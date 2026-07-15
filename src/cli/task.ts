@@ -73,6 +73,13 @@ type TaskStatusSummaryReport =
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const timer = startMonotonicTimer();
   const sub = input.args[1];
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    const commandId = taskSubcommandHelpId(sub);
+    if (commandId) {
+      console.log(renderCommandHelp(commandId));
+      return true;
+    }
+  }
   if (sub === 'create') {
     if (blockLegacyMutation(input, 'task.create')) return true;
     const title = extractTaskCreateTitle(input.args);
@@ -244,6 +251,23 @@ function attachCliDiagnostics<T extends { diagnostics?: TaskCliDiagnostics }>(re
     ...(slow ? { note: 'This command was slow enough to affect interactive agent UX; prefer narrower diagnostics or progress-aware follow-up work if this repeats.' } : {})
   };
   return report;
+}
+
+function taskSubcommandHelpId(sub: string | undefined): string | null {
+  switch (sub) {
+    case 'create':
+      return 'task.create';
+    case 'list':
+      return 'task.list';
+    case 'close-source':
+      return 'task.close-source';
+    case 'status':
+      return 'task.status';
+    case 'finalize':
+      return 'task.finalize';
+    default:
+      return null;
+  }
 }
 
 function blockLegacyMutation(input: TaskCommandInput, command: string): boolean {

@@ -206,15 +206,19 @@ function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   }
   const current = fs.readFileSync(taskBoard, 'utf8');
   if (current.includes(`| ${task.id} |`)) throw new TaskCapsuleCreateCollisionError(1);
-  assertTaskBoardManagedSection(current);
-  const marker = '<!-- hadara:managed:end task-board -->';
-  fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');
+  const managed = validateTaskBoardWriteMode(current);
+  if (managed.mode === 'managed') {
+    const marker = '<!-- hadara:managed:end task-board -->';
+    fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');
+    return;
+  }
+  fs.writeFileSync(taskBoard, `${current.replace(/\s*$/, '\n')}${line}`, 'utf8');
 }
 
 function assertTaskBoardWritable(projectRoot: string): void {
   const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   if (!fs.existsSync(taskBoard)) return;
-  assertTaskBoardManagedSection(fs.readFileSync(taskBoard, 'utf8'));
+  validateTaskBoardWriteMode(fs.readFileSync(taskBoard, 'utf8'));
 }
 
 function taskBoardContainsId(projectRoot: string, id: string): boolean {
@@ -223,16 +227,27 @@ function taskBoardContainsId(projectRoot: string, id: string): boolean {
   return fs.readFileSync(taskBoard, 'utf8').includes(`| ${id} |`);
 }
 
-function assertTaskBoardManagedSection(content: string): void {
+function validateTaskBoardWriteMode(content: string): { mode: 'managed' | 'legacy-table' } {
   const parsed = parseManagedSections(content, 'docs/TASK_BOARD.md');
   const error = parsed.issues.find((issue) => issue.severity === 'error');
   if (error) {
     throw new TaskBoardManagedSectionError(error.message);
   }
   const taskBoardSections = parsed.sections.filter((section) => section.id === 'task-board');
-  if (taskBoardSections.length !== 1) {
+  if (taskBoardSections.length === 1) {
+    return { mode: 'managed' };
+  }
+  if (taskBoardSections.length > 1) {
     throw new TaskBoardManagedSectionError(`docs/TASK_BOARD.md must contain exactly one managed task-board section; found ${taskBoardSections.length}.`);
   }
+  if (!hasCanonicalTaskBoardTable(content)) {
+    throw new TaskBoardManagedSectionError('docs/TASK_BOARD.md is missing the canonical task table frame; refusing task create append.');
+  }
+  return { mode: 'legacy-table' };
+}
+
+function hasCanonicalTaskBoardTable(content: string): boolean {
+  return /\|\s*ID\s*\|\s*Title\s*\|\s*Status\s*\|\s*Capsule\s*\|\s*Notes\s*\|/.test(content) && /\|\s*---\s*\|\s*---\s*\|\s*---\s*\|\s*---\s*\|\s*---\s*\|/.test(content);
 }
 
 function writeTaskCreateLockMetadata(lockDir: string): void {

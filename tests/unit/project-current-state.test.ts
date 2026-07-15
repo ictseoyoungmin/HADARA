@@ -119,6 +119,32 @@ describe('project current-state canon', () => {
     expect(plan).toEqual({ writes: [], issues: [] });
   });
 
+  it('retires nextWork when the completed task matches the structured recommendation', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const currentPath = path.join(root, PROJECT_CURRENT_STATE_PATH);
+    const current = readProjectCurrentState(root).state!;
+    fs.writeFileSync(
+      currentPath,
+      `${JSON.stringify({
+        ...current,
+        nextWork: {
+          title: 'Retry interrupted onboarding task',
+          state: 'candidate',
+          operatorGuidance: 'Resume the interrupted user-requested work.',
+          createCommandAllowed: true
+        },
+        nextOperatorIntent: 'Retry interrupted onboarding task.'
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    expect(completeProjectCurrentTask(root, { id: 'T-0007', title: 'Retry interrupted onboarding task' })).toEqual([]);
+    const completed = readProjectCurrentState(root).state!;
+    expect(completed.nextWork).toBeNull();
+    expect(completed.nextOperatorIntent).toBe('No next work selected. Run `hadara task status --json` for current task-selection guidance.');
+  });
+
   it('orders current-state task refs by numeric suffix beyond four digits', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });

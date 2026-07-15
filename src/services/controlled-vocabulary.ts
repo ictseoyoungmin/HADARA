@@ -22,6 +22,10 @@ export const TASK_STATUS_TOKENS = ['Draft', 'In Progress', 'Blocked', 'Done', 'P
 export const PLAN_STATUS_TOKENS = ['Pending', 'In Progress', 'Done', 'Blocked', 'Skipped'] as const;
 export const SOURCE_DOCUMENT_ROLE_TOKENS = ['implementation-source', 'reference', 'constraint', 'decision', 'background'] as const;
 export const SOURCE_DOCUMENT_ROLE_ALIASES: Readonly<Record<string, typeof SOURCE_DOCUMENT_ROLE_TOKENS[number]>> = {
+  requirement: 'constraint',
+  requirements: 'constraint',
+  workflow: 'constraint',
+  'task context': 'background',
   'implementation target': 'implementation-source',
   'implementation source': 'implementation-source',
   implementation: 'implementation-source',
@@ -44,6 +48,16 @@ export const ACCEPTANCE_DISPOSITION_TOKENS = ['Required', 'Optional', 'Deferred'
 export const VALIDATION_REQUIRED_TOKENS = ['Yes', 'No'] as const;
 export const VALIDATION_RESULT_TOKENS = ['Not Run', 'Passed', 'Failed', 'Blocked', 'Skipped', 'Not Applicable'] as const;
 export const RISK_KIND_TOKENS = ['Risk', 'Follow-up', 'Question'] as const;
+export const RISK_KIND_ALIASES: Readonly<Record<string, typeof RISK_KIND_TOKENS[number]>> = {
+  none: 'Follow-up',
+  'no risk': 'Follow-up',
+  'no risks': 'Follow-up',
+  issue: 'Risk',
+  blocker: 'Risk',
+  todo: 'Follow-up',
+  followup: 'Follow-up',
+  question: 'Question'
+};
 export const RISK_STATE_TOKENS = ['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected'] as const;
 export const EVIDENCE_KIND_TOKENS = ['test-log', 'command-log', 'diff-summary', 'screenshot', 'note'] as const;
 export const EVIDENCE_RESULT_TOKENS = ['passed', 'failed', 'blocked', 'unknown'] as const;
@@ -94,6 +108,7 @@ export function findVocabularyDomain(domain: string): VocabularyDomain | undefin
 export function normalizeVocabularyToken(domain: string, value: string): string {
   const trimmed = value.trim();
   if (domain === 'task.source.role') return SOURCE_DOCUMENT_ROLE_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+  if (domain === 'task.risk.kind') return RISK_KIND_ALIASES[trimmed.toLowerCase()] ?? trimmed;
   return trimmed;
 }
 

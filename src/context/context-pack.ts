@@ -301,9 +301,9 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
   const readFirst = readFirstCandidates.slice(0, budget.maxReadFirstItems);
   if (readFirstCandidates.length > readFirst.length) {
     issues.push({
-      severity: 'warning',
+      severity: 'info',
       code: 'CONTEXT_PACK_BUDGET_TRUNCATED',
-      message: `Context pack readFirst items were truncated from ${readFirstCandidates.length} to ${readFirst.length}.`
+      message: `Context pack readFirst items were limited by the current read budget from ${readFirstCandidates.length} to ${readFirst.length}; rerun with a larger --budget only if the omitted candidates are needed.`
     });
   }
 
@@ -321,9 +321,9 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
   const readIfNeeded = readIfNeededCandidates.slice(0, maxReadIfNeeded);
   if (readIfNeededCandidates.length > readIfNeeded.length) {
     issues.push({
-      severity: 'warning',
+      severity: 'info',
       code: 'CONTEXT_PACK_BUDGET_TRUNCATED',
-      message: `Context pack readIfNeeded items were truncated from ${readIfNeededCandidates.length} to ${readIfNeeded.length}.`
+      message: `Context pack readIfNeeded items were limited by the current read budget from ${readIfNeededCandidates.length} to ${readIfNeeded.length}; rerun with a larger --budget only if the omitted candidates are needed.`
     });
   }
 

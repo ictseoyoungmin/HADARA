@@ -215,7 +215,10 @@ describe('Harness Task Capsule validation', () => {
             '| index.js | implementation target | active | Main code target. |',
             '| test.js | validation target | active | Test target. |',
             '| docs/HADARA_WORKFLOW.md | workflow constraint | active | Workflow constraint. |',
-            '| User request | task driver | active | User-provided direction. |'
+            '| User request | task driver | active | User-provided direction. |',
+            '| Product requirement | requirement | active | User-facing constraint. |',
+            '| Workflow docs | workflow | active | General workflow alias. |',
+            '| TASK.md | task context | active | Task-local context. |'
           ].join('\n')
         ),
       'utf8'
@@ -226,6 +229,24 @@ describe('Harness Task Capsule validation', () => {
     expect(result.ok).toBe(true);
     expect(result.issues).toEqual([]);
     expect(SOURCE_DOCUMENT_ROLE_TOKENS).toEqual(['implementation-source', 'reference', 'constraint', 'decision', 'background']);
+  });
+
+  it('accepts no-risk risk kind aliases without expanding canonical tokens', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Risk kind aliases');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | None | No open risks. | Closed | N/A |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
   });
 
   it('accepts stable Change Summary areas at draft level', () => {

@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6-rc.0 |
-| Latest Completed Task | T-0616 Serialize task create allocation and managed board writes |
+| Latest Completed Task | T-0617 0.4.6 first-user onboarding and brownfield quickstart |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
-| Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
-| Next Work State | candidate |
-| Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. |
+| Next Work | None |
+| Next Work State | none |
+| Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
 | Current Trusted Validation Baseline | T-0614 prepared 0.4.6-rc.0 source/readiness: npm exact-version availability check passed as unpublished, build/version smoke passed, package smoke and strict release gate passed, and Docker full suite passed with dist freshness. |
 
 ### Current Known Problems

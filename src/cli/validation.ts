@@ -47,7 +47,7 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     if (report.evidence) console.log(`id=${report.evidence.id}`);
     if (report.evidence?.appendLock.contended) console.log(`appendLock=waited ${report.evidence.appendLock.waitedMs}ms at ${report.evidence.appendLock.path}`);
     console.log(`result=${report.result}`);
-    console.log(`taskValidationRow=${report.taskValidationRow.mode}${report.taskValidationRow.updated ? ' updated' : ' not-updated'}`);
+    console.log(`taskValidationRow=${formatTaskValidationRow(report.taskValidationRow)}`);
     console.log(`acceptanceRows=not-updated`);
     for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
     if (report.nextActions.length > 0) console.log(`[HADARA] next actions`);
@@ -55,6 +55,11 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
   }
   if (!report.ok || report.result !== 'Passed') process.exitCode = 6;
   return true;
+}
+
+function formatTaskValidationRow(row: { mode: string; updated: boolean }): string {
+  const updateState = row.updated ? 'updated' : 'not-updated';
+  return row.mode === updateState ? updateState : `${row.mode} ${updateState}`;
 }
 
 function parseDirectResult(value: string | undefined): 'Passed' | 'Failed' | 'Blocked' | undefined {

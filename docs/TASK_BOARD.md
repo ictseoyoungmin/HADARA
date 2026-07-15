@@ -617,3 +617,4 @@
 | T-0614 | 0.4.6-rc.0 release readiness and publish preparation | Done | tasks/T-0614-0-4-6-rc-0-release-readiness-and-publish-preparation | |
 | T-0615 | 0.4.6-rc.0 installed package multi-scenario delegated dogfood | Done | tasks/T-0615-0-4-6-rc-0-installed-package-multi-scenario-delegated-dogfood | |
 | T-0616 | Serialize task create allocation and managed board writes | Done | tasks/T-0616-serialize-task-create-allocation-and-managed-board-writes | |
+| T-0617 | 0.4.6 first-user onboarding and brownfield quickstart | Done | tasks/T-0617-0-4-6-first-user-onboarding-and-brownfield-quickstart | |

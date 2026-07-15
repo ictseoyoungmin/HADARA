@@ -67,8 +67,9 @@ describe('context pack', () => {
       }
     }));
     expect(report.issues).toContainEqual(expect.objectContaining({
-      severity: 'warning',
-      code: 'CONTEXT_PACK_BUDGET_TRUNCATED'
+      severity: 'info',
+      code: 'CONTEXT_PACK_BUDGET_TRUNCATED',
+      message: expect.stringContaining('limited by the current read budget')
     }));
     expect(report.doNotReadByDefault.map((item) => item.id)).toEqual(['doc:docs/OLD_STATE.md']);
     expect(report.sourceSummary).toEqual(expect.objectContaining({
@@ -77,7 +78,7 @@ describe('context pack', () => {
       stateProjectionAvailable: true,
       docsRegistryAvailable: true,
       commandRegistryAvailable: true,
-      degraded: true,
+      degraded: false,
       graphSourceHash: 'sha256:graph'
     }));
     expect(report.validateWith.some((item) => item.command.includes(`task status --task ${taskId} --detail full`))).toBe(true);

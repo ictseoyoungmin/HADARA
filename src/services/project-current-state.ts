@@ -325,12 +325,12 @@ export function activateProjectCurrentTask(projectRoot: string, task: ProjectCur
 }
 
 export function completeProjectCurrentTask(projectRoot: string, task: ProjectCurrentTaskRef): ProjectCurrentStateIssue[] {
-  return mutateProjectCurrentState(projectRoot, (current) => retireBootstrapNextWork({
+  return mutateProjectCurrentState(projectRoot, (current) => retireCompletedNextWork({
     ...current,
     rev: current.rev + 1,
     latestCompletedTask: highestTaskRef(current.latestCompletedTask, task),
     activeTask: current.activeTask?.id === task.id ? null : current.activeTask
-  }));
+  }, task));
 }
 
 export function planCompletedProjectCurrentStateWrites(projectRoot: string, task: ProjectCurrentTaskRef): {
@@ -341,15 +341,19 @@ export function planCompletedProjectCurrentStateWrites(projectRoot: string, task
   if (!read.present) return { writes: [], issues: [] };
   if (!read.state) return { writes: [], issues: read.issues };
   const latestCompletedTask = highestTaskRef(read.state.latestCompletedTask, task);
-  if (read.state.latestCompletedTask?.id === latestCompletedTask.id && read.state.activeTask?.id !== task.id && !hasBootstrapNextWork(read.state)) {
+  if (
+    read.state.latestCompletedTask?.id === latestCompletedTask.id &&
+    read.state.activeTask?.id !== task.id &&
+    !hasRetirableNextWork(read.state, task)
+  ) {
     return { writes: [], issues: [] };
   }
-  const next: ProjectCurrentState = retireBootstrapNextWork({
+  const next: ProjectCurrentState = retireCompletedNextWork({
     ...read.state,
     rev: read.state.rev + 1,
     latestCompletedTask,
     activeTask: read.state.activeTask?.id === task.id ? null : read.state.activeTask
-  });
+  }, task);
   return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [] };
 }
 
@@ -489,13 +493,17 @@ function normalizeLegacyIntentTitle(intent: string): string {
     .trim() || 'Create first Task Capsule';
 }
 
-function retireBootstrapNextWork(state: ProjectCurrentState): ProjectCurrentState {
-  if (!hasBootstrapNextWork(state)) return state;
+function retireCompletedNextWork(state: ProjectCurrentState, completedTask: ProjectCurrentTaskRef): ProjectCurrentState {
+  if (!hasRetirableNextWork(state, completedTask)) return state;
   return {
     ...state,
     nextWork: null,
     nextOperatorIntent: 'No next work selected. Run `hadara task status --json` for current task-selection guidance.'
   };
+}
+
+function hasRetirableNextWork(state: ProjectCurrentState, completedTask: ProjectCurrentTaskRef): boolean {
+  return hasBootstrapNextWork(state) || nextWorkMatchesTask(state.nextWork, completedTask) || intentMatchesTask(state.nextOperatorIntent, completedTask);
 }
 
 function hasBootstrapNextWork(state: ProjectCurrentState): boolean {
@@ -504,6 +512,21 @@ function hasBootstrapNextWork(state: ProjectCurrentState): boolean {
 
 function isBootstrapFirstTaskNextWork(value: string | null | undefined): boolean {
   return (value ?? '').trim().toLowerCase() === 'create first task capsule';
+}
+
+function nextWorkMatchesTask(nextWork: ProjectNextWork | null, task: ProjectCurrentTaskRef): boolean {
+  if (!nextWork) return false;
+  if (nextWork.title.includes(task.id)) return true;
+  return normalizeTaskTitle(nextWork.title) === normalizeTaskTitle(task.title);
+}
+
+function intentMatchesTask(intent: string, task: ProjectCurrentTaskRef): boolean {
+  if (intent.includes(task.id)) return true;
+  return normalizeTaskTitle(intent) === normalizeTaskTitle(task.title);
+}
+
+function normalizeTaskTitle(value: string): string {
+  return value.trim().replace(/[.]+$/, '').replace(/\s+/g, ' ').toLowerCase();
 }
 
 function planWrite(writes: ProjectCurrentStateWrite[], projectRoot: string, relativePath: string, after: string): void {

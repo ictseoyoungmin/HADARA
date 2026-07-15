@@ -130,16 +130,29 @@ describe('task create templates', () => {
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
   });
 
-  it('fails closed instead of appending outside a missing Task Board managed section', () => {
+  it('supports legacy Task Board tables that do not yet use a managed section', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(rootTaskBoard(root), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
 
-    const report = createTaskCreateReport(root, 'Missing managed block');
+    const report = createTaskCreateReport(root, 'Legacy board task');
+
+    expect(report.ok).toBe(true);
+    expect(report.task?.id).toBe('T-0001');
+    expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).toContain('| T-0001 | Legacy board task | Draft | tasks/T-0001-legacy-board-task | |');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
+  it('fails closed instead of appending to a malformed legacy Task Board', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(rootTaskBoard(root), '# TASK_BOARD\n\nLost table frame.\n', 'utf8');
+
+    const report = createTaskCreateReport(root, 'Malformed board task');
 
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_BOARD_MANAGED_SECTION_INVALID' }));
-    expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).not.toContain('Missing managed block');
+    expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).not.toContain('Malformed board task');
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
   });
 

@@ -446,4 +446,41 @@ describe('validation run', () => {
     expect(text).toContain('taskValidationRow=skipped not-updated');
     expect(text).toContain('acceptanceRows=not-updated');
   });
+
+  it('prints a single updated token for explicit TASK Validation row updates', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation text update wording');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleValidationCommand({
+          args: [
+            'validation',
+            'run',
+            '--task',
+            task.id,
+            '--check',
+            'CLI check',
+            '--update-task',
+            '--',
+            process.execPath,
+            '-e',
+            'process.exit(0)'
+          ],
+          projectRoot: root,
+          jsonOutput: false
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const text = output.join('\n');
+    expect(text).toContain('taskValidationRow=updated');
+    expect(text).not.toContain('taskValidationRow=updated updated');
+  });
 });

@@ -1,21 +1,16 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 141,
+  "rev": 144,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0616",
-    "title": "Serialize task create allocation and managed board writes"
+    "id": "T-0617",
+    "title": "0.4.6 first-user onboarding and brownfield quickstart"
   },
   "activeTask": null,
-  "nextWork": {
-    "title": "0.4.6 first-user onboarding and brownfield quickstart",
-    "state": "candidate",
-    "operatorGuidance": "T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface.",
-    "createCommandAllowed": true
-  },
-  "nextOperatorIntent": "Continue the 0.4.6 line with first-user onboarding and brownfield quickstart polish.",
+  "nextWork": null,
+  "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
