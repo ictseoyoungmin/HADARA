@@ -108,8 +108,8 @@ HADARA-dev CLI work should prefer the reusable `hadara-dev` Docker workflow when
 | Need | Command | Notes |
 |---|---|---|
 | Check container availability | `docker info` | Start or recreate the reusable container only when Docker itself is available. |
-| Sync/build development CLI | `npm run dev:docker-sync-build` | Builds in Docker and refreshes workspace `dist` from the Docker build output. |
-| Run the Docker validation wrapper | `npm run dev:docker-check` | Use for broader repo validation when time permits. |
+| Sync/build development CLI | `npm run dev:docker-sync-build` | Fast path: copies the minimal build workspace to Docker ext4, runs `npm ci`, `npm run build`, refreshes workspace `dist`, and runs the built CLI smoke. |
+| Run the Docker validation wrapper | `npm run dev:docker-check` | Full path: copies the full workspace to Docker ext4 and runs `npm run check`; use for broader repo validation when time permits. |
 | Run focused built-CLI smoke | `node dist/cli/main.js <command> ... --json` | Run only after `dist` has been refreshed from the Docker build. |
 
 Do not assume container-global `/usr/local/bin/hadara` is the latest development build. For source changes, build first, refresh `/workspace/dist`, then run built-CLI smokes from `dist/cli/main.js`.

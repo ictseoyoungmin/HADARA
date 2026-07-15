@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 146,
+  "rev": 148,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0618",
-    "title": "0.4.6 minimal init docs and optional docs add workflow"
+    "id": "T-0619",
+    "title": "0.4.6 docker sync build fast path and progress diagnostics"
   },
   "activeTask": null,
   "nextWork": null,

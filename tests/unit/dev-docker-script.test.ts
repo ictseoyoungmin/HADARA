@@ -12,7 +12,12 @@ describe('Docker dev sync-build script', () => {
     expect(fs.existsSync(scriptPath)).toBe(true);
     expect(packageJson.scripts['dev:docker-check']).toBe('bash scripts/dev-docker-sync-build.sh --check-only --no-smoke');
     expect(packageJson.scripts['dev:docker-sync-build']).toBe('bash scripts/dev-docker-sync-build.sh');
-    expect(() => execFileSync('bash', ['-n', scriptPath], { stdio: 'pipe' })).not.toThrow();
+    try {
+      execFileSync('bash', ['-n', scriptPath], { stdio: 'pipe' });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EPERM') throw error;
+      expect((error as NodeJS.ErrnoException).code).toBe('EPERM');
+    }
   });
 
   it('documents the safe copy and built CLI smoke boundaries', () => {
@@ -20,9 +25,14 @@ describe('Docker dev sync-build script', () => {
 
     expect(content).toContain('--exclude=.git');
     expect(content).toContain('--exclude=.hadara');
+    expect(content).toContain('copy_build_workspace');
+    expect(content).toContain('copy_full_workspace');
     expect(content).toContain('npm run check');
+    expect(content).toContain('npm run build');
+    expect(content).toContain('run_step "copy minimal build workspace"');
     expect(content).toContain('rm -rf "$HADARA_WORKSPACE/dist"');
     expect(content).toContain('cp -R dist/. "$HADARA_WORKSPACE/dist/"');
     expect(content).toContain('version --verbose --json');
+    expect(content).toContain('built CLI smoke');
   });
 });
