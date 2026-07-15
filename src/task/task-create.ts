@@ -1,6 +1,13 @@
 import path from 'node:path';
 import type { TaskCapsule } from './task-capsule';
-import { createTaskCapsule, TaskCapsuleCreateCollisionError, type CreateTaskCapsuleOptions } from './task-capsule';
+import {
+  createTaskCapsule,
+  TaskBoardManagedSectionError,
+  TaskCapsuleCreateCollisionError,
+  TaskCapsuleCreateLockError,
+  withTaskCreateProjectLock,
+  type CreateTaskCapsuleOptions
+} from './task-capsule';
 import { getTaskTemplate, supportedTaskTemplateIds, templateSummary, type TaskTemplateSummary } from './task-templates';
 import { activateProjectCurrentTask } from '../services/project-current-state';
 
@@ -29,7 +36,7 @@ export interface TaskCreateReport {
   }>;
 }
 
-export function createTaskCreateReport(projectRoot: string, title: string, options: Pick<CreateTaskCapsuleOptions, 'templateId' | 'maxCreateRetries' | 'onBeforeCreateAttempt'> = {}): TaskCreateReport {
+export function createTaskCreateReport(projectRoot: string, title: string, options: Pick<CreateTaskCapsuleOptions, 'templateId' | 'maxCreateRetries' | 'onBeforeCreateAttempt' | 'lockTimeoutMs'> = {}): TaskCreateReport {
   const supportedTemplates = supportedTaskTemplateIds();
   const template = getTaskTemplate(options.templateId);
   const templateReport = templateSummary(template);
@@ -59,9 +66,25 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
   let task: TaskCapsule;
   const issues: TaskCreateReport['issues'] = [];
   try {
-    task = createTaskCapsule(projectRoot, title, { templateId: template?.id, maxCreateRetries: options.maxCreateRetries, onBeforeCreateAttempt: options.onBeforeCreateAttempt });
+    task = withTaskCreateProjectLock(projectRoot, () => {
+      const created = createTaskCapsule(projectRoot, title, {
+        templateId: template?.id,
+        maxCreateRetries: options.maxCreateRetries,
+        onBeforeCreateAttempt: options.onBeforeCreateAttempt,
+        lockTimeoutMs: options.lockTimeoutMs,
+        lock: false
+      });
+      for (const issue of activateProjectCurrentTask(projectRoot, { id: created.id, title: created.title })) {
+        issues.push({
+          severity: 'warning',
+          code: 'TASK_CREATE_CURRENT_STATE_SYNC_FAILED',
+          message: `${issue.message} The Task Capsule was created; repair current-state drift before relying on session continuation.`
+        });
+      }
+      return created;
+    }, { timeoutMs: options.lockTimeoutMs });
   } catch (error) {
-    if (error instanceof TaskCapsuleCreateCollisionError) {
+    if (error instanceof TaskCapsuleCreateCollisionError || error instanceof TaskCapsuleCreateLockError || error instanceof TaskBoardManagedSectionError) {
       return {
         schemaVersion: 'hadara.task.create.v1',
         command: 'task.create',
@@ -78,13 +101,6 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
       };
     }
     throw error;
-  }
-  for (const issue of activateProjectCurrentTask(projectRoot, { id: task.id, title: task.title })) {
-    issues.push({
-      severity: 'warning',
-      code: 'TASK_CREATE_CURRENT_STATE_SYNC_FAILED',
-      message: `${issue.message} The Task Capsule was created; repair current-state drift before relying on session continuation.`
-    });
   }
   return {
     schemaVersion: 'hadara.task.create.v1',

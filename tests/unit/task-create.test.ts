@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { initProject } from '../../src/cli/init';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
+import { managedSectionBlock } from '../../src/services/managed-sections';
 import { createTaskCreateReport } from '../../src/task/task-create';
 
 const roots: string[] = [];
@@ -111,13 +112,67 @@ describe('task create templates', () => {
   it('skips task ids already present in the Task Board even when no capsule directory exists', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(rootTaskBoard(root), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0001 | Existing board row | Draft | tasks/T-0001-existing-board-row | |\n', 'utf8');
+    fs.writeFileSync(
+      rootTaskBoard(root),
+      `# TASK_BOARD\n\n${managedSectionBlock(
+        'task-board',
+        { schema: 'hadara.managedSection.v1', owner: 'task.board.projection', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' },
+        '| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0001 | Existing board row | Draft | tasks/T-0001-existing-board-row | |\n'
+      )}\n`,
+      'utf8'
+    );
 
     const report = createTaskCreateReport(root, 'Board collision task');
 
     expect(report.ok).toBe(true);
     expect(report.task?.id).toBe('T-0002');
     expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).toContain('| T-0002 | Board collision task | Draft | tasks/T-0002-board-collision-task | |');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
+  it('fails closed instead of appending outside a missing Task Board managed section', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(rootTaskBoard(root), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
+
+    const report = createTaskCreateReport(root, 'Missing managed block');
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_BOARD_MANAGED_SECTION_INVALID' }));
+    expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).not.toContain('Missing managed block');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
+  it('fails closed when the Task Board has duplicate managed task-board sections', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    const block = managedSectionBlock(
+      'task-board',
+      { schema: 'hadara.managedSection.v1', owner: 'task.board.projection', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' },
+      '| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n'
+    );
+    fs.writeFileSync(rootTaskBoard(root), `# TASK_BOARD\n\n${block}\n\n${block}\n`, 'utf8');
+
+    const report = createTaskCreateReport(root, 'Duplicate managed block');
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_BOARD_MANAGED_SECTION_INVALID' }));
+    expect(fs.readdirSync(path.join(root, 'tasks'))).toEqual([]);
+    expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).not.toContain('Duplicate managed block');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
+  it('fails closed when another task create holds the project lock', () => {
+    const root = tempProject();
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-create.lock');
+    fs.mkdirSync(lockDir, { recursive: true });
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), '{"pid":12345,"command":"test"}\n', 'utf8');
+
+    const report = createTaskCreateReport(root, 'Locked create', { lockTimeoutMs: 25 });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CREATE_LOCK_TIMEOUT' }));
+    expect(fs.existsSync(path.join(root, 'tasks'))).toBe(false);
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
   });
 

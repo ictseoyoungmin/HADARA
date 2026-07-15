@@ -615,3 +615,5 @@
 | T-0612 | 0.4.6 current-state contract hardening after latest-basis review | Done | tasks/T-0612-0-4-6-current-state-contract-hardening-after-latest-basis-review | |
 | T-0613 | 0.4.6 current-state validation baseline wording and task-id ordering polish | Done | tasks/T-0613-0-4-6-current-state-validation-baseline-wording-and-task-id-orde | |
 | T-0614 | 0.4.6-rc.0 release readiness and publish preparation | Done | tasks/T-0614-0-4-6-rc-0-release-readiness-and-publish-preparation | |
+| T-0615 | 0.4.6-rc.0 installed package multi-scenario delegated dogfood | Done | tasks/T-0615-0-4-6-rc-0-installed-package-multi-scenario-delegated-dogfood | |
+| T-0616 | Serialize task create allocation and managed board writes | Done | tasks/T-0616-serialize-task-create-allocation-and-managed-board-writes | |

@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, slugify, writeFileIfMissing } from '../core/fs';
-import { managedSectionBlock } from '../services/managed-sections';
+import { startMonotonicTimer } from '../core/timing';
+import { managedSectionBlock, parseManagedSections } from '../services/managed-sections';
 import { readMarkdownSection } from '../services/markdown-table';
 import { getTaskTemplate } from './task-templates';
 
@@ -80,6 +81,8 @@ export interface CreateTaskCapsuleOptions {
   templateId?: string;
   maxCreateRetries?: number;
   onBeforeCreateAttempt?: (attempt: { id: string; dir: string; attempt: number }) => void;
+  lock?: boolean;
+  lockTimeoutMs?: number;
 }
 
 export class TaskCapsuleCreateCollisionError extends Error {
@@ -92,10 +95,33 @@ export class TaskCapsuleCreateCollisionError extends Error {
   }
 }
 
+export class TaskCapsuleCreateLockError extends Error {
+  readonly code = 'TASK_CREATE_LOCK_TIMEOUT';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'TaskCapsuleCreateLockError';
+  }
+}
+
+export class TaskBoardManagedSectionError extends Error {
+  readonly code = 'TASK_BOARD_MANAGED_SECTION_INVALID';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'TaskBoardManagedSectionError';
+  }
+}
+
 export function createTaskCapsule(projectRoot: string, title: string, options: CreateTaskCapsuleOptions = {}): TaskCapsule {
+  if (options.lock !== false) {
+    return withTaskCreateProjectLock(projectRoot, () => createTaskCapsule(projectRoot, title, { ...options, lock: false }), { timeoutMs: options.lockTimeoutMs });
+  }
+
   const tasksDir = path.join(projectRoot, 'tasks');
   const slug = slugify(title);
   ensureDir(tasksDir);
+  assertTaskBoardWritable(projectRoot);
   const maxCreateRetries = Math.max(1, options.maxCreateRetries ?? 5);
   const blockedIds = new Set<string>();
 
@@ -138,6 +164,38 @@ export function createTaskCapsule(projectRoot: string, title: string, options: C
   throw new TaskCapsuleCreateCollisionError(maxCreateRetries);
 }
 
+export function withTaskCreateProjectLock<T>(projectRoot: string, fn: () => T, options: { timeoutMs?: number } = {}): T {
+  const lockRoot = path.join(projectRoot, '.hadara', 'local', 'locks');
+  ensureDir(lockRoot);
+  const lockDir = path.join(lockRoot, 'task-create.lock');
+  const lockPortablePath = path.relative(projectRoot, lockDir).split(path.sep).join('/');
+  const timer = startMonotonicTimer();
+  const timeoutMs = options.timeoutMs ?? 5000;
+
+  while (true) {
+    try {
+      fs.mkdirSync(lockDir);
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      if (timer.elapsedMs() >= timeoutMs) {
+        throw new TaskCapsuleCreateLockError(
+          `Timed out waiting for the project task-create lock. Lock directory: ${lockPortablePath}. ` +
+            `If no HADARA process is creating a task, inspect ${lockPortablePath}/lock.json and remove the stale lock directory before retrying.`
+        );
+      }
+      sleepSync(25);
+    }
+  }
+
+  try {
+    writeTaskCreateLockMetadata(lockDir);
+    return fn();
+  } finally {
+    fs.rmSync(lockDir, { recursive: true, force: true });
+  }
+}
+
 function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   ensureDir(path.dirname(taskBoard));
@@ -148,18 +206,50 @@ function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   }
   const current = fs.readFileSync(taskBoard, 'utf8');
   if (current.includes(`| ${task.id} |`)) throw new TaskCapsuleCreateCollisionError(1);
+  assertTaskBoardManagedSection(current);
   const marker = '<!-- hadara:managed:end task-board -->';
-  if (current.includes(marker)) {
-    fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');
-    return;
-  }
-  fs.appendFileSync(taskBoard, line, 'utf8');
+  fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');
+}
+
+function assertTaskBoardWritable(projectRoot: string): void {
+  const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoard)) return;
+  assertTaskBoardManagedSection(fs.readFileSync(taskBoard, 'utf8'));
 }
 
 function taskBoardContainsId(projectRoot: string, id: string): boolean {
   const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   if (!fs.existsSync(taskBoard)) return false;
   return fs.readFileSync(taskBoard, 'utf8').includes(`| ${id} |`);
+}
+
+function assertTaskBoardManagedSection(content: string): void {
+  const parsed = parseManagedSections(content, 'docs/TASK_BOARD.md');
+  const error = parsed.issues.find((issue) => issue.severity === 'error');
+  if (error) {
+    throw new TaskBoardManagedSectionError(error.message);
+  }
+  const taskBoardSections = parsed.sections.filter((section) => section.id === 'task-board');
+  if (taskBoardSections.length !== 1) {
+    throw new TaskBoardManagedSectionError(`docs/TASK_BOARD.md must contain exactly one managed task-board section; found ${taskBoardSections.length}.`);
+  }
+}
+
+function writeTaskCreateLockMetadata(lockDir: string): void {
+  try {
+    fs.writeFileSync(
+      path.join(lockDir, 'lock.json'),
+      `${JSON.stringify({ pid: process.pid, command: 'task.create', createdAt: new Date().toISOString() })}\n`,
+      'utf8'
+    );
+  } catch {
+    // Directory ownership is the lock; metadata is best-effort diagnostics.
+  }
+}
+
+function sleepSync(ms: number): void {
+  const signal = new Int32Array(new SharedArrayBuffer(4));
+  Atomics.wait(signal, 0, 0, ms);
 }
 
 export function listTaskCapsules(projectRoot: string): TaskCapsule[] {

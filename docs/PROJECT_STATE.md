@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6-rc.0 |
-| Latest Completed Task | T-0614 0.4.6-rc.0 release readiness and publish preparation |
+| Latest Completed Task | T-0616 Serialize task create allocation and managed board writes |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
