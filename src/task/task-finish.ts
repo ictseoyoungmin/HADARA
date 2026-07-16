@@ -280,7 +280,8 @@ function planWrites(
         expectedBeforeExists: true,
         expectedBeforeHash: hashContent(taskContent),
         afterHash: hashContent(nextTaskContent),
-        applied: false
+        applied: false,
+        contentAfter: nextTaskContent
       });
     }
   }
@@ -308,7 +309,8 @@ function planWrites(
       expectedBeforeExists: board.exists,
       expectedBeforeHash: hashContent(beforeContent),
       afterHash: hashContent(afterContent),
-      applied: false
+      applied: false,
+      contentAfter: afterContent
     });
     return writes;
   }
@@ -345,7 +347,8 @@ function planWrites(
       expectedBeforeExists: true,
       expectedBeforeHash: hashContent(beforeContent),
       afterHash: hashContent(afterContent),
-      applied: false
+      applied: false,
+      contentAfter: afterContent
     });
   }
   return writes;

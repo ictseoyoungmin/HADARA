@@ -626,3 +626,4 @@
 | T-0623 | 0.4.6 rc1 installed package recycle and delegated dogfood | Done | tasks/T-0623-0-4-6-rc1-installed-package-recycle-and-delegated-dogfood | |
 | T-0624 | 0.4.6 rc1 delegated dogfood findings cleanup | Done | tasks/T-0624-0-4-6-rc1-delegated-dogfood-findings-cleanup | |
 | T-0625 | 0.4.6 rc1 current-package codex dogfood before stable | Done | tasks/T-0625-0-4-6-rc1-current-package-codex-dogfood-before-stable | |
+| T-0626 | 0.4.6 atomic finalize auto close preflight | Done | tasks/T-0626-0-4-6-atomic-finalize-auto-close-preflight | |

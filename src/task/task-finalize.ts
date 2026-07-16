@@ -1,4 +1,7 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
 import type { HadaraNextAction } from '../core/next-action';
 import { appendEvidenceWithResult, EvidenceAppendResult } from '../evidence/evidence';
@@ -209,17 +212,94 @@ function executeAutoFinalize(
 }
 
 function createAutoFinalizePreflightBlockers(projectRoot: string, taskId: string, actor: HadaraActorContext): TaskFinalizeIssue[] {
-  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
-  return closePlan.issues
-    .filter((issue) => issue.severity === 'error' && !FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code))
-    .map((issue) => ({
-      severity: issue.severity,
-      code: issue.code,
-      message: issue.message,
-      ...(issue.path ? { path: issue.path } : {}),
-      ...(issue.fixHint ? { fixHint: issue.fixHint } : {}),
-      ...(issue.example ? { example: issue.example } : {})
-    }));
+  const finishPlan = createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor });
+  if (!finishPlan.ok) return finishPlan.issues.map(taskFinishIssueToFinalizeIssue);
+  const tempRoot = createVirtualFinishedProjectRoot(projectRoot, taskId, finishPlan);
+  try {
+    const closePlan = createTaskCloseReport(tempRoot, taskId, 'dry-run', { actor });
+    return closePlan.issues
+      .filter((issue) => issue.severity === 'error')
+      .map((issue) => ({
+        severity: issue.severity,
+        code: issue.code,
+        message: issue.message,
+        ...(issue.path ? { path: issue.path } : {}),
+        ...(issue.fixHint ? { fixHint: issue.fixHint } : {}),
+        ...(issue.example ? { example: issue.example } : {})
+      }));
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+function taskFinishIssueToFinalizeIssue(issue: TaskFinishReport['issues'][number]): TaskFinalizeIssue {
+  return {
+    severity: issue.severity,
+    code: issue.code,
+    message: issue.message,
+    ...(issue.path ? { path: issue.path } : {})
+  };
+}
+
+function createVirtualFinishedProjectRoot(projectRoot: string, taskId: string, finishPlan: TaskFinishReport): string {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-finalize-preflight-'));
+  const task = finishPlan.task;
+  if (!task) return tempRoot;
+
+  copyIfExists(path.join(projectRoot, task.capsule), path.join(tempRoot, task.capsule));
+  for (const docPath of [
+    path.join('docs', 'TASK_BOARD.md'),
+    path.join('docs', 'PROJECT_STATE.md'),
+    path.join('docs', 'AGENT_HANDOFF.md'),
+    path.join('docs', 'DEVELOPMENT_SLICES.md'),
+    path.join('docs', 'DECISIONS.md')
+  ]) {
+    copyIfExists(path.join(projectRoot, docPath), path.join(tempRoot, docPath));
+  }
+  for (const statePath of [
+    path.join('.hadara', 'state'),
+    path.join('.hadara', 'context'),
+    path.join('.hadara', 'docs-registry.json'),
+    path.join('.hadara', 'slot-registry.json'),
+    path.join('.hadara', 'scaffold.json')
+  ]) {
+    copyIfExists(path.join(projectRoot, statePath), path.join(tempRoot, statePath));
+  }
+
+  for (const write of finishPlan.writes) {
+    const absolutePath = path.join(tempRoot, write.path);
+    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+    if (write.contentAfter !== undefined) {
+      fs.writeFileSync(absolutePath, write.contentAfter, 'utf8');
+      continue;
+    }
+    if (write.field === 'task-status') {
+      const current = fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, 'utf8') : '';
+      fs.writeFileSync(absolutePath, current.replace(/^(\|\s*Status\s*\|\s*)[^|]*(\|)$/m, `$1${write.after} $2`), 'utf8');
+    }
+  }
+
+  // Ensure the task id is visible in the virtual root even if an unusual
+  // fixture omitted the board row before finish planning.
+  if (!fs.existsSync(path.join(tempRoot, task.capsule, 'TASK.md'))) {
+    fs.mkdirSync(path.join(tempRoot, task.capsule), { recursive: true });
+    fs.writeFileSync(path.join(tempRoot, task.capsule, 'TASK.md'), `# ${taskId}\n`, 'utf8');
+  }
+  return tempRoot;
+}
+
+function copyIfExists(source: string, destination: string): void {
+  if (!fs.existsSync(source)) return;
+  const stat = fs.statSync(source);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  if (stat.isDirectory()) {
+    fs.cpSync(source, destination, {
+      recursive: true,
+      filter: (candidate) => !candidate.includes(`${path.sep}.hadara${path.sep}local${path.sep}`)
+    });
+    return;
+  }
+  fs.copyFileSync(source, destination);
 }
 
 function createAutoPreflightBlockedReport(taskId: string, review: TaskFinalizeReport, preflightBlockers: TaskFinalizeIssue[]): TaskFinalizeReport {

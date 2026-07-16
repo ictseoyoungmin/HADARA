@@ -469,6 +469,80 @@ describe('task finalize --auto (FD-010)', () => {
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
+  it('preflights hidden post-finish blockers before writing Draft lifecycle status in auto mode', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto hidden blocker');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| Status | Done |', '| Status | Draft |')
+        .replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      boardPath,
+      fs
+        .readFileSync(boardPath, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+        .join('\n'),
+      'utf8'
+    );
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({ ok: false, mode: 'dry-run', state: 'blocked', planStatus: 'blocked', partialExecutionRisk: false });
+    expect(report.pendingWrites).toEqual([]);
+    expect(report.blockingIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ severity: 'error', code: 'HARNESS_TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN' })
+      ])
+    );
+    expect(report.blockingIssues.map((issue) => issue.code)).not.toContain('HARNESS_TASK_STATUS_NOT_DONE');
+    expect(report.blockingIssues.map((issue) => issue.code)).not.toContain('HARNESS_TASK_BOARD_STATUS_NOT_DONE');
+    expect(snapshotFiles(root)[`tasks/${task.id}-finalize-auto-hidden-blocker/TASK.md`]).toContain('| Status | Draft |');
+    expect(snapshotFiles(root)['docs/TASK_BOARD.md']).toContain(`| ${task.id} | Finalize auto hidden blocker | Draft |`);
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('closes a clean first-capsule style Draft task without manual lifecycle status edits', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto first capsule');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      boardPath,
+      fs
+        .readFileSync(boardPath, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+        .join('\n'),
+      'utf8'
+    );
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+
+    expect(report).toMatchObject({ ok: true, mode: 'execute', state: 'closed-valid', partialExecutionRisk: false });
+    expect(snapshotFiles(root)[`tasks/${task.id}-finalize-auto-first-capsule/TASK.md`]).toContain('| Status | Done |');
+    expect(snapshotFiles(root)['docs/TASK_BOARD.md']).toContain(`| ${task.id} | Finalize auto first capsule | Done |`);
+    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
   it('surfaces missing v2 History Done row before execute', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finalize missing history done');

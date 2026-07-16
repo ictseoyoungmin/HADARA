@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 161,
+  "rev": 163,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0625",
-    "title": "0.4.6 rc1 current-package codex dogfood before stable"
+    "id": "T-0626",
+    "title": "0.4.6 atomic finalize auto close preflight"
   },
   "activeTask": null,
   "nextWork": null,
