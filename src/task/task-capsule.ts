@@ -22,9 +22,11 @@ export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
 
 export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string, content: string): boolean {
   if (fileName === 'TASK.md') {
-    return ['## Goal', '## Scope', '## Plan', '## Acceptance', '## Validation', '## Inputs / Constraints', '## Changes', '## Risks / Follow-ups'].some((heading) =>
-      isPlaceholderSection(readMarkdownSection(content, heading))
-    );
+    return ['## Goal', '## Scope', '## Plan', '## Acceptance', '## Validation', '## Inputs / Constraints', '## Changes', '## Risks / Follow-ups'].some((heading) => {
+      const section = readMarkdownSection(content, heading);
+      if (heading === '## Validation') return isPlaceholderValidationSection(section);
+      return isPlaceholderSection(section);
+    });
   }
 
   if (fileName === 'ACCEPTANCE.md') {
@@ -328,6 +330,29 @@ function isPlaceholderSection(value: string): boolean {
   const normalized = value.trim();
   if (normalized.length === 0 || /^TBD\.?$/i.test(normalized)) return true;
   return /\|\s*TBD\s*\|/i.test(normalized);
+}
+
+function isPlaceholderValidationSection(value: string): boolean {
+  const normalized = value.trim();
+  if (normalized.length === 0 || /^TBD\.?$/i.test(normalized)) return true;
+  const dataRows = normalized
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && !/^\|\s*-+/.test(line) && !/^\|\s*Check\s*\|/i.test(line))
+    .filter((line) => !isFinalizePreCloseValidationRow(line));
+  if (dataRows.length === 0) return false;
+  return dataRows.some((line) => /\|\s*TBD\s*\|/i.test(line));
+}
+
+function isFinalizePreCloseValidationRow(line: string): boolean {
+  const cells = line
+    .slice(1, line.endsWith('|') ? -1 : undefined)
+    .split('|')
+    .map((cell) => cell.trim().replace(/^`|`$/g, ''));
+  const check = cells[0] ?? '';
+  const result = cells.length >= 4 ? cells[cells.length - 2] : '';
+  const evidence = cells.length >= 4 ? cells[cells.length - 1] : '';
+  return /\bhadara\s+task\s+finalize\b/.test(check) && /^Not Run$/i.test(result) && /^TBD$/i.test(evidence);
 }
 
 function normalizeMarkdown(value: string): string {

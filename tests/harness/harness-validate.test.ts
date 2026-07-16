@@ -443,6 +443,33 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues.map((issue) => issue.code)).not.toContain('EVIDENCE_SCAFFOLD_UNCHANGED');
   });
 
+  it('does not treat a planned finalize validation row as scaffold residue', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize validation row');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs
+        .readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')
+        .replace('| Harness done-level fixture | Yes | Passed | Harness result. |', `| \`hadara task finalize --task ${task.id} --execute --auto --json\` | Yes | Not Run | TBD |`),
+      'utf8'
+    );
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.issues.map((issue) => issue.code)).not.toContain('TASK_SCAFFOLD_PLACEHOLDER');
+  });
+
   it('rejects done-level capsules with placeholder TASK metadata dates', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Placeholder metadata');
