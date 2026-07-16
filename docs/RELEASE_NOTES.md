@@ -1,5 +1,28 @@
 # RELEASE_NOTES
 
+## 0.4.6-rc.1
+
+Release candidate refresh after published `0.4.6-rc.0`, focused on installed-package dogfood findings, concurrent task creation safety, first-user documentation workflow, and HADARA-dev Docker validation ergonomics before a stable 0.4.6 decision.
+
+Highlights:
+
+- Validates the published rc.0 package through multi-scenario installed-package dogfood, including delegated toy projects and a larger Quant Battle Arena planning/development scenario.
+- Serializes task creation allocation and managed Task Board writes so multiple external agents can request capsules in parallel while HADARA applies the actual id allocation and board write safely.
+- Improves first-user onboarding docs by keeping init scaffolds minimal and adding `hadara docs add <architecture|decisions|roadmap|security-model|test-strategy|agent-guide>` for optional project-owned docs.
+- Updates generated workflow/AGENTS guidance so agents must keep generated/project-owned `docs/` files current when a task changes their subject, while still allowing direct Markdown authoring plus docs-registry registration.
+- Splits HADARA-dev Docker helper behavior:
+  - `npm run dev:docker-sync-build` now uses a fast minimal build workspace, refreshes `dist`, and prints stage timings.
+  - `npm run dev:docker-check` remains the full validation path over the full workspace.
+- Keeps stage-level progress visible for Docker helper runs, making mounted-workspace latency diagnosable instead of looking like a silent hang.
+
+Boundaries:
+
+- This is a prerelease candidate intended for npm `next`.
+- Stable npm `latest` remains `hadara@0.4.5` until a later stable promotion.
+- T-0615 records rc.0 installed-package dogfood; T-0616 through T-0619 close the concrete blockers and HADARA-dev workflow friction found from that dogfood.
+- T-0620 prepares source metadata, release notes, readiness docs, GitHub Release note artifact, and release validation evidence for `hadara@0.4.6-rc.1`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
+- Post-publish installed-package recycle for `hadara@next` expected `0.4.6-rc.1` remains a separate follow-up capsule after npm/GitHub publication.
+
 ## 0.4.6-rc.0
 
 Release candidate line after stable `0.4.5`, focused on brownfield trust residuals, first-user/delegated onboarding friction, validation capture reliability, and current-state contract cleanup.

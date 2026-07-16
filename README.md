@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.6--rc.0-blue">
+  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.6--rc.1-blue">
   <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.4.5-lightgrey">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
@@ -104,12 +104,12 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.4.6-rc.0`](docs/RELEASE_NOTES.md#046-rc0), validated locally before prerelease publication |
+| Prepared source | [`hadara@0.4.6-rc.1`](docs/RELEASE_NOTES.md#046-rc1), validated locally before prerelease publication |
 | Published stable npm | `hadara@0.4.5` |
 | Published GitHub Release | [`v0.4.5`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.5) |
-| Published RC npm | `hadara@0.4.4-rc.0` on `next` until the operator publishes `0.4.6-rc.0` |
-| Published RC GitHub Release | [`v0.4.4-rc.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.4-rc.0), public prerelease until `v0.4.6-rc.0` is published |
-| RC readiness decision | `0.4.6-rc.0` source/readiness prepared after brownfield trust polish, delegated onboarding dogfood cleanup, validation capture hardening, bootstrap next-work cleanup, and current-state contract hardening |
+| Published RC npm | `hadara@0.4.6-rc.0` on `next` until the operator publishes `0.4.6-rc.1` |
+| Published RC GitHub Release | [`v0.4.6-rc.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.0), public prerelease until `v0.4.6-rc.1` is published |
+| RC readiness decision | `0.4.6-rc.1` source/readiness prepared after rc.0 installed-package dogfood, task-create serialization, first-user docs workflow cleanup, and Docker sync-build fast-path hardening |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |

@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.6-rc.0 | Portable project state. |
-| Latest Completed Task | T-0619 0.4.6 docker sync build fast path and progress diagnostics | Highest Done task id, not close timestamp. |
+| Current Release | 0.4.6-rc.1 | Portable project state. |
+| Latest Completed Task | T-0620 0.4.6-rc.1 release readiness and publish preparation | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0614 prepared 0.4.6-rc.0 source/readiness: npm exact-version availability check passed as unpublished, build/version smoke passed, package smoke and strict release gate passed, and Docker full suite passed with dist freshness. | ev:T-0614:32b52d29237f4b44bf5ff288, ev:T-0614:53e4f099939a499092e13ac4, ev:T-0614:0420632db26e43098bbbe235, ev:T-0614:99b32b5930ea41539c4d4138 |
+| Current Trusted Validation Baseline | T-0620 prepared 0.4.6-rc.1 source/readiness: package metadata and release docs retargeted, npm exact-version availability confirmed unpublished, build/version smoke passed, Docker fast sync-build passed, package smoke passed with known empty-stdout fallback warnings, and strict release gate passed. | ev:T-0620:ac6df15e331f481a81fb1e43, ev:T-0620:a5a1acda3d994e5ca744e219, ev:T-0620:40bc0c052d2a49d0a5a9fef8, ev:T-0620:f37bb4127a4d4ff9a26e7cd7, ev:T-0620:f4077b5fbc514fceb9c19596 |
 
 ### Current Known Problems
 

@@ -620,3 +620,4 @@
 | T-0617 | 0.4.6 first-user onboarding and brownfield quickstart | Done | tasks/T-0617-0-4-6-first-user-onboarding-and-brownfield-quickstart | |
 | T-0618 | 0.4.6 minimal init docs and optional docs add workflow | Done | tasks/T-0618-0-4-6-minimal-init-docs-and-optional-docs-add-workflow | |
 | T-0619 | 0.4.6 docker sync build fast path and progress diagnostics | Done | tasks/T-0619-0-4-6-docker-sync-build-fast-path-and-progress-diagnostics | |
+| T-0620 | 0.4.6-rc.1 release readiness and publish preparation | Done | tasks/T-0620-0-4-6-rc-1-release-readiness-and-publish-preparation | |

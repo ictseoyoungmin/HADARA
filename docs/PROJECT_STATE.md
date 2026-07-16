@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.4.6-rc.0 |
-| Latest Completed Task | T-0619 0.4.6 docker sync build fast path and progress diagnostics |
+| Current Release | 0.4.6-rc.1 |
+| Latest Completed Task | T-0620 0.4.6-rc.1 release readiness and publish preparation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0614 prepared 0.4.6-rc.0 source/readiness: npm exact-version availability check passed as unpublished, build/version smoke passed, package smoke and strict release gate passed, and Docker full suite passed with dist freshness. |
+| Current Trusted Validation Baseline | T-0620 prepared 0.4.6-rc.1 source/readiness: package metadata and release docs retargeted, npm exact-version availability confirmed unpublished, build/version smoke passed, Docker fast sync-build passed, package smoke passed with known empty-stdout fallback warnings, and strict release gate passed. |
 
 ### Current Known Problems
 
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 is published and recycled after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, T-0602 fixed package-smoke generated-init workspace isolation found before publish, and T-0603 verified the public npm package in fresh installed-package dogfood. T-0604 started the 0.4.6 line by closing residual brownfield trust gaps, and T-0605 closes evidence category UX friction plus Go `/vN` inference polish. The next high-value scope is first-user onboarding and brownfield quickstart polish.
+v0.4.5 is published and recycled after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, T-0602 fixed package-smoke generated-init workspace isolation found before publish, and T-0603 verified the public npm package in fresh installed-package dogfood. T-0604 through T-0614 prepared and published `0.4.6-rc.0`; T-0615 through T-0619 dogfooded rc.0 and fixed task-create serialization, first-user docs workflow, and Docker sync-build friction. T-0620 prepares `0.4.6-rc.1` for operator-controlled prerelease publication and installed-package recycle.
 
 | Stage | State | Purpose |
 |---|---|---|
