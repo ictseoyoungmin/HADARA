@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.6 | Portable project state. |
-| Latest Completed Task | T-0630 Fix workflow evidence-jsonl guidance regression | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0631 0.4.6 operator publish record and installed-package recycle | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0629 prepared 0.4.6 stable source/readiness: package metadata and release docs retargeted, built dist reports 0.4.6 and distLooksStale=false, package smoke passed with known empty-stdout fallback warnings, strict release gate passed, and npm exact-version preflight confirmed 0.4.6 unpublished before operator publish. | ev:T-0629:1bbd0107c26d4ff788b22da3, ev:T-0629:5b8a1002bd774ac38481d46c, ev:T-0629:78e72e046cdf499787751567, ev:T-0629:ebdc4d27b38643448ef95176 |
+| Current Trusted Validation Baseline | T-0631 verified 0.4.6 stable publication and consumer recycle: npm registry returned version 0.4.6 with latest=0.4.6 and next=0.4.6-rc.1, GitHub Release v0.4.6 was published publicly, and approved installed-package recycle passed from hadara@latest expected 0.4.6. | ev:T-0631:c31dd280f6af48d6b8918b02, ev:T-0631:511bb997c92146bf8ffaf02e, ev:T-0631:598918ef009146cc95d3a0f0 |
 
 ### Current Known Problems
 

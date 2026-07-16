@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6 |
-| Latest Completed Task | T-0630 Fix workflow evidence-jsonl guidance regression |
+| Latest Completed Task | T-0631 0.4.6 operator publish record and installed-package recycle |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0629 prepared 0.4.6 stable source/readiness: package metadata and release docs retargeted, built dist reports 0.4.6 and distLooksStale=false, package smoke passed with known empty-stdout fallback warnings, strict release gate passed, and npm exact-version preflight confirmed 0.4.6 unpublished before operator publish. |
+| Current Trusted Validation Baseline | T-0631 verified 0.4.6 stable publication and consumer recycle: npm registry returned version 0.4.6 with latest=0.4.6 and next=0.4.6-rc.1, GitHub Release v0.4.6 was published publicly, and approved installed-package recycle passed from hadara@latest expected 0.4.6. |
 
 ### Current Known Problems
 
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 is published and recycled after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, T-0602 fixed package-smoke generated-init workspace isolation found before publish, and T-0603 verified the public npm package in fresh installed-package dogfood. T-0604 through T-0614 prepared and published `0.4.6-rc.0`; T-0615 through T-0619 dogfooded rc.0 and fixed task-create serialization, first-user docs workflow, and Docker sync-build friction. T-0620 prepared and published `0.4.6-rc.1`; T-0621 through T-0628 cleaned up rc.1 release/dogfood findings and verified the finalize close-boundary fix through delegated Quant Battle Arena dogfood. T-0629 prepares `0.4.6` for operator-controlled stable publication and installed-package recycle.
+v0.4.6 is published and recycled. T-0604 through T-0614 prepared and published `0.4.6-rc.0`; T-0615 through T-0619 dogfooded rc.0 and fixed task-create serialization, first-user docs workflow, and Docker sync-build friction. T-0620 prepared and published `0.4.6-rc.1`; T-0621 through T-0628 cleaned up rc.1 release/dogfood findings and verified the finalize close-boundary fix through delegated Quant Battle Arena dogfood. T-0629 prepared stable `0.4.6`; T-0631 records completed npm/GitHub publication and public installed-package recycle.
 
 | Stage | State | Purpose |
 |---|---|---|

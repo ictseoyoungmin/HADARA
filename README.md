@@ -105,11 +105,11 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 | Surface | Status |
 |---|---|
 | Prepared source | [`hadara@0.4.6`](docs/RELEASE_NOTES.md#046), validated for stable publication |
-| Published stable npm | `hadara@0.4.5` until the operator publishes this capsule |
-| Published GitHub Release | [`v0.4.5`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.5) until the operator publishes `v0.4.6` |
+| Published stable npm | `hadara@0.4.6` |
+| Published GitHub Release | [`v0.4.6`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6) |
 | Published RC npm | `hadara@0.4.6-rc.1` on `next` |
 | Published RC GitHub Release | [`v0.4.6-rc.1`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.1), public prerelease |
-| Stable readiness decision | `0.4.6` prepared after rc.1 recycle, delegated first-capsule close failure analysis, finalize close-boundary fixes, and successful delegated Quant Battle Arena dogfood rerun |
+| Stable recycle decision | `0.4.6` published and installed-package recycle passed from `hadara@latest` |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
