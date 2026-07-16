@@ -107,8 +107,8 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 | Prepared source | [`hadara@0.4.6-rc.1`](docs/RELEASE_NOTES.md#046-rc1), validated locally before prerelease publication |
 | Published stable npm | `hadara@0.4.5` |
 | Published GitHub Release | [`v0.4.5`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.5) |
-| Published RC npm | `hadara@0.4.6-rc.0` on `next` until the operator publishes `0.4.6-rc.1` |
-| Published RC GitHub Release | [`v0.4.6-rc.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.0), public prerelease until `v0.4.6-rc.1` is published |
+| Published RC npm | `hadara@0.4.6-rc.1` on `next` |
+| Published RC GitHub Release | [`v0.4.6-rc.1`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.1), public prerelease |
 | RC readiness decision | `0.4.6-rc.1` source/readiness prepared after rc.0 installed-package dogfood, task-create serialization, first-user docs workflow cleanup, and Docker sync-build fast-path hardening |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |

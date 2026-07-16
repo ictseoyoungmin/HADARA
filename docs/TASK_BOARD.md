@@ -622,3 +622,4 @@
 | T-0619 | 0.4.6 docker sync build fast path and progress diagnostics | Done | tasks/T-0619-0-4-6-docker-sync-build-fast-path-and-progress-diagnostics | |
 | T-0620 | 0.4.6-rc.1 release readiness and publish preparation | Done | tasks/T-0620-0-4-6-rc-1-release-readiness-and-publish-preparation | |
 | T-0621 | 0.4.6 rc1 release test fixture contract cleanup | Done | tasks/T-0621-0-4-6-rc1-release-test-fixture-contract-cleanup | |
+| T-0622 | 0.4.6 rc1 operator publish record | Done | tasks/T-0622-0-4-6-rc1-operator-publish-record | |

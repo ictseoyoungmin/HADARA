@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 153,
+  "rev": 155,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0621",
-    "title": "0.4.6 rc1 release test fixture contract cleanup"
+    "id": "T-0622",
+    "title": "0.4.6 rc1 operator publish record"
   },
   "activeTask": null,
   "nextWork": null,
