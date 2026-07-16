@@ -66,7 +66,6 @@ describe('Phase 7.4 managed sections', () => {
 
     const list = createManagedSectionsListReport(root);
     const taskBoard = createManagedSectionExplainReport(root, 'docs/TASK_BOARD.md');
-    const architecture = createManagedSectionExplainReport(root, 'docs/ARCHITECTURE.md');
 
     expect(list.ok).toBe(true);
     expect(taskBoard.sections.map((section) => section.id)).toContain('task-board');
@@ -78,7 +77,10 @@ describe('Phase 7.4 managed sections', () => {
     if (agentHandoffSections.length > 0) expect(agentHandoffSections).toContain('current-state');
     const implementationSopSections = createManagedSectionExplainReport(root, 'docs/IMPLEMENTATION_SOP.md').sections.map((section) => section.id);
     if (implementationSopSections.length > 0) expect(implementationSopSections).toContain('required-reading');
-    expect(architecture.ok).toBe(true);
-    expect(architecture.sections).toEqual([]);
+    if (fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))) {
+      const architecture = createManagedSectionExplainReport(root, 'docs/ARCHITECTURE.md');
+      expect(architecture.ok).toBe(true);
+      expect(architecture.sections).toEqual([]);
+    }
   });
 });

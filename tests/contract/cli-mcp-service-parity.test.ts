@@ -8,6 +8,7 @@ import { createHandoffReadReport, createProjectStateReadReport } from '../../src
 import { createPolicyEvaluateReport } from '../../src/services/policy-service';
 import { createTaskListReport, createTaskReadReport } from '../../src/services/task-read-model';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { writeCanonicalTaskBoard } from '../helpers/task-board';
 
 const roots: string[] = [];
 
@@ -19,7 +20,7 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'HANDOFF_HISTORY.md'), '# HANDOFF_HISTORY\n\n- Previous parity handoff\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n\n- Previous parity validation\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\n- Parity project\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title |\n|---|---|\n', 'utf8');
+  writeCanonicalTaskBoard(dir);
   fs.writeFileSync(path.join(dir, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n\n| Order | Slice |\n|---|---|\n', 'utf8');
   return dir;
 }

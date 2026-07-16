@@ -75,8 +75,9 @@ copy_build_workspace() {
   done
 }
 
-rm -rf "$HADARA_TMP_WORKDIR"
 mkdir -p "$HADARA_TMP_WORKDIR"
+HADARA_TMP_WORKDIR="$(mktemp -d "$HADARA_TMP_WORKDIR/run.XXXXXX")"
+trap '"'"'rm -rf "$HADARA_TMP_WORKDIR"'"'"' EXIT
 if [[ "$HADARA_CHECK_ONLY" == "1" ]]; then
   run_step "copy workspace for full check" copy_full_workspace
 else

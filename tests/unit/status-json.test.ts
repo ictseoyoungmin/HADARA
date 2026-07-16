@@ -8,6 +8,7 @@ import {
   createOpsStatusSummaryReport
 } from '../../src/services/operations-status-service';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { writeCanonicalTaskBoard } from '../helpers/task-board';
 
 const roots: string[] = [];
 
@@ -625,7 +626,7 @@ Phase 0 / Phase 1 boundary.
 `,
     'utf8'
   );
-  fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+  writeCanonicalTaskBoard(root);
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
 }
 
@@ -668,7 +669,7 @@ function writeProfileProjectDocs(root: string, profile: 'basic' | 'standard' | '
     ].join('\n'),
     'utf8'
   );
-  fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+  writeCanonicalTaskBoard(root);
 }
 
 function writeGitBranch(root: string, branch: string): void {

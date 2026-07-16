@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createHermesExportContextReport } from '../../src/cli/hermes-json';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { writeCanonicalTaskBoard } from '../helpers/task-board';
 
 interface CompatibilityFixture {
   schemaVersion: 'hadara.compatibility.fixture.v1';
@@ -30,7 +31,7 @@ function tempProject(): string {
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n\nUse HADARA protocol.\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\n- Compatibility project\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title |\n|---|---|\n', 'utf8');
+  writeCanonicalTaskBoard(dir);
   fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Compatibility handoff\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'HANDOFF_HISTORY.md'), '# HANDOFF_HISTORY\n\n- Older handoff\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n\n- Older validation\n', 'utf8');
