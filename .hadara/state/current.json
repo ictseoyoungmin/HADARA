@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 165,
+  "rev": 167,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0627",
-    "title": "0.4.6 finalize validation placeholder semantics cleanup"
+    "id": "T-0628",
+    "title": "0.4.6 current-package delegated dogfood rerun after finalize fixes"
   },
   "activeTask": null,
   "nextWork": null,

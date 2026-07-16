@@ -628,3 +628,4 @@
 | T-0625 | 0.4.6 rc1 current-package codex dogfood before stable | Done | tasks/T-0625-0-4-6-rc1-current-package-codex-dogfood-before-stable | |
 | T-0626 | 0.4.6 atomic finalize auto close preflight | Done | tasks/T-0626-0-4-6-atomic-finalize-auto-close-preflight | |
 | T-0627 | 0.4.6 finalize validation placeholder semantics cleanup | Done | tasks/T-0627-0-4-6-finalize-validation-placeholder-semantics-cleanup | |
+| T-0628 | 0.4.6 current-package delegated dogfood rerun after finalize fixes | Done | tasks/T-0628-0-4-6-current-package-delegated-dogfood-rerun-after-finalize-fix | |

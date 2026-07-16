@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6-rc.1 |
-| Latest Completed Task | T-0627 0.4.6 finalize validation placeholder semantics cleanup |
+| Latest Completed Task | T-0628 0.4.6 current-package delegated dogfood rerun after finalize fixes |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
