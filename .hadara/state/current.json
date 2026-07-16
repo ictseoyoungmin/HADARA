@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 159,
+  "rev": 161,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0624",
-    "title": "0.4.6 rc1 delegated dogfood findings cleanup"
+    "id": "T-0625",
+    "title": "0.4.6 rc1 current-package codex dogfood before stable"
   },
   "activeTask": null,
   "nextWork": null,
