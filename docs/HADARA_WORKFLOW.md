@@ -281,6 +281,7 @@ For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.t
 
 Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `evidence list` to find durable evidence ids for docs and resolution markers.
 
+Do not hand-edit `evidence.jsonl`.
 Evidence appends are task-scoped and serialized by a local lock. Do not start multiple `validation run` or `evidence add-command` writes for the same task in parallel; JSON evidence responses include `evidence.appendLock` so lock contention and wait time are visible when it happens.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.

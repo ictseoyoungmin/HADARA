@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 170,
+  "rev": 172,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0629",
-    "title": "0.4.6 stable release readiness and publish preparation"
+    "id": "T-0630",
+    "title": "Fix workflow evidence-jsonl guidance regression"
   },
   "activeTask": null,
   "nextWork": null,

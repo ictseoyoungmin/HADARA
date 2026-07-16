@@ -630,3 +630,4 @@
 | T-0627 | 0.4.6 finalize validation placeholder semantics cleanup | Done | tasks/T-0627-0-4-6-finalize-validation-placeholder-semantics-cleanup | |
 | T-0628 | 0.4.6 current-package delegated dogfood rerun after finalize fixes | Done | tasks/T-0628-0-4-6-current-package-delegated-dogfood-rerun-after-finalize-fix | |
 | T-0629 | 0.4.6 stable release readiness and publish preparation | Done | tasks/T-0629-0-4-6-stable-release-readiness-and-publish-preparation | |
+| T-0630 | Fix workflow evidence-jsonl guidance regression | Done | tasks/T-0630-fix-workflow-evidence-jsonl-guidance-regression | |
