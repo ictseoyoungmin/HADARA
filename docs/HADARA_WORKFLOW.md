@@ -73,6 +73,18 @@ After init, review:
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
+### Installed Package Fallback
+
+Most projects should run the installed `hadara` command directly. In environments where npm cannot create executable bin links, such as some Windows-mounted prefixes, install with `--no-bin-links` and invoke the package entrypoint with Node:
+
+```bash
+npm install -g hadara --no-bin-links
+node <npm-prefix>/lib/node_modules/hadara/dist/cli/main.js version --json
+node <npm-prefix>/lib/node_modules/hadara/dist/cli/main.js task status --json
+```
+
+Use `npm prefix -g` to find `<npm-prefix>`. This is an invocation fallback only; generated docs and task command examples still use the normal `hadara ...` form.
+
 ## Generated Docs Completion
 
 `hadara init` creates the minimum docs needed for safe task work. Generated docs are not decorative placeholders. They are current-state surfaces that agents must keep aligned when the task changes their subject.
@@ -209,6 +221,8 @@ Use `--execute --auto` for the ordinary guarded close path. Use the explicit `--
 
 Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle`) were removed from public routing. Use `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
 
+Do not hand-edit lifecycle-owned status fields to force closure. `TASK.md` Identity `Status` and `docs/TASK_BOARD.md` Status are updated by `task create` and `task finalize`. Before finalize, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let finalize move the lifecycle status to Done.
+
 ## Finalize Entry Gate
 
 Before running `hadara task finalize`, all of these must be true:
@@ -241,7 +255,7 @@ HADARA 0.4 Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `ev
 | Finalize execute | Do not edit close-source docs during execute. |
 | After close | Only clarify docs if the task contract did not change; rerun finalize after close-source edits. |
 
-Do not hand-edit `evidence.jsonl`. Treat `EVIDENCE.md` as a CLI-generated projection file.
+Do not hand-edit `TASK.md` Identity `Status`, `docs/TASK_BOARD.md` Status, `evidence.jsonl`, or generated `EVIDENCE.md` projections. Use `task finalize --execute --auto --json` for normal closure; use `task status --task T-XXXX --detail full --json` when the close path is blocked and you need repair guidance.
 
 ## Evidence
 

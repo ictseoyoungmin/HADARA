@@ -85,6 +85,7 @@ export interface ProtocolConsistencyReport {
 const REQUIRED_TASK_FILES = Object.keys(TASK_FILES);
 const DONE_STATUSES = new Set(['done']);
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
 const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
 const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md'];
 
@@ -301,24 +302,8 @@ function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>,
   const docs = [...CORE_PROJECT_DOCS];
   const profile = detectProfile(projectRoot);
   const docSet = getProjectDocSet(projectRoot);
-  const hasAnyStandardDoc = docSet.standard.present.length > 0;
-  const hasAnyGovernedDoc = docSet.governed.present.length > 0;
-  if (profile === 'mixed' || (hasAnyStandardDoc && docSet.standard.missing.length > 0) || (hasAnyGovernedDoc && docSet.governed.missing.length > 0)) {
-    pushIssue(issues, {
-      code: 'PROFILE_DOC_SET_MIXED',
-      severity: 'warning',
-      area: 'profile',
-      message: 'Project profile document set is mixed or partial.',
-      expected: 'complete basic, standard, or governed doc set',
-      actual: `standard missing: ${docSet.standard.missing.join(', ') || 'none'}; governed missing: ${docSet.governed.missing.join(', ') || 'none'}`
-    });
-  }
-  if (profile === 'standard' || profile === 'governed' || hasAnyStandardDoc || hasAnyGovernedDoc) {
-    docs.push(...STANDARD_PROJECT_DOCS);
-  }
-  if (profile === 'governed' || hasAnyGovernedDoc) {
-    docs.push(...GOVERNED_PROJECT_DOCS);
-  }
+  if (profile === 'governed') docs.push(...GOVERNED_MINIMAL_DOCS);
+  docs.push(...docSet.standard.present, ...docSet.governed.present);
 
   for (const relativePath of Array.from(new Set(docs))) {
     checkedDocs.add(relativePath);
@@ -1004,10 +989,12 @@ function findActiveTaskId(rows: TaskBoardRow[], tasks: TaskCapsule[]): string | 
 }
 
 function getProjectDocSet(projectRoot: string): {
+  governedMinimal: { present: string[]; missing: string[] };
   standard: { present: string[]; missing: string[] };
   governed: { present: string[]; missing: string[] };
 } {
   return {
+    governedMinimal: splitDocPresence(projectRoot, GOVERNED_MINIMAL_DOCS),
     standard: splitDocPresence(projectRoot, STANDARD_PROJECT_DOCS),
     governed: splitDocPresence(projectRoot, GOVERNED_PROJECT_DOCS)
   };
@@ -1143,12 +1130,11 @@ function slugify(value: string): string {
 }
 
 function detectProfile(projectRoot: string): 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed' {
-  const hasStandardDocs = ['ARCHITECTURE.md', 'DECISIONS.md', 'ROADMAP.md'].every((file) =>
+  const hasGovernedDocs = fs.existsSync(path.join(projectRoot, 'docs', 'SECURITY_MODEL.md'));
+  const hasStandardDocs = ['ARCHITECTURE.md', 'DECISIONS.md', 'ROADMAP.md'].some((file) =>
     fs.existsSync(path.join(projectRoot, 'docs', file))
   );
-  const hasGovernedDocs = ['SECURITY_MODEL.md'].every((file) => fs.existsSync(path.join(projectRoot, 'docs', file)));
-  if (hasGovernedDocs && hasStandardDocs) return 'governed';
-  if (hasGovernedDocs && !hasStandardDocs) return 'mixed';
+  if (hasGovernedDocs) return 'governed';
   if (hasStandardDocs) return 'standard';
   if (fs.existsSync(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'))) return 'basic';
   return 'unknown';

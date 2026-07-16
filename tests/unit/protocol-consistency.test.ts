@@ -26,6 +26,11 @@ function tempProject(): string {
   );
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
   fs.writeFileSync(
+    path.join(dir, 'docs', 'TASK_BOARD.md'),
+    '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n',
+    'utf8'
+  );
+  fs.writeFileSync(
     path.join(dir, 'docs', 'HADARA_WORKFLOW.md'),
     workflowDocContent(),
     'utf8'
@@ -208,7 +213,7 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports expanded project-doc drift for profile, state, slices, decisions, tests, handoff, and workflow structure', () => {
+  it('reports expanded project-doc drift for state, slices, decisions, tests, handoff, and workflow structure', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
@@ -238,11 +243,9 @@ describe('Docs protocol consistency report', () => {
 
     const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
-    expect(report.ok).toBe(false);
+    expect(report.ok).toBe(true);
     expect(report.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining([
-        'PROFILE_DOC_SET_MIXED',
-        'PROJECT_DOC_MISSING',
         'PROJECT_STATE_ACTIVE_TASK_STALE',
         'PROJECT_HANDOFF_ACTIVE_TASK_STALE',
         'DEVELOPMENT_SLICE_STATUS_DRIFT',
@@ -322,32 +325,23 @@ describe('Profile protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports partial profile document sets with missing-doc remediation guidance', () => {
+  it('allows optional profile docs to be present without requiring the full optional doc set', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
 
     const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
     expect(report.ok).toBe(true);
-    expect(report.summary.detectedProfile).toBe('mixed');
+    expect(report.summary.detectedProfile).toBe('governed');
     expect(report.summary.profile).toMatchObject({
       declared: 'unknown',
-      detected: 'mixed',
+      detected: 'governed',
       target: 'governed',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_REQUIRED_DOC_MISSING'])
-    );
-    expect(report.issues.find((issue) => issue.code === 'PROFILE_REQUIRED_DOC_MISSING')).toMatchObject({
-      severity: 'warning'
-    });
-    const remediation = report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete');
-    expect(remediation).toMatchObject({
-      mode: 'manual',
-      command: 'hadara init upgrade --profile governed --json',
-      targetPaths: expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'])
-    });
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_DOC_SET_MIXED');
+    expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeUndefined();
   });
 
   it('uses declared governed metadata as the target when only standard docs exist', () => {
@@ -363,14 +357,8 @@ describe('Profile protocol consistency report', () => {
       target: 'governed',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(['PROFILE_REQUIRED_DOC_MISSING']));
-    expect(report.issues.find((issue) => issue.path === 'docs/SECURITY_MODEL.md')).toMatchObject({
-      expected: 'docs/SECURITY_MODEL.md present'
-    });
-    expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toMatchObject({
-      command: 'hadara init upgrade --profile governed --json',
-      targetPaths: expect.arrayContaining(['docs/SECURITY_MODEL.md'])
-    });
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
+    expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeUndefined();
   });
 
   it('uses complete governed docs as the target when metadata is missing', () => {
@@ -397,13 +385,14 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.summary.profile).toMatchObject({
       declared: 'basic',
-      detected: 'mixed',
+      detected: 'governed',
       target: 'governed',
       source: 'metadata-and-docset'
     });
     expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_DOC_MISSING'])
+      expect.arrayContaining(['PROFILE_METADATA_DRIFT'])
     );
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
   });
 
   it('uses complete governed docs as the target when metadata declares standard', () => {

@@ -51,6 +51,7 @@ export interface ProtocolProfileSummary {
 }
 
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
 const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
 const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md'];
 
@@ -68,10 +69,10 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
     target: targetProfile,
     source: 'metadata-and-docset' as const
   };
-  const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile);
+  const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile, docSet);
   const missingTargetDocs = requiredDocs.filter((relativePath) => !exists(projectRoot, relativePath));
 
-  for (const relativePath of new Set([...CORE_PROJECT_DOCS, ...STANDARD_PROJECT_DOCS, ...GOVERNED_PROJECT_DOCS])) {
+  for (const relativePath of new Set([...CORE_PROJECT_DOCS, ...GOVERNED_MINIMAL_DOCS, ...STANDARD_PROJECT_DOCS, ...GOVERNED_PROJECT_DOCS])) {
     checkedDocs.add(relativePath);
   }
 
@@ -133,7 +134,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
       }
     }
 
-    const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile);
+    const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile, docSet);
     const agentsMissing = missingRequiredReadingPaths(projectRoot, 'AGENTS.md', requiredReadingDocs);
     if (agentsMissing.length > 0) {
       issues.push({
@@ -141,7 +142,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
         severity: 'warning',
         area: 'required-reading',
         path: 'AGENTS.md',
-        message: `AGENTS Required Reading is missing ${targetProfile} profile paths.`,
+      message: `AGENTS Required Reading is missing generated or present ${targetProfile} profile paths.`,
         expected: agentsMissing.join(', '),
         actual: 'not listed',
         remediationId: 'profile-metadata-align'
@@ -222,11 +223,13 @@ function buildProfileRemediations(
 
 function getProfileDocSet(projectRoot: string): {
   core: { present: string[]; missing: string[] };
+  governedMinimal: { present: string[]; missing: string[] };
   standard: { present: string[]; missing: string[] };
   governed: { present: string[]; missing: string[] };
 } {
   return {
     core: splitDocPresence(projectRoot, CORE_PROJECT_DOCS),
+    governedMinimal: splitDocPresence(projectRoot, GOVERNED_MINIMAL_DOCS),
     standard: splitDocPresence(projectRoot, STANDARD_PROJECT_DOCS),
     governed: splitDocPresence(projectRoot, GOVERNED_PROJECT_DOCS)
   };
@@ -234,12 +237,10 @@ function getProfileDocSet(projectRoot: string): {
 
 function detectProfileFromDocSet(docSet: ReturnType<typeof getProfileDocSet>): ProtocolProfile {
   const standardAny = docSet.standard.present.length > 0;
-  const standardComplete = docSet.standard.missing.length === 0;
   const governedAny = docSet.governed.present.length > 0;
-  const governedComplete = docSet.governed.missing.length === 0;
   const coreAny = docSet.core.present.length > 0;
-  if (governedAny) return governedComplete && standardComplete ? 'governed' : 'mixed';
-  if (standardAny) return standardComplete ? 'standard' : 'mixed';
+  if (governedAny) return 'governed';
+  if (standardAny) return 'standard';
   if (coreAny) return 'basic';
   return 'unknown';
 }
@@ -258,14 +259,15 @@ function highestDocSetProfile(docSet: ReturnType<typeof getProfileDocSet>): Targ
   return 'unknown';
 }
 
-function requiredDocsForProfile(profile: TargetProtocolProfile): string[] {
-  if (profile === 'governed') return [...CORE_PROJECT_DOCS, ...STANDARD_PROJECT_DOCS, ...GOVERNED_PROJECT_DOCS];
-  if (profile === 'standard') return [...CORE_PROJECT_DOCS, ...STANDARD_PROJECT_DOCS];
-  return CORE_PROJECT_DOCS;
+function requiredDocsForProfile(profile: TargetProtocolProfile, docSet: ReturnType<typeof getProfileDocSet>): string[] {
+  const docs = [...CORE_PROJECT_DOCS];
+  if (profile === 'governed') docs.push(...GOVERNED_MINIMAL_DOCS);
+  docs.push(...docSet.standard.present, ...docSet.governed.present);
+  return Array.from(new Set(docs));
 }
 
-function requiredReadingDocsForProfile(profile: TargetProtocolProfile): string[] {
-  return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
+function requiredReadingDocsForProfile(profile: TargetProtocolProfile, docSet: ReturnType<typeof getProfileDocSet>): string[] {
+  return requiredDocsForProfile(profile, docSet).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
 }
 
 function readProfileMetadata(projectRoot: string): { projectState: TargetProtocolProfile | null } {
@@ -303,6 +305,7 @@ function missingRequiredReadingPaths(projectRoot: string, relativePath: string, 
 function describeDocSet(docSet: ReturnType<typeof getProfileDocSet>): string {
   return [
     `core missing: ${docSet.core.missing.join(', ') || 'none'}`,
+    `governed minimal missing: ${docSet.governedMinimal.missing.join(', ') || 'none'}`,
     `standard missing: ${docSet.standard.missing.join(', ') || 'none'}`,
     `governed missing: ${docSet.governed.missing.join(', ') || 'none'}`
   ].join('; ');

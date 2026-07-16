@@ -140,6 +140,17 @@ After init, review:
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
+### Installed Package Fallback
+
+Most projects should run the installed \`hadara\` command directly. In environments where the package manager cannot create executable bin links, such as some Windows-mounted prefixes, use its \`--no-bin-links\` mode and invoke the installed package entrypoint with Node:
+
+\`\`\`bash
+node <installed-hadara-package>/dist/cli/main.js version --json
+node <installed-hadara-package>/dist/cli/main.js task status --json
+\`\`\`
+
+Use your package manager to locate \`<installed-hadara-package>\`. This is an invocation fallback only; generated docs and task command examples still use the normal \`hadara ...\` form.
+
 ## Generated Docs Completion
 
 \`hadara init\` creates the minimum docs needed for safe work. Generated docs are not decorative placeholders. When a task changes the product, architecture, workflow, validation, security boundary, roadmap, or agent operating model, update the matching generated or project-owned \`docs/\` file before finalize.
@@ -258,6 +269,8 @@ Use the explicit \`--plan-hash\` form only when a reviewed dry-run plan needs to
 
 Low-level lifecycle command surfaces (\`task finish\`, \`task ready\`, \`task close\`, \`task audit-close\`, \`task complete\`, and \`task lifecycle\`) were removed from public routing. Use \`task status --task T-XXXX --detail full --json\` for diagnostics and \`task finalize\` for close execution.
 
+Do not hand-edit lifecycle-owned status fields to force closure. \`TASK.md\` Identity \`Status\` and \`docs/TASK_BOARD.md\` Status are updated by \`task create\` and \`task finalize\`. Before finalize, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let finalize move the lifecycle status to Done.
+
 ## Finalize Entry Gate
 
 Before running \`hadara task finalize\`, all of these must be true:
@@ -287,7 +300,7 @@ HADARA 0.4 Task Capsules contain \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, a
 | Finalize execute | Do not edit close-source docs during execute. |
 | After close | Only clarify docs if the task contract did not change; rerun finalize after close-source edits. |
 
-Do not hand-edit \`evidence.jsonl\`. Treat \`EVIDENCE.md\` as a CLI-generated projection file.
+Do not hand-edit \`TASK.md\` Identity \`Status\`, \`docs/TASK_BOARD.md\` Status, \`evidence.jsonl\`, or generated \`EVIDENCE.md\` projections. Use \`task finalize --execute --auto --json\` for normal closure; use \`task status --task T-XXXX --detail full --json\` when the close path is blocked and you need repair guidance.
 
 ## Evidence
 

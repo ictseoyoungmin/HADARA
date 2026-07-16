@@ -125,6 +125,9 @@ describe('init profiles', () => {
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Quickstart');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Minimal Loop');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Generated Docs Completion');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('### Installed Package Fallback');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('`--no-bin-links` mode');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('node <installed-hadara-package>/dist/cli/main.js task status --json');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('hadara docs add agent-guide --json');
 
     const slotRegistry = JSON.parse(read(root, '.hadara/slot-registry.json'));
@@ -195,6 +198,8 @@ describe('init profiles', () => {
     }
     expect(workflow).toContain('Agents must not scan the repository');
     expect(workflow).toContain('Before running `hadara task finalize`, all of these must be true');
+    expect(workflow).toContain('Do not hand-edit lifecycle-owned status fields to force closure.');
+    expect(workflow).toContain('Do not hand-edit `TASK.md` Identity `Status`, `docs/TASK_BOARD.md` Status');
     expect(workflow).toContain('Evidence must reflect real execution results');
     expect(workflow).toContain('For ordinary clean capsules, `task finalize --execute --auto --json` performs the dry-run and current-plan verification internally and records idempotent validation-category readiness evidence before close proof when close evidence is still required.');
     expect(workflow).toContain('hadara slice add --id M1 --title "First slice" --status not-started --json');
