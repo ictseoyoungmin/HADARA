@@ -24,12 +24,12 @@
 #
 # Before running this script, the operator should have already:
 # 1) Version and release docs already point at the intended package version.
-#    For the current 0.4.6-rc.1 release-candidate path:
-#    package.json "version": "0.4.6-rc.1"
+#    For the current 0.4.6 stable path:
+#    package.json "version": "0.4.6"
 #    docs/RELEASE_READINESS.md:
-#    - Current version is `0.4.6-rc.1`.
+#    - Current version is `0.4.6`.
 # 2) Commit the readiness state. Fresh clones only contain committed content.
-# git add -A && git commit -m "T-0620 0.4.6-rc.1 release readiness and publish preparation"
+# git add -A && git commit -m "T-0629 0.4.6 stable release readiness and publish preparation"
 #
 #
 # What it does:
@@ -58,7 +58,7 @@
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
-#   bash scripts/release/prepare-publish-env.sh T-0620
+#   bash scripts/release/prepare-publish-env.sh T-0629
 
 set -euo pipefail
 

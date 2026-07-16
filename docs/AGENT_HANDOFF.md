@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.6-rc.1 | Portable project state. |
-| Latest Completed Task | T-0628 0.4.6 current-package delegated dogfood rerun after finalize fixes | Highest Done task id, not close timestamp. |
+| Current Release | 0.4.6 | Portable project state. |
+| Latest Completed Task | T-0629 0.4.6 stable release readiness and publish preparation | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0620 prepared 0.4.6-rc.1 source/readiness: package metadata and release docs retargeted, npm exact-version availability confirmed unpublished, build/version smoke passed, Docker fast sync-build passed, package smoke passed with known empty-stdout fallback warnings, and strict release gate passed. | ev:T-0620:ac6df15e331f481a81fb1e43, ev:T-0620:a5a1acda3d994e5ca744e219, ev:T-0620:40bc0c052d2a49d0a5a9fef8, ev:T-0620:f37bb4127a4d4ff9a26e7cd7, ev:T-0620:f4077b5fbc514fceb9c19596 |
+| Current Trusted Validation Baseline | T-0629 prepared 0.4.6 stable source/readiness: package metadata and release docs retargeted, built dist reports 0.4.6 and distLooksStale=false, package smoke passed with known empty-stdout fallback warnings, strict release gate passed, and npm exact-version preflight confirmed 0.4.6 unpublished before operator publish. | ev:T-0629:1bbd0107c26d4ff788b22da3, ev:T-0629:5b8a1002bd774ac38481d46c, ev:T-0629:78e72e046cdf499787751567, ev:T-0629:ebdc4d27b38643448ef95176 |
 
 ### Current Known Problems
 

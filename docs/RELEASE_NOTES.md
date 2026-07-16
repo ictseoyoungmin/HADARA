@@ -1,5 +1,45 @@
 # RELEASE_NOTES
 
+## 0.4.6
+
+Stable release after the `0.4.6-rc.0` and `0.4.6-rc.1` lines. This release focuses on first-user trust polish: safe brownfield adoption residuals, delegated-agent onboarding friction, validation capture reliability, concurrent task creation safety, minimal init docs, optional docs creation, and a corrected finalize close boundary for clean first-capsule closure.
+
+Highlights:
+
+- Preserves the 0.4.6 RC brownfield trust improvements:
+  - duplicate `.gitignore` HADARA `local-state` blocks fail closed;
+  - package-smoke empty-stdout fallbacks are visible in evidence;
+  - best-effort project identity inference covers `package.json`, `pyproject.toml`, `Cargo.toml`, and Go module names including `/vN` suffixes.
+- Improves evidence and validation ergonomics for delegated agents:
+  - `test` and `tests` are CLI-only aliases that persist canonical `category=validation`;
+  - unsupported category errors include allowed tokens, aliases, and a schema hint;
+  - validation command capture uses file-backed capture and direct-result recovery for tool-host process issues.
+- Cleans up fresh-project onboarding:
+  - stale bootstrap next-work is retired after the first close;
+  - generated docs explain that project-owned `docs/` files should stay current as work changes their subject;
+  - optional documents are added with `hadara docs add <architecture|decisions|roadmap|security-model|test-strategy|agent-guide>` instead of expanding init profiles.
+- Serializes task id allocation and managed Task Board writes so external agents may request task creation concurrently while HADARA applies the actual write safely.
+- Splits HADARA-dev Docker helper behavior:
+  - `npm run dev:docker-sync-build` is a fast minimal build/dist-refresh path with stage timings;
+  - `npm run dev:docker-check` remains the full validation path.
+- Fixes the stable-blocking first-capsule close boundary found in delegated rc.1 dogfood:
+  - `task finalize --execute --auto` now treats finish writes atomically before close checks;
+  - validation placeholder semantics no longer classify a deliberate pre-close validation row as scaffold residue;
+  - delegated Codex rerun closed both the adoption baseline and a Quant Battle Arena MVP feature capsule without hand-editing lifecycle-owned status fields.
+
+Validation:
+
+- The rc.0 and rc.1 lines passed focused tests, Docker build/sync checks, package smoke, strict release gate, installed-package recycle, and delegated dogfood.
+- T-0625 reproduced the delegated first-capsule close blocker from a current package candidate.
+- T-0626 and T-0627 fixed the finalize boundary and validation placeholder semantics.
+- T-0628 reran delegated Codex dogfood from a clean external governed project and produced a working Quant Battle Arena MVP with valid close proof for both the baseline and feature capsules.
+
+Boundaries:
+
+- This is the stable npm `latest` source preparation for `hadara@0.4.6`.
+- npm publish, GitHub Release publication, token loading, and installed-package recycle remain operator-controlled steps after this source/readiness capsule.
+- Post-publish recycle should install `hadara@latest` and verify expected version `0.4.6`.
+
 ## 0.4.6-rc.1
 
 Release candidate refresh after published `0.4.6-rc.0`, focused on installed-package dogfood findings, concurrent task creation safety, first-user documentation workflow, and HADARA-dev Docker validation ergonomics before a stable 0.4.6 decision.

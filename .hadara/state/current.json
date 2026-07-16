@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 167,
+  "rev": 170,
   "profile": "governed",
-  "currentRelease": "0.4.6-rc.1",
+  "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0628",
-    "title": "0.4.6 current-package delegated dogfood rerun after finalize fixes"
+    "id": "T-0629",
+    "title": "0.4.6 stable release readiness and publish preparation"
   },
   "activeTask": null,
   "nextWork": null,
@@ -34,13 +34,12 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0620 prepared 0.4.6-rc.1 source/readiness: package metadata and release docs retargeted, npm exact-version availability confirmed unpublished, build/version smoke passed, Docker fast sync-build passed, package smoke passed with known empty-stdout fallback warnings, and strict release gate passed.",
+    "summary": "T-0629 prepared 0.4.6 stable source/readiness: package metadata and release docs retargeted, built dist reports 0.4.6 and distLooksStale=false, package smoke passed with known empty-stdout fallback warnings, strict release gate passed, and npm exact-version preflight confirmed 0.4.6 unpublished before operator publish.",
     "evidence": [
-      "ev:T-0620:ac6df15e331f481a81fb1e43",
-      "ev:T-0620:a5a1acda3d994e5ca744e219",
-      "ev:T-0620:40bc0c052d2a49d0a5a9fef8",
-      "ev:T-0620:f37bb4127a4d4ff9a26e7cd7",
-      "ev:T-0620:f4077b5fbc514fceb9c19596"
+      "ev:T-0629:1bbd0107c26d4ff788b22da3",
+      "ev:T-0629:5b8a1002bd774ac38481d46c",
+      "ev:T-0629:78e72e046cdf499787751567",
+      "ev:T-0629:ebdc4d27b38643448ef95176"
     ]
   }
 }
