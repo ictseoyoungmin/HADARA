@@ -17,7 +17,7 @@
 
 It turns non-deterministic agent work into inspectable Task Capsules, append-only evidence, explicit current state, and guarded handoffs—without requiring a cloud service or a full agent runtime.
 
-The live release, task, intent, problem, and validation facts stay in `.hadara/state/current.json`. A new agent session can therefore resume with `hadara session start --json` instead of reconstructing the whole project from historical prose.
+The live release, task, intent, problem, and validation facts stay in `.hadara/state/current.json`. A new human/agent session should start with `hadara status --json` instead of reconstructing the whole project from historical prose.
 
 This repository is both the HADARA source checkout and the HADARA protocol workspace used to build it.
 
@@ -35,14 +35,14 @@ hadara doctor --json
 
 ## Resume A Session
 
-Start from the bounded current-state packet rather than rereading the repository:
+Start from the lifecycle-aware status ingress rather than rereading the repository:
 
 ```bash
-hadara session start --json
+hadara status --json
 hadara task status --task T-XXXX --json
 ```
 
-`session start` reads the structured current-state canon first and routes only the active files needed to continue. Historical docs remain available through the indexes when a task actually needs them.
+`status` reads the structured current-state canon first and returns one primary next action. Use `task status --task T-XXXX --json` for the selected capsule and `context pack --task T-XXXX --json` when you need routed file context. Historical docs remain available through the indexes when a task actually needs them.
 
 Run the stable release without a global install:
 
@@ -186,7 +186,7 @@ Use read-only lifecycle diagnostics when you want a current-stage report, next r
 
 ```bash
 hadara task status --task T-XXXX --json
-hadara session start --task T-XXXX --json
+hadara context pack --task T-XXXX --json
 ```
 
 Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle` are no longer public routes. Use `task finalize` (`--execute --auto` for guarded execution, dry-run for step-level readiness/audit reports) or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task finalize`.

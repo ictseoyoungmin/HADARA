@@ -83,14 +83,14 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
 | Need project-specific docs | Use \`hadara docs add <type> --json\`, or create a Markdown file directly and register it with \`hadara docs register\`. |
-| Need files to inspect | Run \`hadara session start --task T-XXXX --json\` or \`hadara context pack --task T-XXXX --json\`, then read only routed files. |
+| Need files to inspect | Run \`hadara context pack --task T-XXXX --json\`, then read only routed files. |
 | Ready to close | Run \`hadara task finalize --task T-XXXX --execute --auto --json\` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
 
 ## Minimal Loop
 
 \`\`\`text
 1. \`hadara task status --json\`
-2. \`hadara session start --task T-XXXX --json\` when resuming or changing tasks
+2. \`hadara task status --task T-XXXX --json\` when resuming or changing tasks
 3. \`hadara task create "task title" --json\` only when no suitable capsule exists
 4. update \`TASK.md\`
 5. implement the scoped change
@@ -107,7 +107,7 @@ Agents must follow this read order:
 
 | Order | Authority | Allowed Reads |
 |---:|---|---|
-| 1 | HADARA CLI read models | \`session start\`, \`task status\`, \`context pack\`, docs registry/read-map reports. |
+| 1 | HADARA CLI read models | \`status\`, \`task status\`, \`context pack\`, docs registry/read-map reports. |
 | 2 | Command-returned paths | Files, ranges, candidates, or docs explicitly returned by those read models. |
 | 3 | Active Task Capsule | \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, and task-local evidence summaries for the selected task. |
 | 4 | Shared state docs | Only when Required Reading says every session, or when a read model/task explicitly references them. |
@@ -183,14 +183,15 @@ hadara docs add agent-guide --json
 
 ## Session Start
 
-Use session start at the beginning of a work session, after switching tasks, or when project state is unclear.
+Use status at the beginning of a human/agent work session, after switching tasks, or when project state is unclear.
 
 \`\`\`bash
-hadara session start --json
-hadara session start --task T-XXXX --json
+hadara status --json
+hadara task status --task T-XXXX --json
+hadara context pack --task T-XXXX --json
 \`\`\`
 
-Session start is a read model. It does not create tasks, append evidence, warm caches, validate completion, or close work. When the structured current-state canon exists, Session Start exposes it directly so a new session can resume without reconstructing project history.
+\`status\` is the project/session ingress read model. It does not create tasks, append evidence, warm caches, validate completion, or close work. When the structured current-state canon exists, status exposes it directly so a new session can resume without reconstructing project history. Use \`context pack\` only after a task is selected and file context is actually needed.
 
 ## Selecting or Creating Work
 
@@ -766,12 +767,12 @@ hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
-hadara session start --task T-XXXX --json
+hadara context pack --task T-XXXX --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
 hadara task status --task T-XXXX --json
-hadara session start --task T-XXXX --json
+hadara context pack --task T-XXXX --json
 
 # Do the scoped work.
 
@@ -914,7 +915,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 export function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
-    ['`.hadara/state/current.json`', 'Every session unless session start already exposed it', 'Structured release, active/latest task, next intent, current problems, and validation baseline.'],
+    ['`.hadara/state/current.json`', 'Every session unless `hadara status --json` already exposed it', 'Structured release, active/latest task, next intent, current problems, and validation baseline.'],
     ['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.'],
     ['`docs/PROJECT_STATE.md`', 'Every session', 'Human-readable product and phase projection.'],
     ['`docs/TASK_BOARD.md`', 'Every session', 'Task queue, task status, and capsule paths.'],

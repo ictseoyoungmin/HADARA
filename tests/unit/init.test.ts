@@ -158,7 +158,7 @@ describe('init profiles', () => {
     expect(context).toContain('Compact project-local context anchor and read router.');
     expect(context).toContain('not the Required Reading authority');
     expect(context).toContain('| Required reading and safety rules | `AGENTS.md` |');
-    expect(context).toContain('Prefer `hadara session start --json`');
+    expect(context).toContain('Prefer `hadara status --json`');
     expect(context).not.toContain('| Document | When to Read | Purpose |');
     expect(context).not.toContain('## Minimal Loop');
     expect(context).not.toContain('## Task Document Timing');

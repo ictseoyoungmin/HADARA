@@ -37,7 +37,7 @@ HADARA stores the small set of live continuation facts in `.hadara/state/current
 At the start of a later session, run:
 
 ```bash
-hadara session start --json
+hadara status --json
 ```
 
 If the report identifies an active capsule, continue with its bounded status packet:

@@ -335,7 +335,7 @@ This file is not the Required Reading authority, workflow manual, project histor
 | Need | Read |
 |---|---|
 | Required reading and safety rules | \`AGENTS.md\` |
-| Current release, task continuity, next intent, problems, and validation | \`.hadara/state/current.json\` or \`hadara session start --json\` |
+| Current release, task continuity, next intent, problems, and validation | \`hadara status --json\` or \`.hadara/state/current.json\` |
 | Product and phase projection | \`docs/PROJECT_STATE.md\` |
 | Current or next task | \`docs/TASK_BOARD.md\` |
 | HADARA command workflow | \`docs/HADARA_WORKFLOW.md\` |
@@ -344,7 +344,7 @@ This file is not the Required Reading authority, workflow manual, project histor
 
 ## Rule
 
-Prefer \`hadara session start --json\`, \`hadara task status --task T-XXXX --json\`, and \`hadara context pack --task T-XXXX --json\` before broad manual reading.
+Prefer \`hadara status --json\`, \`hadara task status --task T-XXXX --json\`, and \`hadara context pack --task T-XXXX --json\` before broad manual reading.
 
 ## Project-Specific Notes
 

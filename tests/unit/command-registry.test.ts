@@ -34,7 +34,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'context.slice',
   'context.cache.status',
   'context.cache.warm',
-  'session.start',
   'debt.list',
   'debt.show',
   'protocol.doctor',

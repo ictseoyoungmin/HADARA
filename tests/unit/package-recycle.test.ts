@@ -88,7 +88,7 @@ describe('installed package recycle', () => {
       'init-project',
       'task-create',
       'task-status',
-      'session-start',
+      'status-ingress',
       'task-finalize',
       'context-pack',
       'context-slice',
@@ -117,7 +117,7 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'session start --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
@@ -188,7 +188,7 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'session start --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context graph --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
@@ -223,7 +223,7 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'session start --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));

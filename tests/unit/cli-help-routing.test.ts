@@ -12,7 +12,6 @@ import { handleReleaseCloseoutCommand } from '../../src/cli/release-closeout';
 import { handleReleaseDryRunCommand } from '../../src/cli/release-dry-run';
 import { handleReleaseGateCommand } from '../../src/cli/release-gate';
 import { handleReleasePublishCommand } from '../../src/cli/release-publish';
-import { handleSessionCommand } from '../../src/cli/session';
 import { handleSliceCommand } from '../../src/cli/slice';
 import { handleTaskCommand } from '../../src/cli/task';
 import { handleValidationCommand } from '../../src/cli/validation';
@@ -62,8 +61,6 @@ describe('command-level help routing', () => {
     expect(await handleHarnessCommand({ args: ['harness', 'validate', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('harness.validate');
 
-    expect(handleSessionCommand({ args: ['session', 'start', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
-    expect(latestOutput()).toContain('session.start');
     expect(process.exitCode).toBeUndefined();
   });
 

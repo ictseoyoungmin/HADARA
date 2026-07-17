@@ -283,7 +283,7 @@ function mergeAgentsRequiredReading(content: string | null, profile: InitProfile
 
 function agentsRequiredReadingRowsForProfile(profile: InitProfile): Array<{ document: string; when: string; purpose: string }> {
   const rows: Array<{ document: string; when: string; purpose: string }> = [
-    { document: '`.hadara/state/current.json`', when: 'Every session unless session start already exposed it', purpose: 'Structured current release, task continuity, next intent, problems, and validation baseline.' },
+    { document: '`.hadara/state/current.json`', when: 'Every session unless `hadara status --json` already exposed it', purpose: 'Structured current release, task continuity, next intent, problems, and validation baseline.' },
     { document: '`docs/PROJECT_STATE.md`', when: 'Every session', purpose: 'Current product and capability state.' },
     { document: '`docs/TASK_BOARD.md`', when: 'Every session', purpose: 'Current task queue and status.' },
     { document: '`docs/HADARA_WORKFLOW.md`', when: 'Every session', purpose: 'Workflow rules and command-surface routing.' }

@@ -661,7 +661,7 @@ Before starting work:
 
 1. Read \`.hadara/context/HADARA_CONTEXT.md\`.
 2. Run \`hadara task status --json\`.
-3. Use \`hadara session start --task T-XXXX --json\` for the selected capsule.
+3. Use \`hadara task status --task T-XXXX --json\` for the selected capsule.
 `
     };
   }
