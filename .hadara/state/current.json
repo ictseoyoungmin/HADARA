@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 174,
+  "rev": 176,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0631",
-    "title": "0.4.6 operator publish record and installed-package recycle"
+    "id": "T-0632",
+    "title": "0.5.x implementation capsule plan split"
   },
   "activeTask": null,
   "nextWork": null,

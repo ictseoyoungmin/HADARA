@@ -1947,6 +1947,237 @@
       }
     },
     {
+      "path": "docs/specs/0.5/0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md",
+      "title": "HADARA 0.5.0 Status Ingress and Evaluation Development Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Proposed public status schemas and routing migration"
+      }
+    },
+    {
+      "path": "docs/specs/0.5/0.5.1/HADARA_0_5_1_Task_Close_Transaction_Development_Plan.md",
+      "title": "HADARA 0.5.1 Task Close Transaction Development Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Proposed close transaction, locking, recovery, and proof contract"
+      }
+    },
+    {
+      "path": "docs/specs/0.5/0.5.2/HADARA_0_5_2_Public_Close_Migration_Development_Plan.md",
+      "title": "HADARA 0.5.2 Public Close Migration Development Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Proposed command portfolio and compatibility migration"
+      }
+    },
+    {
+      "path": "docs/specs/0.5/0.5.3/HADARA_0_5_3_Structured_State_and_Projection_Development_Plan.md",
+      "title": "HADARA 0.5.3 Structured State and Projection Development Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Proposed structured-state and projection ownership expansion"
+      }
+    },
+    {
+      "path": "docs/specs/0.5/all/HADARA_0_5_X_Combined_Agent_Loop_Plan.md",
+      "title": "HADARA 0.5.x Combined Agent Loop Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "conditional-reference",
+      "authority": "reference-only",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Proposed combined source retained for traceability"
+      }
+    },
+    {
+      "path": "docs/specs/0.5/all/HADARA_0_5_X_Combined_Lifecycle_Usecases.md",
+      "title": "HADARA 0.5.x Combined Lifecycle and Use Cases",
+      "owner": "project",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "conditional-reference",
+      "authority": "reference-only",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Proposed combined acceptance source retained for traceability"
+      }
+    },
+    {
+      "path": "docs/specs/0.5/README.md",
+      "title": "HADARA 0.5.x Development Plan Index",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Cross-release implementation sequencing and promotion gates"
+      }
+    },
+    {
       "path": "docs/specs/0.5/state-first/RFC.md",
       "title": "0.5 state-first candidate RFC",
       "owner": "hadara-docs",
@@ -2057,7 +2288,7 @@
       }
     }
   ],
-  "generatedAt": "2026-07-13T12:04:34.075Z",
+  "generatedAt": "2026-07-17T10:21:15.323Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"

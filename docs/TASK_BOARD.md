@@ -632,3 +632,4 @@
 | T-0629 | 0.4.6 stable release readiness and publish preparation | Done | tasks/T-0629-0-4-6-stable-release-readiness-and-publish-preparation | |
 | T-0630 | Fix workflow evidence-jsonl guidance regression | Done | tasks/T-0630-fix-workflow-evidence-jsonl-guidance-regression | |
 | T-0631 | 0.4.6 operator publish record and installed-package recycle | Done | tasks/T-0631-0-4-6-operator-publish-record-and-installed-package-recycle | |
+| T-0632 | 0.5.x implementation capsule plan split | Done | tasks/T-0632-0-5-x-implementation-capsule-plan-split | |
