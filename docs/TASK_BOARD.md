@@ -643,3 +643,4 @@
 | T-0640 | 0.5.0 init output redirection greenfield trap hardening | Done | tasks/T-0640-0-5-0-init-output-redirection-greenfield-trap-hardening | |
 | T-0641 | 0.5.0 close-time handoff workflow guidance | Done | tasks/T-0641-0-5-0-close-time-handoff-workflow-guidance | |
 | T-0642 | 0.5.0 task handoff identity timestamp sync | Done | tasks/T-0642-0-5-0-task-handoff-identity-timestamp-sync | |
+| T-0643 | 0.5.0 latest dist delegated Codex dogfood | Done | tasks/T-0643-0-5-0-latest-dist-delegated-codex-dogfood | |
