@@ -10,6 +10,7 @@ import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createTaskListReport, formatTaskListReport } from './task-json';
 import { createTaskSelectionStatusV2Report, formatTaskSelectionStatusV2Report } from '../services/task-selection-status-v2';
+import { createTaskStatusV2Report, formatTaskStatusV2Report } from '../services/task-status-v2';
 
 export interface TaskCommandInput {
   args: string[];
@@ -152,7 +153,19 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     }
     const detail = getStringOption(input.args, '--detail');
     if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
-    const report = createTaskWorkbenchReport(input.projectRoot, id, new Date(), { detail: detail === 'full' ? 'full' : 'fast' });
+    const workbenchOptions = { detail: detail === 'full' ? 'full' as const : 'fast' as const };
+    if (!compat && !summaryJsonOutput) {
+      const report = createTaskStatusV2Report(input.projectRoot, id, new Date(), workbenchOptions);
+      attachCliDiagnostics(report, timer, 'task.status');
+      if (input.jsonOutput) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        console.log(formatTaskStatusV2Report(report));
+      }
+      if (!report.ok) process.exitCode = 6;
+      return true;
+    }
+    const report = withTaskWorkbenchV1CompatibilityMetadata(createTaskWorkbenchReport(input.projectRoot, id, new Date(), workbenchOptions));
     attachCliDiagnostics(report, timer, 'task.status');
     if (summaryJsonOutput) {
       console.log(JSON.stringify(createTaskStatusSummaryReport(report), null, 2));
@@ -192,6 +205,23 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+function withTaskWorkbenchV1CompatibilityMetadata<T extends TaskWorkbenchReport>(report: T): T & {
+  compatibility: {
+    defaultSchemaVersion: 'hadara.task.status.v2';
+    recommendedCommand: string;
+    migration: string;
+  };
+} {
+  return {
+    ...report,
+    compatibility: {
+      defaultSchemaVersion: 'hadara.task.status.v2',
+      recommendedCommand: `hadara task status --task ${report.taskId} --json`,
+      migration: 'This v1 selected-task workbench report is an explicit 0.5.x compatibility route for legacy consumers. New agents should use the default selected-task status v2 report.'
+    }
+  };
 }
 
 function withTaskSelectionV1CompatibilityMetadata<T extends TaskStatusSelectionReport>(report: T): T & {

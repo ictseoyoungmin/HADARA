@@ -636,3 +636,4 @@
 | T-0633 | 0.5.0 preflight feedback cleanup | Done | tasks/T-0633-0-5-0-preflight-feedback-cleanup | |
 | T-0634 | 0.5.0 status ingress and evaluation | Done | tasks/T-0634-0-5-0-status-ingress-and-evaluation | |
 | T-0635 | 0.5.0 task-selection status v2 projection | Done | tasks/T-0635-0-5-0-task-selection-status-v2-projection | |
+| T-0636 | 0.5.0 selected-task status v2 cockpit | Done | tasks/T-0636-0-5-0-selected-task-status-v2-cockpit | |

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 182,
+  "rev": 184,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0635",
-    "title": "0.5.0 task-selection status v2 projection"
+    "id": "T-0636",
+    "title": "0.5.0 selected-task status v2 cockpit"
   },
   "activeTask": null,
   "nextWork": null,
