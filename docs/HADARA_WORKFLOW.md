@@ -60,6 +60,12 @@ hadara init --profile governed --json
 hadara init doctor --json
 ```
 
+If you need to save init JSON before the scaffold exists, prefer writing it outside
+the target directory, for example `hadara init --json > /tmp/hadara-init.json`.
+HADARA tolerates a zero-byte `init.json` that a shell creates before the command
+starts, but a non-empty output file in the project root is treated as existing
+project content.
+
 After init, review:
 
 | Step | Document | Purpose |

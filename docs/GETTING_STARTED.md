@@ -28,6 +28,9 @@ hadara init --profile standard --json
 hadara doctor --json
 ```
 
+If you capture init JSON before the scaffold exists, write it outside the target
+directory, for example `hadara init --json > /tmp/hadara-init.json`.
+
 Use `basic` for small projects and `governed` for long-lived projects with roadmap, security, or release governance needs.
 
 ## Resume Without Reconstructing History

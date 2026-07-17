@@ -275,6 +275,43 @@ describe('init profiles', () => {
     expect(exists(root, 'docs/PROJECT_STATE.md')).toBe(false);
   });
 
+  it('ignores zero-byte init output placeholders when classifying a new project', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'init.json'), '', 'utf8');
+
+    const report = initProject(root, 'basic', { silent: true });
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.init.v1',
+      command: 'init',
+      ok: true,
+      profile: 'basic'
+    });
+    expect(exists(root, 'AGENTS.md')).toBe(true);
+    expect(exists(root, 'docs/PROJECT_STATE.md')).toBe(true);
+    expect(read(root, 'init.json')).toBe('');
+  });
+
+  it('keeps non-empty init output files as brownfield signals', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'init.json'), '{"previous":true}\n', 'utf8');
+
+    const report = initProject(root, 'basic', { silent: true });
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.init.adoption.v1',
+      command: 'init',
+      ok: true,
+      mode: 'dry-run',
+      repositoryState: 'brownfield'
+    });
+    expect((report as any).actions).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'init.json', disposition: 'preserve' })
+    ]));
+    expect(exists(root, 'AGENTS.md')).toBe(false);
+  });
+
   it('infers brownfield project identity and version from common non-npm manifests', () => {
     const pythonRoot = tempProject();
     fs.writeFileSync(path.join(pythonRoot, 'pyproject.toml'), [

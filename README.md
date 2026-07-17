@@ -62,6 +62,9 @@ hadara init --profile standard --json
 hadara doctor --json
 ```
 
+If you capture init JSON before the scaffold exists, write it outside the target
+directory, for example `hadara init --json > /tmp/hadara-init.json`.
+
 Profiles:
 
 | Profile | Use When |

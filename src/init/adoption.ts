@@ -57,6 +57,11 @@ const MEANINGFUL_ROOT_ENTRY_IGNORES = new Set([
   '.DS_Store',
   'node_modules'
 ]);
+const ZERO_BYTE_INIT_OUTPUT_PLACEHOLDERS = new Set([
+  'init.json',
+  'hadara-init.json',
+  'hadara-init-report.json'
+]);
 const PROJECT_REFERENCE_DOCS = new Set(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md', 'docs/SECURITY_MODEL.md']);
 const CORE_PATCH_DOCS = new Set(['.gitignore', 'AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/AGENT_HANDOFF.md']);
 
@@ -192,9 +197,20 @@ function readMeaningfulRootEntries(projectRoot: string): string[] {
     return fs.readdirSync(projectRoot)
       .filter((entry) => !MEANINGFUL_ROOT_ENTRY_IGNORES.has(entry))
       .filter((entry) => !entry.startsWith('.npm'))
+      .filter((entry) => !isZeroByteInitOutputPlaceholder(projectRoot, entry))
       .sort();
   } catch {
     return [];
+  }
+}
+
+function isZeroByteInitOutputPlaceholder(projectRoot: string, entry: string): boolean {
+  if (!ZERO_BYTE_INIT_OUTPUT_PLACEHOLDERS.has(entry)) return false;
+  try {
+    const stat = fs.lstatSync(path.join(projectRoot, entry));
+    return stat.isFile() && stat.size === 0;
+  } catch {
+    return false;
   }
 }
 
