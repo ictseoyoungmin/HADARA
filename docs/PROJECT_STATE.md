@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6 |
-| Latest Completed Task | T-0637 0.5.0 remove public session start ingress |
+| Latest Completed Task | T-0638 0.5.0 cross-profile status ingress dogfood |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

@@ -638,3 +638,4 @@
 | T-0635 | 0.5.0 task-selection status v2 projection | Done | tasks/T-0635-0-5-0-task-selection-status-v2-projection | |
 | T-0636 | 0.5.0 selected-task status v2 cockpit | Done | tasks/T-0636-0-5-0-selected-task-status-v2-cockpit | |
 | T-0637 | 0.5.0 remove public session start ingress | Done | tasks/T-0637-0-5-0-remove-public-session-start-ingress | |
+| T-0638 | 0.5.0 cross-profile status ingress dogfood | Done | tasks/T-0638-0-5-0-cross-profile-status-ingress-dogfood | |

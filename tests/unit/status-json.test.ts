@@ -82,6 +82,35 @@ describe('Operations Status JSON', () => {
     });
   });
 
+  it('surfaces malformed current-state canon in project status v2', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), '{not-json', 'utf8');
+
+    const report = createProjectStatusV2Report(root);
+
+    expect(report.phase).toBe('degraded');
+    expect(report.health).toBe('blocked');
+    expect(report.evaluations).toContainEqual(
+      expect.objectContaining({
+        id: 'current-state',
+        state: 'invalid',
+        health: 'blocked'
+      })
+    );
+    expect(report.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_INVALID_JSON', severity: 'error' })
+      ])
+    );
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'inspect-status-full',
+      command: 'hadara status --detail full --json',
+      writes: false
+    });
+  });
+
   it('builds a dashboard-ready status snapshot from project docs and task capsules', () => {
     const root = tempProject();
     writeProjectDocs(root);

@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.6 | Portable project state. |
-| Latest Completed Task | T-0637 0.5.0 remove public session start ingress | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0638 0.5.0 cross-profile status ingress dogfood | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |

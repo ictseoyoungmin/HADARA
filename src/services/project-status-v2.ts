@@ -92,8 +92,13 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
     maxTextLength: 240
   });
   const taskSelection = createTaskSelectionReport(projectRoot);
-  const phase = determineProjectPhase({ currentState, opsStatus, taskSelection });
-  const health = determineHealth(opsStatus, phase);
+  const currentStateIssues = currentStateRead.issues.map((issue) => ({
+    severity: issue.severity,
+    code: issue.code,
+    message: issue.message
+  }));
+  const phase = determineProjectPhase({ currentState, currentStateIssues, opsStatus, taskSelection });
+  const health = determineHealth(opsStatus, phase, currentStateIssues);
   const primaryNextAction = buildPrimaryNextAction({ phase, currentState, taskSelection, health });
 
   return {
@@ -106,7 +111,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
     phase,
     health,
     readiness: buildReadiness(phase, health, primaryNextAction),
-    evaluations: buildEvaluations({ currentStatePresent: Boolean(currentState), opsStatus, taskSelection }),
+    evaluations: buildEvaluations({ currentStateRead, opsStatus, taskSelection }),
     primaryNextAction,
     compatibility: {
       legacySchemaVersion: 'hadara.ops.status.v1',
@@ -130,7 +135,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
         issues: opsStatus.issues.length
       }
     },
-    issues: opsStatus.issues
+    issues: [...currentStateIssues, ...opsStatus.issues]
   };
 }
 
@@ -147,9 +152,11 @@ export function formatProjectStatusV2Report(report: ProjectStatusV2Report): stri
 
 function determineProjectPhase(input: {
   currentState: ReturnType<typeof readProjectCurrentState>['state'];
+  currentStateIssues: ProjectStatusV2Report['issues'];
   opsStatus: OpsStatusReport;
   taskSelection: ReturnType<typeof createTaskSelectionReport>;
 }): ProjectStatusPhase {
+  if (input.currentStateIssues.some((issue) => issue.severity === 'error')) return 'degraded';
   if (input.opsStatus.issues.some((issue) => issue.code === 'PROJECT_STATE_MISSING' && input.opsStatus.issues.some((candidate) => candidate.code === 'TASK_BOARD_MISSING'))) return 'uninitialized';
   if (input.currentState?.activeTask?.id) return 'active-work';
   if (input.currentState?.nextWork?.state === 'waiting-for-operator') return 'adoption-review';
@@ -159,7 +166,8 @@ function determineProjectPhase(input: {
   return 'idle';
 }
 
-function determineHealth(opsStatus: OpsStatusReport, phase: ProjectStatusPhase): ProjectStatusHealth {
+function determineHealth(opsStatus: OpsStatusReport, phase: ProjectStatusPhase, currentStateIssues: ProjectStatusV2Report['issues']): ProjectStatusHealth {
+  if (currentStateIssues.some((issue) => issue.severity === 'error')) return 'blocked';
   if (opsStatus.health === 'error') return 'blocked';
   if (phase === 'uninitialized') return 'attention';
   if (opsStatus.health === 'degraded') return 'degraded';
@@ -175,6 +183,9 @@ function buildPrimaryNextAction(input: {
   if (input.currentState?.activeTask?.id) {
     const taskId = input.currentState.activeTask.id;
     return readOnlyCommandAction('inspect-active-task', `hadara task status --task ${taskId} --json`, `Inspect active task ${taskId}.`);
+  }
+  if (input.health === 'blocked') {
+    return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect blocking status diagnostics.');
   }
   const recommendation = input.taskSelection.recommendations[0];
   if (recommendation?.taskCapsulePresent && recommendation.taskId !== 'TBD') {
@@ -225,16 +236,18 @@ function buildReadiness(phase: ProjectStatusPhase, health: ProjectStatusHealth, 
 }
 
 function buildEvaluations(input: {
-  currentStatePresent: boolean;
+  currentStateRead: ReturnType<typeof readProjectCurrentState>;
   opsStatus: OpsStatusReport;
   taskSelection: ReturnType<typeof createTaskSelectionReport>;
 }): StatusEvaluationV1[] {
+  const currentStateIssue = input.currentStateRead.issues[0] ?? null;
+  const currentStatePresent = input.currentStateRead.present && Boolean(input.currentStateRead.state);
   return [
     {
       id: 'current-state',
-      state: input.currentStatePresent ? 'evaluated' : 'unavailable',
-      health: input.currentStatePresent ? 'ok' : 'attention',
-      summary: input.currentStatePresent ? 'Structured current-state canon was read.' : 'Structured current-state canon is unavailable; status used compatibility sources.'
+      state: currentStateIssue ? 'invalid' : currentStatePresent ? 'evaluated' : 'unavailable',
+      health: currentStateIssue?.severity === 'error' ? 'blocked' : currentStatePresent ? 'ok' : 'attention',
+      summary: currentStateIssue ? currentStateIssue.message : currentStatePresent ? 'Structured current-state canon was read.' : 'Structured current-state canon is unavailable; status used compatibility sources.'
     },
     {
       id: 'task-selection',
