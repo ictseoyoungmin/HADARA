@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import packageJson from '../../package.json';
 
 const scriptPath = path.join(process.cwd(), 'scripts', 'context-routing-e2e-smoke.mjs');
+const canSpawnNode = spawnSync(process.execPath, ['--version'], { encoding: 'utf8' }).error?.code !== 'EPERM';
+const spawnIt = canSpawnNode ? it : it.skip;
 
 describe('context routing e2e smoke script', () => {
   it('is wired as a package script and preserves read-only cache boundary checks', () => {
@@ -23,7 +25,7 @@ describe('context routing e2e smoke script', () => {
     expect(source).toContain("child.kill('SIGKILL')");
   });
 
-  it('runs the fast workload profile through a fake built CLI and reports a compact pass summary', () => {
+  spawnIt('runs the fast workload profile through a fake built CLI and reports a compact pass summary', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-routing-smoke-test-'));
     try {
       const fakeCliPath = path.join(root, 'fake-cli.mjs');
@@ -63,7 +65,7 @@ describe('context routing e2e smoke script', () => {
     }
   });
 
-  it('can run the full workload profile when the operator explicitly selects it', () => {
+  spawnIt('can run the full workload profile when the operator explicitly selects it', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-routing-smoke-full-test-'));
     try {
       const fakeCliPath = path.join(root, 'fake-cli.mjs');

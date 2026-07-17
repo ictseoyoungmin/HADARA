@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 188,
+  "rev": 190,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0638",
-    "title": "0.5.0 cross-profile status ingress dogfood"
+    "id": "T-0639",
+    "title": "0.5.0 host spawn EPERM test guard hardening"
   },
   "activeTask": null,
   "nextWork": null,

@@ -109,7 +109,8 @@ describe('Dogfooding E2E fixture', () => {
   });
 
   const builtCliPath = path.join(process.cwd(), 'dist', 'cli', 'main.js');
-  const runIfBuilt = fs.existsSync(builtCliPath) ? it : it.skip;
+  const canSpawnNode = spawnSync(process.execPath, ['--version'], { encoding: 'utf8' }).error?.code !== 'EPERM';
+  const runIfBuilt = fs.existsSync(builtCliPath) && canSpawnNode ? it : it.skip;
 
   runIfBuilt('smokes the dogfooding replay through built CLI JSON surfaces only', () => {
     const fixture = readFixture();

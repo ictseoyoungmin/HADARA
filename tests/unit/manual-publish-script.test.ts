@@ -6,8 +6,22 @@ import { describe, expect, it } from 'vitest';
 describe('manual publish release script', () => {
   const scriptPath = path.join(process.cwd(), 'scripts', 'release', 'manual-publish-rc.sh');
   const prepareScriptPath = path.join(process.cwd(), 'scripts', 'release', 'prepare-publish-env.sh');
+  const canSpawnBash = (() => {
+    try {
+      execFileSync('bash', ['--version'], { stdio: 'pipe' });
+      return true;
+    } catch (error) {
+      return !(
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as NodeJS.ErrnoException).code === 'EPERM'
+      );
+    }
+  })();
+  const spawnIt = canSpawnBash ? it : it.skip;
 
-  it('passes shell syntax validation', () => {
+  spawnIt('passes shell syntax validation', () => {
     expect(() => execFileSync('bash', ['-n', scriptPath], { stdio: 'pipe' })).not.toThrow();
   });
 

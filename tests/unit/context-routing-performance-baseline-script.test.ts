@@ -5,6 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
 const scriptPath = path.join(process.cwd(), 'scripts', 'context-routing-performance-baseline.mjs');
+const canSpawnNode = spawnSync(process.execPath, ['--version'], { encoding: 'utf8' }).error?.code !== 'EPERM';
+const spawnIt = canSpawnNode ? it : it.skip;
 
 describe('context routing performance baseline script', () => {
   it('records timeout kill diagnostics and escalates stuck children', () => {
@@ -19,7 +21,7 @@ describe('context routing performance baseline script', () => {
     expect(source).toContain('processError');
   });
 
-  it('supports advisory threshold comparison for regression fixtures', () => {
+  spawnIt('supports advisory threshold comparison for regression fixtures', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-perf-script-test-'));
     try {
       const fakeCliPath = path.join(root, 'fake-cli.mjs');
