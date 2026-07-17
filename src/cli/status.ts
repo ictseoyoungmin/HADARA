@@ -4,6 +4,7 @@ import {
   createOpsStatusSummaryReport,
   formatOpsStatusReport
 } from '../services/operations-status-service';
+import { createProjectStatusV2Report, formatProjectStatusV2Report } from '../services/project-status-v2';
 import { CliArgsError, getFlag, getIntegerOption, getStringOption } from './args';
 
 export interface StatusCommandInput {
@@ -21,6 +22,8 @@ export function handleStatusCommand(input: StatusCommandInput): boolean {
 function printStatus(input: StatusCommandInput): void {
   const detail = getStringOption(input.args, '--detail', 'fast');
   if (detail !== 'fast' && detail !== 'full') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--detail must be fast or full');
+  const compat = getStringOption(input.args, '--compat');
+  if (compat && compat !== 'v1') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--compat must be v1');
   const stateIssueLimit = getIntegerOption(input.args, '--state-issue-limit', { fallback: 10, min: 0, max: 100 }) ?? 10;
 
   if (getFlag(input.args, '--state-only')) {
@@ -49,6 +52,16 @@ function printStatus(input: StatusCommandInput): void {
     return;
   }
 
+  if (!compat) {
+    const report = createProjectStatusV2Report(input.projectRoot);
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatProjectStatusV2Report(report));
+    }
+    return;
+  }
+
   const report = createOpsStatusReport(input.projectRoot, detail === 'full'
     ? { includeStateConsistency: true, stateIssueLimit }
     : {
@@ -58,9 +71,33 @@ function printStatus(input: StatusCommandInput): void {
         taskStatusSource: 'task-board',
         maxTextLength: 240
       });
+  const compatReport = withStatusV1CompatibilityMetadata(report);
   if (input.jsonOutput) {
-    console.log(JSON.stringify(report, null, 2));
+    console.log(JSON.stringify(compatReport, null, 2));
   } else {
-    console.log(formatOpsStatusReport(report));
+    console.log([
+      formatOpsStatusReport(report),
+      '',
+      '[HADARA] Compatibility',
+      'default: hadara status --json emits hadara.project.status.v2',
+      'legacy: this v1 report is available through hadara status --compat v1 --json during 0.5.x'
+    ].join('\n'));
   }
+}
+
+function withStatusV1CompatibilityMetadata<T extends { schemaVersion: string }>(report: T): T & {
+  compatibility: {
+    defaultSchemaVersion: 'hadara.project.status.v2';
+    recommendedCommand: 'hadara status --json';
+    migration: string;
+  };
+} {
+  return {
+    ...report,
+    compatibility: {
+      defaultSchemaVersion: 'hadara.project.status.v2',
+      recommendedCommand: 'hadara status --json',
+      migration: 'This v1 status report is an explicit 0.5.x compatibility route for legacy dashboard/read-model consumers. New agents should use hadara status --json.'
+    }
+  };
 }

@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6 |
-| Latest Completed Task | T-0633 0.5.0 preflight feedback cleanup |
+| Latest Completed Task | T-0634 0.5.0 status ingress and evaluation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

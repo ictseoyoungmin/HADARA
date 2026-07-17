@@ -3,10 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleStatusCommand } from '../../src/cli/status';
+import { assertSchema } from '../../src/core/schema';
 import {
   createOpsStatusReport,
   createOpsStatusSummaryReport
 } from '../../src/services/operations-status-service';
+import { createProjectStatusV2Report } from '../../src/services/project-status-v2';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { writeCanonicalTaskBoard } from '../helpers/task-board';
 
@@ -24,6 +26,62 @@ afterEach(() => {
 });
 
 describe('Operations Status JSON', () => {
+  it('emits lifecycle-aware project status v2 as the default status ingress', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+
+    const report = createProjectStatusV2Report(root);
+
+    assertSchema('hadara.project.status.v2', report);
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.project.status.v2',
+      command: 'status',
+      ok: true,
+      scope: 'project',
+      health: 'ok',
+      compatibility: {
+        legacySchemaVersion: 'hadara.ops.status.v1',
+        legacyCommand: 'hadara status --compat v1 --json'
+      }
+    });
+    expect(report.readiness).toMatchObject({
+      intent: expect.any(String),
+      status: expect.any(String),
+      reason: expect.any(String)
+    });
+    expect(report.evaluations.length).toBeGreaterThan(0);
+  });
+
+  it('routes active current-state work to task status without duplicating local task phase', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
+      schemaVersion: 'hadara.projectCurrentState.v1',
+      rev: 1,
+      profile: 'governed',
+      currentRelease: '0.5.0-dev',
+      latestCompletedTaskBasis: 'highest-done-task-id',
+      latestCompletedTask: null,
+      activeTask: { id: 'T-0002', title: 'Active task' },
+      nextWork: null,
+      nextOperatorIntent: 'Inspect active task.',
+      currentKnownProblems: [],
+      validationBaseline: { summary: 'Fixture baseline.', evidence: [] }
+    })}\n`, 'utf8');
+
+    const report = createProjectStatusV2Report(root);
+
+    expect(report.phase).toBe('active-work');
+    expect(report.readiness.intent).toBe('edit');
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'inspect-active-task',
+      command: 'hadara task status --task T-0002 --json',
+      writeBoundary: 'read-only',
+      writes: false
+    });
+  });
+
   it('builds a dashboard-ready status snapshot from project docs and task capsules', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -390,37 +448,50 @@ describe('Operations Status JSON', () => {
     expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
   });
 
-  it('prints fast JSON for status by default and keeps full/state-only diagnostics explicit', () => {
+  it('prints v2 fast JSON by default and keeps v1 compatibility and diagnostics explicit', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleStatusCommand({ args: ['status', '--compat', 'v1', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleStatusCommand({ args: ['status', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleStatusCommand({ args: ['status', '--state-only', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleStatusCommand({ args: ['status', '--summary-json'], projectRoot: root, jsonOutput: false })).toBe(true);
+    expect(handleStatusCommand({ args: ['status', '--compat', 'v1', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
 
     const first = JSON.parse(String(log.mock.calls[0]?.[0]));
-    const full = JSON.parse(String(log.mock.calls[1]?.[0]));
-    const stateOnly = JSON.parse(String(log.mock.calls[2]?.[0]));
-    const summary = JSON.parse(String(log.mock.calls[3]?.[0]));
-    expect(first.schemaVersion).toBe('hadara.ops.status.v1');
-    expect(first.command).toBe('ops.status');
-    expect(first.stateConsistency).toBeUndefined();
-    expect(first.handoff.knownProblems).toEqual([]);
-    expect(first.debt).toMatchObject({
+    const compat = JSON.parse(String(log.mock.calls[1]?.[0]));
+    const full = JSON.parse(String(log.mock.calls[2]?.[0]));
+    const stateOnly = JSON.parse(String(log.mock.calls[3]?.[0]));
+    const summary = JSON.parse(String(log.mock.calls[4]?.[0]));
+    const compatFull = JSON.parse(String(log.mock.calls[5]?.[0]));
+    expect(first.schemaVersion).toBe('hadara.project.status.v2');
+    expect(first.command).toBe('status');
+    expect(first.compatibility.legacyCommand).toBe('hadara status --compat v1 --json');
+    expect(compat.schemaVersion).toBe('hadara.ops.status.v1');
+    expect(compat.command).toBe('ops.status');
+    expect(compat.compatibility).toMatchObject({
+      defaultSchemaVersion: 'hadara.project.status.v2',
+      recommendedCommand: 'hadara status --json'
+    });
+    expect(compat.stateConsistency).toBeUndefined();
+    expect(compat.handoff.knownProblems).toEqual([]);
+    expect(compat.debt).toMatchObject({
       total: 0,
       open: 0,
       highOpen: 0
     });
-    expect(full.schemaVersion).toBe('hadara.ops.status.v1');
-    expect(full.stateConsistency).toMatchObject({
+    expect(full.schemaVersion).toBe('hadara.project.status.v2');
+    expect(full.command).toBe('status');
+    expect(compatFull.schemaVersion).toBe('hadara.ops.status.v1');
+    expect(compatFull.stateConsistency).toMatchObject({
       mode: 'advisory',
       strictBlocking: false,
       issueCounts: expect.any(Object),
       issues: expect.any(Array)
     });
-    expect(full.handoff.knownProblems).toEqual(['Docker is the working validation path for now.']);
+    expect(compatFull.handoff.knownProblems).toEqual(['Docker is the working validation path for now.']);
     expect(stateOnly).toMatchObject({
       schemaVersion: 'hadara.ops.statusState.v1',
       command: 'status.state',

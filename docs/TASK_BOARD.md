@@ -634,3 +634,4 @@
 | T-0631 | 0.4.6 operator publish record and installed-package recycle | Done | tasks/T-0631-0-4-6-operator-publish-record-and-installed-package-recycle | |
 | T-0632 | 0.5.x implementation capsule plan split | Done | tasks/T-0632-0-5-x-implementation-capsule-plan-split | |
 | T-0633 | 0.5.0 preflight feedback cleanup | Done | tasks/T-0633-0-5-0-preflight-feedback-cleanup | |
+| T-0634 | 0.5.0 status ingress and evaluation | Done | tasks/T-0634-0-5-0-status-ingress-and-evaluation | |

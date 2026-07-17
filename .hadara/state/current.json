@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 178,
+  "rev": 180,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0633",
-    "title": "0.5.0 preflight feedback cleanup"
+    "id": "T-0634",
+    "title": "0.5.0 status ingress and evaluation"
   },
   "activeTask": null,
   "nextWork": null,

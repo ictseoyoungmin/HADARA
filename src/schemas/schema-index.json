@@ -9,6 +9,13 @@
       "notes": "Portable structured canon for release, task continuity, next intent, current problems, and validation baseline."
     },
     {
+      "id": "hadara.project.status.v2",
+      "path": "src/schemas/project-status.schema.json",
+      "status": "fixture",
+      "owner": "status/project",
+      "notes": "Lifecycle-aware project/session ingress status report with explicit health, readiness, evaluation state, primary action, and v1 compatibility metadata."
+    },
+    {
       "id": "hadara.actor_context.v1",
       "path": "src/schemas/actor-context.schema.json",
       "status": "fixture",

@@ -1551,8 +1551,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'status',
-    command: 'hadara status [--json|--summary-json] [--detail fast|full] [--state-only] [--state-issue-limit <n>]',
-    summary: 'Read fast project status by default, full operations status on request, or state-consistency advisory only.',
+    command: 'hadara status [--json] [--detail fast|full] [--compat v1] [--summary-json] [--state-only] [--state-issue-limit <n>]',
+    summary: 'Read lifecycle-aware project/session status by default, or explicit v1 compatibility/status-state projections.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -1564,13 +1564,13 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     risk: 'low',
     actor: 'agent-worker',
     status: 'stable',
-    schemaVersion: 'hadara.ops.status.v1',
+    schemaVersion: 'hadara.project.status.v2',
     docs: ['docs/PROJECT_STATE.md'],
     examples: [
-      example('Read fast status', 'hadara status --json', 'When checking project health and active task signals without broad scans.'),
+      example('Read project/session ingress', 'hadara status --json', 'At the start of a human/agent session or after task close.'),
       example('Read compact status', 'hadara status --summary-json', 'When automation needs the smallest status payload.'),
       example('Read state advisory', 'hadara status --state-only --json', 'When checking state consistency after state.verify removal.'),
-      example('Read full operations status', 'hadara status --detail full --json', 'When dashboard-style debt, known-problem, and full state diagnostics are needed.')
+      example('Read v1 compatibility status', 'hadara status --compat v1 --detail full --json', 'When legacy dashboard-style debt, known-problem, and full state diagnostics are needed.')
     ],
     related: ['doctor', 'status'],
     conflictsWith: []

@@ -2,7 +2,7 @@ import { HadaraPaths } from '../core/paths';
 import { assertSchema, validateSchema } from '../core/schema';
 import { createDoctorReport } from '../cli/doctor';
 import { createReleaseGateReport } from './operational-debt';
-import { createOpsStatusReport } from './operations-status-service';
+import { createProjectStatusV2Report } from './project-status-v2';
 import { createTaskListReport } from './task-read-model';
 import { createToolsListReport } from './tools-list';
 import { createTuiReadModel } from '../tui/read-model';
@@ -100,9 +100,9 @@ function createCoreSteps(paths: HadaraPaths, issues: FeatureSmokeIssue[]): Featu
     runStep(issues, {
       id: 'status',
       command: 'hadara status --json',
-      schemaVersion: 'hadara.ops.status.v1',
-      run: () => createOpsStatusReport(paths.projectRoot),
-      summarize: (report) => `Operations status completed with health ${report.health}.`
+      schemaVersion: 'hadara.project.status.v2',
+      run: () => createProjectStatusV2Report(paths.projectRoot),
+      summarize: (report) => `Project status completed with phase ${report.phase} and health ${report.health}.`
     }),
     runStep(issues, {
       id: 'task-list',
