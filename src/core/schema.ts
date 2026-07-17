@@ -69,6 +69,7 @@ import taskContextSchemaJson from '../schemas/task-context.schema.json';
 import taskCreateSchemaJson from '../schemas/task-create.schema.json';
 import taskFinalizeSchemaJson from '../schemas/task-finalize.schema.json';
 import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
+import taskSelectionStatusSchemaJson from '../schemas/task-selection-status.schema.json';
 import taskSelectionSchemaJson from '../schemas/task-selection.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskStatusSchemaJson from '../schemas/task-status.schema.json';
@@ -186,6 +187,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.create.v1': taskCreateSchemaJson as JsonObject,
   'hadara.task.finalize.v1': taskFinalizeSchemaJson as JsonObject,
   'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
+  'hadara.taskSelection.status.v2': taskSelectionStatusSchemaJson as JsonObject,
   'hadara.task.selection.v1': taskSelectionSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.status.v1': taskStatusSchemaJson as JsonObject,

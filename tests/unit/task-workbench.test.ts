@@ -6,6 +6,7 @@ import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evi
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import * as harnessService from '../../src/services/harness-service';
+import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../../src/services/task-workbench';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -187,7 +188,26 @@ describe('task workbench status report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench next selection');
 
+    const v2Report = createTaskSelectionStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'));
     const report = createTaskStatusSelectionReport(root, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(v2Report).toMatchObject({
+      schemaVersion: 'hadara.taskSelection.status.v2',
+      command: 'task.status',
+      scope: 'task-selection',
+      mode: 'select-work',
+      phase: 'select-work',
+      primaryNextAction: {
+        command: `hadara task status --task ${task.id} --json`,
+        writeBoundary: 'read-only',
+        writes: false
+      },
+      compatibility: {
+        legacyCommand: 'hadara task status --compat v1 --json'
+      }
+    });
+    expect(v2Report.recommendations[0]).toMatchObject({ taskId: task.id, taskCapsulePresent: true });
+    expect(validateSchema('hadara.taskSelection.status.v2', v2Report).ok).toBe(true);
 
     expect(report).toMatchObject({
       schemaVersion: 'hadara.task.status.v1',
@@ -241,7 +261,7 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.workbench.v1', payload).ok).toBe(true);
   });
 
-  it('routes task status without --task through the CLI selection report', () => {
+  it('routes task status without --task through v2 by default and v1 through compat', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Workbench CLI selection');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -255,10 +275,11 @@ describe('task workbench status report', () => {
     expect(handled).toBe(true);
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({
-      schemaVersion: 'hadara.task.status.v1',
+      schemaVersion: 'hadara.taskSelection.status.v2',
       command: 'task.status',
+      scope: 'task-selection',
       mode: 'select-work',
-      loop: { phase: 'select-work' },
+      phase: 'select-work',
       diagnostics: {
         generatedBy: 'cli',
         commandPath: 'task.status',
@@ -267,7 +288,25 @@ describe('task workbench status report', () => {
       }
     });
     expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
-    expect(validateSchema('hadara.task.status.v1', payload).ok).toBe(true);
+    expect(validateSchema('hadara.taskSelection.status.v2', payload).ok).toBe(true);
+
+    const compatHandled = handleTaskCommand({
+      args: ['task', 'status', '--compat', 'v1', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    expect(compatHandled).toBe(true);
+    const compat = JSON.parse(String(log.mock.calls[1][0]));
+    expect(compat).toMatchObject({
+      schemaVersion: 'hadara.task.status.v1',
+      command: 'task.status',
+      mode: 'select-work',
+      compatibility: {
+        defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+        recommendedCommand: 'hadara task status --json'
+      }
+    });
+    expect(validateSchema('hadara.task.status.v1', compat).ok).toBe(true);
   });
 
   it('uses fast selected-task CLI status by default and full diagnostics only on request', () => {

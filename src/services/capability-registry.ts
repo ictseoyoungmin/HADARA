@@ -514,8 +514,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.status',
-    command: 'hadara task status [--task <task-id>] [--detail fast|full] [--json|--summary-json]',
-    summary: 'Read the phase-aware task cockpit: next-work selection without --task, fast selected-capsule loop guidance with --task, compact selected-capsule summary with --summary-json, or explicit full diagnostics with --detail full.',
+    command: 'hadara task status [--task <task-id>] [--detail fast|full] [--compat v1] [--json|--summary-json]',
+    summary: 'Read the phase-aware task cockpit: v2 next-work selection without --task, fast selected-capsule loop guidance with --task, compact selected-capsule summary with --summary-json, or explicit full diagnostics with --detail full.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
@@ -527,10 +527,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     risk: 'low',
     actor: 'agent-worker',
     status: 'stable',
-    schemaVersion: 'hadara.task.workbench.v1',
+    schemaVersion: 'hadara.taskSelection.status.v2',
     docs: TASK_DOCS,
     examples: [
       example('Select next work', 'hadara task status --json', 'At session start or after a capsule closes.'),
+      example('Read legacy selection report', 'hadara task status --compat v1 --json', 'When a legacy consumer still expects hadara.task.status.v1 select-work output.'),
       example('Inspect capsule status', 'hadara task status --task T-0001 --json', 'At loop boundaries for a selected capsule.'),
       example('Inspect compact capsule status', 'hadara task status --task T-0001 --summary-json', 'When shell automation or humans only need phase, readiness, counts, and next action.'),
       example('Inspect full diagnostics', 'hadara task status --task T-0001 --detail full --json', 'When explicit close/protocol diagnostics are needed without finalize planning.')

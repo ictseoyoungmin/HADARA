@@ -5,10 +5,11 @@ import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport, type TaskStatusSelectionReport, type TaskWorkbenchReport } from '../services/task-workbench';
 import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 import { getActorContextOption } from './actor';
-import { getFlag, getStringOption } from './args';
+import { CliArgsError, getFlag, getStringOption } from './args';
 import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createTaskListReport, formatTaskListReport } from './task-json';
+import { createTaskSelectionStatusV2Report, formatTaskSelectionStatusV2Report } from '../services/task-selection-status-v2';
 
 export interface TaskCommandInput {
   args: string[];
@@ -122,9 +123,22 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
 
   if (sub === 'status') {
     const summaryJsonOutput = getFlag(input.args, '--summary-json');
+    const compat = getStringOption(input.args, '--compat');
+    if (compat && compat !== 'v1') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', 'task status --compat must be v1');
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) {
-      const report = createTaskStatusSelectionReport(input.projectRoot);
+      if (!compat && !summaryJsonOutput) {
+        const report = createTaskSelectionStatusV2Report(input.projectRoot);
+        attachCliDiagnostics(report, timer, 'task.status');
+        if (input.jsonOutput) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          console.log(formatTaskSelectionStatusV2Report(report));
+        }
+        if (!report.ok) process.exitCode = 6;
+        return true;
+      }
+      const report = withTaskSelectionV1CompatibilityMetadata(createTaskStatusSelectionReport(input.projectRoot));
       attachCliDiagnostics(report, timer, 'task.status');
       if (summaryJsonOutput) {
         console.log(JSON.stringify(createTaskStatusSummaryReport(report), null, 2));
@@ -178,6 +192,23 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+function withTaskSelectionV1CompatibilityMetadata<T extends TaskStatusSelectionReport>(report: T): T & {
+  compatibility: {
+    defaultSchemaVersion: 'hadara.taskSelection.status.v2';
+    recommendedCommand: 'hadara task status --json';
+    migration: string;
+  };
+} {
+  return {
+    ...report,
+    compatibility: {
+      defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+      recommendedCommand: 'hadara task status --json',
+      migration: 'This v1 select-work report is an explicit 0.5.x compatibility route for legacy consumers. New agents should use hadara task status --json.'
+    }
+  };
 }
 
 function createTaskStatusSummaryReport(report: TaskStatusSelectionReport | TaskWorkbenchReport): TaskStatusSummaryReport {

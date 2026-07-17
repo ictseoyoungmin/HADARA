@@ -103,6 +103,7 @@ describe('schema fixtures', () => {
       'hadara.task.status.v1',
       'hadara.task.workbench.v1',
       'hadara.taskContext.v1',
+      'hadara.taskSelection.status.v2',
       'hadara.tools.list.v1',
       'hadara.validation.run.v1',
       'hadara.write.preflight.v1'

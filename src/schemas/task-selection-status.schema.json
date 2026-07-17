@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.taskSelection.status.v2",
+  "x-hadara-schema-id": "hadara.taskSelection.status.v2",
+  "title": "HADARA Task Selection Status v2",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "scope",
+    "mode",
+    "generatedAt",
+    "projectRoot",
+    "phase",
+    "health",
+    "readiness",
+    "evaluations",
+    "primaryNextAction",
+    "recommendations",
+    "compatibility",
+    "sources",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.taskSelection.status.v2" },
+    "command": { "const": "task.status" },
+    "ok": { "type": "boolean" },
+    "scope": { "const": "task-selection" },
+    "mode": { "const": "select-work" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "phase": {
+      "enum": ["select-work", "idle", "review-next-work", "degraded"]
+    },
+    "health": {
+      "enum": ["ok", "attention", "blocked", "degraded", "unknown"]
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["intent", "status", "reason"],
+      "properties": {
+        "intent": { "enum": ["orient", "plan", "edit", "validate", "close", "release"] },
+        "status": { "enum": ["ready", "needs-context", "needs-review", "not-evaluated", "blocked", "terminal"] },
+        "reason": { "type": "string" }
+      }
+    },
+    "evaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "state", "health", "summary"],
+        "properties": {
+          "id": { "type": "string" },
+          "state": { "enum": ["evaluated", "not-evaluated", "unavailable", "stale", "invalid", "partial"] },
+          "health": { "enum": ["ok", "attention", "blocked", "degraded", "unknown"] },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "primaryNextAction": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["id", "kind", "message", "writeBoundary", "risk", "requiresReview", "writes"],
+          "properties": {
+            "id": { "type": "string" },
+            "kind": { "enum": ["command", "review", "create", "none"] },
+            "command": { "type": "string" },
+            "message": { "type": "string" },
+            "writeBoundary": { "enum": ["read-only", "task-local", "project-state", "evidence-append", "none"] },
+            "risk": { "enum": ["none", "low", "medium", "high"] },
+            "requiresReview": { "type": "boolean" },
+            "writes": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "recommendations": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["legacySchemaVersion", "legacyCommand", "migration"],
+      "properties": {
+        "legacySchemaVersion": { "const": "hadara.task.status.v1" },
+        "legacyCommand": { "const": "hadara task status --compat v1 --json" },
+        "migration": { "type": "string" }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["taskSelection"]
+    },
+    "issues": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  }
+}
