@@ -21,6 +21,7 @@ export interface HarnessValidationIssue {
   field?: string;
   received?: string;
   allowedValues?: string[];
+  aliases?: Record<string, string>;
   remediationHint?: RemediationHint;
 }
 
@@ -577,6 +578,8 @@ function checkToken(
   if (domain) issue.field = domain.field;
   issue.received = value;
   issue.allowedValues = [...allowed];
+  const aliases = vocab.vocabularyAliasesForDomain(domainId);
+  if (Object.keys(aliases).length > 0) issue.aliases = aliases;
   issues.push(issue);
 }
 

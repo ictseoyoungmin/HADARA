@@ -55,6 +55,40 @@ describe('evidence lint', () => {
     });
   });
 
+  it('compares EVIDENCE.md rows against generated projection rows instead of raw JSONL records', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence lint projection count');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Focused validation passed.',
+      result: 'passed',
+      visibility: 'public',
+      category: 'validation'
+    });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Task close validation returned ok:true.',
+      result: 'passed',
+      visibility: 'public',
+      category: 'audit',
+      tags: ['close-proof']
+    });
+
+    const report = createEvidenceLintReport(root, task.id);
+
+    expect(report.ok).toBe(true);
+    expect(report.summary).toMatchObject({
+      records: 2,
+      markdownRows: 2,
+      projectedRows: 2,
+      omittedRows: 0,
+      issueCounts: { error: 0, warning: 0, info: 0 }
+    });
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'EVIDENCE_MARKDOWN_JSONL_COUNT_DRIFT' }));
+  });
+
   it('reports unsupported hand-edited evidence kinds before done-level validation', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence lint bad kind');

@@ -362,11 +362,12 @@ describe('CLI evidence JSON reports', () => {
     });
   });
 
-  it('normalizes human test category aliases to validation without expanding persisted schema', () => {
+  it('normalizes human category aliases without expanding persisted schema', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Normalize test category aliases');
     const firstOutput: string[] = [];
     const secondOutput: string[] = [];
+    const thirdOutput: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (value?: unknown) => {
@@ -386,12 +387,22 @@ describe('CLI evidence JSON reports', () => {
         projectRoot: root,
         jsonOutput: true
       })).toBe(true);
+
+      console.log = (value?: unknown) => {
+        thirdOutput.push(String(value));
+      };
+      expect(handleEvidenceCommand({
+        args: ['evidence', 'add-command', '--task', task.id, '--summary', 'Diagnostic check passed', '--result', 'passed', '--category', 'diagnostic', '--json'],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
     } finally {
       console.log = originalLog;
     }
 
     const first = JSON.parse(firstOutput.join('\n'));
     const second = JSON.parse(secondOutput.join('\n'));
+    const third = JSON.parse(thirdOutput.join('\n'));
     expect(first).toMatchObject({
       ok: true,
       categoryAlias: { input: 'test', normalized: 'validation' },
@@ -402,9 +413,16 @@ describe('CLI evidence JSON reports', () => {
       categoryAlias: { input: 'tests', normalized: 'validation' },
       evidence: { category: 'validation' }
     });
+    expect(third).toMatchObject({
+      ok: true,
+      categoryAlias: { input: 'diagnostic', normalized: 'operation' },
+      evidence: { category: 'operation' }
+    });
     const persisted = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
     expect(persisted).toContain('"category":"validation"');
+    expect(persisted).toContain('"category":"operation"');
     expect(persisted).not.toContain('"category":"test"');
+    expect(persisted).not.toContain('"category":"diagnostic"');
   });
 
   it('returns structured category diagnostics for unsupported evidence category input', () => {
@@ -440,7 +458,7 @@ describe('CLI evidence JSON reports', () => {
           code: 'EVIDENCE_CATEGORY_UNSUPPORTED',
           inputCategory: 'testt',
           allowedCategoryTokens: expect.arrayContaining(['validation', 'release', 'audit']),
-          aliases: { test: 'validation', tests: 'validation' },
+          aliases: expect.objectContaining({ diagnostic: 'operation', test: 'validation', tests: 'validation' }),
           hint: 'Run: hadara schema --domain evidence.category --json'
         }
       ]

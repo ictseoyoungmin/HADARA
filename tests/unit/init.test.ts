@@ -128,6 +128,7 @@ describe('init profiles', () => {
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('### Installed Package Fallback');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('`--no-bin-links` mode');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('node <installed-hadara-package>/dist/cli/main.js task status --json');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('.hadara-install/node_modules/hadara');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('hadara docs add agent-guide --json');
 
     const slotRegistry = JSON.parse(read(root, '.hadara/slot-registry.json'));

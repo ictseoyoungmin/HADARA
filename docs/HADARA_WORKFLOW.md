@@ -79,11 +79,11 @@ Most projects should run the installed `hadara` command directly. In environment
 
 ```bash
 npm install -g hadara --no-bin-links
-node <npm-prefix>/lib/node_modules/hadara/dist/cli/main.js version --json
-node <npm-prefix>/lib/node_modules/hadara/dist/cli/main.js task status --json
+node "$(npm prefix -g)/lib/node_modules/hadara/dist/cli/main.js" version --json
+node "$(npm prefix -g)/lib/node_modules/hadara/dist/cli/main.js" task status --json
 ```
 
-Use `npm prefix -g` to find `<npm-prefix>`. This is an invocation fallback only; generated docs and task command examples still use the normal `hadara ...` form.
+For project-local installs, replace `$(npm prefix -g)/lib/node_modules/hadara` with the project-local package path, for example `.hadara-install/node_modules/hadara`. This is an invocation fallback only; generated docs and task command examples still use the normal `hadara ...` form.
 
 ## Generated Docs Completion
 

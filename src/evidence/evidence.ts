@@ -560,6 +560,13 @@ function renderEvidenceProjection(records: PersistedEvidenceRecord[]): string {
   ].join('\n');
 }
 
+export function countEvidenceProjectionRows(records: PersistedEvidenceRecord[]): number {
+  const validationRows = records.filter((record) => !isCloseProofRecord(record) && !isResidualRecord(record));
+  const closeRows = records.filter(isCloseProofRecord);
+  const residualRows = records.filter(isResidualRecord);
+  return validationRows.length + closeRows.length + residualRows.length;
+}
+
 function evidenceProjectionSlots(): string[] {
   return ['evidence.validation-summary', 'evidence.close-proof', 'evidence.residuals'];
 }
@@ -577,7 +584,7 @@ function evidenceProjectionCategory(record: PersistedEvidenceRecord): EvidenceCa
 }
 
 function evidenceProjectionSummary(record: PersistedEvidenceRecord): string {
-  return record.summary.replace(/\|/g, '/');
+  return record.summary.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').replace(/\|/g, '/').trim();
 }
 
 function isCloseProofRecord(record: PersistedEvidenceRecord): boolean {

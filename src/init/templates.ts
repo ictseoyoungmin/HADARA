@@ -149,7 +149,7 @@ node <installed-hadara-package>/dist/cli/main.js version --json
 node <installed-hadara-package>/dist/cli/main.js task status --json
 \`\`\`
 
-Use your package manager to locate \`<installed-hadara-package>\`. This is an invocation fallback only; generated docs and task command examples still use the normal \`hadara ...\` form.
+Use your package manager to locate \`<installed-hadara-package>\`. For project-local installs, this is usually the local package directory, for example \`.hadara-install/node_modules/hadara\`. This is an invocation fallback only; generated docs and task command examples still use the normal \`hadara ...\` form.
 
 ## Generated Docs Completion
 

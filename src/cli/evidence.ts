@@ -208,7 +208,7 @@ function renderEvidenceCommandHelp(sub: string | undefined): string {
       '  --result <value>          Legacy-compatible result: passed, failed, blocked, unknown.',
       '  --outcome <value>         Evidence v2 outcome.',
       '  --category <value>        Evidence v2 category. Common values: validation, implementation, release, audit, note.',
-      '                            CLI aliases: test/tests -> validation.',
+      '                            CLI aliases: test/tests -> validation, diagnostic/diagnostics -> operation.',
       '  --resolves <id>           Add a resolves:<id> tag. Repeatable.',
       '  --supersedes <id>         Add a supersedes:<id> tag. Repeatable.',
       '  --idempotency-key <key>   Reuse an existing keyed record instead of appending duplicates.',

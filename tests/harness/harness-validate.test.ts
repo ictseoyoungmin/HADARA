@@ -218,7 +218,8 @@ describe('Harness Task Capsule validation', () => {
             '| User request | task driver | active | User-provided direction. |',
             '| Product requirement | requirement | active | User-facing constraint. |',
             '| Workflow docs | workflow | active | General workflow alias. |',
-            '| TASK.md | task context | active | Task-local context. |'
+            '| TASK.md | task context | active | Task-local context. |',
+            '| .hadara/state/current.json | current-state canon | planned | Planned state source. |'
           ].join('\n')
         ),
       'utf8'

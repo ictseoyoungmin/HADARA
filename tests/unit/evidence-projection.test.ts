@@ -42,6 +42,24 @@ describe('evidence projection', () => {
     expect(evidence).not.toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
   });
 
+  it('keeps multiline summaries inside one markdown table row', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection multiline summary');
+
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Validation passed; command: bash -lc set -e\nnpm test\nnpm run build',
+      result: 'passed',
+      visibility: 'public',
+      category: 'validation'
+    });
+
+    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    expect(evidence).toContain('Validation passed; command: bash -lc set -e npm test npm run build');
+    expect(evidence).not.toContain('set -e\nnpm test');
+  });
+
   it('reports projection drift and execute rewrites only EVIDENCE.md', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Projection repair');

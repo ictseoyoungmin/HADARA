@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 176,
+  "rev": 178,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0632",
-    "title": "0.5.x implementation capsule plan split"
+    "id": "T-0633",
+    "title": "0.5.0 preflight feedback cleanup"
   },
   "activeTask": null,
   "nextWork": null,

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { countEvidenceProjectionRows } from '../evidence/evidence';
 import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
@@ -21,6 +22,8 @@ export interface EvidenceLintReport {
       info: number;
     };
     semantics?: EvidenceSemanticSummary;
+    projectedRows?: number;
+    omittedRows?: number;
   };
   records: PersistedEvidenceRecord[];
   issues: EvidenceLintIssue[];
@@ -54,6 +57,8 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
   const parsedRecords = lintEvidenceIndex(projectRoot, taskId, indexPath, issues);
   const records = parsedRecords.map((entry) => entry.record);
   const markdownRows = lintEvidenceMarkdown(projectRoot, evidencePath, issues);
+  const projectedRows = countEvidenceProjectionRows(records);
+  const omittedRows = records.length - projectedRows;
 
   if (markdownRows > 0 && records.length === 0) {
     issues.push({
@@ -64,7 +69,7 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
       expected: 'matching evidence.jsonl records',
       actual: 'no valid evidence.jsonl records'
     });
-  } else if (records.length > 0 && markdownRows === 0) {
+  } else if (projectedRows > 0 && markdownRows === 0) {
     issues.push({
       severity: 'warning',
       code: 'EVIDENCE_JSONL_WITHOUT_MARKDOWN_ROWS',
@@ -73,13 +78,13 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
       expected: 'EVIDENCE.md rows for evidence records',
       actual: 'no evidence rows'
     });
-  } else if (markdownRows > 0 && records.length > 0 && markdownRows !== records.length) {
+  } else if (markdownRows > 0 && projectedRows > 0 && markdownRows !== projectedRows) {
     issues.push({
       severity: 'warning',
       code: 'EVIDENCE_MARKDOWN_JSONL_COUNT_DRIFT',
-      message: `EVIDENCE.md row count (${markdownRows}) differs from valid evidence.jsonl record count (${records.length}).`,
+      message: `EVIDENCE.md row count (${markdownRows}) differs from projected evidence row count (${projectedRows}); ${omittedRows} canonical record(s) are intentionally non-projecting.`,
       path: toPortablePath(path.relative(projectRoot, evidencePath)),
-      expected: String(records.length),
+      expected: String(projectedRows),
       actual: String(markdownRows)
     });
   }
@@ -97,7 +102,7 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
     issues.push(toLintIssue(semanticIssue));
   }
 
-  return buildReport(projectRoot, taskId, records, markdownRows, issues, semanticAnalysis.summary);
+  return buildReport(projectRoot, taskId, records, markdownRows, issues, semanticAnalysis.summary, projectedRows, omittedRows);
 }
 
 function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: string, issues: EvidenceLintIssue[]): EvidenceIndexRecordWithSourceLine[] {
@@ -251,7 +256,9 @@ function buildReport(
   records: PersistedEvidenceRecord[],
   markdownRows: number,
   issues: EvidenceLintIssue[],
-  semantics?: EvidenceSemanticSummary
+  semantics?: EvidenceSemanticSummary,
+  projectedRows?: number,
+  omittedRows?: number
 ): EvidenceLintReport {
   return {
     schemaVersion: 'hadara.evidence.lint.v1',
@@ -262,6 +269,8 @@ function buildReport(
     summary: {
       records: records.length,
       markdownRows,
+      ...(typeof projectedRows === 'number' ? { projectedRows } : {}),
+      ...(typeof omittedRows === 'number' ? { omittedRows } : {}),
       issueCounts: {
         error: issues.filter((issue) => issue.severity === 'error').length,
         warning: issues.filter((issue) => issue.severity === 'warning').length,

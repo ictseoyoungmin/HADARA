@@ -36,11 +36,26 @@ export const SOURCE_DOCUMENT_ROLE_ALIASES: Readonly<Record<string, typeof SOURCE
   manifest: 'reference',
   'workflow constraint': 'constraint',
   'task driver': 'background',
+  'task-local context': 'background',
+  'current-state canon': 'reference',
+  'current state canon': 'reference',
+  'state canon': 'reference',
   request: 'background',
   'user request': 'background'
 };
 export const SOURCE_DOCUMENT_AUTHORITY_TOKENS = ['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical'] as const;
 export const SOURCE_DOCUMENT_STATUS_TOKENS = ['active', 'draft', 'review', 'approved', 'implementing', 'implemented', 'superseded', 'drift-risk', 'archived'] as const;
+export const SOURCE_DOCUMENT_STATUS_ALIASES: Readonly<Record<string, typeof SOURCE_DOCUMENT_STATUS_TOKENS[number]>> = {
+  planned: 'draft',
+  plan: 'draft',
+  pending: 'draft',
+  'in progress': 'implementing',
+  current: 'active',
+  live: 'active',
+  done: 'implemented',
+  complete: 'implemented',
+  completed: 'implemented'
+};
 export const ACCEPTANCE_REQUIRED_TOKENS = ['Yes', 'No'] as const;
 export const ACCEPTANCE_DECISION_TOKENS = ['Must', 'Optional', 'Follow-up', 'Accepted Risk', 'Not Applicable', 'Superseded'] as const;
 export const ACCEPTANCE_STATUS_TOKENS = ['Pending', 'In Progress', 'Met', 'Done', 'Not Met', 'Blocked', 'Partial', 'Deferred', 'Follow-up Created', 'Accepted Risk', 'Not Applicable', 'Superseded'] as const;
@@ -64,6 +79,8 @@ export const EVIDENCE_RESULT_TOKENS = ['passed', 'failed', 'blocked', 'unknown']
 export const EVIDENCE_VISIBILITY_TOKENS = ['public', 'private'] as const;
 export const EVIDENCE_CATEGORY_TOKENS = ['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation'] as const;
 export const EVIDENCE_CATEGORY_ALIASES: Readonly<Record<string, typeof EVIDENCE_CATEGORY_TOKENS[number]>> = {
+  diagnostic: 'operation',
+  diagnostics: 'operation',
   test: 'validation',
   tests: 'validation'
 };
@@ -108,8 +125,17 @@ export function findVocabularyDomain(domain: string): VocabularyDomain | undefin
 export function normalizeVocabularyToken(domain: string, value: string): string {
   const trimmed = value.trim();
   if (domain === 'task.source.role') return SOURCE_DOCUMENT_ROLE_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+  if (domain === 'task.source.state') return SOURCE_DOCUMENT_STATUS_ALIASES[trimmed.toLowerCase()] ?? trimmed;
   if (domain === 'task.risk.kind') return RISK_KIND_ALIASES[trimmed.toLowerCase()] ?? trimmed;
   return trimmed;
+}
+
+export function vocabularyAliasesForDomain(domain: string): Record<string, string> {
+  if (domain === 'task.source.role') return { ...SOURCE_DOCUMENT_ROLE_ALIASES };
+  if (domain === 'task.source.state') return { ...SOURCE_DOCUMENT_STATUS_ALIASES };
+  if (domain === 'task.risk.kind') return { ...RISK_KIND_ALIASES };
+  if (domain === 'evidence.category') return { ...EVIDENCE_CATEGORY_ALIASES };
+  return {};
 }
 
 export interface VocabularyIssue {
@@ -132,6 +158,7 @@ export interface VocabularyReport {
     surface: string;
     issueCode: string | null;
     allowed: string[];
+    aliases?: Record<string, string>;
   }>;
   issues: VocabularyIssue[];
 }
@@ -160,13 +187,17 @@ export function createVocabularyReport(domainFilter?: string): VocabularyReport 
     command: 'schema',
     ok: issues.every((issue) => issue.severity !== 'error'),
     filter: domainFilter ?? null,
-    domains: domains.map((entry) => ({
-      domain: entry.domain,
-      field: entry.field,
-      surface: entry.surface,
-      issueCode: entry.issueCode,
-      allowed: [...entry.allowed]
-    })),
+    domains: domains.map((entry) => {
+      const aliases = vocabularyAliasesForDomain(entry.domain);
+      return {
+        domain: entry.domain,
+        field: entry.field,
+        surface: entry.surface,
+        issueCode: entry.issueCode,
+        allowed: [...entry.allowed],
+        ...(Object.keys(aliases).length > 0 ? { aliases } : {})
+      };
+    }),
     issues
   };
 }

@@ -42,18 +42,28 @@ describe('controlled vocabulary (FD-006 / FD-009)', () => {
     expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
   });
 
-  it('exposes human-friendly TASK.md aliases for acceptance and input state', () => {
+  it('exposes human-friendly TASK.md aliases without changing canonical tokens', () => {
     expect(ACCEPTANCE_STATUS_TOKENS).toContain('Done');
     expect(SOURCE_DOCUMENT_STATUS_TOKENS).toContain('active');
     expect(createVocabularyReport('task.acceptance.state').domains[0].allowed).toContain('Done');
     expect(createVocabularyReport('task.source.state').domains[0].allowed).toContain('active');
+    expect(createVocabularyReport('task.source.state').domains[0].aliases).toMatchObject({
+      planned: 'draft',
+      done: 'implemented'
+    });
+    expect(createVocabularyReport('task.source.role').domains[0].aliases).toMatchObject({
+      'current-state canon': 'reference',
+      requirement: 'constraint'
+    });
   });
 
-  it('exposes canonical evidence category tokens without CLI-only aliases', () => {
+  it('exposes canonical evidence category tokens separately from CLI-only aliases', () => {
     const report = createVocabularyReport('evidence.category');
     expect(report.ok).toBe(true);
     expect(report.domains[0].allowed).toEqual(['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation']);
     expect(report.domains[0].allowed).not.toContain('test');
+    expect(report.domains[0].allowed).not.toContain('diagnostic');
+    expect(report.domains[0].aliases).toMatchObject({ diagnostic: 'operation', test: 'validation' });
   });
 
   it('rejects an unknown domain with structured allowed values (dogfoods the diagnostics pattern)', () => {
