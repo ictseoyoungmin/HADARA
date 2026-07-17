@@ -40,17 +40,17 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | The combined 0.5.x scope is split into explicit release folders with a documented rationale and dependency order. | Met | `ev:T-0632:f2387de6d2f448869c8ddb97` | `docs/specs/0.5/README.md` |
-| AC-2 | Every release plan defines capsule budgets, schema work, implementation boundaries, acceptance gates, and validation/dogfood. | Met | `ev:T-0632:f2387de6d2f448869c8ddb97` | `docs/specs/0.5/0.5.*/` |
-| AC-3 | The split preserves status routing, task-close safety, evidence locality, and structured-state promotion constraints from the combined plans. | Met | `ev:T-0632:f2387de6d2f448869c8ddb97` | Combined source coverage map and release plans |
-| AC-4 | Documentation validation evidence is recorded. | Met | `ev:T-0632:0087cc6d51ac4c87929a15fc`, `ev:T-0632:d834cc52783844f5ac70d802` | Task evidence |
+| AC-1 | The combined 0.5.x scope is split into explicit release folders with a documented rationale and dependency order. | Met | `ev:T-0632:4605bb3d3a4e40d9a5337f24` | `docs/specs/0.5/README.md` |
+| AC-2 | Every release plan defines capsule budgets, schema or compatibility work, implementation boundaries, acceptance gates, and validation/dogfood. | Met | `ev:T-0632:4605bb3d3a4e40d9a5337f24` | `docs/specs/0.5/0.5.*/` |
+| AC-3 | The split preserves status routing, task-close safety, evidence locality, and structured-state promotion constraints from the combined plans. | Met | `ev:T-0632:4605bb3d3a4e40d9a5337f24` | Combined source coverage map and release plans |
+| AC-4 | Documentation validation evidence is recorded. | Met | `ev:T-0632:53374886476a48e6ab7cc3c1`, `ev:T-0632:d834cc52783844f5ac70d802` | Task evidence |
 
 ## Validation
 
 | Check | Gate | Result | Evidence |
 |---|---|---|---|
-| Release-plan structure and source-coverage audit | Yes | Passed | ev:T-0632:f2387de6d2f448869c8ddb97 |
-| Markdown links and docs governance checks | Yes | Passed | ev:T-0632:0087cc6d51ac4c87929a15fc |
+| Release-plan structure and source-coverage audit | Yes | Passed | ev:T-0632:4605bb3d3a4e40d9a5337f24 |
+| Markdown links and docs governance checks | Yes | Passed | ev:T-0632:53374886476a48e6ab7cc3c1 |
 | Focused docs registry tests | Yes | Passed | ev:T-0632:d834cc52783844f5ac70d802 |
 
 ## Inputs / Constraints
@@ -71,9 +71,9 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Area | Summary |
 |---|---|
 | Task Capsule | Created T-0632 and authored the planning contract. |
-| `docs/specs/0.5/README.md` | Chose four release slices, defined the common capsule/workflow budgets, cross-release dependencies, invariants, validation matrix, and source coverage. |
-| `docs/specs/0.5/0.5.0` through `0.5.3` | Added four release development plans with 23 bounded capsule IDs, schema plans, split triggers, implementation detail, acceptance, dogfood, promotion, and rollback. |
-| Docs governance | Registered five derived plans as proposed active specs and two combined inputs as reference-only; docs doctor is clean. |
+| `docs/specs/0.5/README.md` | Chose six release slices, defined the common capsule/workflow budgets, cross-release dependencies, invariants, validation matrix, source coverage, and deferred scope beyond 0.5.5. |
+| `docs/specs/0.5/0.5.0` through `0.5.5` | Added six release development plans with 32 bounded capsule IDs, schema/compatibility plans, split triggers, implementation detail, acceptance, dogfood, hardening, stabilization, promotion, and rollback. |
+| Docs governance | Registered seven derived plans as proposed active specs and two combined inputs as reference-only; docs doctor is clean. |
 
 ## Risks / Follow-ups
 
@@ -87,4 +87,4 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Date | State | Note |
 |---|---|---|
 | 2026-07-17 | Draft | Initial task scaffold. |
-| 2026-07-17 | Done | Authored and validated the four-release 0.5.x implementation capsule plan split. |
+| 2026-07-17 | Done | Authored and validated the six-release 0.5.x implementation capsule plan split. |

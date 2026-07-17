@@ -4,9 +4,9 @@
 **Baseline:** HADARA 0.4.6  
 **Source set:** [`all/`](./all/) combined agent-loop and lifecycle/use-case plans
 
-## Decision: four release slices
+## Decision: six release slices
 
-The 0.5.x plan is split into **four release folders**, `0.5.0` through `0.5.3`.
+The 0.5.x plan is split into **six release folders**, `0.5.0` through `0.5.5`.
 
 | Release | Theme | Primary risk retired | Promotion result |
 |---|---|---|---|
@@ -14,15 +14,19 @@ The 0.5.x plan is split into **four release folders**, `0.5.0` through `0.5.3`.
 | [0.5.1](./0.5.1/HADARA_0_5_1_Task_Close_Transaction_Development_Plan.md) | Task-close transaction engine | Partial close, races, premature proof | Experimental one-command close with recovery |
 | [0.5.2](./0.5.2/HADARA_0_5_2_Public_Close_Migration_Development_Plan.md) | Public close promotion and compatibility | Two taught close paths and consumer drift | `task close` becomes the single primary close surface |
 | [0.5.3](./0.5.3/HADARA_0_5_3_Structured_State_and_Projection_Development_Plan.md) | Structured state and projection ownership | Manual synchronization and projection drift | Proven state-first expansion for selected machine-owned facts |
+| [0.5.4](./0.5.4/HADARA_0_5_4_Dogfood_and_Hardening_Development_Plan.md) | Dogfood and hardening | Hidden regressions across real project shapes | Broad installed-package proof and blocker cleanup |
+| [0.5.5](./0.5.5/HADARA_0_5_5_Stabilization_and_Promotion_Development_Plan.md) | Stabilization and promotion | Overclaiming or unstable compatibility | Agent loop v1 stable promotion decision |
 
-Four is the smallest release count that does not mix these independent risk domains:
+Six is the smallest release count that does not mix these independent risk domains:
 
 1. Read-only status behavior can ship without transaction mutation risk.
 2. Close correctness can be proven behind an experimental route before changing public guidance.
 3. Public command migration can be measured independently from the close engine implementation.
 4. Structured-state expansion can be gated on stable status and close contracts instead of blocking them.
+5. Installed-package dogfood/hardening can fix real-project regressions without adding more feature scope.
+6. Stabilization/promotion can freeze schemas, compatibility policy, release notes, and public package evidence without absorbing new implementation risk.
 
-Using only the original three labels (`0.5.0`, `0.5.1`, `0.5.2+`) would leave `0.5.2+` with both command migration and state/projection migration. That creates an unbounded capsule line and weakens rollback decisions.
+Using only the original three labels (`0.5.0`, `0.5.1`, `0.5.2+`) would leave `0.5.2+` with command migration, state/projection migration, hardening, and promotion. That creates an unbounded capsule line and weakens rollback decisions. Four releases are enough for core implementation planning, but six releases better match the final combined scope.
 
 ## Cross-release dependency chain
 
@@ -31,6 +35,8 @@ Using only the original three labels (`0.5.0`, `0.5.1`, `0.5.2+`) would leave `0
   → 0.5.1 close transaction and recovery
     → 0.5.2 public command migration
       → 0.5.3 structured-state expansion
+        → 0.5.4 dogfood and hardening
+          → 0.5.5 stabilization and promotion
 ```
 
 Every release is independently releasable. A failed promotion gate delays the next release without forcing a partial public migration.
@@ -80,14 +86,14 @@ The existing Task Capsule budget remains four unique task-work commands. `hadara
 
 ## Release-wide validation matrix
 
-| Gate | 0.5.0 | 0.5.1 | 0.5.2 | 0.5.3 |
-|---|---|---|---|---|
-| Focused unit/schema tests | Required | Required | Required | Required |
-| CLI JSON contract smokes | Required | Required | Required | Required |
-| Race/fault injection | Routing consistency | Required | Compatibility retry | CAS/render conflict |
-| Disposable-project workflow | Status ingress | Clean/blocked/recovery close | Primary portfolio | No-op/drift/migration |
-| Installed-package delegated dogfood | Status + task status | Experimental close | Full promoted loop | Projection upgrade/recycle |
-| Full Docker validation | Release gate | Release gate | Release gate | Release gate |
+| Gate | 0.5.0 | 0.5.1 | 0.5.2 | 0.5.3 | 0.5.4 | 0.5.5 |
+|---|---|---|---|---|---|---|
+| Focused unit/schema tests | Required | Required | Required | Required | Required | Required |
+| CLI JSON contract smokes | Required | Required | Required | Required | Required | Required |
+| Race/fault injection | Routing consistency | Required | Compatibility retry | CAS/render conflict | Regression replay | Release gate |
+| Disposable-project workflow | Status ingress | Clean/blocked/recovery close | Primary portfolio | No-op/drift/migration | Multi-scenario dogfood | Stable candidate proof |
+| Installed-package delegated dogfood | Status + task status | Experimental close | Full promoted loop | Projection upgrade/recycle | Broad matrix | Public stable recycle |
+| Full Docker validation | Release gate | Release gate | Release gate | Release gate | Release gate | Release gate |
 
 ## Source coverage map
 
@@ -98,13 +104,16 @@ The existing Task Capsule budget remains four unique task-work commands. `hadara
 | Clean/blocked close, lock ordering, idempotency, recovery, proof-last | 0.5.1 |
 | One public close surface, compatibility and workflow-budget change | 0.5.2 |
 | Projection ownership tiers, Task Board inputs, structured-state expansion gates | 0.5.3 |
-| Greenfield, brownfield, delegated agent, failed validation, release recycle | Distributed across release dogfood gates |
+| Broad greenfield, brownfield, delegated-agent, failed-validation, projection-drift, and release-rehearsal hardening | 0.5.4 |
+| Schema freeze, compatibility policy, stable release readiness, public recycle, and promotion decision | 0.5.5 |
+| Greenfield, brownfield, delegated agent, failed validation, release recycle | Distributed across release dogfood gates, consolidated in 0.5.4/0.5.5 |
 
-## Deferred beyond 0.5.3
+## Deferred beyond 0.5.5
 
 - Full `TASK.md` state migration.
 - Centralized task evidence.
 - Cloud/controller runtime or default real-provider execution.
 - Broad MCP mutation or shell execution.
 - Automatic release-scope inference from arbitrary version-file changes.
-
+- Full `verify --ac` automation.
+- Dashboard/TUI migration beyond compatibility wrappers.

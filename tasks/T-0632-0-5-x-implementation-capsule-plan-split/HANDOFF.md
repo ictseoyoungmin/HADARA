@@ -4,8 +4,8 @@
 
 | Item | Evidence |
 |---|---|
-| Split 0.5.x into four ordered release plans (`0.5.0`-`0.5.3`) with 23 planned capsules. | `ev:T-0632:f2387de6d2f448869c8ddb97` |
-| Registered all derived plans and combined sources; docs governance is healthy and focused registry tests pass. | `ev:T-0632:0087cc6d51ac4c87929a15fc`, `ev:T-0632:d834cc52783844f5ac70d802` |
+| Split 0.5.x into six ordered release plans (`0.5.0`-`0.5.5`) with 32 planned capsules, including 0.5.4 dogfood/hardening and 0.5.5 stabilization/promotion. | `ev:T-0632:4605bb3d3a4e40d9a5337f24` |
+| Registered all derived plans and combined sources; docs governance is healthy and focused registry tests pass. | `ev:T-0632:53374886476a48e6ab7cc3c1`, `ev:T-0632:d834cc52783844f5ac70d802` |
 
 ## Next Recommended Step
 

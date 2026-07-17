@@ -2079,6 +2079,72 @@
       }
     },
     {
+      "path": "docs/specs/0.5/0.5.4/HADARA_0_5_4_Dogfood_and_Hardening_Development_Plan.md",
+      "title": "HADARA 0.5.4 Dogfood and Hardening Development Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "0.5.4 implementation planning controls dogfood and hardening scope before promotion."
+      }
+    },
+    {
+      "path": "docs/specs/0.5/0.5.5/HADARA_0_5_5_Stabilization_and_Promotion_Development_Plan.md",
+      "title": "HADARA 0.5.5 Stabilization and Promotion Development Plan",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "proposed",
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "0.5.5 implementation planning controls stabilization, compatibility freeze, and promotion scope."
+      }
+    },
+    {
       "path": "docs/specs/0.5/all/HADARA_0_5_X_Combined_Agent_Loop_Plan.md",
       "title": "HADARA 0.5.x Combined Agent Loop Plan",
       "owner": "project",
@@ -2288,7 +2354,7 @@
       }
     }
   ],
-  "generatedAt": "2026-07-17T10:21:15.323Z",
+  "generatedAt": "2026-07-17T10:33:48.208Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"

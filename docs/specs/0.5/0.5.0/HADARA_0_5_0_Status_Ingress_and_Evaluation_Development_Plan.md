@@ -69,12 +69,24 @@ Public projections:
 
 | Schema | Scope | Compatibility rule |
 |---|---|---|
-| `hadara.project.status.v2` | Global ingress | New version; v1 consumers receive an explicit migration note. |
+| `hadara.project.status.v2` | Global ingress | Default `status --json` projection in 0.5.0. Existing v1 status contracts remain available through explicit compatibility routes for all 0.5.x releases. |
 | `hadara.taskSelection.status.v2` | No selected task | Preserve recommendation identity/source while normalizing envelope fields. |
 | `hadara.task.status.v2` | Selected capsule | Replace ambiguous `ok` readiness use with explicit health/readiness. |
 | `hadara.release.status.v2` | Explicit release work only | May remain internal/conditional until release signals are available. |
 
 `primaryNextAction` extends the existing next-action contract with canonical `writeBoundary`, `risk`, and `requiresReview`. The boolean `writes` may remain a derived convenience field.
+
+### Status v1 compatibility policy
+
+0.5.0 may change the default `hadara status --json` projection to lifecycle-aware v2, but it must not fully remove the existing read-model contracts in the same release.
+
+Compatibility requirements:
+
+- `hadara.ops.status.v1`, status summary, and status state consumers have an explicit compatibility route or mode for all 0.5.x releases.
+- Default examples, README, scaffold guidance, and agent instructions teach v2 only.
+- v1 compatibility output includes migration metadata and the recommended v2 command.
+- v1 removal is a 0.6.0 decision and requires installed-consumer evidence.
+- Package recycle and delegated dogfood verify both default v2 and promised v1 compatibility routes.
 
 ## Implementation details by capsule
 
@@ -123,6 +135,7 @@ Public projections:
 | Gate | Required proof |
 |---|---|
 | Schema | Every public fixture validates; scope-specific schemas do not become a giant optional-field union. |
+| Compatibility | Default `status --json` is v2, but existing v1 status contracts remain available through explicit compatibility routes with migration metadata. |
 | Routing | Top-level status returns exactly one primary action for every non-terminal phase. |
 | Separation | Active project status routes to task status and does not duplicate local phase evaluation. |
 | Failure semantics | `ok:true` may coexist with non-`ok` health; all skipped/unavailable checks are explicit. |
@@ -133,4 +146,3 @@ Public projections:
 ## Promotion and rollback
 
 Promote 0.5.0 only if compact status is faster than the configured slow threshold on a local temp project and mounted-workspace degradation remains diagnostic rather than correctness-affecting. Roll back public schema selection—not the shared evaluator—if existing consumers cannot migrate cleanly. Do not start 0.5.1 public routing work until C01-C04 contracts are frozen.
-
