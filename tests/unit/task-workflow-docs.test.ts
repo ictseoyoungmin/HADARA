@@ -74,6 +74,8 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof');
     expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task finalize --execute --auto`.');
     expect(workflow).toContain('Before finalize execute, finish all close-source edits');
+    expect(workflow).toContain('`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint.');
+    expect(workflow).toContain('convert it into close-time handoff');
     expect(workflow).toContain('## Documentation Timing and Write Coordination');
     expect(workflow).toContain('Do not defer all documentation until after implementation.');
     expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
@@ -85,6 +87,8 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
     expect(hadaraWorkflow).toContain('| Find next work | `hadara task status --json` | Read-only selection cockpit. |');
     expect(hadaraWorkflow).toContain('Before running `task finalize --execute`, finish all close-source edits');
+    expect(hadaraWorkflow).toContain('`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint.');
+    expect(hadaraWorkflow).toContain('convert `HANDOFF.md` from any WIP checkpoint into close-time handoff');
     expect(hadaraWorkflow).toContain('## Task Document Timing');
     expect(hadaraWorkflow).toContain('Do not hand-edit `evidence.jsonl`.');
     expect(hadaraWorkflow).toContain('Avoid writing volatile close evidence ids into close-source docs');

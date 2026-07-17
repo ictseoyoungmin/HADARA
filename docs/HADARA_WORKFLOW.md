@@ -246,6 +246,7 @@ Do not use status/finalize to avoid authoring the task contract.
 
 Before running `task finalize --execute`, finish all close-source edits.
 Avoid writing volatile close evidence ids into close-source docs.
+`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before finalize execute, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it.
 
 ## Task Document Timing
 
@@ -257,7 +258,7 @@ HADARA 0.4 Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `ev
 | Before execution | Refine `TASK.md` Plan, Source Documents, and Acceptance. |
 | During execution | Update `TASK.md` Plan, Change Summary, Risks / Follow-ups; update `HANDOFF.md` warnings if continuity changes. |
 | After validation | Use `validation run` when possible; record evidence, then update `TASK.md` Validation and Acceptance deliberately with evidence ids or residual notes. |
-| Before finalize dry-run | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; update `HANDOFF.md`; update shared state docs when the task changed them. |
+| Before finalize dry-run | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert `HANDOFF.md` from any WIP checkpoint into close-time handoff with current next-step guidance; update shared state docs when the task changed them. |
 | Finalize review | Inspect `task finalize --json` dry-run output and fix reported blockers before execute. |
 | Finalize execute | Do not edit close-source docs during execute. |
 | After close | Only clarify docs if the task contract did not change; rerun finalize after close-source edits. |

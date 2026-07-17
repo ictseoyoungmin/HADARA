@@ -641,3 +641,4 @@
 | T-0638 | 0.5.0 cross-profile status ingress dogfood | Done | tasks/T-0638-0-5-0-cross-profile-status-ingress-dogfood | |
 | T-0639 | 0.5.0 host spawn EPERM test guard hardening | Done | tasks/T-0639-0-5-0-host-spawn-eperm-test-guard-hardening | |
 | T-0640 | 0.5.0 init output redirection greenfield trap hardening | Done | tasks/T-0640-0-5-0-init-output-redirection-greenfield-trap-hardening | |
+| T-0641 | 0.5.0 close-time handoff workflow guidance | Done | tasks/T-0641-0-5-0-close-time-handoff-workflow-guidance | |

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 192,
+  "rev": 194,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0640",
-    "title": "0.5.0 init output redirection greenfield trap hardening"
+    "id": "T-0641",
+    "title": "0.5.0 close-time handoff workflow guidance"
   },
   "activeTask": null,
   "nextWork": null,
