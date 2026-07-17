@@ -360,7 +360,8 @@ Document registration writes registry metadata, not prose rows in entry docs. Do
 | Requirements and source docs | Provides and approves | Summarizes into task docs | Indexes/read-map only |
 | `TASK.md` identity | Reviews | Does not hand-edit CLI-owned fields | Creates and lifecycle-updates |
 | `TASK.md` prose/tables | Reviews | Authors goal, source documents, plan, acceptance, validation, change summary, risks, and follow-ups | Validates controlled values |
-| `HANDOFF.md` | Reviews | Writes continuation guidance | May suggest or project summaries |
+| `HANDOFF.md` identity | Reviews | Does not hand-edit CLI-owned fields | Creates and lifecycle-updates |
+| `HANDOFF.md` prose/tables | Reviews | Writes WIP checkpoints and close-time continuation guidance | Validates during close; does not rewrite prose |
 | `evidence.jsonl` | Supplies command result facts | Does not hand-edit | Appends canonical evidence |
 | `EVIDENCE.md` | Reads | Does not hand-edit generated projection | Regenerates projection file |
 | Close proof | Reviews | Does not write by hand | Appends proof and audits freshness |

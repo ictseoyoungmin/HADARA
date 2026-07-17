@@ -538,6 +538,15 @@ describe('task finalize --auto (FD-010)', () => {
 
     expect(report).toMatchObject({ ok: true, mode: 'execute', state: 'closed-valid', partialExecutionRisk: false });
     expect(snapshotFiles(root)[`tasks/${task.id}-finalize-auto-first-capsule/TASK.md`]).toContain('| Status | Done |');
+    expect(snapshotFiles(root)[`tasks/${task.id}-finalize-auto-first-capsule/TASK.md`]).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
+    const handoff = snapshotFiles(root)[`tasks/${task.id}-finalize-auto-first-capsule/HANDOFF.md`];
+    const identitySection = handoff.match(/^## Identity\n[\s\S]*?(?=\n## )/m)?.[0] ?? '';
+    expect(handoff).toContain('## Identity');
+    expect(identitySection).toContain(`| ID | ${task.id} |`);
+    expect(identitySection).toContain('| Status | Done |');
+    expect(identitySection).not.toContain('| Status | Draft |');
+    expect(identitySection.match(/\| Field \| Value \|/g)).toHaveLength(1);
+    expect(identitySection).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
     expect(snapshotFiles(root)['docs/TASK_BOARD.md']).toContain(`| ${task.id} | Finalize auto first capsule | Done |`);
     expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 194,
+  "rev": 196,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0641",
-    "title": "0.5.0 close-time handoff workflow guidance"
+    "id": "T-0642",
+    "title": "0.5.0 task handoff identity timestamp sync"
   },
   "activeTask": null,
   "nextWork": null,

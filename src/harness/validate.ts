@@ -902,16 +902,16 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
     issues.push({
       severity: 'error',
       code: 'TASK_METADATA_PLACEHOLDER',
-      message: `Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: ${missing.join(', ')}.`,
+      message: `Done-level validation requires TASK.md metadata field(s) to be concrete dates/timestamps, not TBD: ${missing.join(', ')}.`,
       path: relativePath,
       heading: 'Identity',
-      fixHint: 'Replace TASK.md Created and Updated metadata placeholders with YYYY-MM-DD dates.',
-      example: '| Created | 2026-06-12 |',
+      fixHint: 'Replace TASK.md Created and Updated metadata placeholders with YYYY-MM-DD or YYYY-MM-DDTHH:mm values.',
+      example: '| Created | 2026-06-12T09:30 |',
       remediationHint: {
         path: relativePath,
         heading: 'Metadata',
-        requiredChange: 'Replace Created and Updated metadata placeholders with concrete YYYY-MM-DD dates.',
-        example: '| Created | 2026-06-12 |',
+        requiredChange: 'Replace Created and Updated metadata placeholders with concrete YYYY-MM-DD or YYYY-MM-DDTHH:mm values.',
+        example: '| Created | 2026-06-12T09:30 |',
         blocking: true
       }
     });
@@ -921,16 +921,16 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
     issues.push({
       severity: 'error',
       code: 'TASK_METADATA_DATE_INVALID',
-      message: 'Done-level validation requires TASK.md Created and Updated metadata to use YYYY-MM-DD dates.',
+      message: 'Done-level validation requires TASK.md Created and Updated metadata to use YYYY-MM-DD or YYYY-MM-DDTHH:mm values.',
       path: relativePath,
       heading: 'Identity',
-      fixHint: 'Use YYYY-MM-DD values for TASK.md Created and Updated metadata.',
-      example: '| Updated | 2026-06-12 |',
+      fixHint: 'Use YYYY-MM-DD or YYYY-MM-DDTHH:mm values for TASK.md Created and Updated metadata.',
+      example: '| Updated | 2026-06-12T09:30 |',
       remediationHint: {
         path: relativePath,
         heading: 'Metadata',
-        requiredChange: 'Use YYYY-MM-DD values for Created and Updated metadata.',
-        example: '| Updated | 2026-06-12 |',
+        requiredChange: 'Use YYYY-MM-DD or YYYY-MM-DDTHH:mm values for Created and Updated metadata.',
+        example: '| Updated | 2026-06-12T09:30 |',
         blocking: true
       }
     });
@@ -1593,7 +1593,7 @@ function isMetadataPlaceholder(value: string): boolean {
 }
 
 function isIsoDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+  return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2})?$/.test(value.trim());
 }
 
 function scaffoldHeadingForFile(fileName: string): string | undefined {

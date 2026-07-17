@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
+import { formatLocalMinuteTimestamp } from '../core/local-time';
 import { readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
 import { planCompletedProjectCurrentStateWrites } from '../services/project-current-state';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
@@ -46,7 +47,7 @@ export type TaskFinishNextAction = TaskLifecycleNextAction;
 export interface TaskFinishWrite {
   path: string;
   action: 'update' | 'insert';
-  field: 'task-status' | 'task-board-row' | 'current-state' | 'project-state-projection' | 'handoff-projection';
+  field: 'task-status' | 'task-handoff-identity' | 'task-board-row' | 'current-state' | 'project-state-projection' | 'handoff-projection';
   before: string | null;
   after: string;
   expectedBeforeExists: boolean;
@@ -258,10 +259,12 @@ function planWrites(
   issues: TaskFinishIssue[]
 ): TaskFinishWrite[] {
   const writes: TaskFinishWrite[] = [];
-  if (taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done')) {
+  const finishTimestamp = formatLocalMinuteTimestamp();
+  const finishRequired = taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done');
+  if (finishRequired) {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
-    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done'));
+    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done', finishTimestamp));
     const nextStatusHistoryStatus = latestStatusHistoryStatus(nextTaskContent);
     if (nextTaskContent === taskContent || (statusHistoryStatus !== null && nextStatusHistoryStatus !== 'Done')) {
       issues.push({
@@ -282,6 +285,26 @@ function planWrites(
         afterHash: hashContent(nextTaskContent),
         applied: false,
         contentAfter: nextTaskContent
+      });
+    }
+  }
+
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
+  if (finishRequired && fs.existsSync(handoffPath)) {
+    const handoffContent = fs.readFileSync(handoffPath, 'utf8');
+    const nextHandoffContent = normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, taskStatus, finishTimestamp));
+    if (nextHandoffContent !== normalizeAtomicTextDocument(handoffContent)) {
+      writes.push({
+        path: toPortablePath(path.relative(projectRoot, handoffPath)),
+        action: 'update',
+        field: 'task-handoff-identity',
+        before: readIdentityField(handoffContent, 'Status'),
+        after: readIdentityField(nextHandoffContent, 'Status') ?? 'Done',
+        expectedBeforeExists: true,
+        expectedBeforeHash: hashContent(handoffContent),
+        afterHash: hashContent(nextHandoffContent),
+        applied: false,
+        contentAfter: nextHandoffContent
       });
     }
   }
@@ -525,12 +548,68 @@ function readLatestStatusHistoryStatus(task: TaskCapsule): string | null {
   return latestStatusHistoryStatus(fs.readFileSync(taskPath, 'utf8'));
 }
 
-function replaceTaskStatus(content: string, status: string): string {
-  const withMetadata = content.replace(/^(\|\s*Status\s*\|\s*)[^|]*(\|)$/m, `$1${status} $2`);
+function replaceTaskStatus(content: string, status: string, updatedAt = formatLocalMinuteTimestamp()): string {
+  const withMetadata = setIdentityField(setIdentityField(content, 'Status', status), 'Updated', updatedAt);
   const withStatus = withMetadata.includes('## Status History')
     ? withMetadata.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`)
     : withMetadata;
   return appendStatusHistoryDone(withStatus);
+}
+
+function syncHandoffIdentity(content: string, task: TaskCapsule, taskStatus: string, updatedAt: string): string {
+  const currentStatus = readIdentityField(content, 'Status');
+  const nextStatus = 'Done';
+  const created = readIdentityField(content, 'Created') ?? readTaskIdentityField(task, 'Created') ?? updatedAt;
+  const existingUpdated = readIdentityField(content, 'Updated');
+  const shouldUpdateTimestamp = currentStatus !== nextStatus || !existingUpdated;
+  const identity = [
+    '## Identity',
+    '',
+    '| Field | Value |',
+    '|---|---|',
+    `| ID | ${task.id} |`,
+    `| Title | ${task.title.replace(/\|/g, '/')} |`,
+    `| Status | ${nextStatus} |`,
+    `| Created | ${created} |`,
+    `| Updated | ${shouldUpdateTimestamp ? updatedAt : existingUpdated} |`
+  ].join('\n');
+  if (/^## Identity\s*$/m.test(content)) {
+    return replaceMarkdownHeadingSection(content, '## Identity', `${identity}\n`);
+  }
+  return content.replace(/^# Handoff\s*\n*/m, `# Handoff\n\n${identity}\n\n`);
+}
+
+function replaceMarkdownHeadingSection(content: string, heading: string, replacement: string): string {
+  const lines = content.split(/\r?\n/);
+  const start = lines.findIndex((line) => line.trim() === heading);
+  if (start < 0) return content;
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    if (/^##\s+/.test(lines[index])) {
+      end = index;
+      break;
+    }
+  }
+  const replacementLines = replacement.trimEnd().split(/\r?\n/);
+  return `${[...lines.slice(0, start), ...replacementLines, ...lines.slice(end)].join('\n').trimEnd()}\n`;
+}
+
+function readTaskIdentityField(task: TaskCapsule, field: string): string | null {
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return null;
+  return readIdentityField(fs.readFileSync(taskPath, 'utf8'), field);
+}
+
+function readIdentityField(content: string, field: string): string | null {
+  const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = content.match(new RegExp(`^\\|\\s*${escaped}\\s*\\|\\s*([^|]+?)\\s*\\|$`, 'm'));
+  return match?.[1]?.trim() || null;
+}
+
+function setIdentityField(content: string, field: string, value: string): string {
+  const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`^(\\|\\s*${escaped}\\s*\\|\\s*)[^|]*(\\|)$`, 'm');
+  return content.replace(pattern, `$1${value} $2`);
 }
 
 function readStatusTableValue(content: string): string | null {

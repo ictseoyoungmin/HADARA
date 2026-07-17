@@ -501,7 +501,7 @@ describe('Harness Task Capsule validation', () => {
       expect.objectContaining({
         severity: 'error',
         code: 'TASK_METADATA_PLACEHOLDER',
-        message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: Created, Updated.',
+        message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates/timestamps, not TBD: Created, Updated.',
         path: `tasks/${task.id}-placeholder-metadata/TASK.md`,
         heading: 'Identity',
         fixHint: expect.stringContaining('YYYY-MM-DD')

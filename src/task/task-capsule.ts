@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, slugify, writeFileIfMissing } from '../core/fs';
+import { formatLocalDate, formatLocalMinuteTimestamp } from '../core/local-time';
 import { startMonotonicTimer } from '../core/timing';
 import { managedSectionBlock, parseManagedSections } from '../services/managed-sections';
 import { readMarkdownSection } from '../services/markdown-table';
@@ -13,9 +14,19 @@ export interface TaskCapsule {
   dir: string;
 }
 
+function taskTitleForTable(task: TaskCapsule): string {
+  return task.title.replace(/\|/g, '/');
+}
+
 export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
-  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | ${new Date().toISOString().slice(0, 10)} |\n| Updated | ${new Date().toISOString().slice(0, 10)} |\n\nSchema hint: use \`hadara schema --json\` or \`hadara schema --domain <domain-id> --json\` for controlled values before replacing scaffold tokens.\n\nLifecycle note: do not hand-edit Identity \`Status\` or \`docs/TASK_BOARD.md\` Status to close work. Keep the task prose current, then run \`hadara task finalize --task ${task.id} --execute --auto --json\`.\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| Boundary | Items |\n|---|---|\n| In | TBD |\n| Out | TBD |\n\n## Plan\n\n| Step | Action | Status |\n|---|---|---|\n| 1 | Define the task contract. | Pending |\n| 2 | Implement the smallest useful slice. | Pending |\n| 3 | Validate and record evidence. | Pending |\n\n## Acceptance\n\n| ID | Criterion | State | Evidence | Reference |\n|---|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD | TBD |\n| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |\n\n## Validation\n\n| Check | Gate | Result | Evidence |\n|---|---|---|---|\n| TBD | Yes | Not Run | TBD |\n\n## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |\n\n## Changes\n\n| Area | Summary |\n|---|---|\n| N/A | TBD |\n\n## Risks / Follow-ups\n\n| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Follow-up | TBD | Open | TBD |\n\n## History\n\n| Date | State | Note |\n|---|---|---|\n| ${new Date().toISOString().slice(0, 10)} | Draft | Initial task scaffold. |\n`,
-  'HANDOFF.md': () => `# Handoff\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`,
+  'TASK.md': (task) => {
+    const timestamp = formatLocalMinuteTimestamp();
+    return `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${taskTitleForTable(task)} |\n| Status | Draft |\n| Created | ${timestamp} |\n| Updated | ${timestamp} |\n\nSchema hint: use \`hadara schema --json\` or \`hadara schema --domain <domain-id> --json\` for controlled values before replacing scaffold tokens.\n\nLifecycle note: do not hand-edit Identity \`Status\` or \`docs/TASK_BOARD.md\` Status to close work. Keep the task prose current, then run \`hadara task finalize --task ${task.id} --execute --auto --json\`.\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| Boundary | Items |\n|---|---|\n| In | TBD |\n| Out | TBD |\n\n## Plan\n\n| Step | Action | Status |\n|---|---|---|\n| 1 | Define the task contract. | Pending |\n| 2 | Implement the smallest useful slice. | Pending |\n| 3 | Validate and record evidence. | Pending |\n\n## Acceptance\n\n| ID | Criterion | State | Evidence | Reference |\n|---|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD | TBD |\n| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |\n\n## Validation\n\n| Check | Gate | Result | Evidence |\n|---|---|---|---|\n| TBD | Yes | Not Run | TBD |\n\n## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |\n\n## Changes\n\n| Area | Summary |\n|---|---|\n| N/A | TBD |\n\n## Risks / Follow-ups\n\n| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Follow-up | TBD | Open | TBD |\n\n## History\n\n| Date | State | Note |\n|---|---|---|\n| ${formatLocalDate()} | Draft | Initial task scaffold. |\n`;
+  },
+  'HANDOFF.md': (task) => {
+    const timestamp = formatLocalMinuteTimestamp();
+    return `# Handoff\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${taskTitleForTable(task)} |\n| Status | Draft |\n| Created | ${timestamp} |\n| Updated | ${timestamp} |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`;
+  },
   'EVIDENCE.md': () => `# EVIDENCE\n\nThis file is a human-readable projection from \`evidence.jsonl\`.\n\nDo not hand-edit this file.\n\n## Validation Evidence\n\n<!-- hadara:slot evidence.validation-summary -->\n| Evidence ID | Outcome | Category | Summary |\n|---|---|---|---|\n<!-- /hadara:slot -->\n\n## Close Proof\n\n<!-- hadara:slot evidence.close-proof -->\n| Check | Result | Evidence |\n|---|---|---|\n<!-- /hadara:slot -->\n\n## Failed / Blocked / Residual Evidence\n\n<!-- hadara:slot evidence.residuals -->\n| Evidence ID | Outcome | Summary | Disposition | Reference |\n|---|---|---|---|---|\n<!-- /hadara:slot -->\n`,
   'evidence.jsonl': () => '',
 };

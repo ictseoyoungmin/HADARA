@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6 |
-| Latest Completed Task | T-0641 0.5.0 close-time handoff workflow guidance |
+| Latest Completed Task | T-0642 0.5.0 task handoff identity timestamp sync |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

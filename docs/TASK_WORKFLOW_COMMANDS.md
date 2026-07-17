@@ -127,7 +127,8 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`
 | `TASK.md` status metadata, `## Status`, and Status History | Command-owned for finish bookkeeping; worker-owned before finish. |
 | `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task finalize`; Notes and extra cells are mixed/human-owned. |
 | `EVIDENCE.md` and `evidence.jsonl` | Evidence writer-owned; do not hand-edit `evidence.jsonl`. |
-| `HANDOFF.md` managed current-state table | Managed/mixed; persist `TaskStatus` only. `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
+| Task-local `HANDOFF.md` Identity table | Command-owned for `ID`, `Title`, `Status`, `Created`, and `Updated` during task create/finalize bookkeeping. |
+| Task-local `HANDOFF.md` prose/tables | Worker-owned close-time handoff guidance. Persist `TaskStatus` only; `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
 | `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 

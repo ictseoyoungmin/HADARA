@@ -402,7 +402,8 @@ Document registration writes registry metadata, not prose rows in entry docs. Do
 | Requirements and source docs | Provides and approves | Summarizes into task docs | Indexes/read-map only |
 | \`TASK.md\` identity | Reviews | Does not hand-edit CLI-owned fields | Creates and lifecycle-updates |
 | \`TASK.md\` prose/tables | Reviews | Authors goal, source documents, plan, acceptance, validation, change summary, risks, and follow-ups | Validates controlled values |
-| \`HANDOFF.md\` | Reviews | Writes continuation guidance | May suggest or project summaries |
+| \`HANDOFF.md\` identity | Reviews | Does not hand-edit CLI-owned fields | Creates and lifecycle-updates |
+| \`HANDOFF.md\` prose/tables | Reviews | Writes WIP checkpoints and close-time continuation guidance | Validates during close; does not rewrite prose |
 | \`evidence.jsonl\` | Supplies command result facts | Does not hand-edit | Appends canonical evidence |
 | \`EVIDENCE.md\` | Reads | Does not hand-edit generated projection | Regenerates projection file |
 | Close proof | Reviews | Does not write by hand | Appends proof and audits freshness |
@@ -871,7 +872,8 @@ Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`
 | \`TASK.md\` status metadata, \`## Status\`, and Status History | Command-owned for finalize bookkeeping; worker-owned before finalize. |
 | \`docs/TASK_BOARD.md\` ID/title/status/capsule cells | Command-owned by \`task finalize\`; Notes and extra cells are mixed/human-owned. |
 | \`EVIDENCE.md\` and \`evidence.jsonl\` | Evidence writer-owned; do not hand-edit \`evidence.jsonl\`. Treat \`evidence.jsonl\` as canonical and \`EVIDENCE.md\` as a non-canonical human summary; evidence rebuild is not implemented in this scaffold and any future execute mode must be dry-run-first and before-hash guarded. |
-| \`HANDOFF.md\` managed current-state table | Managed/mixed; persist \`TaskStatus\` only. \`CloseState\` is derived by status/finalize/state read models and should not be written into close-source handoff tables. |
+| Task-local \`HANDOFF.md\` Identity table | Command-owned for \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` during task create/finalize bookkeeping. |
+| Task-local \`HANDOFF.md\` prose/tables | Worker-owned close-time handoff guidance. Persist \`TaskStatus\` only; \`CloseState\` is derived by status/finalize/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
 | \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
