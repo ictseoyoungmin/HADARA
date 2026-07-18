@@ -385,8 +385,8 @@ function lifecycleForSessionStart(taskId: string | undefined, contextPack: Conte
       ? hadaraCommand(`context graph --task ${taskId} --json`)
       : hadaraCommand('context graph --json'),
     taskId
-      ? hadaraCommand(`session start --task ${taskId} --live --json`)
-      : hadaraCommand('session start --live --json'),
+      ? hadaraCommand(`context pack --task ${taskId} --json`)
+      : hadaraCommand('task status --json'),
     hadaraCommand('status --json')
   ];
 
@@ -473,16 +473,19 @@ function guidanceForSessionStart(input: {
     reason: 'Preview stale cache shards without writing cache.'
   });
 
-  commands.push({
-    id: 'session-start-live',
-    command: taskId
-      ? hadaraCommand(`session start --task ${taskId} --live --json`)
-      : hadaraCommand('session start --live --json'),
-    args: taskId
-      ? ['session', 'start', '--task', taskId, '--live', '--json']
-      : ['session', 'start', '--live', '--json'],
-    reason: 'Opt into slower live context-pack discovery only when broad graph reads are acceptable.'
-  });
+  commands.push(taskId
+    ? {
+        id: 'context-pack',
+        command: hadaraCommand(`context pack --task ${taskId} --json`),
+        args: ['context', 'pack', '--task', taskId, '--json'],
+        reason: 'Opt into explicit context-pack discovery only when task-scoped file routing is needed.'
+      }
+    : {
+        id: 'task-status',
+        command: hadaraCommand('task status --json'),
+        args: ['task', 'status', '--json'],
+        reason: 'Select a concrete task before requesting task-scoped context.'
+      });
 
   return {
     mode,
@@ -522,14 +525,14 @@ function buildBoundedContextPackReport(input: {
     ? [{
         severity: 'warning',
         code: 'CONTEXT_PACK_DEGRADED',
-        message: 'Session start used the bounded no-live context pack envelope. Run session start --live or context pack explicitly when a full graph read is acceptable.',
+        message: 'The historical bounded session-start adapter used the bounded no-live context pack envelope. Run context pack explicitly when a full graph read is acceptable.',
         fixHint: 'Run hadara context cache warm --execute --json before relying on broad graph-backed session context.'
       }]
     : [{
         severity: 'warning',
         code: 'CONTEXT_PACK_TASK_NOT_FOUND',
-        message: 'No task id was supplied. Bounded session start returned task-selection guidance without running live project discovery.',
-        fixHint: 'Run hadara task status --json, then rerun hadara session start --task <task-id> --json.'
+        message: 'No task id was supplied. The historical bounded session-start adapter returned task-selection guidance without running live project discovery.',
+        fixHint: 'Run hadara task status --json, then run hadara context pack --task <task-id> --json when file-routing context is needed.'
       }];
   const readFirst: ContextPackItem[] = input.taskId
     ? [{

@@ -647,3 +647,4 @@
 | T-0644 | 0.5.0 finalize dry-run done-level token parity | Done | tasks/T-0644-0-5-0-finalize-dry-run-done-level-token-parity | |
 | T-0645 | 0.5.0 dogfood UX follow-up cleanup | Done | tasks/T-0645-0-5-0-dogfood-ux-follow-up-cleanup | |
 | T-0646 | 0.5.0 task-selection status v2 and selected-task cockpit | Done | tasks/T-0646-0-5-0-task-selection-status-v2-and-selected-task-cockpit | |
+| T-0647 | 0.5.0 session-start removal and cross-profile dogfood | Done | tasks/T-0647-0-5-0-session-start-removal-and-cross-profile-dogfood | |

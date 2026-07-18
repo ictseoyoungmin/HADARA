@@ -6,7 +6,7 @@ This repository must be developed using the HADARA protocol.
 
 | Document | When to Read | Purpose |
 |---|---|---|
-| `.hadara/state/current.json` | Every session, unless `session start` already exposed it | Structured release, active/latest task, next intent, current problems, and validation baseline. |
+| `.hadara/state/current.json` | Every session, unless `hadara status --json` already exposed it | Structured release, active/latest task, next intent, current problems, and validation baseline. |
 | `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |
 | `docs/PROJECT_STATE.md` | Every session | Current project state. |
 | `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff. |
@@ -37,7 +37,7 @@ Use semantic tiers to keep session startup compact:
 | `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
 | `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
 
-`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `.hadara/state/current.json` or the equivalent `session start` projection before task-work or conditional-reference docs. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; use `docs/AGENT_HANDOFF.md` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
+`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `.hadara/state/current.json` or the equivalent `hadara status --json` projection before task-work or conditional-reference docs. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; use `docs/AGENT_HANDOFF.md` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
 
 ## Rules
 

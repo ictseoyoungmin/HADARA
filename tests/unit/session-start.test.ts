@@ -124,6 +124,7 @@ describe('session start', () => {
     expect(report.lifecycle.diagnosticCommands).toEqual(expect.arrayContaining([
       'hadara context cache status --json',
       `hadara context graph --task ${task.id} --json`,
+      `hadara context pack --task ${task.id} --json`,
       'hadara status --json'
     ]));
     expect(report.guidance.commands).toEqual(expect.arrayContaining([
@@ -140,10 +141,11 @@ describe('session start', () => {
         args: ['docs', 'read-map', '--task', task.id, '--json']
       }),
       expect.objectContaining({
-        id: 'session-start-live',
-        args: ['session', 'start', '--task', task.id, '--live', '--json']
+        id: 'context-pack',
+        args: ['context', 'pack', '--task', task.id, '--json']
       })
     ]));
+    expect(report.guidance.commands.some((command) => command.command.includes('session start'))).toBe(false);
     expect(report.docsReadMap).toMatchObject({
       taskId: task.id,
       command: `hadara docs read-map --task ${task.id} --json`,

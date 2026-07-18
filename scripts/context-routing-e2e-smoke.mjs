@@ -15,8 +15,8 @@ const timeoutMs = numberArg('--timeout-ms', 60_000);
 const killGraceMs = numberArg('--kill-grace-ms', 3_000);
 const profile = String(args.get('--profile') ?? 'fast');
 const fastWorkloads = new Set([
-  'session_start_no_task',
-  'session_start_task',
+  'status_ingress',
+  'task_status',
   'context_slice_range',
   'context_slice_symbol'
 ]);
@@ -26,8 +26,8 @@ const fullWorkloads = new Set([
   'graph_task',
   'graph_task_include_code',
   'context_pack',
-  'session_start_no_task',
-  'session_start_task',
+  'status_ingress',
+  'task_status',
   'context_slice_range',
   'context_slice_symbol'
 ]);
@@ -99,31 +99,28 @@ const workloads = [
     ]
   },
   {
-    label: 'session_start_no_task',
-    args: ['session', 'start', '--max-read-first', '3', '--project', projectRoot, '--json'],
+    label: 'status_ingress',
+    args: ['status', '--project', projectRoot, '--json'],
     expect: (data) => [
-      expectEqual(data.schemaVersion, 'hadara.sessionStart.v1', 'schemaVersion'),
-      expectEqual(data.command, 'session.start', 'command'),
-      expectEqual(data.guidance?.primaryNextAction, 'select-task', 'guidance.primaryNextAction'),
-      expectEqual(data.guidance?.taskRequired, true, 'guidance.taskRequired')
+      expectEqual(data.schemaVersion, 'hadara.project.status.v2', 'schemaVersion'),
+      expectEqual(data.command, 'status', 'command'),
+      expectEqual(data.scope, 'project', 'scope')
     ]
   },
   {
-    label: 'session_start_task',
-    args: ['session', 'start', '--task', taskId, '--max-read-first', '3', '--max-items', '12', '--project', projectRoot, '--json'],
+    label: 'task_status',
+    args: ['task', 'status', '--task', taskId, '--project', projectRoot, '--json'],
     expect: (data) => [
-      expectEqual(data.schemaVersion, 'hadara.sessionStart.v1', 'schemaVersion'),
-      expectEqual(data.command, 'session.start', 'command'),
-      expectEqual(data.guidance?.primaryNextAction, 'inspect-task', 'guidance.primaryNextAction'),
-      expectEqual(data.guidance?.taskRequired, false, 'guidance.taskRequired'),
-      expectMaxLength(data.contextPack?.readFirst, 3, 'contextPack.readFirst')
+      expectEqual(data.schemaVersion, 'hadara.task.status.v2', 'schemaVersion'),
+      expectEqual(data.command, 'task.status', 'command'),
+      expectEqual(data.taskId, taskId, 'taskId')
     ]
   },
   {
     label: 'context_slice_range',
     args: [
       'context', 'slice',
-      '--path', 'docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md',
+      '--path', 'docs/specs/0.5/0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md',
       '--from', '1',
       '--to', '8',
       '--project', projectRoot,
@@ -141,8 +138,8 @@ const workloads = [
     label: 'context_slice_symbol',
     args: [
       'context', 'slice',
-      '--path', 'src/context/session-start.ts',
-      '--symbol', 'buildSessionStartReport',
+      '--path', 'src/services/project-status-v2.ts',
+      '--symbol', 'createProjectStatusV2Report',
       '--window', '2',
       '--project', projectRoot,
       '--json'
@@ -190,7 +187,7 @@ const report = {
   killGraceMs,
   selectedWorkloads: [...selectedWorkloads].sort(),
   notes: [
-    'The default fast profile covers bounded Session Start and raw slice surfaces.',
+    'The default fast profile covers status-first ingress, selected-task status, and raw slice surfaces.',
     'Use --profile full to include cache status, cache warm dry-run, task graph, code-aware graph, and context pack workloads.',
     'The smoke pack invokes read-only or dry-run commands only and verifies .hadara/local/cache/context is unchanged.'
   ],

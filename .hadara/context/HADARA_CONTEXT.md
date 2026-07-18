@@ -20,7 +20,7 @@ Use it to decide what to read next.
 
 | Need | Read |
 |---|---|
-| Current release/task/intent/problem/validation facts | `.hadara/state/current.json` (also exposed by `session start`) |
+| Current release/task/intent/problem/validation facts | `.hadara/state/current.json` or `hadara status --json` |
 | Product/phase projection and deeper routing | `docs/PROJECT_STATE.md` |
 | Next-agent continuity, next action, and live warnings | `docs/AGENT_HANDOFF.md` |
 | Task list | `docs/TASK_BOARD.md` |

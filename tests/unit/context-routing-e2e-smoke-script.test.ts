@@ -18,8 +18,10 @@ describe('context routing e2e smoke script', () => {
     expect(source).toContain('--profile');
     expect(source).toContain('cache_status');
     expect(source).toContain('cache_warm_dry_run');
-    expect(source).toContain('session_start_no_task');
+    expect(source).toContain('status_ingress');
+    expect(source).toContain('task_status');
     expect(source).toContain('context_slice_symbol');
+    expect(source).not.toContain('session_start_no_task');
     expect(source).toContain('fingerprintContextCache');
     expect(source).toContain("child.kill('SIGTERM')");
     expect(source).toContain("child.kill('SIGKILL')");
@@ -55,8 +57,8 @@ describe('context routing e2e smoke script', () => {
         }
       });
       expect(report.workloads.map((workload: { label: string }) => workload.label)).toEqual([
-        'session_start_no_task',
-        'session_start_task',
+        'status_ingress',
+        'task_status',
         'context_slice_range',
         'context_slice_symbol'
       ]);
@@ -99,8 +101,8 @@ describe('context routing e2e smoke script', () => {
         'context_slice_symbol',
         'graph_task',
         'graph_task_include_code',
-        'session_start_no_task',
-        'session_start_task'
+        'status_ingress',
+        'task_status'
       ]);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
@@ -140,7 +142,7 @@ if (command === 'context cache status') {
     command: 'context.graph',
     ok: true,
     taskId,
-    nodes: [{ id: 'task:' + taskId, type: 'Task' }, ...(hasIncludeCode ? [{ id: 'file:src/context/session-start.ts', type: 'SourceFile' }] : [])],
+    nodes: [{ id: 'task:' + taskId, type: 'Task' }, ...(hasIncludeCode ? [{ id: 'file:src/services/project-status-v2.ts', type: 'SourceFile' }] : [])],
     edges: [],
     issues: []
   };
@@ -154,15 +156,21 @@ if (command === 'context cache status') {
     cache: { used: false, hit: false },
     issues: []
   };
-} else if (args[0] === 'session' && args[1] === 'start') {
+} else if (args[0] === 'status') {
   payload = {
-    schemaVersion: 'hadara.sessionStart.v1',
-    command: 'session.start',
+    schemaVersion: 'hadara.project.status.v2',
+    command: 'status',
     ok: true,
-    guidance: taskId
-      ? { primaryNextAction: 'inspect-task', taskRequired: false }
-      : { primaryNextAction: 'select-task', taskRequired: true },
-    contextPack: { readFirst: taskId ? [{ id: 'task:' + taskId }] : [] },
+    scope: 'project',
+    phase: 'select-work',
+    issues: []
+  };
+} else if (args[0] === 'task' && args[1] === 'status') {
+  payload = {
+    schemaVersion: 'hadara.task.status.v2',
+    command: 'task.status',
+    ok: true,
+    taskId,
     issues: []
   };
 } else if (args[0] === 'context' && args[1] === 'slice') {
@@ -172,7 +180,7 @@ if (command === 'context cache status') {
     command: 'context.slice',
     ok: true,
     strategy: symbol ? 'symbol-neighborhood' : 'explicit-range',
-    slices: [{ text: symbol ? 'export function buildSessionStartReport() {}\\n' : '# Context Pack\\n' }],
+    slices: [{ text: symbol ? 'export function createProjectStatusV2Report() {}\\n' : '# Status Plan\\n' }],
     issues: []
   };
 } else {
