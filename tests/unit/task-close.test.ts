@@ -181,6 +181,100 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
   });
 
+  it('does not reclaim a fresh metadata gap while another process is acquiring a lock', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction fresh metadata gap');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
+    fs.mkdirSync(lockDir, { recursive: true });
+
+    const report = createTaskCloseTransactionReport(root, task.id, { lockTimeoutMs: 25 });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT' }));
+    expect(report.transaction.locks).not.toContainEqual(expect.objectContaining({ name: 'task-board', staleReclaimed: true }));
+    expect(fs.existsSync(lockDir)).toBe(true);
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('reclaims old invalid metadata through the stale-lock path', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction invalid metadata reclaim');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
+    fs.mkdirSync(lockDir, { recursive: true });
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), '{not json', 'utf8');
+    const old = new Date(Date.now() - 10_000);
+    fs.utimesSync(lockDir, old, old);
+
+    const report = createTaskCloseTransactionReport(root, task.id, { lockTimeoutMs: 100 });
+
+    expect(report.ok).toBe(true);
+    expect(report.transaction.locks).toContainEqual(
+      expect.objectContaining({
+        name: 'task-board',
+        contended: true,
+        staleReclaimed: true,
+        staleReason: 'metadata-invalid'
+      })
+    );
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('does not reclaim a live-owner lock only because it is old', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction live old lock');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
+    fs.mkdirSync(lockDir, { recursive: true });
+    const old = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    fs.writeFileSync(
+      path.join(lockDir, 'lock.json'),
+      `${JSON.stringify({ pid: process.pid, token: 'live-old-owner', command: 'task.close', createdAt: old })}\n`,
+      'utf8'
+    );
+
+    const report = createTaskCloseTransactionReport(root, task.id, { lockTimeoutMs: 25 });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT' }));
+    expect(report.transaction.locks).not.toContainEqual(expect.objectContaining({ name: 'task-board', staleReclaimed: true }));
+    expect(fs.existsSync(lockDir)).toBe(true);
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('leaves a recreated lock in place when release cannot prove token ownership', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction release ownership');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction release ownership | Done |`, `| ${task.id} | Close transaction release ownership | Draft |`),
+      'utf8'
+    );
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-close', `${task.id}.lock`);
+    let replaced = false;
+
+    const report = createTaskCloseTransactionReport(root, task.id, {
+      onProgress(event) {
+        if (replaced || event.step !== 'finish' || event.phase !== 'executed') return;
+        replaced = true;
+        fs.rmSync(lockDir, { recursive: true, force: true });
+        fs.mkdirSync(lockDir, { recursive: true });
+      }
+    });
+
+    expect(report.ok).toBe(true);
+    expect(replaced).toBe(true);
+    expect(fs.existsSync(lockDir)).toBe(true);
+    expect(fs.existsSync(path.join(lockDir, 'lock.json'))).toBe(false);
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
   it('persists local operation state when execution writes lifecycle state then stops on a later blocker', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction partial recovery');

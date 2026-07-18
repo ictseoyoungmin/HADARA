@@ -79,6 +79,20 @@ export interface ProjectStatusV2Report {
       detail: 'fast' | 'full';
       health: OpsStatusReport['health'];
       issues: number;
+      debt?: {
+        open: number;
+        highOpen: number;
+      };
+      stateConsistency?: {
+        evaluated: boolean;
+        consistent: boolean;
+        errors: number;
+        warnings: number;
+      };
+      activeRun?: {
+        present: boolean;
+      };
+      knownProblems?: number;
     };
   };
   issues: Array<{
@@ -107,8 +121,9 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
     code: issue.code,
     message: issue.message
   }));
+  const opsStatusIssues = projectStatusIssuesFromOpsStatus(opsStatus);
   const phase = determineProjectPhase({ currentState, currentStateIssues, opsStatus, taskSelection });
-  const health = determineHealth(opsStatus, phase, currentStateIssues);
+  const health = determineHealth(opsStatus, phase, [...currentStateIssues, ...opsStatusIssues]);
   const primaryNextAction = buildPrimaryNextAction({ phase, currentState, taskSelection, health });
 
   return {
@@ -144,10 +159,31 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
       opsStatusV1: {
         detail,
         health: opsStatus.health,
-        issues: opsStatus.issues.length
+        issues: opsStatus.issues.length + opsStatusIssues.length,
+        ...(detail === 'full' ? {
+          debt: {
+            open: opsStatus.debt.open,
+            highOpen: opsStatus.debt.highOpen
+          },
+          stateConsistency: opsStatus.stateConsistency ? {
+            evaluated: true,
+            consistent: opsStatus.stateConsistency.consistent,
+            errors: opsStatus.stateConsistency.issueCounts.error,
+            warnings: opsStatus.stateConsistency.issueCounts.warning
+          } : {
+            evaluated: false,
+            consistent: true,
+            errors: 0,
+            warnings: 0
+          },
+          activeRun: {
+            present: Boolean(opsStatus.activeRun.activeRun)
+          },
+          knownProblems: opsStatus.handoff.knownProblems.length
+        } : {})
       }
     },
-    issues: [...currentStateIssues, ...opsStatus.issues]
+    issues: [...currentStateIssues, ...opsStatus.issues, ...opsStatusIssues]
   };
 }
 
@@ -182,6 +218,7 @@ function determineHealth(opsStatus: OpsStatusReport, phase: ProjectStatusPhase, 
   if (currentStateIssues.some((issue) => issue.severity === 'error')) return 'blocked';
   if (opsStatus.health === 'error') return 'blocked';
   if (phase === 'uninitialized') return 'attention';
+  if (currentStateIssues.some((issue) => issue.severity === 'warning')) return 'degraded';
   if (opsStatus.health === 'degraded') return 'degraded';
   return 'ok';
 }
@@ -200,7 +237,16 @@ function buildPrimaryNextAction(input: {
     return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect blocking status diagnostics.');
   }
   if (input.phase === 'uninitialized') {
-    return readOnlyCommandAction('initialize-project', 'hadara init --json', 'Initialize HADARA or run adoption preview for an existing project.');
+    return {
+      id: 'initialize-project',
+      kind: 'create',
+      command: 'hadara init --json',
+      message: 'Initialize HADARA or run adoption preview for an existing project.',
+      writeBoundary: 'project-state',
+      risk: 'low',
+      requiresReview: true,
+      writes: true
+    };
   }
   if (input.phase === 'adoption-review') {
     return readOnlyCommandAction('review-adoption', 'hadara init --adopt --json', 'Review HADARA adoption before creating task capsules.');
@@ -243,11 +289,30 @@ function readOnlyCommandAction(id: string, command: string, message: string): Pr
 function buildReadiness(phase: ProjectStatusPhase, health: ProjectStatusHealth, action: ProjectStatusNextActionV2 | null): StatusReadinessV1 {
   if (phase === 'idle' && !action) return { intent: 'orient', status: 'terminal', reason: 'No active task, next work, or current recommendation was found.' };
   if (health === 'blocked') return { intent: 'orient', status: 'blocked', reason: 'Status generation found blocking project health issues.' };
-  if (phase === 'active-work') return { intent: 'edit', status: 'ready', reason: 'An active task is selected; route to selected-task status for local phase evaluation.' };
+  if (phase === 'active-work') return { intent: 'orient', status: 'ready', reason: 'An active task is selected; inspect selected-task status before editing.' };
   if (phase === 'select-work') return { intent: 'plan', status: 'ready', reason: 'A next-work recommendation is available.' };
   if (phase === 'uninitialized' || phase === 'adoption-review') return { intent: 'orient', status: 'needs-review', reason: 'Project setup or adoption state needs operator review.' };
   if (health === 'degraded') return { intent: 'orient', status: 'needs-context', reason: 'Project status is degraded; inspect explicit diagnostics before acting.' };
   return { intent: 'orient', status: 'ready', reason: 'Project status is available.' };
+}
+
+function projectStatusIssuesFromOpsStatus(opsStatus: OpsStatusReport): ProjectStatusV2Report['issues'] {
+  const issues: ProjectStatusV2Report['issues'] = [];
+  const stateConsistency = opsStatus.stateConsistency;
+  if (stateConsistency && stateConsistency.issueCounts.error > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'STATUS_STATE_CONSISTENCY_ERROR',
+      message: `State consistency reported ${stateConsistency.issueCounts.error} error(s) and ${stateConsistency.issueCounts.warning} warning(s).`
+    });
+  } else if (stateConsistency && stateConsistency.issueCounts.warning > 0) {
+    issues.push({
+      severity: 'warning',
+      code: 'STATUS_STATE_CONSISTENCY_WARNING',
+      message: `State consistency reported ${stateConsistency.issueCounts.warning} warning(s).`
+    });
+  }
+  return issues;
 }
 
 function buildEvaluations(input: {

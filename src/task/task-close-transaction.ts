@@ -20,6 +20,7 @@ export interface TaskCloseTransactionOptions {
 }
 
 const TASK_CLOSE_LOCK_STALE_MS = 5 * 60 * 1000;
+const TASK_CLOSE_LOCK_METADATA_GRACE_MS = 2000;
 
 export type TaskCloseOperationPhase = 'preflight' | 'applying' | 'closed-valid' | 'blocked' | 'recovery-required';
 
@@ -30,7 +31,7 @@ export interface TaskCloseTransactionLockDiagnostics {
   contended: boolean;
   timeoutMs: number;
   staleReclaimed?: boolean;
-  staleReason?: 'owner-dead' | 'lease-expired' | 'metadata-invalid';
+  staleReason?: 'owner-dead' | 'metadata-invalid';
   ownerPid?: number;
   ownerAgeMs?: number;
 }
@@ -312,9 +313,11 @@ function acquireCloseLock(
   }
   const token = crypto.randomUUID();
   try {
-    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, token, command: 'task.close', taskId, lock: name, createdAt: new Date().toISOString(), staleMs: TASK_CLOSE_LOCK_STALE_MS })}\n`, 'utf8');
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, token, command: 'task.close', taskId, lock: name, createdAt: new Date().toISOString(), staleMs: TASK_CLOSE_LOCK_STALE_MS })}\n`, { encoding: 'utf8', flag: 'wx' });
   } catch {
-    // Metadata is best-effort diagnostics.
+    // Ownership metadata is part of the lock contract. Without it, fail closed
+    // by leaving the directory for the next caller's stale-lock handling.
+    throw new TaskCloseLockError(name, portablePath, timer.elapsedMs(), timeoutMs);
   }
   return {
     path: lockDir,
@@ -404,22 +407,39 @@ function tryReclaimStaleCloseLock(lockDir: string): { reclaimed: boolean; reason
   try {
     metadata = JSON.parse(fs.readFileSync(path.join(lockDir, 'lock.json'), 'utf8')) as { pid?: number; createdAt?: string };
   } catch {
-    try {
-      fs.rmSync(lockDir, { recursive: true, force: true });
-      return { reclaimed: true, reason: 'metadata-invalid' };
-    } catch {
-      return { reclaimed: false };
+    const ownerAgeMs = lockDirectoryAgeMs(lockDir);
+    if (typeof ownerAgeMs !== 'number' || ownerAgeMs < TASK_CLOSE_LOCK_METADATA_GRACE_MS) {
+      return { reclaimed: false, ownerAgeMs };
     }
+    return quarantineAndRemoveLock(lockDir, 'metadata-invalid', undefined, ownerAgeMs);
   }
   const ownerPid = typeof metadata.pid === 'number' ? metadata.pid : undefined;
   const createdAtMs = metadata.createdAt ? Date.parse(metadata.createdAt) : Number.NaN;
   const ownerAgeMs = Number.isFinite(createdAtMs) ? Math.max(0, Date.now() - createdAtMs) : undefined;
   const ownerDead = typeof ownerPid === 'number' && !isProcessAlive(ownerPid);
-  const leaseExpired = typeof ownerAgeMs === 'number' && ownerAgeMs > TASK_CLOSE_LOCK_STALE_MS;
-  if (!ownerDead && !leaseExpired) return { reclaimed: false, ownerPid, ownerAgeMs };
+  if (!ownerDead) return { reclaimed: false, ownerPid, ownerAgeMs };
+  return quarantineAndRemoveLock(lockDir, 'owner-dead', ownerPid, ownerAgeMs);
+}
+
+function lockDirectoryAgeMs(lockDir: string): number | undefined {
   try {
-    fs.rmSync(lockDir, { recursive: true, force: true });
-    return { reclaimed: true, reason: ownerDead ? 'owner-dead' : 'lease-expired', ownerPid, ownerAgeMs };
+    return Math.max(0, Date.now() - fs.statSync(lockDir).mtimeMs);
+  } catch {
+    return undefined;
+  }
+}
+
+function quarantineAndRemoveLock(
+  lockDir: string,
+  reason: TaskCloseTransactionLockDiagnostics['staleReason'],
+  ownerPid: number | undefined,
+  ownerAgeMs: number | undefined
+): { reclaimed: boolean; reason?: TaskCloseTransactionLockDiagnostics['staleReason']; ownerPid?: number; ownerAgeMs?: number } {
+  const quarantinePath = `${lockDir}.stale.${process.pid}.${Date.now()}.${crypto.randomUUID()}`;
+  try {
+    fs.renameSync(lockDir, quarantinePath);
+    fs.rmSync(quarantinePath, { recursive: true, force: true });
+    return { reclaimed: true, reason, ownerPid, ownerAgeMs };
   } catch {
     return { reclaimed: false, ownerPid, ownerAgeMs };
   }
@@ -440,7 +460,7 @@ function lockMetadataTokenMatches(lockDir: string, token: string): boolean {
     const metadata = JSON.parse(fs.readFileSync(path.join(lockDir, 'lock.json'), 'utf8')) as { token?: string };
     return metadata.token === token;
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -480,7 +500,7 @@ function persistCloseOperation(projectRoot: string, operation: TaskCloseOperatio
   const absolutePath = path.join(projectRoot, operation.path);
   ensureDir(path.dirname(absolutePath));
   const persisted = { ...operation, persisted: true, updatedAt: new Date().toISOString() };
-  fs.writeFileSync(absolutePath, `${JSON.stringify(persisted, null, 2)}\n`, 'utf8');
+  writeJsonAtomic(absolutePath, persisted);
   return persisted;
 }
 
@@ -567,4 +587,27 @@ function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | und
 
 function hashObject(value: unknown): string {
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex')}`;
+}
+
+function writeJsonAtomic(absolutePath: string, value: unknown): void {
+  const tempPath = `${absolutePath}.${process.pid}.${Date.now()}.${crypto.randomUUID()}.tmp`;
+  const payload = `${JSON.stringify(value, null, 2)}\n`;
+  const fd = fs.openSync(tempPath, 'wx');
+  try {
+    fs.writeFileSync(fd, payload, 'utf8');
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+  fs.renameSync(tempPath, absolutePath);
+  try {
+    const dirFd = fs.openSync(path.dirname(absolutePath), 'r');
+    try {
+      fs.fsyncSync(dirFd);
+    } finally {
+      fs.closeSync(dirFd);
+    }
+  } catch {
+    // Directory fsync is best-effort across platforms/filesystems.
+  }
 }

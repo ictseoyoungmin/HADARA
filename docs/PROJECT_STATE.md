@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0656 0.5.0 pre-stable public surface and close recovery hardening |
+| Latest Completed Task | T-0657 0.5.0 pre-stable lock safety and status metadata hardening |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

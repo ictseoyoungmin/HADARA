@@ -73,7 +73,11 @@ describe('Operations Status JSON', () => {
     const report = createProjectStatusV2Report(root);
 
     expect(report.phase).toBe('active-work');
-    expect(report.readiness.intent).toBe('edit');
+    expect(report.readiness).toMatchObject({
+      intent: 'orient',
+      status: 'ready',
+      reason: 'An active task is selected; inspect selected-task status before editing.'
+    });
     expect(report.primaryNextAction).toMatchObject({
       id: 'inspect-active-task',
       command: 'hadara task status --task T-0002 --json',
@@ -120,8 +124,9 @@ describe('Operations Status JSON', () => {
     expect(report.primaryNextAction).toMatchObject({
       id: 'initialize-project',
       command: 'hadara init --json',
-      writeBoundary: 'read-only',
-      writes: false
+      writeBoundary: 'project-state',
+      requiresReview: true,
+      writes: true
     });
     expect(report.primaryNextAction?.command).not.toContain('task create');
     expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
@@ -136,7 +141,69 @@ describe('Operations Status JSON', () => {
 
     expect(fast.sources.opsStatusV1.detail).toBe('fast');
     expect(full.sources.opsStatusV1.detail).toBe('full');
+    expect(full.sources.opsStatusV1).toMatchObject({
+      debt: {
+        open: expect.any(Number),
+        highOpen: expect.any(Number)
+      },
+      stateConsistency: {
+        evaluated: true,
+        consistent: expect.any(Boolean),
+        errors: expect.any(Number),
+        warnings: expect.any(Number)
+      },
+      activeRun: {
+        present: expect.any(Boolean)
+      },
+      knownProblems: expect.any(Number)
+    });
     expect(assertSchema('hadara.project.status.v2', full)).toBeUndefined();
+  });
+
+  it('surfaces full status state-consistency drift in compact v2 issues and health', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, '.hadara', 'state', 'current.json'),
+      `${JSON.stringify({
+        schemaVersion: 'hadara.projectCurrentState.v1',
+        rev: 1,
+        profile: 'governed',
+        currentRelease: '0.5.0-dev',
+        latestCompletedTaskBasis: 'highest-done-task-id',
+        latestCompletedTask: { id: 'T-0001', title: 'Old done task' },
+        activeTask: null,
+        nextWork: null,
+        nextOperatorIntent: 'Fixture.',
+        currentKnownProblems: [],
+        validationBaseline: { summary: 'Fixture baseline.', evidence: [] }
+      })}\n`,
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Path | Notes |',
+        '|---|---|---|---|---|',
+        '| T-0002 | Newer done task | Done | tasks/T-0002-newer-done-task | Closed. |'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const report = createProjectStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
+
+    expect(report.health).toBe('degraded');
+    expect(report.sources.opsStatusV1.stateConsistency).toMatchObject({
+      evaluated: true,
+      consistent: false,
+      warnings: expect.any(Number)
+    });
+    expect(report.sources.opsStatusV1.stateConsistency?.warnings).toBeGreaterThan(0);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'STATUS_STATE_CONSISTENCY_WARNING', severity: 'warning' }));
+    expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
   });
 
   it('builds a dashboard-ready status snapshot from project docs and task capsules', () => {

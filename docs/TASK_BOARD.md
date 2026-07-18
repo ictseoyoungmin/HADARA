@@ -657,3 +657,4 @@
 | T-0654 | 0.5.0 task close installed package dogfood | Done | tasks/T-0654-0-5-0-task-close-installed-package-dogfood | |
 | T-0655 | 0.5.0 task close partial recovery retry proof | Done | tasks/T-0655-0-5-0-task-close-partial-recovery-retry-proof | |
 | T-0656 | 0.5.0 pre-stable public surface and close recovery hardening | Done | tasks/T-0656-0-5-0-pre-stable-public-surface-and-close-recovery-hardening | |
+| T-0657 | 0.5.0 pre-stable lock safety and status metadata hardening | Done | tasks/T-0657-0-5-0-pre-stable-lock-safety-and-status-metadata-hardening | |
