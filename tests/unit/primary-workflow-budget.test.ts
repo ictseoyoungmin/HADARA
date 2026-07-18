@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { listCommandRegistryEntries } from '../../src/services/capability-registry';
 import { createLifecycleGuideReport } from '../../src/services/lifecycle-guide';
 
-const expectedPrimary = ['task.status', 'task.create', 'validation.run', 'task.finalize'];
+const expectedPrimary = ['task.status', 'task.create', 'validation.run', 'task.close'];
 
 describe('primary workflow budget', () => {
   it('freezes the registry-backed lifecycle at four unique primary commands', () => {

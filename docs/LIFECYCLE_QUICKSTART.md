@@ -47,27 +47,22 @@ Use durable `ev:` ids for long-lived references:
 hadara evidence list --task T-0001
 ```
 
-## 4. Finalize
+## 4. Close
 
-Finalize is dry-run-first:
-
-```bash
-hadara task finalize --task T-0001 --json
-```
-
-If the plan is correct, execute it with the reported hash:
+For ordinary clean work, run the proof-last close transaction:
 
 ```bash
-hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
+hadara task close --task T-0001 --json
 ```
 
-For ordinary clean work without a separate reviewer, use the guarded automatic path:
+If a separate reviewer or automation boundary requires a reviewed plan hash, dry-run first and execute the reported hash:
 
 ```bash
-hadara task finalize --task T-0001 --execute --auto --json
+hadara task close --task T-0001 --dry-run --json
+hadara task close --task T-0001 --execute --plan-hash sha256:... --json
 ```
 
-Finalize runs the underlying finish, ready, close, and audit boundaries in order. It succeeds only when close audit reaches `closed-valid`.
+Task close runs the underlying finish, ready, close, and audit boundaries in order. It succeeds only when close audit reaches `closed-valid`.
 
 ## Diagnostics
 
@@ -80,4 +75,4 @@ hadara harness validate --task T-0001 --level done --json
 hadara task status --task T-0001 --detail full --json
 ```
 
-Standalone low-level lifecycle commands are removed. Use `task status --detail full` for diagnostics and `task finalize` for finish, readiness, close, audit, and recovery.
+Standalone low-level lifecycle commands are removed. Use `task status --detail full` for diagnostics and `task close` for finish, readiness, close, audit, and recovery.

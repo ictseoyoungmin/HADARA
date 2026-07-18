@@ -12,7 +12,7 @@ This is a product boundary, not a claim that every diagnostic or integration com
 | `task.status` | Select and inspect work. | Before create and after selecting a capsule. |
 | `task.create` | Create one bounded Task Capsule. | Once when no suitable capsule exists. |
 | `validation.run` | Execute or honestly record validation evidence. | At least once before close. |
-| `task.finalize` | Review and execute guarded close. | Once for review and once for execution. |
+| `task.close` | Execute the guarded proof-last close transaction. | Once after implementation, evidence, and close-source docs are ready. |
 
 `evidence.add-command` remains a conditional fallback for an already-run result. Diagnostics, release, UI, and integration families remain available only when their task needs them.
 
@@ -26,10 +26,10 @@ Bootstrap `hadara init` and human/agent implementation edits are outside this co
 | 2 | `hadara task create "..." --json` | One capsule id and path. |
 | 3 | `hadara task status --task T-XXXX --json` | Current phase, blockers, and next action. |
 | 4 | `hadara validation run ...` | Durable command-log evidence. |
-| 5 | `hadara task finalize --task T-XXXX --json` | Read-only reviewed close plan, including bounded finish work when needed. |
-| 6 | `hadara task finalize --task T-XXXX --execute --auto --json` | `closed-valid` or a specific actionable blocker. |
+| 5 | `hadara task close --task T-XXXX --json` | `closed-valid` or a specific actionable blocker; internally reviews and guards the close transaction. |
+| 6 | `hadara task close --task T-XXXX --dry-run --json` or `hadara task status --task T-XXXX --detail full --json` | Optional diagnostic/review call when the primary close reports a blocker. |
 
-The ordinary path budget is `<= 6` invocations after init. Recovery calls caused by a real failed check are reported separately rather than hidden.
+The ordinary path budget is `<= 6` invocations after init. Clean work should usually close in five primary calls; recovery calls caused by a real failed check are reported separately rather than hidden.
 
 ## Measurement contract
 

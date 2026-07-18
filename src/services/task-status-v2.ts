@@ -248,7 +248,7 @@ function determineCockpit(workbench: TaskWorkbenchReport): { phase: TaskCockpitP
   if (workbench.loop.phase === 'implement') {
     return { phase: 'implement', reason: workbench.loop.summary, planState };
   }
-  return { phase: 'close-ready', reason: 'Task has evidence and is ready for finalize dry-run or guarded close review.', planState };
+  return { phase: 'close-ready', reason: 'Task has evidence and is ready for task close or an explicit close dry-run review.', planState };
 }
 
 function readPlanState(projectRoot: string, capsulePath: string): TaskStatusV2Report['cockpit']['planState'] {

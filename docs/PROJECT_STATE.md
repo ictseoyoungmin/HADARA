@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0651 0.5.0 stable close scope plan realignment |
+| Latest Completed Task | T-0652 0.5.0 task close transaction route |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -57,7 +57,7 @@ v0.4.6 is published and recycled. T-0634 through T-0647 implemented the 0.5.0 st
 
 | Area | Current State |
 |---|---|
-| Task lifecycle | Status-first Task Capsules with validation evidence and guarded finalize to `closed-valid`. |
+| Task lifecycle | Status-first Task Capsules with validation evidence and guarded task close to `closed-valid`. |
 | Evidence | Canonical append-only `evidence.jsonl`, generated `EVIDENCE.md`, v2 durable ids, resolution and close proof. |
 | Context | Status-first session ingress, task-scoped context pack/slice, graph/code index, bounded cache-backed reads. |
 | Documents | Registry/read maps, required-reading tiers, docs doctor, managed sections, safe dry-run-first patches. |

@@ -69,7 +69,7 @@ function inspectHistorySection(content: string, taskPath: string): TaskAuthoring
     required,
     summary: doneRecorded
       ? 'History records the final Done state.'
-      : 'Before finalize execute, append a final `Done` row to TASK.md History; close proof hashes TASK.md, so this close-source note must be written before close.'
+      : 'Before task close, append a final `Done` row to TASK.md History; close proof hashes TASK.md, so this close-source note must be written before close.'
   };
 }
 

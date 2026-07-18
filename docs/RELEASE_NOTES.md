@@ -12,13 +12,13 @@ Highlights:
   - status selection includes precedence and recommendation confidence;
   - selected task status includes phase, blockers, ready-to-close state, cockpit actions, validation/evidence summaries, and routed context pointers.
 - Removes public `session start` guidance and routing from current 0.5 docs/help/smokes. Session bootstrap facts that still matter are exposed through `status` and `task status`.
-- Preserves 0.4.6 evidence locality and close-proof behavior. Task-local `evidence.jsonl` remains canonical, `task finalize --execute --auto` remains the ordinary guarded close path, and publish/recycle steps remain operator-controlled.
+- Preserves 0.4.6 evidence locality and close-proof behavior. Task-local `evidence.jsonl` remains canonical, `task close --task T-XXXX --json` is the ordinary guarded close transaction, and publish/recycle steps remain operator-controlled.
 - Keeps v1 compatibility routes available during 0.5.x for consumers that explicitly request compatibility, but the 0.5.0 default status output is v2.
 
 Validation:
 
 - T-0634 through T-0647 implement and validate the 0.5.0 status ingress, task-selection status v2, selected-task cockpit, cross-profile dogfood, and public session-start removal.
-- T-0647 verified latest built `dist` across fresh `basic`, `standard`, and `governed` projects, including init, status, task create, task status, context pack, and finalize dry-run paths.
+- T-0647 verified latest built `dist` across fresh `basic`, `standard`, and `governed` projects, including init, status, task create, task status, context pack, and close dry-run paths.
 - T-0648 prepares source metadata, release notes, GitHub Release note artifact, focused validation evidence, package-smoke dry-run evidence, and operator publish commands for `hadara@0.5.0-rc.0`.
 - T-0649 resolves broader full-suite regressions found after T-0648: stale task-status v1 fixture expectations, timestamped Identity scaffold expectations, HANDOFF Identity finish writes, and blocked-evidence semantics. Direct full suite passed with 154 files and 1132 tests.
 

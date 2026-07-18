@@ -545,9 +545,9 @@ function buildFastWorkbenchNextActions(input: {
         kind: 'command',
         required: true,
         priority: 'now',
-        command: `hadara task finalize --task ${input.taskId} --json`,
-        executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
-        message: 'Close evidence exists but is not valid in the fast projection. Review finalize dry-run and repair through guarded finalize execute.',
+        command: `hadara task close --task ${input.taskId} --dry-run --json`,
+        executeCommand: `hadara task close --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+        message: 'Close evidence exists but is not valid in the fast projection. Review task close dry-run and repair through guarded task close.',
         sourceIssueCodes: [input.closeState === 'close-evidence-malformed' ? 'TASK_CLOSE_EVIDENCE_MALFORMED' : 'TASK_CLOSE_EVIDENCE_INVALID'],
         loopBoundary: true
       }
@@ -585,9 +585,9 @@ function buildFastWorkbenchNextActions(input: {
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task finalize --task ${input.taskId} --json`,
-      executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
-      message: 'Review the finalize dry-run for close-grade checks, inspect the plan hash, then execute the matching finalize plan if it still applies.',
+      command: `hadara task close --task ${input.taskId} --dry-run --json`,
+      executeCommand: `hadara task close --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the task close dry-run for close-grade checks, inspect the plan hash when explicit review is required, then run task close.',
       sourceIssueCodes: ['TASK_STATUS_FAST_FINALIZE_BOUNDARY'],
       loopBoundary: true
     }
@@ -835,7 +835,7 @@ function buildTaskStatusLoopGuidance(
   if (input.evidenceRecords === 0) {
     return {
       phase: 'validate-evidence',
-      summary: 'Run real validation or record already-run proof before attempting finalize.',
+      summary: 'Run real validation or record already-run proof before attempting task close.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       primaryNextAction,
       deprecatedCommands: deprecatedStatusCommands()
@@ -844,7 +844,7 @@ function buildTaskStatusLoopGuidance(
   if (!input.closePlanEvaluated) {
     return {
       phase: 'finalize-dry-run',
-      summary: 'Fast task status skipped close-grade checks; review task finalize dry-run for ready, close, and audit planning.',
+      summary: 'Fast task status skipped close-grade checks; review task close dry-run for ready, close, and audit planning.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       primaryNextAction,
       deprecatedCommands: deprecatedStatusCommands()
@@ -853,7 +853,7 @@ function buildTaskStatusLoopGuidance(
   if (input.closePlanOk) {
     return {
       phase: input.taskStatus === 'Done' && input.taskBoardStatus === 'Done' ? 'finalize-execute' : 'finalize-dry-run',
-      summary: 'The close preflight is ready; review task finalize dry-run output and execute only with the current plan hash.',
+      summary: 'The close preflight is ready; run task close, or review task close dry-run output when an explicit plan hash is required.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       primaryNextAction,
       deprecatedCommands: deprecatedStatusCommands()
@@ -864,7 +864,7 @@ function buildTaskStatusLoopGuidance(
     phase: hasOnlyWarnings ? 'implement' : 'blocked',
     summary: hasOnlyWarnings
       ? 'Continue the known implementation or documentation work; rerun task status at the next loop boundary.'
-      : 'Blocking issues remain before finalize can be reviewed.',
+      : 'Blocking issues remain before task close can run.',
     statusCommand: `hadara task status --task ${taskId} --json`,
     primaryNextAction,
     deprecatedCommands: deprecatedStatusCommands()
@@ -916,7 +916,7 @@ function buildTaskWorkbenchReadinessDeferred(closeProofValid: boolean, taskId: s
     closeProofValid,
     summary: closeProofValid
       ? 'Fast task status skipped current done-level readiness checks; existing close proof is valid.'
-      : `Fast task status skipped done-level readiness checks; run \`hadara task status --task ${taskId} --detail full --json\` or \`hadara task finalize --task ${taskId} --json\` before close.`
+      : `Fast task status skipped done-level readiness checks; run \`hadara task status --task ${taskId} --detail full --json\` or \`hadara task close --task ${taskId} --dry-run --json\` before close.`
   };
 }
 

@@ -46,7 +46,7 @@ describe('workbench next actions', () => {
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
-  it('suggests finalize dry-run with paired execute command when a task is ready', () => {
+  it('suggests task close dry-run with paired execute command when a task is ready', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',
       closed: false,
@@ -59,8 +59,8 @@ describe('workbench next actions', () => {
     expect(actions).toEqual([
       expect.objectContaining({
         id: 'review-finalize-plan',
-        command: 'hadara task finalize --task T-0172 --json',
-        executeCommand: 'hadara task finalize --task T-0172 --execute --plan-hash <planHash> --json',
+        command: 'hadara task close --task T-0172 --dry-run --json',
+        executeCommand: 'hadara task close --task T-0172 --execute --plan-hash <planHash> --json',
         loopBoundary: true
       })
     ]);
@@ -143,8 +143,8 @@ describe('workbench next actions', () => {
     expect(actions).toContainEqual(
       expect.objectContaining({
         id: 'review-finalize-plan',
-        command: 'hadara task finalize --task T-0172 --json',
-        executeCommand: 'hadara task finalize --task T-0172 --execute --plan-hash <planHash> --json'
+        command: 'hadara task close --task T-0172 --dry-run --json',
+        executeCommand: 'hadara task close --task T-0172 --execute --plan-hash <planHash> --json'
       })
     );
   });
@@ -208,7 +208,7 @@ describe('workbench next actions', () => {
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
-  it('routes finish-only blockers to guarded finalize auto instead of generic continue guidance', () => {
+  it('routes finish-only blockers to guarded task close instead of generic continue guidance', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0001',
       closed: false,
@@ -234,7 +234,7 @@ describe('workbench next actions', () => {
     expect(actions[0]).toMatchObject({
       id: 'finalize-auto-finish-bookkeeping',
       kind: 'command',
-      command: 'hadara task finalize --task T-0001 --execute --auto --json',
+      command: 'hadara task close --task T-0001 --json',
       loopBoundary: true
     });
     expect(actions.map((action) => action.id)).not.toContain('continue-implementation-or-docs');

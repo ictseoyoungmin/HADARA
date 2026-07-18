@@ -164,7 +164,7 @@ function createFastTaskWorkbenchReport(
       summary: closedValid
         ? 'This Task Capsule has valid close proof.'
         : closePlanOk
-          ? 'The fast dashboard projection sees no blockers; review task finalize dry-run before closing.'
+          ? 'The fast dashboard projection sees no blockers; run task close or review task close dry-run before closing.'
           : 'The fast dashboard projection found blockers or missing evidence.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       ...(nextActions[0] ? { primaryNextAction: nextActions[0] } : {}),
@@ -336,9 +336,9 @@ function buildFastWorkbenchNextActions(
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task finalize --task ${taskId} --json`,
-      executeCommand: `hadara task finalize --task ${taskId} --execute --plan-hash <planHash> --json`,
-      message: 'Close evidence exists but is not currently valid. Review finalize dry-run and repair through guarded finalize execute.',
+      command: `hadara task close --task ${taskId} --dry-run --json`,
+      executeCommand: `hadara task close --task ${taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Close evidence exists but is not currently valid. Review task close dry-run and repair through guarded task close.',
       sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_REPAIR_REQUIRED'],
       loopBoundary: true
     });
@@ -349,9 +349,9 @@ function buildFastWorkbenchNextActions(
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task finalize --task ${taskId} --json`,
-      executeCommand: `hadara task finalize --task ${taskId} --execute --plan-hash <planHash> --json`,
-      message: 'Review the finalize dry-run, inspect the plan hash, then execute the matching finalize plan if it still applies.',
+      command: `hadara task close --task ${taskId} --dry-run --json`,
+      executeCommand: `hadara task close --task ${taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the task close dry-run, inspect the plan hash, then execute the matching close plan if it still applies.',
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: true
     });

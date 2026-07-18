@@ -536,19 +536,47 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Inspect compact capsule status', 'hadara task status --task T-0001 --summary-json', 'When shell automation or humans only need phase, readiness, counts, and next action.'),
       example('Inspect full diagnostics', 'hadara task status --task T-0001 --detail full --json', 'When explicit close/protocol diagnostics are needed without finalize planning.')
     ],
-    related: ['task.status', 'evidence.list', 'task.finalize'],
+    related: ['task.status', 'evidence.list', 'task.close'],
     conflictsWith: []
+  },
+  {
+    id: 'task.close',
+    command: 'hadara task close --task <task-id> [--dry-run | --execute --plan-hash <hash>] [--json]',
+    summary: 'Close a Task Capsule through the 0.5 proof-last transaction route; clean capsules close in one command, blocked capsules return one recovery action without lifecycle-owned writes.',
+    canonical: true,
+    appearsInDefaultHelp: true,
+    family: 'capsule-lifecycle',
+    scope: 'capsule',
+    lifecycleStage: 'close',
+    requiredness: 'primary',
+    writeBoundary: 'task-status-bookkeeping',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'agent-worker',
+    status: 'stable',
+    schemaVersion: 'hadara.task.close.v2',
+    docs: TASK_DOCS,
+    implementationFiles: ['src/cli/task.ts', 'src/task/task-close-transaction.ts', 'src/task/task-finalize.ts', 'src/task/task-close.ts'],
+    testFiles: ['tests/unit/task-close.test.ts', 'tests/unit/task-finalize.test.ts'],
+    examples: [
+      example('Close a clean task', 'hadara task close --task T-0001 --json', 'For ordinary task completion; the CLI reviews, verifies, writes, appends proof, and audits internally.'),
+      example('Preview close readiness', 'hadara task close --task T-0001 --dry-run --json', 'When a human or automation wants the close plan without writes.'),
+      example('Execute an externally reviewed close plan', 'hadara task close --task T-0001 --execute --plan-hash sha256:... --json', 'For advanced reviewed flows that carry an explicit current plan hash.')
+    ],
+    related: ['task.status', 'task.close-source', 'protocol.doctor', 'task.finalize'],
+    conflictsWith: [],
+    notes: 'Default mode executes the guarded close transaction. It internally uses the finalize engine and keeps proof-last, stale-plan guard, idempotent retry, and task-local evidence locality semantics.'
   },
   {
     id: 'task.finalize',
     command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash> | --execute --auto] [--json]',
     summary: 'Create a reviewed finalize or close-repair plan, then execute the matching guarded lifecycle sequence; --auto folds the review and hash check into one guarded call for clean capsules.',
     canonical: true,
-    appearsInDefaultHelp: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'finalize',
-    requiredness: 'primary',
+    requiredness: 'conditional',
     writeBoundary: 'task-status-bookkeeping',
     readOnly: false,
     risk: 'medium',
@@ -559,11 +587,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-finalize.ts'],
     testFiles: ['tests/unit/task-finalize.test.ts'],
     examples: [
-      example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit or close-repair plan before executing the default close path.'),
-      example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'For ordinary clean capsules; the CLI performs the dry-run/current-plan verification internally and records readiness evidence before close proof when needed.'),
-      example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After a human or automation explicitly reviews and carries the current dry-run plan hash.')
+      example('Review finalize internals', 'hadara task finalize --task T-0001 --json', 'When debugging the underlying finish/ready/close/audit step plan used by task close.'),
+      example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'Compatibility path for existing automation; new agents should prefer task close.'),
+      example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'Compatibility path after a human or automation explicitly reviews and carries the current dry-run plan hash.')
     ],
-    related: ['task.status', 'task.close-source', 'protocol.doctor'],
+    related: ['task.close', 'task.status', 'task.close-source', 'protocol.doctor'],
     conflictsWith: [],
     notes: 'Default mode is read-only. Execute uses either --auto for one-call guarded close or a matching current dry-run plan hash for externally reviewed flows; both run phases serially, preserve the underlying finish/close write boundaries, repair stale close proof by appending fresh close evidence when the plan requires it, and stop on the first blocker.'
   },
@@ -587,7 +615,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
     testFiles: ['tests/unit/task-close-source.test.ts'],
     examples: [example('Inspect close source', 'hadara task close-source --task T-0001 --json', 'When reviewing close-source drift boundaries.')],
-    related: ['task.finalize', 'status'],
+    related: ['task.close', 'status'],
     conflictsWith: []
   },
   {
@@ -614,7 +642,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Run and sync TASK.md', 'hadara validation run --task T-0001 --check "Focused tests" --update-task -- npm test', 'When the command should also update the TASK.md Validation row.'),
       example('Record direct validation result', 'hadara validation run --task T-0001 --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json', 'When the wrapper cannot launch child processes in the current tool environment but the same command was run directly.')
     ],
-    related: ['evidence.add-command', 'evidence.project', 'task.finalize'],
+    related: ['evidence.add-command', 'evidence.project', 'task.close'],
     notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Launch failures such as ENOENT, EPERM, EACCES, and timeout are reported as blocked wrapper outcomes with structured execution.failureKind and fallback nextActions. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process. The evidence response includes appendLock diagnostics for task-scoped append-lock waits.',
     conflictsWith: []
   },
@@ -638,7 +666,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [
       example('Record already-run command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'When recording a real result that was already executed outside validation run.')
     ],
-    related: ['evidence.list', 'evidence.lint', 'task.finalize'],
+    related: ['evidence.list', 'evidence.lint', 'task.close'],
     notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata and appendLock diagnostics for task-scoped append-lock waits. A new add-command report schema id, check-id, and subject fields are deferred candidate scope.',
     conflictsWith: []
   },
@@ -706,7 +734,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.evidence.lint.v1',
     docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Lint evidence', 'hadara evidence lint --task T-0001 --json', 'When readiness reports evidence blockers.')],
-    related: ['task.finalize', 'harness.validate'],
+    related: ['task.close', 'harness.validate'],
     conflictsWith: []
   },
   {
@@ -1434,7 +1462,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.harness.validate.v1',
     docs: TASK_DOCS,
     examples: [example('Debug done readiness', 'hadara harness validate --task T-0001 --level done --json', 'When task status or finalize reports done-level blockers.')],
-    related: ['task.finalize', 'protocol.doctor', 'evidence.lint'],
+    related: ['task.close', 'protocol.doctor', 'evidence.lint'],
     conflictsWith: []
   }),
   commandEntry({

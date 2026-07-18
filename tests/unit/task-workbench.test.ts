@@ -569,7 +569,7 @@ describe('task workbench status report', () => {
       expect.arrayContaining([
         expect.objectContaining({
           id: 'review-finalize-repair-plan',
-          command: `hadara task finalize --task ${task.id} --json`
+          command: `hadara task close --task ${task.id} --dry-run --json`
         })
       ])
     );

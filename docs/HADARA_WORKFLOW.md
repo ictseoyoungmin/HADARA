@@ -17,7 +17,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need a task | Run `hadara task create "task title" --json`, then fill `TASK.md` Goal, Source Documents, Plan, and Acceptance. |
 | Need files to inspect | Run `hadara context pack --task T-XXXX --json`, then read only routed files. |
 | Need project-specific docs | Use `hadara docs add <type> --json`, or create a Markdown file directly and register it with `hadara docs register`. |
-| Ready to close | Run `hadara task finalize --task T-XXXX --execute --auto --json` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
+| Ready to close | Run `hadara task close --task T-XXXX --json` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
 
 ## Minimal Loop
 
@@ -30,8 +30,8 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 6. run real validation
 7. record evidence
 8. update task docs and any generated `docs/` files whose subject changed
-9. review `task finalize --json` when the close needs external review
-10. execute finalize with `--execute --auto` for ordinary clean work, or with a reviewed `--plan-hash` when an external review flow requires it
+9. run `hadara task close --task T-XXXX --json` for ordinary clean work
+10. use `task close --dry-run` and reviewed `--plan-hash` only when an external review flow requires it
 ```
 
 ## Read Authority Rules
@@ -153,7 +153,7 @@ hadara task create "task title" --json
 hadara task status --task T-XXXX --json
 ```
 
-Use `task status --json` to decide what to work on when no task is selected. Use `task create` only when no suitable capsule exists. Use `task status --task T-XXXX --json` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use `task finalize --task T-XXXX --json` or `task status --task T-XXXX --detail full --json` when you need close-grade readiness diagnostics.
+Use `task status --json` to decide what to work on when no task is selected. Use `task create` only when no suitable capsule exists. Use `task status --task T-XXXX --json` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use `task close --task T-XXXX --dry-run --json` or `task status --task T-XXXX --detail full --json` when you need close-grade readiness diagnostics.
 
 ## Task Context
 
@@ -206,9 +206,9 @@ author task contract
 do scoped work
 record evidence
 finish task docs and shared state
-review finalize plan
-execute finalize with the reviewed plan hash
-stop when finalize returns closed-valid
+run task close, or review a close dry-run when an external plan hash is needed
+execute task close with the reviewed plan hash when using reviewed mode
+stop when task close returns closed-valid
 ```
 
 Use the high-level lifecycle path for ordinary work:
@@ -217,22 +217,22 @@ Use the high-level lifecycle path for ordinary work:
 hadara task status --task T-XXXX --json
 
 # Finalize Task Capsule docs and tracked state docs before closing.
-# Active/latest task facts in the structured canon are synchronized by task finalize; separately authored product/phase context must already be current.
+# Active/latest task facts in the structured canon are synchronized by task close; separately authored product/phase context must already be current.
 
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --auto --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --dry-run --json
+hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-Use `--execute --auto` for the ordinary guarded close path. Use the explicit `--plan-hash` form only when a reviewed dry-run plan crosses a human or external automation boundary.
+Use `task close --json` for the ordinary guarded close path. Use the explicit `--plan-hash` form only when a reviewed dry-run plan crosses a human or external automation boundary.
 
-Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle`) were removed from public routing. Use `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
+Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task audit-close`, `task complete`, and `task lifecycle`) were removed from public routing. Use `hadara task close --task T-XXXX --dry-run --json` for the step-level dry-run report, `hadara task close --task T-XXXX --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed close runs also completes by rerunning task close.
 
-Do not hand-edit lifecycle-owned status fields to force closure. `TASK.md` Identity `Status` and `docs/TASK_BOARD.md` Status are updated by `task create` and `task finalize`. Before finalize, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let finalize move the lifecycle status to Done.
+Do not hand-edit lifecycle-owned status fields to force closure. `TASK.md` Identity `Status` and `docs/TASK_BOARD.md` Status are updated by `task create` and `task close`. Before task close, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let task close move the lifecycle status to Done.
 
-## Finalize Entry Gate
+## Close Entry Gate
 
-Before running `hadara task finalize`, all of these must be true:
+Before running `hadara task close`, all of these must be true:
 
 | Gate | Required State |
 |---|---|
@@ -242,15 +242,15 @@ Before running `hadara task finalize`, all of these must be true:
 | Acceptance | `TASK.md` Acceptance has the completion criteria. |
 | Validation | At least one validation method is defined, or a documented reason explains why validation is not applicable. |
 
-Do not use status/finalize to avoid authoring the task contract.
+Do not use status/task close to avoid authoring the task contract.
 
-Before running `task finalize --execute`, finish all close-source edits.
+Before running `task close`, finish all close-source edits.
 Avoid writing volatile close evidence ids into close-source docs.
-`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before finalize execute, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it.
+`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before task close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it.
 
 ## Task Document Timing
 
-HADARA 0.4 Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl`.
+HADARA Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl`.
 
 | Timing | Update |
 |---|---|
@@ -258,12 +258,12 @@ HADARA 0.4 Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `ev
 | Before execution | Refine `TASK.md` Plan, Source Documents, and Acceptance. |
 | During execution | Update `TASK.md` Plan, Change Summary, Risks / Follow-ups; update `HANDOFF.md` warnings if continuity changes. |
 | After validation | Use `validation run` when possible; record evidence, then update `TASK.md` Validation and Acceptance deliberately with evidence ids or residual notes. |
-| Before finalize dry-run | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert `HANDOFF.md` from any WIP checkpoint into close-time handoff with current next-step guidance; update shared state docs when the task changed them. |
-| Finalize review | Inspect `task finalize --json` dry-run output and fix reported blockers before execute. |
-| Finalize execute | Do not edit close-source docs during execute. |
-| After close | Only clarify docs if the task contract did not change; rerun finalize after close-source edits. |
+| Before task close | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert `HANDOFF.md` from any WIP checkpoint into close-time handoff with current next-step guidance; update shared state docs when the task changed them. |
+| Close review | Inspect `task close --dry-run --json` output and fix reported blockers when a separate review needs the plan hash. |
+| Close execute | Do not edit close-source docs during execute. |
+| After close | Only clarify docs if the task contract did not change; rerun task close after close-source edits. |
 
-Do not hand-edit `TASK.md` Identity `Status`, `docs/TASK_BOARD.md` Status, `evidence.jsonl`, or generated `EVIDENCE.md` projections. Use `task finalize --execute --auto --json` for normal closure; use `task status --task T-XXXX --detail full --json` when the close path is blocked and you need repair guidance.
+Do not hand-edit `TASK.md` Identity `Status`, `docs/TASK_BOARD.md` Status, `evidence.jsonl`, or generated `EVIDENCE.md` projections. Use `task close --task T-XXXX --json` for normal closure; use `task status --task T-XXXX --detail full --json` when the close path is blocked and you need repair guidance.
 
 ## Evidence
 
@@ -302,14 +302,14 @@ Evidence must reflect real execution results. Fabricated or assumed results are 
 
 ```bash
 hadara task status --task T-XXXX --detail full --json
-hadara task finalize --task T-XXXX --json
+hadara task close --task T-XXXX --dry-run --json
 hadara harness validate --task T-XXXX --level done --json
 hadara init doctor --json
 ```
 
-Use finalize dry-run as the ordinary close-proof repair plan. Use diagnostics when finalize reports blockers. Do not repair close proof by editing evidence files by hand.
+Use task close dry-run as the ordinary close-proof repair plan. Use diagnostics when task close reports blockers. Do not repair close proof by editing evidence files by hand.
 
-Agents may use `task finalize --execute --auto` for ordinary clean capsules; it performs the dry-run and current-plan verification internally. Use the explicit dry-run plus `--plan-hash` form when a separate reviewer or automation boundary must carry the reviewed plan.
+Agents should use `task close --json` for ordinary clean capsules; it performs the dry-run and current-plan verification internally. Use the explicit dry-run plus `--plan-hash` form when a separate reviewer or automation boundary must carry the reviewed plan.
 
 ## Useful CLI by Situation
 
@@ -331,9 +331,9 @@ Agents may use `task finalize --execute --auto` for ordinary clean capsules; it 
 | Find evidence ids | `hadara evidence list --task T-XXXX --json` | Durable id discovery. |
 | Add optional project doc | `hadara docs add <type> --json` | Dry-run-first creator/registrar for architecture, decisions, roadmap, security model, test strategy, and agent guide docs. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |
-| Close ordinary work | `hadara task finalize --task T-XXXX --execute --auto --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
-| Externally reviewed close | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
-| Repair close drift | `hadara task finalize --task T-XXXX --json` then execute with `--auto` or the reviewed `planHash` | Default repair path for stale close proof. |
+| Close ordinary work | `hadara task close --task T-XXXX --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
+| Externally reviewed close | `hadara task close --task T-XXXX --dry-run --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
+| Repair close drift | `hadara task close --task T-XXXX --dry-run --json` then rerun close or execute with the reviewed `planHash` | Default repair path for stale close proof. |
 | Register project-specific docs | `hadara docs register --path <path> --json` | 0.4 registry surface. Canonical state belongs in `.hadara/docs-registry.json`; use registry-backed help for exact options. |
 | Discover command details | `hadara help lifecycle`, `hadara help command <id>`, `hadara commands --json` | Prefer registry-backed help over copied command tables. |
 
@@ -346,7 +346,7 @@ Agents may use `task finalize --execute --auto` for ordinary clean capsules; it 
 | Running lifecycle before `TASK.md` is authored. | Satisfy the Lifecycle Entry Gate first. |
 | Treating context pack as validation. | Use it only for read guidance; run real checks separately. |
 | Recording evidence for checks that were not run. | Record only real execution results, including failed or blocked checks. |
-| Running finalize execute from memory. | Review fresh dry-run output and copy its current plan hash. |
+| Running reviewed close execute from memory. | Review fresh dry-run output and copy its current plan hash. |
 | Putting same-capsule chores in `HANDOFF.md` Next Recommended Step. | Use that section for next capsule or global-state recommendations. |
 
 ## Design Source Documents and Read Maps

@@ -367,7 +367,7 @@ function buildTaskProjection(
     issues.push(warning('STATE_TASK_BOARD_CAPSULE_DRIFT', 'docs/TASK_BOARD.md', `Task Board capsule for ${taskId} is ${taskBoard.capsule || '(empty)'}, expected ${capsule}.`, `Update the Task Board capsule cell for ${taskId}.`, taskId, capsule, taskBoard.capsule || '(empty)'));
   }
   if (taskStatus && taskBoard?.status && taskStatus !== taskBoard.status) {
-    issues.push(warning('STATE_TASK_BOARD_STATUS_DRIFT', 'docs/TASK_BOARD.md', `Task Board status for ${taskId} is ${taskBoard.status}, but TASK.md status is ${taskStatus}.`, `Align docs/TASK_BOARD.md deliberately before running hadara task finalize --task ${taskId} --execute --auto --json.`, taskId, taskStatus, taskBoard.status));
+    issues.push(warning('STATE_TASK_BOARD_STATUS_DRIFT', 'docs/TASK_BOARD.md', `Task Board status for ${taskId} is ${taskBoard.status}, but TASK.md status is ${taskStatus}.`, `Align docs/TASK_BOARD.md deliberately before running hadara task close --task ${taskId} --json.`, taskId, taskStatus, taskBoard.status));
   }
   if (deepCheck && taskHandoff.taskStatus && !TASK_STATUS_TOKENS.has(taskHandoff.taskStatus)) {
     issues.push(warning('STATE_TASK_HANDOFF_STATUS_INVALID', handoffPath, `Task handoff TaskStatus for ${taskId} is not a canonical task status token: ${taskHandoff.taskStatus}.`, 'Use a canonical TaskStatus token; close proof state belongs in task status/finalize/state read models.', taskId));
@@ -376,7 +376,7 @@ function buildTaskProjection(
     issues.push(warning('STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED', handoffPath, `Task handoff TaskStatus for ${taskId} appears to mix task status and close proof state.`, 'Use TaskStatus: Done only; derive CloseState from task status/finalize/state read models.', taskId));
   }
   if (deepCheck && taskHandoff.closeState) {
-    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED', handoffPath, `Task handoff persists derived CloseState for ${taskId}: ${taskHandoff.closeState}.`, 'Remove CloseState from task-local HANDOFF.md; use task status --detail full, task finalize, status, or protocol doctor read models for derived close state.', taskId));
+    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED', handoffPath, `Task handoff persists derived CloseState for ${taskId}: ${taskHandoff.closeState}.`, 'Remove CloseState from task-local HANDOFF.md; use task status --detail full, task close, status, or protocol doctor read models for derived close state.', taskId));
     if (!CLOSE_STATE_TOKENS.has(taskHandoff.closeState)) {
       issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_INVALID', handoffPath, `Task handoff CloseState for ${taskId} is not canonical: ${taskHandoff.closeState}.`, 'Remove the CloseState row from task-local HANDOFF.md.', taskId));
     }
@@ -592,11 +592,11 @@ function checkLatestCloseProof(projectedTasks: StateProjectionTask[], latestDone
   if (!task) return;
   if (task.closeProof.state === 'closed-valid') return;
   if (task.closeProof.state === 'not-closed') {
-    issues.push(warning('STATE_LATEST_CLOSE_PROOF_MISSING', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has no close proof.`, `Run hadara task finalize --task ${latestDoneTaskId} --json, resolve blockers, then execute with --auto.`, latestDoneTaskId));
+    issues.push(warning('STATE_LATEST_CLOSE_PROOF_MISSING', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has no close proof.`, `Run hadara task close --task ${latestDoneTaskId} --dry-run --json, resolve blockers, then run task close.`, latestDoneTaskId));
     return;
   }
   if (task.closeProof.state === 'closed-stale') {
-    issues.push(warning('STATE_LATEST_CLOSE_PROOF_STALE', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has stale close proof.`, `Rerun hadara task finalize --task ${latestDoneTaskId} --json after intentional close-source edits, then execute with --auto when ready.`, latestDoneTaskId, task.closeProof.currentSourceHash ?? undefined, task.closeProof.sourceHash ?? undefined));
+    issues.push(warning('STATE_LATEST_CLOSE_PROOF_STALE', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has stale close proof.`, `Rerun hadara task close --task ${latestDoneTaskId} --dry-run --json after intentional close-source edits, then run task close when ready.`, latestDoneTaskId, task.closeProof.currentSourceHash ?? undefined, task.closeProof.sourceHash ?? undefined));
     return;
   }
   issues.push(warning('STATE_LATEST_CLOSE_PROOF_INVALID', task.closeProof.path, `Latest Done task ${latestDoneTaskId} close proof is ${task.closeProof.state}.`, `Rerun task close/audit-close for ${latestDoneTaskId} after resolving validation blockers.`, latestDoneTaskId));

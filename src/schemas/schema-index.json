@@ -366,6 +366,13 @@
       "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
     },
     {
+      "id": "hadara.task.close.v2",
+      "path": "src/schemas/task-close-v2.schema.json",
+      "status": "fixture",
+      "owner": "task/close-transaction",
+      "notes": "Documents the public 0.5 task close transaction report with one-call close, recovery, write summary, and proof-last metadata."
+    },
+    {
       "id": "hadara.task.finalize.v1",
       "path": "src/schemas/task-finalize.schema.json",
       "status": "fixture",

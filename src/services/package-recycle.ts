@@ -461,11 +461,11 @@ function runInstalledSmokes(input: {
       args: ['status', '--json'],
       cwd: disposableProject
     });
-    pushTaskFinalizeSmokeStep(input, {
-      id: 'task-finalize',
-      label: 'Verify task finalize dry-run report',
-      command: 'hadara task finalize --task <task-id> --json',
-      args: ['task', 'finalize', '--task', taskId, '--json'],
+    pushTaskCloseSmokeStep(input, {
+      id: 'task-close',
+      label: 'Verify task close dry-run report',
+      command: 'hadara task close --task <task-id> --dry-run --json',
+      args: ['task', 'close', '--task', taskId, '--dry-run', '--json'],
       cwd: disposableProject
     });
   }
@@ -528,7 +528,7 @@ function pushJsonSmokeStep(
   input.steps.push(reportStep);
 }
 
-function pushTaskFinalizeSmokeStep(
+function pushTaskCloseSmokeStep(
   input: {
     runner: PackageRecycleCommandRunner;
     installedBin: string;
@@ -547,8 +547,8 @@ function pushTaskFinalizeSmokeStep(
   });
   const reportStep = commandStep(step.id, step.label, step.command, result);
   const parsed = parseJsonObject(result.stdout);
-  if (!parsed || parsed.schemaVersion !== 'hadara.task.finalize.v1' || parsed.mode !== 'dry-run') {
-    failStep(reportStep, result.timedOut ? `${step.label} timed out.` : `${step.label} failed or returned no finalize dry-run JSON report.`);
+  if (!parsed || parsed.schemaVersion !== 'hadara.task.close.v2' || parsed.mode !== 'dry-run') {
+    failStep(reportStep, result.timedOut ? `${step.label} timed out.` : `${step.label} failed or returned no task close dry-run JSON report.`);
     input.issues.push({
       severity: 'error',
       code: `PACKAGE_RECYCLE_${step.id.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_FAILED`,
@@ -557,7 +557,7 @@ function pushTaskFinalizeSmokeStep(
     });
   } else {
     reportStep.status = 'passed';
-    reportStep.summary = `${step.label} returned a task finalize dry-run report.`;
+    reportStep.summary = `${step.label} returned a task close dry-run report.`;
   }
   input.steps.push(reportStep);
 }
@@ -719,11 +719,11 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
       summary: 'Would verify status-first project/session ingress in the disposable project.'
     },
     {
-      id: 'task-finalize',
-      label: 'Verify task finalize dry-run report',
-      command: 'hadara task finalize --task <task-id> --json',
+      id: 'task-close',
+      label: 'Verify task close dry-run report',
+      command: 'hadara task close --task <task-id> --dry-run --json',
       status: 'planned',
-      summary: 'Would verify finalize-first dry-run guidance on the disposable task.'
+      summary: 'Would verify task close dry-run guidance on the disposable task.'
     },
     ...(options.includeGraph === true
       ? [
@@ -777,7 +777,7 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('task-create', 'Create disposable task with installed CLI', 'hadara task create <title> --json', 'Skipped because package install failed.'),
     skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('status-ingress', 'Verify project status ingress read model', 'hadara status --json', 'Skipped because package install failed.'),
-    skippedStep('task-finalize', 'Verify task finalize dry-run report', 'hadara task finalize --task <task-id> --json', 'Skipped because package install failed.'),
+    skippedStep('task-close', 'Verify task close dry-run report', 'hadara task close --task <task-id> --dry-run --json', 'Skipped because package install failed.'),
     skippedStep('context-pack', 'Verify context pack read model', 'hadara context pack --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json', 'Skipped because package install failed.')
   ];

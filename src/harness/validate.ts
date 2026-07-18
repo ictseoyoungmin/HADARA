@@ -951,7 +951,7 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
       message: 'Done-level validation requires TASK.md status to be Done.',
       path: relativePath,
       heading: 'Identity',
-      fixHint: 'For normal work, do not hand-edit lifecycle-owned status; run `hadara task finalize --task <task-id> --execute --auto --json` after the capsule is complete. Only set the TASK.md Identity status row to Done when intentionally repairing a partial finalize that already wrote inconsistent lifecycle state.',
+      fixHint: 'For normal work, do not hand-edit lifecycle-owned status; run `hadara task close --task <task-id> --json` after the capsule is complete. Only set the TASK.md Identity status row to Done when intentionally repairing a partial close that already wrote inconsistent lifecycle state.',
       example: '| Status | Done |',
       remediationHint: {
         path: relativePath,
@@ -979,7 +979,7 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
         message: 'Done-level validation requires TASK.md History to end with Done.',
         path: relativePath,
         heading: 'History',
-        fixHint: 'Append a final `Done` row to TASK.md ## History before running finalize execute; close proof hashes TASK.md, so this must be written before close.',
+        fixHint: 'Append a final `Done` row to TASK.md ## History before running task close; close proof hashes TASK.md, so this must be written before close.',
         example: '| 2026-06-12 | Done | Finished task capsule. |',
         remediationHint: {
           path: relativePath,
@@ -999,7 +999,7 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
       message: 'Done-level validation requires TASK.md History to end with Done.',
       path: relativePath,
       heading: 'History',
-      fixHint: 'Add TASK.md ## History with Date / State / Note columns and append a final Done row before finalize execute.',
+      fixHint: 'Add TASK.md ## History with Date / State / Note columns and append a final Done row before task close.',
       example: '| 2026-06-12 | Done | Finished task capsule. |',
       remediationHint: {
         path: relativePath,
@@ -1019,13 +1019,13 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
       message: 'Done-level validation requires TASK.md Status History to end with Done.',
       path: relativePath,
       heading: 'Status History',
-      fixHint: 'Run `hadara task finalize --task <task-id> --execute --auto --json` so finish bookkeeping records Done, or repair the latest Status History row when working with a legacy capsule.',
-      example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finalize --execute --auto` |',
+      fixHint: 'Run `hadara task close --task <task-id> --json` so finish bookkeeping records Done, or repair the latest Status History row when working with a legacy capsule.',
+      example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task close` |',
       remediationHint: {
         path: relativePath,
         heading: 'Status History',
         requiredChange: 'Append or repair the latest Status History row so it records Done.',
-        example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finalize --execute --auto` |',
+        example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task close` |',
         blocking: true
       }
     });
@@ -1317,7 +1317,7 @@ function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsul
       message: `HANDOFF.md persists derived CloseState value "${closeState}".`,
       path: relativePath,
       heading: 'Current State',
-      fixHint: 'Remove the CloseState row from task-local HANDOFF.md; use task status --detail full, task finalize, status, or protocol doctor read models for derived close state.',
+      fixHint: 'Remove the CloseState row from task-local HANDOFF.md; use task status --detail full, task close, status, or protocol doctor read models for derived close state.',
       example: '| TaskStatus | Done |',
       remediationHint: {
         path: relativePath,
@@ -1473,7 +1473,7 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       message: `Done-level validation requires docs/TASK_BOARD.md status for ${task.id} to be Done.`,
       path: relativePath,
       heading: 'TASK_BOARD',
-      fixHint: `For normal work, do not hand-edit lifecycle-owned Task Board status; run \`hadara task finalize --task ${task.id} --execute --auto --json\` after the capsule is complete. Only update the Task Board status cell for ${task.id} to Done when intentionally repairing a partial finalize that already wrote inconsistent lifecycle state.`,
+      fixHint: `For normal work, do not hand-edit lifecycle-owned Task Board status; run \`hadara task close --task ${task.id} --json\` after the capsule is complete. Only update the Task Board status cell for ${task.id} to Done when intentionally repairing a partial close that already wrote inconsistent lifecycle state.`,
       example: `| ${task.id} | ${row.title} | Done | ${row.capsule} | ${row.notes} |`,
       remediationHint: {
         path: relativePath,

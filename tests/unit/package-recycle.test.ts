@@ -89,7 +89,7 @@ describe('installed package recycle', () => {
       'task-create',
       'task-status',
       'status-ingress',
-      'task-finalize',
+      'task-close',
       'context-pack',
       'context-slice',
       'cleanup'
@@ -112,13 +112,13 @@ describe('installed package recycle', () => {
       if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\nnext: 0.3.3-rc.0\n');
       if (joined.startsWith('install -g --prefix')) return passed('');
       if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
-      if (joined === 'commands --json') return passed(commandsJson(['task.status', 'task.finalize']));
+      if (joined === 'commands --json') return passed(commandsJson(['task.status', 'task.close']));
       if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true, schemaVersion: 'hadara.lifecycleGuide.v1' }));
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
+      if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v2', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();
@@ -159,7 +159,7 @@ describe('installed package recycle', () => {
     expect(calls).toContain('npm view hadara@latest version --json');
     expect(calls.some((call) => call.includes('commands --json'))).toBe(true);
     expect(calls.some((call) => call.includes('context graph --json'))).toBe(false);
-    expect(calls.some((call) => call.includes('task finalize --task T-0001 --json'))).toBe(true);
+    expect(calls.some((call) => call.includes('task close --task T-0001 --dry-run --json'))).toBe(true);
     expect(calls.some((call) => call.includes('task lifecycle'))).toBe(false);
     expect(projectRoots.every((value) => value === undefined)).toBe(true);
     expect(encoded).not.toContain(root);
@@ -189,7 +189,7 @@ describe('installed package recycle', () => {
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
+      if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v2', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context graph --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
@@ -218,13 +218,13 @@ describe('installed package recycle', () => {
       if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\n');
       if (joined.startsWith('install -g --prefix')) return passed('');
       if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
-      if (joined === 'commands --json') return passed(commandsJson(['task.lifecycle', 'task.finalize']));
+      if (joined === 'commands --json') return passed(commandsJson(['task.lifecycle', 'task.close']));
       if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
+      if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v2', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();

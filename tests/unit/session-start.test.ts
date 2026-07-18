@@ -168,7 +168,7 @@ describe('session start', () => {
     expect(report.guidance.nextCommandArgs).toEqual(['task', 'status', '--task', task.id, '--json']);
     expect(report.guidance.whyThisNow).toContain('task id is available');
     expect(report.guidance.avoidForNow).toEqual(expect.arrayContaining([
-      expect.stringContaining('Do not run task finalize')
+      expect.stringContaining('Do not run task close')
     ]));
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
     expect(validateSchema('hadara.contextPack.v1', report.contextPack).ok).toBe(true);

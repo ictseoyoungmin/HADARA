@@ -37,7 +37,7 @@ describe('task finish status sync', () => {
     });
     expect(report.primaryNextAction).toMatchObject({
       id: 'execute-finish',
-      command: `hadara task finalize --task ${task.id} --execute --auto --json`,
+      command: `hadara task close --task ${task.id} --json`,
       writeBoundary: 'task-local',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,

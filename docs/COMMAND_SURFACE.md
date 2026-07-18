@@ -67,23 +67,24 @@ Use these surfaces for command discovery:
 
 ## Primary Lifecycle
 
-The 0.4 primary agent loop is:
+The 0.5 primary agent loop is:
 
 ```bash
 hadara task status --json
 hadara task status --task T-XXXX --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --dry-run --json
+hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `handoff suggest`, `evidence collect`, `ops status`, `init register-doc`, `docs archive`, `task lifecycle`, `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`.
+Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `handoff suggest`, `evidence collect`, `ops status`, `init register-doc`, `docs archive`, `task lifecycle`, `task finish`, `task ready`, `task audit-close`, `task complete`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`.
 
-Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task finalize`, `validation run`, `evidence add-command`, `policy preflight-shell`, `status`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`.
+Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task close`, compatibility/debug `task finalize`, `validation run`, `evidence add-command`, `policy preflight-shell`, `status`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`.
 
-No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task finalize`; use `task status` and `task finalize --json` for phase/readiness guidance.
+No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task close`; use `task status` and `task close --dry-run --json` for phase/readiness guidance.
 
-Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and `status` explain blockers or drift. They do not replace the primary finalize loop.
+Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and `status` explain blockers or drift. They do not replace the primary close loop.
 
 ## 0.4 Planned Surfaces
 

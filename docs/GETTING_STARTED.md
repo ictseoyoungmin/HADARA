@@ -73,11 +73,11 @@ hadara evidence add-command --task T-0001 --summary "Smoke test passed" --result
 ## Close The Capsule
 
 ```bash
-hadara task finalize --task T-0001 --json
-hadara task finalize --task T-0001 --execute --auto --json
-hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
+hadara task close --task T-0001 --json
+hadara task close --task T-0001 --dry-run --json
+hadara task close --task T-0001 --execute --plan-hash sha256:... --json
 ```
 
-Use `--execute --auto` for ordinary clean work. Use the explicit plan hash when a separate human or automation boundary reviews the dry-run.
+Use `task close --json` for ordinary clean work. Use the explicit plan hash when a separate human or automation boundary reviews the dry-run.
 
 For more detail, see `docs/LIFECYCLE_QUICKSTART.md`.

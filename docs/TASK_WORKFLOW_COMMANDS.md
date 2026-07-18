@@ -6,7 +6,7 @@ For command discovery, use the registry-backed surfaces instead of copying comma
 
 ```bash
 hadara help lifecycle
-hadara help command task.finalize
+hadara help command task.close
 hadara commands --json
 ```
 
@@ -20,7 +20,7 @@ The authoritative command inventory is `src/services/capability-registry.ts`. `d
 
 ## Standard Task Loop
 
-From 0.4 onward, agents should use the status-first finalize loop for ordinary implementation capsules:
+From 0.5 onward, agents should use the status-first close loop for ordinary implementation capsules:
 
 ```bash
 hadara task status --json
@@ -44,31 +44,31 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --auto --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --dry-run --json
+hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-`task finalize --json` is the reviewed dry-run. It reports the current lifecycle step, write boundaries, expected write paths, close-proof repair if needed, and a current `planHash`. `task finalize --execute --plan-hash ...` rechecks that plan hash, runs the underlying phases serially, stops on the first blocker, and succeeds only after the final close audit is `closed-valid`.
+`task close --json` is the ordinary guarded close transaction. It reviews the current lifecycle step, write boundaries, expected write paths, and close-proof repair internally, rechecks the current plan before writing, runs the underlying phases serially, stops on the first blocker, and succeeds only after the final close audit is `closed-valid`.
 
-For clean known-good capsules, `hadara task finalize --task T-XXXX --execute --auto --json` folds the same round trip into one guarded call: it runs the identical dry-run review internally, refuses with zero writes when blockers exist, records idempotent validation-category readiness evidence when close evidence is still required, then executes against a freshly recomputed plan through the same plan-hash mismatch guard. `--auto` is mutually exclusive with `--plan-hash`; keep the explicit `--plan-hash` flow when a separate reviewer approves the plan.
+For review/debug flows, `hadara task close --task T-XXXX --dry-run --json` returns the current transaction plan and `planHash` without writes. `hadara task close --task T-XXXX --execute --plan-hash ... --json` rechecks that plan hash before writing. Keep the explicit `--plan-hash` flow when a separate reviewer approves the plan.
 
-The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013) and is no longer routed as a public JSON command. The internal finish/ready/close/audit modules remain the engine of `task finalize`; only the standalone surface is gone.
+The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013) and is no longer routed as standalone public JSON commands. The internal finish/ready/close/audit modules remain the engine of `task close`; only the old standalone step surfaces are gone.
 
 | Removed command | Replacement | Read-only diagnostic |
 |---|---|---|
-| `hadara task finish` | `hadara task finalize --task T-XXXX --execute --auto --json` (guarded finish step) | `hadara task finalize --task T-XXXX --json` |
-| `hadara task ready` | `hadara task finalize --task T-XXXX --json` (ready step report) | `hadara task status --task T-XXXX --detail full --json` |
-| `hadara task close` | `hadara task finalize --task T-XXXX --execute --auto --json` (guarded close step) | `hadara task finalize --task T-XXXX --json` |
-| `hadara task audit-close` | `hadara task finalize --task T-XXXX --json` (audit-close step report and `state`) | `hadara task status --task T-XXXX --detail full --json` (`state.closeState`) |
+| `hadara task finish` | `hadara task close --task T-XXXX --json` (guarded finish step when needed) | `hadara task close --task T-XXXX --dry-run --json` |
+| `hadara task ready` | `hadara task close --task T-XXXX --dry-run --json` (ready step report) | `hadara task status --task T-XXXX --detail full --json` |
+| old standalone close step | `hadara task close --task T-XXXX --json` (guarded close transaction) | `hadara task close --task T-XXXX --dry-run --json` |
+| `hadara task audit-close` | `hadara task close --task T-XXXX --dry-run --json` (audit-close step report and `closeState`) | `hadara task status --task T-XXXX --detail full --json` (`state.closeState`) |
 | `hadara task complete` | `hadara task status --task T-XXXX --json` | — |
 | `hadara task lifecycle` | `hadara task status --task T-XXXX --json` | — |
 
-Audit-contract migration note: consumers that read the `task audit-close` verdict must read `state` (`closed-valid`/`closed-stale`/`closed-invalid`/`not-closed`) from `task finalize --task T-XXXX --json` or `state.closeState` from `task status --task T-XXXX --detail full --json`. Recovery flows (including partially executed finalize runs) complete by rerunning `task finalize`; no standalone step command is needed.
+Audit-contract migration note: consumers that read the `task audit-close` verdict must read `closeState` from `task close --task T-XXXX --dry-run --json`, `state` from compatibility `task finalize --task T-XXXX --json`, or `state.closeState` from `task status --task T-XXXX --detail full --json`. Recovery flows complete by rerunning `task close`; no standalone step command is needed.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
-`task finalize` includes done-level Task Capsule validation through its internal ready/close steps. In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof: `task finalize --execute --auto` records that readiness evidence before appending close proof. Use `hadara harness validate --task T-XXXX --level done --json` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+`task close` includes done-level Task Capsule validation through its internal ready/close steps. In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof: `task close --json` records that readiness evidence before appending close proof. Use `hadara harness validate --task T-XXXX --level done --json` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
 
 ## Status Token And Ownership Policy
 
@@ -83,16 +83,16 @@ HADARA uses separate token families for persistent state, derived proof state, d
 | `Draft` | Task capsule exists but implementation is not started or not yet ready for done-level validation. | `task create`, worker docs |
 | `In Progress` | Work is actively being performed. | Worker docs |
 | `Blocked` | Work cannot proceed without a recorded blocker. | Worker docs |
-| `Done` | Scoped work is implemented and ready for done-level validation/close. | `task finalize --execute --auto` |
+| `Done` | Scoped work is implemented and ready for done-level validation/close. | `task close --json` |
 | `Partial` | Deliberate partial completion with remaining scope deferred or split. | Worker/coordinator docs |
 | `Superseded` | Task has been replaced by another task or line. | Worker/coordinator docs |
 | `Archived` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
 
-Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task status --detail full`, `task finalize`, `status`, or `protocol doctor` read models.
+Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task close --dry-run`, `task status --detail full`, `task finalize`, `status`, or `protocol doctor` read models.
 
 ### CloseState
 
-`CloseState` is derived proof state from close evidence and the audit step inside `task finalize`; it is not written as persistent `TaskStatus` and should not be stored in task-local `HANDOFF.md` current-state tables.
+`CloseState` is derived proof state from close evidence and the audit step inside `task close`; it is not written as persistent `TaskStatus` and should not be stored in task-local `HANDOFF.md` current-state tables.
 
 | Canonical Token | Meaning |
 |---|---|
@@ -126,26 +126,26 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`
 | Surface | Ownership |
 |---|---|
 | `TASK.md` status metadata, `## Status`, and Status History | Command-owned for finish bookkeeping; worker-owned before finish. |
-| `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task finalize`; Notes and extra cells are mixed/human-owned. |
+| `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task close`; Notes and extra cells are mixed/human-owned. |
 | `EVIDENCE.md` and `evidence.jsonl` | Evidence writer-owned; do not hand-edit `evidence.jsonl`. |
-| Task-local `HANDOFF.md` Identity table | Command-owned for `ID`, `Title`, `Status`, `Created`, and `Updated` during task create/finalize bookkeeping. |
+| Task-local `HANDOFF.md` Identity table | Command-owned for `ID`, `Title`, `Status`, `Created`, and `Updated` during task create/close bookkeeping. |
 | Task-local `HANDOFF.md` prose/tables | Worker-owned close-time handoff guidance. Persist `TaskStatus` only; `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
 | `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
 Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Treat Task Capsule `evidence.jsonl` as canonical append-only evidence and `EVIDENCE.md` as a non-canonical human summary. Future rebuild preview must define whether `wouldChange` means formatting regeneration, managed-section drift, or data inconsistency before it reports changes; any future execute mode must be dry-run-first and before-hash guarded.
 
-Before finalize execute, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before finalize, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it. After `task finalize --execute --plan-hash ...` reaches close proof, changing those documents changes the close source hash and requires rerunning finalize (`--execute --auto` or a reviewed `--plan-hash`); the standalone low-level sequence was removed in 0.4.1-rc.0. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
+Before task close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it. After `task close --json` reaches close proof, changing those documents changes the close source hash and requires rerunning task close; the standalone low-level sequence was removed in 0.4.1-rc.0. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
-For current v2 `TASK.md`, the manual `## History` table is part of that close-source set. Before finalize execute, append a final row such as `| 2026-06-12 | Done | Finished task capsule. |`. `task status` and `task finalize --json` surface this as authoring guidance before close; done-level validation blocks a `TASK.md` whose persistent status is `Done` but whose latest History row is not `Done`.
+For current v2 `TASK.md`, the manual `## History` table is part of that close-source set. Before task close, append a final row such as `| 2026-06-12 | Done | Finished task capsule. |`. `task status` and `task close --dry-run --json` surface this as authoring guidance before close; done-level validation blocks a `TASK.md` whose persistent status is `Done` but whose latest History row is not `Done`.
 
 ## Documentation Timing and Write Coordination
 
-Do not defer all documentation until after implementation. Keep `PLAN.md` current before execution; update `DECISIONS.md`, `RISKS.md`, and `FILES.md` during execution; update `TESTS.md` and `EVIDENCE.md` immediately after validation; update `ACCEPTANCE.md`, convert `HANDOFF.md` from any WIP checkpoint into close-time handoff, and update shared state docs before finalize execute; and update shared close-source docs before the close-source hash is captured.
+Do not defer all documentation until after implementation. Keep `PLAN.md` current before execution; update `DECISIONS.md`, `RISKS.md`, and `FILES.md` during execution; update `TESTS.md` and `EVIDENCE.md` immediately after validation; update `ACCEPTANCE.md`, convert `HANDOFF.md` from any WIP checkpoint into close-time handoff, and update shared state docs before task close; and update shared close-source docs before the close-source hash is captured.
 
 Parallelize read-only discovery, `rg`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task finalize --execute`, and release artifact or publish operations. Evidence appends are also protected by a task-scoped local lock; JSON evidence responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.
+Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task close`, compatibility `task finalize --execute`, and release artifact or publish operations. Evidence appends are also protected by a task-scoped local lock; JSON evidence responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.
 
 Dry-run-first remediation commands use a separate guard: when `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes. This extra copy step is intentional UX friction: remediation writes fail closed so operators review the current plan before any scaffold/remediation write.
 
@@ -161,9 +161,9 @@ Phase 6 workflow-compression commands must preserve dry-run reviewability and fu
 
 Phase 6.1 added optional actor CLI input for then-existing workflow-compression surfaces. The low-level lifecycle and handoff suggestion surfaces were later removed from public routing; `dev docker-check` remains the current external-subprocess validation wrapper with actor metadata. Future plan/idempotency work should use `--idempotency-key` where a command accepts reviewed write plans.
 
-T-0254/T-0255/T-0262 added historical lifecycle compression metadata and handoff suggestion reports. Those public command surfaces have since been removed from the CLI; `task finalize`, `task status`, and `dev docker-check` are the current public consumers of the remaining metadata patterns.
+T-0254/T-0255/T-0262 added historical lifecycle compression metadata and handoff suggestion reports. Those public command surfaces have since been removed from the CLI; `task close`, compatibility `task finalize`, `task status`, and `dev docker-check` are the current public consumers of the remaining metadata patterns.
 
-T-0257 added read-only `handoff suggest` reports for coordinator-reviewed `docs/AGENT_HANDOFF.md` updates. T-0506 removed that public helper after dogfood showed stale fragments and duplicated task status/finalize guidance. Shared handoff edits are now manual reviewed docs work before finalize.
+T-0257 added read-only `handoff suggest` reports for coordinator-reviewed `docs/AGENT_HANDOFF.md` updates. T-0506 removed that public helper after dogfood showed stale fragments and duplicated task status/close guidance. Shared handoff edits are now manual reviewed docs work before task close.
 
 T-0258 adds `dev docker-check` as an explicit external-subprocess validation wrapper. It reports Docker/temp-copy/npm/focused/full/dist-sync steps with actor metadata, redacted source/workspace metadata, privacy booleans, and an evidence-ready summary. `--sync-dist` is required before workspace `dist` is refreshed. T-0261 clarifies that `projectMutation:false` is a compatibility alias for no source mutation; `outputMutation:true` is reported when explicit dist sync writes workspace output. T-0263 requires `--before-hash <current dist hash>` before `--sync-dist` can copy Docker-built `dist`; a missing pre-sync hash requires explicit `--allow-missing-before-hash`.
 
@@ -187,43 +187,46 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara task status --task T-XXXX --summary-json` | Compact phase/readiness/counts/next-action summary for one task. | Read-only report. | No. | Summary report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --detail full --json` | Full selected-task cockpit with close/protocol diagnostics. | Read-only report. | No. | Full report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task lifecycle --task T-XXXX --json` | Removed from public routing; use `task status --task T-XXXX --json`. | Not routed. | No. | N/A. | Default help/unknown command path. |
-| `hadara task finalize --task T-XXXX --json` | Build a reviewed finish/ready/close/audit or close-proof repair plan with step write boundaries and a plan hash. | Read-only report. | No. | The plan is satisfied or executable without current blockers. | Task-style failures use 6. |
-| `hadara task finalize --task T-XXXX --execute --auto --json` | Execute the ordinary guarded close path by internally running the dry-run and current-plan recheck. | Execute with internal review. | Yes, through underlying finish writes plus readiness/close evidence append when needed. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
-| `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | Execute a reviewed finalize plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through underlying finish and close write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
-| `hadara handoff suggest --task T-XXXX --json` | Removed from public routing; shared handoff edits are manual and status/finalize own diagnostics. | Not routed. | No. | N/A. | Default help/unknown command path. |
+| `hadara task close --task T-XXXX --json` | Execute the ordinary proof-last close transaction, including bounded finish bookkeeping, readiness evidence when needed, close proof append, and final audit. | Execute with internal review. | Yes, through bounded task/status/evidence write boundaries only. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
+| `hadara task close --task T-XXXX --dry-run --json` | Preview close blockers, deferred checks, pending writes, and the reviewed plan hash without writing. | Read-only report. | No. | Close report was generated and is either clean or blocked with recovery guidance. | Task-style failures use 6. |
+| `hadara task close --task T-XXXX --execute --plan-hash <hash> --json` | Execute a human-reviewed close plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through bounded task/status/evidence write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
+| `hadara task finalize --task T-XXXX --json` | Compatibility/debug route for the underlying finish/ready/close/audit or close-proof repair plan. | Read-only report. | No. | The internal plan was generated. | Task-style failures use 6. |
+| `hadara task finalize --task T-XXXX --execute --auto --json` | Compatibility/debug route for the ordinary close engine. New agents should prefer `task close --task T-XXXX --json`. | Execute with internal review. | Yes, through underlying finish writes plus readiness/close evidence append when needed. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
+| `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | Compatibility/debug route for a reviewed internal finalize plan. New agents should prefer reviewed `task close --execute --plan-hash`. | Execute after dry-run review. | Yes, only through underlying finish and close write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
+| `hadara handoff suggest --task T-XXXX --json` | Removed from public routing; shared handoff edits are manual and status/close own diagnostics. | Not routed. | No. | N/A. | Default help/unknown command path. |
 | `hadara dev docker-check --focused tests/unit/foo.test.ts --sync-dist --before-hash sha256:... --json` | Run Docker temp-copy validation with optional focused tests and explicit dist sync. | Execute report. | Runs Docker; may write workspace `dist` only with `--sync-dist` and a matching reviewed before-hash. | Requested Docker validation completed and any requested dist sync freshness guard passed. | Task-style failures use 6. |
 | `hadara evidence list --task T-XXXX [--json]` | Discover Task Capsule evidence ids and semantic metadata. | Read-only report. | No. | Evidence list report was generated. | Evidence/task-style failures use 6. |
 | `hadara validation run --task T-XXXX --check "..." [--update-task] [--direct-result passed\|failed\|blocked] [--direct-summary "..."] -- <command>` | Execute a real validation command and record durable evidence; with `--direct-result`, record an already-run direct result without spawning a child process. | Execute report. | Yes, appends capsule evidence; updates `TASK.md` Validation only with `--update-task`. | Validation command exited 0, or an operator-supplied direct passed result was recorded. | Evidence/task-style failures use 6. |
 | `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. | Evidence append succeeded or returned the existing keyed record. | Evidence/task-style failures use 6. |
-| `hadara task finish ...` | Removed from public routing; use `task finalize --execute --auto` for the guarded finish/close path. | Not routed. | No. | N/A. | Default help/unknown command path. |
-| `hadara task ready ...` | Removed from public routing; readiness lives in the finalize dry-run ready step and `task status --detail full`. | Not routed. | No. | N/A. | Default help/unknown command path. |
-| `hadara task close ...` | Removed from public routing; close evidence is appended only through the guarded finalize close step. | Not routed. | No. | N/A. | Default help/unknown command path. |
-| `hadara task audit-close ...` | Removed from public routing; audit verdicts are available through `task finalize --json` and `task status --detail full --json`. | Not routed. | No. | N/A. | Default help/unknown command path. |
+| `hadara task finish ...` | Removed from public routing; use `task close --task T-XXXX --json` for the guarded finish/close path. | Not routed. | No. | N/A. | Default help/unknown command path. |
+| `hadara task ready ...` | Removed from public routing; readiness lives in `task close --dry-run` and `task status --detail full`. | Not routed. | No. | N/A. | Default help/unknown command path. |
+| `hadara task audit-close ...` | Removed from public routing; audit verdicts are available through `task close --dry-run`, compatibility `task finalize --json`, and `task status --detail full --json`. | Not routed. | No. | N/A. | Default help/unknown command path. |
 
 ## Non-Overlap Rules
 
 - `task status --json` chooses work when no task is selected; it does not create a capsule or infer completion. Its selection source embeds the compatibility next-work projection. Handoff-only recommendations may use `taskId: TBD`; consumers must inspect `sourceKind`, `taskCapsulePresent`, `createCommand`, and `backlog`.
 - `task create --from` applies template defaults only at creation time. Templates remain Draft scaffolds: they must not mark acceptance done, attach evidence, run validation, close the task, or imply that expected evidence already exists.
 - `task create` uses bounded local collision retries for sequential task ids. If the selected task directory appears before creation or the Task Board already contains the candidate id, it retries another id; exhausted retries return `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`. This is a collision guard, not a durable global task allocator.
-- `task status` is an operator cockpit; `ok: true` means report generation succeeded. Default selected-task status is a fast loop cockpit and may skip close-grade readiness/protocol diagnostics. Use `task status --task T-XXXX --summary-json` when automation or humans only need phase, readiness, counts, and primary next action. Use `task finalize --task T-XXXX --json` for close planning or `task status --task T-XXXX --detail full --json` when you explicitly need the heavier diagnostic projection. Readiness lives in `state.ready`, `summary.blockers`, `issues`, and selected-capsule loop guidance lives in `loop.phase` and `loop.primaryNextAction`.
+- `task status` is an operator cockpit; `ok: true` means report generation succeeded. Default selected-task status is a fast loop cockpit and may skip close-grade readiness/protocol diagnostics. Use `task status --task T-XXXX --summary-json` when automation or humans only need phase, readiness, counts, and primary next action. Use `task close --task T-XXXX --dry-run --json` for close planning or `task status --task T-XXXX --detail full --json` when you explicitly need the heavier diagnostic projection. Readiness lives in `state.ready`, `summary.blockers`, `issues`, and selected-capsule loop guidance lives in `loop.phase` and `loop.primaryNextAction`.
 - `task complete` and `task lifecycle` are fully removed from public routing. `task next` has been fully removed from public routing; use `task status --json` for next-work selection and `task status --task T-XXXX --json` for phase/next-action guidance.
-- `task finalize` is read-only by default. It reports ordered finish/ready/close/audit steps, write boundaries, expected write paths, close-proof repair when current close evidence is stale or invalid, and a `planHash`; guarded execute requires the matching current plan hash, records readiness evidence in the `--auto` close path when needed, runs phases serially, stops on the first blocker, and returns success only after the final audit is `closed-valid`.
-- `handoff suggest` is fully removed from public routing. No current CLI command writes or generates handoff fragments; edit `docs/AGENT_HANDOFF.md` deliberately before finalize when shared state changes.
+- `task close` is the public proof-last transaction. By default it executes the internally reviewed close plan once; `--dry-run` previews ordered finish/ready/close/audit steps, write boundaries, expected write paths, close-proof repair when current close evidence is stale or invalid, and a `planHash`; reviewed execute requires the matching current plan hash, records readiness evidence when needed, runs phases serially, stops on the first blocker, and returns success only after the final audit is `closed-valid`.
+- `task finalize` is compatibility/debug only. It exposes the underlying internal plan for old automation and deep diagnostics, but it is not the default agent loop command.
+- `handoff suggest` is fully removed from public routing. No current CLI command writes or generates handoff fragments; edit `docs/AGENT_HANDOFF.md` deliberately before task close when shared state changes.
 - `dev docker-check` is intentionally an external-subprocess command. It must keep raw Docker/npm logs out of JSON output, redact workspace paths, create a run-scoped temp copy, and require explicit `--sync-dist --before-hash <current dist hash>` before copying Docker-built `dist` to the workspace.
 - `dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available, which hash the operator reviewed, whether it matched, whether sync was allowed through the first-time missing-hash escape hatch, and whether a conflict blocked the copy.
-- `task ready` is removed as a public command. Readiness diagnostics live in `task finalize --json`, `task status --detail full`, and direct `harness validate` debugging.
-- `harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task finalize --execute --auto`.
+- `task ready` is removed as a public command. Readiness diagnostics live in `task close --dry-run`, `task status --detail full`, compatibility `task finalize --json`, and direct `harness validate` debugging.
+- `harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task close --json`.
 - `evidence list` is the supported evidence id discovery surface. Text output shows `[id] time | category/outcome | visibility | summary`; JSON records expose `id`, `idSource`, `idStability`, `persistedSchemaVersion`, `category`, `outcome`, and `tags`. Use durable persisted `ev:` ids for long-lived `--resolves` and `--supersedes` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.
 - `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr. `--category` and `--outcome` set persisted v2 metadata explicitly, while `--result` remains the legacy-compatible command result. When both are supplied, `--result` must match `--outcome` for `passed`, `failed`, `blocked`, and `unknown`; `recorded` and `not-applicable` require `--result unknown` or no explicit `--result`. Mismatches fail with `EVIDENCE_RESULT_OUTCOME_MISMATCH`. `--resolves` and `--supersedes` append exact v2 resolution tags, and only later `passed` or `recorded` evidence can resolve earlier failed evidence through those tags. `--idempotency-key` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows. Evidence append responses include `evidence.appendLock`; if `contended` is true, another process held the task-scoped append lock before this write.
 - `validation run` adds a stable check key to its evidence. Non-JSON output separates child command metadata from HADARA evidence recording, so logs can distinguish the executed command result from the evidence append/TASK.md sync summary. When a later attempt with the same check name passes, it automatically adds `resolves:<id>` tags for earlier unresolved failed or blocked attempts from that check. Use explicit `--resolves` only for cross-check, non-validation, or non-obvious repair relationships.
 - If the wrapper cannot launch child processes in the current tool environment but the same command ran directly, use `--direct-result passed|failed|blocked --direct-summary "..."` on `validation run`. That keeps validation-check resolution tags and optional `TASK.md` row sync in the validation surface without requiring a second `evidence add-command` command.
 - Evidence v2 deferred scope remains explicit: rebuild preview/execute, `check-id`, `subject`, and a new add-command report schema id are future candidates. Do not infer those commands or schema changes from the current `evidence list` and `evidence add-command` ergonomics.
-- The internal finish step may update only the Task Capsule `TASK.md` status and the matching `docs/TASK_BOARD.md` row's command-owned cells: `ID`, `Title`, `Status`, and `Capsule`. It preserves human/mixed-owned `Notes` and any extra cells. Public callers reach it only through `task finalize --execute`.
-- The internal close step may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, Development Slices, or arbitrary evidence. Public callers reach it only through `task finalize --execute`.
-- After close proof is recorded, close-source document edits intentionally invalidate the previous close proof. Make those edits before finalize execute. If the edit is unavoidable, finish the intended edits, rerun `hadara task finalize --task T-XXXX --json`, review the new plan hash, then execute the matching finalize plan to append fresh close proof.
-- Finalize close reports additive close-evidence idempotency metadata. Repeating close with the same task/source/report hash is a no-op in execute mode; a changed source/report hash may append a new close proof with supersedes metadata for the previous proof. T-0264 rechecks `evidence.jsonl` immediately before append, so an execute report created before another same-key close proof was appended is converted to a no-op instead of appending a duplicate. This is a local append race recheck, not a global lock service.
-- Audit-close is no longer public and is normally reached through `task finalize --execute`.
+- The internal finish step may update only the Task Capsule `TASK.md` status and the matching `docs/TASK_BOARD.md` row's command-owned cells: `ID`, `Title`, `Status`, and `Capsule`. It preserves human/mixed-owned `Notes` and any extra cells. Public callers reach it through `task close`.
+- The internal close step may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, Development Slices, or arbitrary evidence. Public callers reach it through `task close`.
+- After close proof is recorded, close-source document edits intentionally invalidate the previous close proof. Make those edits before task close. If the edit is unavoidable, finish the intended edits, rerun `hadara task close --task T-XXXX --dry-run --json`, review the new plan hash when using reviewed mode, then rerun task close to append fresh close proof.
+- Task close reports additive close-evidence idempotency metadata. Repeating close with the same task/source/report hash is a no-op in execute mode; a changed source/report hash may append a new close proof with supersedes metadata for the previous proof. T-0264 rechecks `evidence.jsonl` immediately before append, so an execute report created before another same-key close proof was appended is converted to a no-op instead of appending a duplicate. This is a local append race recheck, not a global lock service.
+- Audit-close is no longer public and is normally reached through `task close`.
 
 ## State Documents
 
-`task finalize --execute` deliberately does not update broad prose state beyond bounded task/status/evidence writes. Operators still update `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, and `docs/AGENT_HANDOFF.md` when the task changes roadmap, project, or handoff state. Future automation for those files should remain dry-run-first and bounded.
+`task close` deliberately does not update broad prose state beyond bounded task/status/evidence writes. Operators still update `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, and `docs/AGENT_HANDOFF.md` when the task changes roadmap, project, or handoff state. Future automation for those files should remain dry-run-first and bounded.

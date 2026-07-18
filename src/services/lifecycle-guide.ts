@@ -8,20 +8,20 @@ import {
   listCommandRegistryEntries
 } from './capability-registry';
 
-export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['inspect', 'create', 'evidence', 'finalize'];
+export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['inspect', 'create', 'evidence', 'close'];
 
 const PRIMARY_WHEN: Record<string, string> = {
   'task.create': 'When no suitable Task Capsule exists.',
   'task.status': 'At session start, after creating a capsule, and at meaningful loop boundaries.',
   'validation.run': 'When a real validation command should be executed and recorded as evidence.',
   'evidence.add-command': 'When recording already-run validation or relevant work proof.',
-  'task.finalize': 'After implementation, evidence, capsule docs, and tracked state docs are ready.'
+  'task.close': 'After implementation, evidence, capsule docs, and tracked state docs are ready.'
 };
 
 const DIAGNOSTIC_USE_WHEN: Record<string, string> = {
   'evidence.lint': 'Evidence records or semantic proof are unclear.',
   'protocol.doctor': 'Protocol docs, task board rows, or profile state may be inconsistent.',
-  'harness.validate': 'task finalize or task status full diagnostics report format or done-level blockers.'
+  'harness.validate': 'task close, task finalize, or task status full diagnostics report format or done-level blockers.'
 };
 
 const ADVANCED_FAMILY_USE_WHEN: Array<{ family: CommandFamily; useWhen: string }> = [
@@ -100,32 +100,32 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
     evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },
   {
-    decision: 'Finalize is the default agent close path.',
-    commands: ['task.finalize', 'task.complete', 'task.finish'],
-    rule: '`task finalize --execute --auto` is the ordinary guarded close path. Removed low-level lifecycle command surfaces are no longer public routes.',
-    evidence: 'FD-010 and FD-013 0.4.1-rc.0 lifecycle surface consolidation.'
+    decision: 'Task close is the default agent close path.',
+    commands: ['task.close', 'task.finalize', 'task.complete', 'task.finish'],
+    rule: '`task close --task T-XXXX --json` is the ordinary guarded close path. `task finalize` remains the compatibility/debug route for the underlying finish/ready/close/audit plan.',
+    evidence: '0.5.0 close transaction route.'
   },
   {
-    decision: 'Close appends proof, audit verifies proof, finalize composes both.',
+    decision: 'Close composes finish, readiness, proof append, and audit.',
     commands: ['task.finalize', 'task.close', 'task.audit-close'],
-    rule: '`task finalize` preserves the proof boundaries internally: finish bookkeeping, done readiness, close evidence append, and post-close audit.',
-    evidence: '0.4.1-rc.0 finalize-first lifecycle default.'
+    rule: '`task close` preserves the proof boundaries internally through the finalize engine: finish bookkeeping, done readiness, close evidence append, and post-close audit.',
+    evidence: '0.5.0 close-first lifecycle default.'
   },
   {
-    decision: 'Status and finalize diagnose readiness; they do not replace close execution.',
+    decision: 'Status and finalize diagnose readiness; close owns ordinary execution.',
     commands: ['task.status', 'task.finalize', 'task.close'],
-    rule: '`task status --detail full` and `task finalize --json` explain readiness; they do not append close proof until guarded finalize execute runs.',
-    evidence: 'T-0522 removed standalone proof status/explain and ci gate commands after finalize/status/state surfaces absorbed their public role.'
+    rule: '`task status --detail full`, `task close --dry-run`, and `task finalize --json` explain readiness; `task close --task T-XXXX --json` owns the ordinary proof-last close transaction.',
+    evidence: 'T-0522 removed standalone proof status/explain and ci gate commands after finalize/status/state surfaces absorbed their public role; 0.5.0 restored close as the public transaction route.'
   },
   {
     decision: 'Shared handoff edits are manual reviewed docs work.',
-    commands: ['task.status', 'task.finalize'],
-    rule: 'No current CLI command writes or generates handoff fragments; use task status/finalize diagnostics and edit shared handoff docs deliberately before close.',
+    commands: ['task.status', 'task.close', 'task.finalize'],
+    rule: 'No current CLI command writes or generates handoff fragments; use task status/close diagnostics and edit shared handoff docs deliberately before close.',
     evidence: 'T-0496 removed the broken handoff update write surface; T-0506 removed the stale handoff suggestion surface.'
   },
   {
     decision: 'Release and dev validation are not ordinary capsule lifecycle steps.',
-    commands: ['release.gate', 'task.finalize', 'task.ready', 'dev.docker-check'],
+    commands: ['release.gate', 'task.close', 'task.finalize', 'task.ready', 'dev.docker-check'],
     rule: 'Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help.',
     evidence: 'Phase 7.2 advanced family boundary.'
   }
@@ -240,6 +240,8 @@ function primaryCommandForEntry(entry: CommandRegistryEntry): string {
       return 'hadara validation run --task T-XXXX --check "Focused tests" -- npm test';
     case 'evidence.add-command':
       return 'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json';
+    case 'task.close':
+      return 'hadara task close --task T-XXXX --json';
     case 'task.finalize':
       return 'hadara task finalize --task T-XXXX --json';
     default:

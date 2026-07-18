@@ -196,8 +196,8 @@ function createFinishNextActions(taskId: string, mode: TaskFinishMode, writes: T
       createTaskLifecycleNextAction({
         id: 'execute-finish',
         required: true,
-        command: `hadara task finalize --task ${taskId} --execute --auto --json`,
-        message: 'Apply bounded task status and Task Board bookkeeping through guarded finalize.',
+        command: `hadara task close --task ${taskId} --json`,
+        message: 'Apply bounded task status and Task Board bookkeeping through guarded task close.',
         writeBoundary: 'task-local',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -652,7 +652,7 @@ function appendStatusHistoryDone(content: string): string {
   const end = start + section.length;
   const prefix = content.slice(0, start);
   const suffix = content.slice(end);
-  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Finished task capsule. | \`hadara task finalize --execute --auto\` |`;
+  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Finished task capsule. | \`hadara task close\` |`;
   const managedEnd = '<!-- hadara:managed:end task-status-history -->';
   const managedEndIndex = section.indexOf(managedEnd);
   if (managedEndIndex >= 0) {

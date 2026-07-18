@@ -26,7 +26,7 @@ describe('Task Capsule scaffold frames', () => {
     const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMarkdown).toContain('## Identity');
     expect(taskMarkdown).toContain('Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Status to close work.');
-    expect(taskMarkdown).toContain(`hadara task finalize --task ${task.id} --execute --auto --json`);
+    expect(taskMarkdown).toContain(`hadara task close --task ${task.id} --json`);
     expect(taskMarkdown.indexOf('## Goal')).toBeLessThan(taskMarkdown.indexOf('## Inputs / Constraints'));
     expect(taskMarkdown).toContain('## Scope');
     expect(taskMarkdown).toContain('## Inputs / Constraints');

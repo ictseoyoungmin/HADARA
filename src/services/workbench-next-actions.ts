@@ -52,8 +52,8 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task finalize --task ${input.taskId} --execute --auto --json`,
-      message: 'Only finish bookkeeping remains; run guarded finalize auto to sync task status, Task Board, readiness evidence, and close proof.',
+      command: `hadara task close --task ${input.taskId} --json`,
+      message: 'Only finish bookkeeping remains; run guarded task close to sync task status, Task Board, readiness evidence, and close proof.',
       sourceIssueCodes: ['HARNESS_TASK_BOARD_STATUS_NOT_DONE'],
       loopBoundary: true
     });
@@ -78,9 +78,9 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task finalize --task ${input.taskId} --json`,
-      executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
-      message: 'Close evidence exists but is not currently valid. Review finalize dry-run and repair through guarded finalize execute.',
+      command: `hadara task close --task ${input.taskId} --dry-run --json`,
+      executeCommand: `hadara task close --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Close evidence exists but is not currently valid. Review task close dry-run and repair through guarded task close.',
       sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_REPAIR_REQUIRED'],
       loopBoundary: true
     });
@@ -92,9 +92,9 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task finalize --task ${input.taskId} --json`,
-      executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
-      message: 'Review the finalize dry-run, inspect the plan hash, then execute the matching finalize plan if it still applies.',
+      command: `hadara task close --task ${input.taskId} --dry-run --json`,
+      executeCommand: `hadara task close --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the task close dry-run, inspect the plan hash, then execute the matching close plan if explicit review is required; otherwise use task close --json.',
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: true
     });
@@ -177,7 +177,7 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
       kind: 'edit',
       required: true,
       priority: 'soon',
-      message: 'Update task/project handoff docs manually after current evidence is recorded; use task status and finalize dry-run for phase guidance.',
+      message: 'Update task/project handoff docs manually after current evidence is recorded; use task status and task close dry-run for phase guidance.',
       path: issue.path,
       sourceIssueCodes: [issue.code]
     });
@@ -195,9 +195,9 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
       kind: 'command',
       required: action.required,
       priority: action.required ? 'now' : 'soon',
-      command: `hadara task finalize --task ${taskId} --json`,
-      executeCommand: `hadara task finalize --task ${taskId} --execute --plan-hash <planHash> --json`,
-      message: 'Review the finalize dry-run, inspect the plan hash, then execute the matching finalize plan if it still applies.',
+      command: `hadara task close --task ${taskId} --dry-run --json`,
+      executeCommand: `hadara task close --task ${taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the task close dry-run, inspect the plan hash, then execute the matching close plan if explicit review is required; otherwise use task close --json.',
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: action.loopBoundary
     });

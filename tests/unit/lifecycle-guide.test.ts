@@ -17,7 +17,7 @@ describe('Phase 7.2 lifecycle guide', () => {
       'task.status',
       'task.create',
       'validation.run',
-      'task.finalize'
+      'task.close'
     ]);
   });
 
@@ -52,7 +52,7 @@ describe('Phase 7.2 lifecycle guide', () => {
     expect(output).toContain('Primary capsule lifecycle:');
     expect(output).toContain('1 inspect');
     expect(output).toMatch(/3 evidence\s+hadara validation run/);
-    expect(output).toMatch(/4 finalize\s+hadara task finalize/);
+    expect(output).toMatch(/4 close\s+hadara task close/);
     expect(output).not.toContain('hadara handoff update');
     expect(output).not.toContain('task lifecycle --task T-XXXX --json');
     expect(output).not.toContain('task finish --task T-XXXX --execute --json');

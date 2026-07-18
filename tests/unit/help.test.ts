@@ -29,8 +29,9 @@ describe('registry-backed help', () => {
     expect(output).toContain('1 inspect');
     expect(output).toContain('task status [--task T-XXXX] --json');
     expect(output).not.toContain('task lifecycle --task T-XXXX --json');
-    expect(output).toContain('task finalize --task T-XXXX --json');
-    expect(output).toContain('task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
+    expect(output).toContain('task close --task T-XXXX --json');
+    expect(output).toContain('task close --task T-XXXX --dry-run --json');
+    expect(output).toContain('task close --task T-XXXX --execute --plan-hash sha256:... --json');
     expect(output).not.toContain('task finish --task T-XXXX --execute --json');
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).not.toContain('Low-level proof-boundary commands are available');
@@ -46,22 +47,22 @@ describe('registry-backed help', () => {
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('evidence.add-command');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.status');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.lifecycle');
-    expect(report.primaryPath.map((step) => step.commandId)).toContain('task.finalize');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('task.close');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('handoff.update');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.finish');
-    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.close');
+    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.finalize');
     expect(report.diagnostics.map((item) => item.commandId)).toContain('harness.validate');
   });
 
   it('explains a command with registry metadata', () => {
-    const output = renderCommandHelp('task.finalize');
-    const entry = findCommandRegistryEntry('task.finalize');
+    const output = renderCommandHelp('task.close');
+    const entry = findCommandRegistryEntry('task.close');
 
     expect(entry).toBeDefined();
-    expect(output).toContain('task.finalize');
+    expect(output).toContain('task.close');
     expect(output).toContain('Family: capsule-lifecycle');
     expect(output).toContain('Examples:');
-    expect(output).toContain('--auto');
+    expect(output).toContain('--dry-run');
   });
 
   it('shows docs.register controlled vocabulary in command help', () => {

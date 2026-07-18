@@ -1371,7 +1371,7 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
   }
 
   const requiredSnippets = [
-    'hadara task finalize --task T-XXXX --execute --auto --json',
+    'hadara task close --task T-XXXX --json',
     '## Slice State',
     'hadara slice add --id M1',
     'hadara slice render --json'
@@ -1405,8 +1405,8 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
     ok,
     summary: ok
       ? fs.existsSync(workflowPath)
-        ? 'Generated init workflow docs expose current finalize --auto and slice guidance without stale removed command instructions.'
-        : 'Installed init stdout capture was empty; installed template bundle exposes current finalize --auto and slice guidance without stale removed command instructions.'
+        ? 'Generated init workflow docs expose current task close and slice guidance without stale removed command instructions.'
+        : 'Installed init stdout capture was empty; installed template bundle exposes current task close and slice guidance without stale removed command instructions.'
       : 'Generated init docs drift detected; see generated-init-docs issues.',
     issues,
     fallbackUsed,

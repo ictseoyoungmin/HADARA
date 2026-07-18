@@ -1,4 +1,5 @@
 import { createTaskCloseSourceReport } from '../task/task-close';
+import { createTaskCloseTransactionReport, formatTaskCloseTransactionReport } from '../task/task-close-transaction';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
 import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
@@ -103,6 +104,27 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     } else {
       console.log(formatTaskListReport(report));
     }
+    return true;
+  }
+
+  if (sub === 'close') {
+    if (!getFlag(input.args, '--dry-run') && blockLegacyMutation(input, 'task.close')) return true;
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task close requires --task <task-id>');
+    const report = createTaskCloseTransactionReport(input.projectRoot, id, {
+      dryRun: getFlag(input.args, '--dry-run'),
+      executeRequested: getFlag(input.args, '--execute'),
+      planHash: getStringOption(input.args, '--plan-hash'),
+      actor: getActorContextOption(input.args),
+      onProgress: !getFlag(input.args, '--dry-run') ? createTaskLifecycleProgressWriter(id, 'task close') : undefined
+    });
+    attachCliDiagnostics(report, timer, 'task.close');
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskCloseTransactionReport(report));
+    }
+    if (!report.ok) process.exitCode = 6;
     return true;
   }
 
@@ -293,9 +315,13 @@ function createTaskStatusSummaryReport(report: TaskStatusSelectionReport | TaskW
 }
 
 function createTaskFinalizeProgressWriter(taskId: string): (event: TaskFinalizeProgressEvent) => void {
+  return createTaskLifecycleProgressWriter(taskId, 'task finalize');
+}
+
+function createTaskLifecycleProgressWriter(taskId: string, commandLabel: string): (event: TaskFinalizeProgressEvent) => void {
   return (event) => {
     const ok = event.ok === undefined ? '' : ` ok=${event.ok}`;
-    process.stderr.write(`[HADARA] task finalize ${taskId}: ${event.step} ${event.phase}${ok} - ${event.summary}\n`);
+    process.stderr.write(`[HADARA] ${commandLabel} ${taskId}: ${event.step} ${event.phase}${ok} - ${event.summary}\n`);
   };
 }
 
@@ -320,6 +346,8 @@ function taskSubcommandHelpId(sub: string | undefined): string | null {
       return 'task.create';
     case 'list':
       return 'task.list';
+    case 'close':
+      return 'task.close';
     case 'close-source':
       return 'task.close-source';
     case 'status':

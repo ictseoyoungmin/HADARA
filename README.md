@@ -96,12 +96,12 @@ hadara evidence add-command --task T-0001 --summary "Smoke test passed" --result
 Close with the reviewed finalize flow:
 
 ```bash
-hadara task finalize --task T-0001 --json
-hadara task finalize --task T-0001 --execute --auto --json
-hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
+hadara task close --task T-0001 --json
+hadara task close --task T-0001 --dry-run --json
+hadara task close --task T-0001 --execute --plan-hash sha256:... --json
 ```
 
-`task finalize --json` is the dry-run review. `--execute --auto` is the ordinary guarded close path: it performs the same review internally, rechecks the current plan, and succeeds only after close audit is valid. Use the explicit `--plan-hash` form when a separate human or automation flow reviews and carries the dry-run plan.
+`task close --json` is the ordinary guarded close path: it performs the review internally, rechecks the current plan, and succeeds only after close audit is valid. Use `task close --dry-run --json` and the explicit `--plan-hash` form when a separate human or automation flow reviews and carries the dry-run plan.
 
 ## Release Status
 
@@ -152,7 +152,7 @@ Use structured discovery when an agent or tool needs machine-readable command me
 ```bash
 hadara commands --json
 hadara commands --family capsule-lifecycle --json
-hadara help command task.finalize
+hadara help command task.close
 ```
 
 ## Lifecycle Details
@@ -167,9 +167,9 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --auto --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --dry-run --json
+hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
 When `evidence add-command` uses both legacy `--result` and v2 `--outcome`, matching outcomes must agree with the legacy result. `recorded` and `not-applicable` outcomes keep legacy result `unknown`; incompatible combinations fail before evidence is appended.
@@ -192,17 +192,18 @@ hadara task status --task T-XXXX --json
 hadara context pack --task T-XXXX --json
 ```
 
-Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle` are no longer public routes. Use `task finalize` (`--execute --auto` for guarded execution, dry-run for step-level readiness/audit reports) or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task finalize`.
+Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task audit-close`, `task complete`, and `task lifecycle` are no longer public routes. `task close` is the 0.5 public close transaction; use `task close --json` for guarded execution, `task close --dry-run --json` or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task close` and compatibility `task finalize`.
 
 Important boundaries:
 
 | Command | Boundary |
 |---|---|
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. `--detail full` includes done-level diagnostics and `state.closeState`. |
-| `task finalize` | Default agent close path. Read-only by default; `--execute --plan-hash <hash>` executes a reviewed plan and `--execute --auto` folds review and hash check into one guarded call. |
-| `task finish` / `task ready` / `task close` / `task audit-close` / `task complete` / `task lifecycle` | Fully removed public routes; use `task status` and `task finalize`. |
+| `task close` | Default agent close path. Executes the guarded proof-last transaction by default; `--dry-run` previews and `--execute --plan-hash <hash>` executes a reviewed plan. |
+| `task finalize` | Compatibility/debug route for the underlying finish/ready/close/audit plan. Not the primary user-facing close path. |
+| `task finish` / `task ready` / `task audit-close` / `task complete` / `task lifecycle` | Fully removed public routes; use `task status` and `task close`. |
 
-Before executing `task finalize`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning finalize.
+Before executing `task close`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning task close.
 
 The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
 
@@ -214,7 +215,7 @@ Diagnostics are useful, but they are not the primary lifecycle:
 hadara evidence lint --task T-0001 --json
 hadara evidence list --task T-0001 --json
 hadara task status --task T-0001 --detail full --json
-hadara task finalize --task T-0001 --json
+hadara task close --task T-0001 --json
 hadara status --json
 hadara status --state-only --json
 hadara status --detail full --json

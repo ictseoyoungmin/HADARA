@@ -3,8 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
+import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/task-close';
+import { createTaskCloseTransactionReport } from '../../src/task/task-close-transaction';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -13,6 +15,7 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-close-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, '.hadara'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.hadara', 'scaffold.json'), `${JSON.stringify({ hadaraProtocol: '0.4' }, null, 2)}\n`, 'utf8');
   fs.writeFileSync(
     path.join(dir, '.hadara', 'slot-registry.json'),
     `${JSON.stringify({ schemaVersion: 'hadara.managedSlot.registry.v1', registryVersion: 1, slots: [], tableSchemas: [] }, null, 2)}\n`,
@@ -27,6 +30,137 @@ afterEach(() => {
 });
 
 describe('task close report', () => {
+  it('closes a clean capsule through the public v2 transaction without an exposed plan hash', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction clean');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.close.v2',
+      command: 'task.close',
+      ok: true,
+      mode: 'execute',
+      taskId: task.id,
+      closeState: 'closed-valid',
+      planStatus: 'satisfied',
+      readOnly: false,
+      transaction: {
+        strategy: 'finalize-auto',
+        internalReview: true,
+        proofLast: true,
+        stalePlanGuard: true
+      },
+      writeSummary: {
+        closeProofAppended: true,
+        idempotentNoop: false
+      },
+      source: {
+        finalize: {
+          schemaVersion: 'hadara.task.finalize.v1',
+          command: 'task.finalize',
+          ok: true,
+          state: 'closed-valid'
+        }
+      }
+    });
+    expect(report.transaction.planHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('returns blocked recovery without lifecycle-owned writes when public close cannot proceed', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction blocked');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.close.v2',
+      command: 'task.close',
+      ok: false,
+      mode: 'dry-run',
+      closeState: 'blocked',
+      readOnly: true,
+      writeSummary: {
+        executedWrites: 0,
+        executedSteps: [],
+        closeProofAppended: false
+      },
+      recovery: {
+        required: true
+      }
+    });
+    expect(report.recovery?.action.writeBoundary).not.toBe('read-only');
+    expect(report.recovery?.action.command).not.toContain('task finalize');
+    expect(report.nextActions.map((action) => action.command ?? '').join('\n')).not.toContain('task finalize');
+    expect(report.source.finalize.mode).toBe('dry-run');
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('treats public close retry on an already closed capsule as an idempotent no-op', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction retry');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const first = createTaskCloseTransactionReport(root, task.id);
+    expect(first.ok).toBe(true);
+    const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    const retry = createTaskCloseTransactionReport(root, task.id);
+    const afterRetry = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    expect(retry).toMatchObject({
+      ok: true,
+      closeState: 'closed-valid',
+      planStatus: 'satisfied',
+      writeSummary: {
+        executedWrites: 0,
+        closeProofAppended: false,
+        idempotentNoop: true
+      }
+    });
+    expect(retry.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(afterRetry).toBe(afterFirst);
+    expect(validateSchema('hadara.task.close.v2', retry).ok).toBe(true);
+  });
+
+  it('routes task close through the CLI v2 transaction report', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI close transaction');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (message?: unknown) => {
+      output.push(String(message));
+    };
+    try {
+      expect(handleTaskCommand({ args: ['task', 'close', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.close.v2',
+      command: 'task.close',
+      ok: true,
+      mode: 'execute',
+      diagnostics: {
+        generatedBy: 'cli',
+        commandPath: 'task.close',
+        slow: false
+      }
+    });
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
   it('creates a read-only close plan with loop-boundary next actions for a completed task', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close ready task');
@@ -81,12 +215,12 @@ describe('task close report', () => {
       nextPhaseAfterSuccess: 'close-execute',
       validationPhase: {
         role: 'prove-readiness',
-        command: `hadara task finalize --task ${task.id} --json`,
+        command: `hadara task close --task ${task.id} --dry-run --json`,
         includesCloseEvidenceAppend: false
       },
       closePhase: {
         role: 'record-proof',
-        command: `hadara task finalize --task ${task.id} --execute --auto --json`,
+        command: `hadara task close --task ${task.id} --json`,
         writes: 'close-evidence-only'
       },
       auditPhase: {
@@ -102,7 +236,7 @@ describe('task close report', () => {
     expect(report.primaryNextAction).toMatchObject({
       id: 'append-close-evidence',
       loopBoundary: true,
-      command: `hadara task finalize --task ${task.id} --execute --auto --json`,
+      command: `hadara task close --task ${task.id} --json`,
       writeBoundary: 'evidence-append',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
@@ -394,7 +528,7 @@ describe('task close report', () => {
     });
     expect(audit.primaryNextAction).toMatchObject({
       id: 'close-first',
-      command: `hadara task finalize --task ${task.id} --json`,
+      command: `hadara task close --task ${task.id} --dry-run --json`,
       writeBoundary: 'read-only',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
@@ -447,4 +581,27 @@ function updateTaskBoardDone(root: string, taskId: string): void {
       .join('\n'),
     'utf8'
   );
+}
+
+function markStateDocsCurrent(root: string, taskId: string): void {
+  const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+  const agentHandoffPath = path.join(root, 'docs', 'AGENT_HANDOFF.md');
+  fs.writeFileSync(projectStatePath, `# Project State\n\n${taskId} is current and complete.\n`, 'utf8');
+  fs.writeFileSync(agentHandoffPath, `# Agent Handoff\n\n${taskId} is current and complete.\n`, 'utf8');
+}
+
+function snapshotFiles(root: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  function walk(dir: string): void {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      result[path.relative(root, full).split(path.sep).join('/')] = fs.readFileSync(full, 'utf8');
+    }
+  }
+  walk(root);
+  return result;
 }

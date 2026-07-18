@@ -184,7 +184,7 @@ describe('init profiles', () => {
       '## Exact Source Slices',
       '## Slice State',
       '## Task Capsule Lifecycle',
-      '## Finalize Entry Gate',
+      '## Close Entry Gate',
       '## Task Document Timing',
       '## Evidence',
       '## Repair and Diagnostics',
@@ -198,11 +198,11 @@ describe('init profiles', () => {
       expect(workflow).toContain(heading);
     }
     expect(workflow).toContain('Agents must not scan the repository');
-    expect(workflow).toContain('Before running `hadara task finalize`, all of these must be true');
+    expect(workflow).toContain('Before running `hadara task close`, all of these must be true');
     expect(workflow).toContain('Do not hand-edit lifecycle-owned status fields to force closure.');
     expect(workflow).toContain('Do not hand-edit `TASK.md` Identity `Status`, `docs/TASK_BOARD.md` Status');
     expect(workflow).toContain('Evidence must reflect real execution results');
-    expect(workflow).toContain('For ordinary clean capsules, `task finalize --execute --auto --json` performs the dry-run and current-plan verification internally and records idempotent validation-category readiness evidence before close proof when close evidence is still required.');
+    expect(workflow).toContain('For ordinary clean capsules, `task close --json` performs the dry-run and current-plan verification internally and records idempotent validation-category readiness evidence before close proof when close evidence is still required.');
     expect(workflow).toContain('hadara slice add --id M1 --title "First slice" --status not-started --json');
     expect(workflow).toContain('`.hadara/state/slices.json` is canonical once it exists.');
     expect(workflow).not.toContain('Low-level lifecycle commands are for debugging');

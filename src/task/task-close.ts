@@ -329,8 +329,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
       createTaskLifecycleNextAction({
         id: 'append-close-evidence',
         required: true,
-        command: `hadara task finalize --task ${taskId} --execute --auto --json`,
-        message: 'Append close evidence through guarded finalize after reviewing this dry-run plan.',
+        command: `hadara task close --task ${taskId} --json`,
+        message: 'Append close evidence through guarded task close after reviewing this dry-run plan when needed.',
         writeBoundary: 'evidence-append',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -416,12 +416,12 @@ function createCloseLifecycleGuidance(taskId: string, mode: TaskCloseMode): Task
     nextPhaseAfterSuccess: mode === 'execute' ? 'post-close-audit' : 'close-execute',
     validationPhase: {
       role: 'prove-readiness',
-      command: `hadara task finalize --task ${taskId} --json`,
+      command: `hadara task close --task ${taskId} --dry-run --json`,
       includesCloseEvidenceAppend: false
     },
     closePhase: {
       role: 'record-proof',
-      command: `hadara task finalize --task ${taskId} --execute --auto --json`,
+      command: `hadara task close --task ${taskId} --json`,
       writes: 'close-evidence-only'
     },
     auditPhase: {
@@ -910,7 +910,7 @@ export function formatTaskAuditCloseReport(report: TaskAuditCloseReport): string
   if (report.ok) {
     lines.push('- No immediate actions.');
   } else {
-    lines.push(`1. hadara task finalize --task ${report.taskId} --json`);
+    lines.push(`1. hadara task close --task ${report.taskId} --dry-run --json`);
   }
   if (report.issues.length > 0) {
     lines.push('', 'Issues');
@@ -990,8 +990,8 @@ function createAuditNextActions(taskId: string, closeMissing: boolean): TaskClos
     createTaskLifecycleNextAction({
       id: 'close-first',
       required: true,
-      command: `hadara task finalize --task ${taskId} --json`,
-      message: 'Review finalize close evidence planning before inspecting close proof.',
+      command: `hadara task close --task ${taskId} --dry-run --json`,
+      message: 'Review task close evidence planning before inspecting close proof.',
       writeBoundary: 'read-only',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,

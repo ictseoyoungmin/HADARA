@@ -11,7 +11,7 @@ export interface HelpCommandInput {
   args: string[];
 }
 
-const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'finalize'];
+const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'close', 'finalize'];
 
 export function handleHelpCommand(input: HelpCommandInput): boolean {
   const topic = input.args[1];
@@ -95,13 +95,13 @@ export function renderLifecycleHelp(): string {
 
   for (const step of report.primaryPath) {
     lines.push(`  ${step.order} ${step.stage.padEnd(11)} ${step.command}`);
-    if (step.commandId === 'task.finalize') {
-      lines.push('               hadara task finalize --task T-XXXX --execute --auto --json');
-      lines.push('               hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
+    if (step.commandId === 'task.close') {
+      lines.push('               hadara task close --task T-XXXX --dry-run --json');
+      lines.push('               hadara task close --task T-XXXX --execute --plan-hash sha256:... --json');
     }
   }
 
-  lines.push('', 'Removed low-level lifecycle commands are no longer public routes; use `task status --detail full` and `task finalize`.');
+  lines.push('', '`task close` is the public close transaction. Use `task finalize` only for compatibility or low-level debugging of the underlying finish/ready/close/audit plan.');
 
   lines.push(
     '',

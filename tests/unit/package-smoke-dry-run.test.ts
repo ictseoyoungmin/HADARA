@@ -78,7 +78,7 @@ function installedFixtureFromArgs(args: string[], overrides?: { dropVerb?: strin
   fs.writeFileSync(
     path.join(pkgRoot, 'dist', 'init', 'templates.js'),
     [
-      'hadara task finalize --task T-XXXX --execute --auto --json',
+      'hadara task close --task T-XXXX --json',
       '## Slice State',
       'hadara slice add --id M1',
       'hadara slice render --json'
@@ -93,8 +93,8 @@ function writeGeneratedWorkflowFixture(cwd: string, options?: { stale?: boolean 
     '# HADARA_WORKFLOW',
     '',
     '## Task Capsule Lifecycle',
-    'hadara task finalize --task T-XXXX --json',
-    'hadara task finalize --task T-XXXX --execute --auto --json',
+    'hadara task close --task T-XXXX --dry-run --json',
+    'hadara task close --task T-XXXX --json',
     '',
     '## Slice State',
     'hadara slice add --id M1 --title "First slice" --status not-started --json',
@@ -629,7 +629,7 @@ describe('package smoke local execution', () => {
     expect(report.steps).toContainEqual(expect.objectContaining({
       id: 'generated-init-docs',
       status: 'passed',
-      summary: 'Installed init stdout capture was empty; installed template bundle exposes current finalize --auto and slice guidance without stale removed command instructions.',
+      summary: 'Installed init stdout capture was empty; installed template bundle exposes current task close and slice guidance without stale removed command instructions.',
       fallbackUsed: true,
       fallbackReason: 'Installed init stdout capture was empty; installed template bundle was inspected instead of generated docs.'
     }));

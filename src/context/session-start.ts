@@ -494,7 +494,7 @@ function guidanceForSessionStart(input: {
     whyThisNow: primaryAction.reason,
     avoidForNow: taskId
       ? [
-          'Do not run task finalize before reviewing lifecycle blockers and required reads.',
+          'Do not run task close before reviewing lifecycle blockers and required reads.',
           'Do not opt into --live context reads unless the bounded or warm packet is insufficient.'
         ]
       : [

@@ -621,7 +621,7 @@ describe('task finalize --auto (FD-010)', () => {
         id: 'history',
         status: 'pending',
         required: true,
-        summary: expect.stringContaining('Before finalize execute')
+        summary: expect.stringContaining('Before task close')
       })
     ]));
     expect(report.blockingIssues).toEqual(expect.arrayContaining([
