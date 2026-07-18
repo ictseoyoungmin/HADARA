@@ -194,6 +194,61 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
   });
 
+  it('recovers a persisted partial operation by rerunning the same public close command after repair', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction partial retry');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction partial retry | Done |`, `| ${task.id} | Close transaction partial retry | Draft |`),
+      'utf8'
+    );
+    let mutated = false;
+    const taskPath = path.join(task.dir, 'TASK.md');
+
+    const partial = createTaskCloseTransactionReport(root, task.id, {
+      onProgress(event) {
+        if (event.step !== 'finish' || event.phase !== 'executed' || mutated) return;
+        mutated = true;
+        fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'), 'utf8');
+      }
+    });
+
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+    expect(partial.ok).toBe(false);
+    expect(partial.transaction.operation).toMatchObject({ phase: 'recovery-required', persisted: true });
+    expect(fs.existsSync(operationPath)).toBe(true);
+
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |', '| docs/TASK_BOARD.md | reference | active | Repaired role fixture. |'), 'utf8');
+    const recovered = createTaskCloseTransactionReport(root, task.id);
+
+    expect(recovered).toMatchObject({
+      ok: true,
+      closeState: 'closed-valid',
+      writeSummary: {
+        closeProofAppended: true,
+        idempotentNoop: false
+      },
+      transaction: {
+        operation: {
+          phase: 'closed-valid',
+          persisted: false,
+          pendingSteps: []
+        }
+      }
+    });
+    expect(fs.existsSync(operationPath)).toBe(false);
+    const records = fs
+      .readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')
+      .trim()
+      .split(/\n/)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(1);
+    expect(validateSchema('hadara.task.close.v2', recovered).ok).toBe(true);
+  });
+
   it('treats public close retry on an already closed capsule as an idempotent no-op', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction retry');

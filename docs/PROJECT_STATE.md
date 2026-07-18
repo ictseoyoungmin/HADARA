@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0654 0.5.0 task close installed package dogfood |
+| Latest Completed Task | T-0655 0.5.0 task close partial recovery retry proof |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

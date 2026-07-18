@@ -655,3 +655,4 @@
 | T-0652 | 0.5.0 task close transaction route | Done | tasks/T-0652-0-5-0-task-close-transaction-route | |
 | T-0653 | 0.5.0 task close transaction locks and recovery state | Done | tasks/T-0653-0-5-0-task-close-transaction-locks-and-recovery-state | |
 | T-0654 | 0.5.0 task close installed package dogfood | Done | tasks/T-0654-0-5-0-task-close-installed-package-dogfood | |
+| T-0655 | 0.5.0 task close partial recovery retry proof | Done | tasks/T-0655-0-5-0-task-close-partial-recovery-retry-proof | |

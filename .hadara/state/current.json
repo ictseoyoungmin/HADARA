@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 220,
+  "rev": 222,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0654",
-    "title": "0.5.0 task close installed package dogfood"
+    "id": "T-0655",
+    "title": "0.5.0 task close partial recovery retry proof"
   },
   "activeTask": null,
   "nextWork": null,
