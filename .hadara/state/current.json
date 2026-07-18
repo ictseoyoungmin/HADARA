@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 212,
+  "rev": 214,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0650",
-    "title": "0.5.0-rc.0 operator publish record and installed-package recycle"
+    "id": "T-0651",
+    "title": "0.5.0 stable close scope plan realignment"
   },
   "activeTask": null,
   "nextWork": null,

@@ -8,7 +8,7 @@ Move selected machine-owned lifecycle facts out of hand-maintained Markdown only
 
 | Boundary | Contract |
 |---|---|
-| Baseline | 0.5.0 evaluation semantics and 0.5.2 public close contract are stable. |
+| Baseline | 0.5.0 evaluation semantics and the 0.5.0 stable public close contract are stable. |
 | Canonical evidence | Remains `tasks/T-*/evidence.jsonl`. |
 | Human-owned prose | Goal, scope, design notes, risk narrative, and handoff commentary remain Markdown-owned. |
 | Exit | Selected Tier 1/2 projections pass no-op, round-trip, drift, close-proof, and manual-sync-reduction gates. |
@@ -19,7 +19,7 @@ Release ceiling: **6 capsules**, at most **3 L**, total planned source ceiling *
 
 | Plan ID | Capsule | Size | Depends on | Deliverable |
 |---|---|---:|---|---|
-| 053-C01 | Ownership registry and projection manifest | M | 0.5.2 | Explicit Tier 1/2/3 ownership and writer contracts |
+| 053-C01 | Ownership registry and projection manifest | M | 0.5.0 stable | Explicit Tier 1/2/3 ownership and writer contracts |
 | 053-C02 | State store rev/CAS and guarded mutation API | L | C01 | Lost-update prevention for structured state writers |
 | 053-C03 | Task Board canonical index and full projection | L | C01-C02 | Tier 1 render/import/drift behavior |
 | 053-C04 | Close operation/proof state projection integration | M | C01-C03 | Rebuildable status/proof indexes without evidence centralization |
@@ -149,4 +149,3 @@ Failure of any gate leaves that candidate on its previous ownership tier. Partia
 ## Rollback and follow-up
 
 Projection promotion must be reversible by retaining the last valid canonical/import source and migration metadata. On drift or round-trip failure, stop writes and fall back to the prior human-owned or managed-block model; never regenerate over ambiguous human content. Candidates that pass only schema tests but not dogfood remain experimental for a later 0.5.x/0.6 release.
-

@@ -1,16 +1,18 @@
 # HADARA 0.5.1 Task Close Transaction Development Plan
 
+> Status update, 2026-07-18: this plan is no longer a separate post-0.5.0 release boundary. Its task-close transaction work is folded into the **0.5.0 stable** scope after `0.5.0-rc.0`. Keep this document as the detailed transaction design module referenced by 0.5.0 C07.
+
 ## Release objective
 
-Build and fault-test a one-command task-close transaction behind a hidden or experimental route. The engine must preserve the 0.4.x close proof model while adding fixed lock ordering, snapshot revalidation, idempotent retry, partial-execution recovery, and proof-last behavior.
+Build and fault-test a one-command task-close transaction for 0.5.0 stable. The engine must preserve the 0.4.x close proof model while adding fixed lock ordering, snapshot revalidation, idempotent retry, partial-execution recovery, and proof-last behavior.
 
 ## Entry and exit contracts
 
 | Boundary | Contract |
 |---|---|
 | Baseline | 0.5.0 status/readiness schemas are stable. |
-| Public primary close | `task finalize` remains primary. |
-| Candidate route | `task close --task T-XXXX --json`, hidden or explicitly experimental. |
+| Public primary close | `task close --task T-XXXX --json` is required before 0.5.0 stable promotion. |
+| Candidate route | `task close --task T-XXXX --json`, initially guarded behind implementation tests until public migration passes. |
 | Clean UX | One invocation; internal review/hash ceremony is not exposed in the happy path. |
 | Exit | Clean, blocked, race, retry, and partial-recovery flows pass delegated dogfood. |
 
@@ -142,7 +144,7 @@ Required close sources are task-local contract/evidence, selected Task Board ide
 - The command name is the clean-path write boundary.
 - Keep explicit dry-run/plan-hash modes for review, CI preview, and debugging.
 - Project/task status surfaces recovery-required without instructing manual lifecycle-field edits.
-- Preserve `finalize` as the only documented primary close command in 0.5.1.
+- Preserve `finalize` as a compatibility route only after the public migration lands; do not teach it as a co-primary command.
 
 ### 051-C06 — fault matrix
 
@@ -163,5 +165,4 @@ Test failure immediately before and after each planned write, close-source mutat
 
 ## Promotion and rollback
 
-0.5.1 does not promote the route merely because the clean path passes. Promotion requires clean, blocked, concurrency, and partial-recovery dogfood from an installed package. If recovery cannot be made deterministic, keep the engine internal and continue teaching `finalize`; do not introduce a second public primary path.
-
+0.5.0 stable does not promote the route merely because the clean path passes. Promotion requires clean, blocked, concurrency, and partial-recovery dogfood from an installed package. If recovery cannot be made deterministic, keep the engine internal and do not ship 0.5.0 stable with split primary close guidance.

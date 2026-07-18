@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0650 0.5.0-rc.0 operator publish record and installed-package recycle |
+| Latest Completed Task | T-0651 0.5.0 stable close scope plan realignment |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

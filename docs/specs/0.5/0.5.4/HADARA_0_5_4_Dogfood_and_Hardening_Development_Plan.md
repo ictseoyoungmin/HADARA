@@ -8,7 +8,7 @@ Run the promoted 0.5.x agent loop through broad installed-package dogfood and ha
 
 | Boundary | Contract |
 |---|---|
-| Baseline | 0.5.0 status ingress, 0.5.2 public close, and selected 0.5.3 projection contracts are implemented. |
+| Baseline | 0.5.0 stable status ingress/public close and selected post-0.5.0 projection contracts are implemented. |
 | Primary loop | `status --json` → `task status` → validation/evidence → `task close --task T --json`. |
 | Compatibility | 0.5.x compatibility routes remain available but are not taught as primary. |
 | Exit | Installed-package dogfood and regression hardening show the loop works without private HADARA-dev knowledge. |

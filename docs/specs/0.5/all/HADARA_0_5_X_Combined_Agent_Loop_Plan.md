@@ -91,9 +91,9 @@ Recommended rollout:
 
 | Stage | Public primary | `task close` | `finalize` |
 |---|---|---|---|
-| 0.5.0 | `task finalize` unless task-close dogfood is complete | hidden/experimental or internal engine | stable primary |
-| 0.5.1 | depends on dogfood | visible candidate if clean/blocked/recovery flows pass | compatibility |
-| 0.5.2+ | `task close` | default primary | compatibility/deprecated |
+| 0.5.0-rc.0 | `task finalize` | not public primary | stable primary |
+| 0.5.0 stable pre-release | depends on dogfood | visible candidate while clean/blocked/recovery flows are proven | compatibility |
+| 0.5.0 stable | `task close` | default primary | compatibility/deprecated |
 
 The product target remains one-command `task close`; the release sequence must avoid teaching two primary close paths at once.
 
@@ -593,7 +593,7 @@ Generated or structured-state expansion must pass measurable gates before promot
 
 Recommended 0.5.x sequencing:
 
-### 0.5.0
+### 0.5.0-rc.0
 
 Focus:
 
@@ -601,26 +601,34 @@ Focus:
 - add shared evaluation semantics;
 - make `hadara status --json` lifecycle-aware for project/session ingress;
 - adapt task selection and selected-task status enough to expose phase/readiness/primary action cleanly;
-- keep `finalize` as the primary close surface unless `task close` has already passed delegated dogfood.
+- keep `finalize` as the primary close surface in the rc snapshot.
 
-### 0.5.1
+### 0.5.0 stable close engine
 
 Focus:
 
 - implement task-close internal engine;
-- add hidden or experimental `task close` route;
+- add and harden `task close` route;
 - prove lock ordering, idempotency, recovery record, and proof-last behavior;
 - dogfood clean close and blocked close.
 
-### 0.5.2+
+### 0.5.0 stable public migration
 
 Focus:
 
 - promote `task close` to public primary if dogfood passes;
 - move `finalize` to compatibility/deprecated route;
-- continue generated block and structured-state migration.
+- migrate README, generated workflow docs, help, package smoke, and delegated prompts;
+- run installed-package delegated dogfood through the promoted loop.
 
-This sequencing avoids coupling lower-risk status cleanup to higher-risk close transaction work.
+### Post-0.5.0
+
+Focus:
+
+- continue generated block and structured-state migration;
+- broaden dogfood/hardening and stabilization after the core loop is stable.
+
+This sequencing keeps the rc0 status snapshot valid while preventing 0.5.0 stable from shipping with a half-migrated lifecycle loop.
 
 ---
 
@@ -665,7 +673,7 @@ No new brief command.
 Remove session start as a public agent-runtime remnant.
 Make status route globally.
 Make task status decide locally.
-Promote task close only after transaction/recovery dogfood proves it.
+Promote task close before 0.5.0 stable, after transaction/recovery dogfood proves it.
 Keep Markdown readable and evidence task-local.
 Move structured state only where it removes real synchronization friction.
 ```

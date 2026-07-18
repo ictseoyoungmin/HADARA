@@ -4,15 +4,31 @@
 **Baseline:** HADARA 0.4.6  
 **Source set:** [`all/`](./all/) combined agent-loop and lifecycle/use-case plans
 
-## Decision: six release slices
+## Decision Update: 0.5.0 Stable Absorbs Close
 
-The 0.5.x plan is split into **six release folders**, `0.5.0` through `0.5.5`.
+After `0.5.0-rc.0`, the stable scope changed: **0.5.0 stable must include the one-command task close path**, not only status ingress.
+
+The practical release boundary is now:
+
+```text
+0.5.0-rc.0
+  status ingress, selected-task cockpit, session-start removal
+
+0.5.0 stable
+  status ingress + task-close transaction + public primary task close + installed/delegated dogfood
+```
+
+The old `0.5.1` task-close transaction and `0.5.2` public-close promotion plans are retained as source design modules, but their deliverables are folded into the 0.5.0 stable pre-release workstream. Do not treat them as future-version promises unless the plan is explicitly resplit.
+
+## Previous Split: six release slices
+
+The original 0.5.x plan was split into **six release folders**, `0.5.0` through `0.5.5`. This table is now historical planning context for workstream ownership, not the current stable-release boundary.
 
 | Release | Theme | Primary risk retired | Promotion result |
 |---|---|---|---|
-| [0.5.0](./0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md) | Status ingress and shared evaluation semantics | Ambiguous global/local routing | One global route and phase-aware local cockpit |
-| [0.5.1](./0.5.1/HADARA_0_5_1_Task_Close_Transaction_Development_Plan.md) | Task-close transaction engine | Partial close, races, premature proof | Experimental one-command close with recovery |
-| [0.5.2](./0.5.2/HADARA_0_5_2_Public_Close_Migration_Development_Plan.md) | Public close promotion and compatibility | Two taught close paths and consumer drift | `task close` becomes the single primary close surface |
+| [0.5.0](./0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md) | Status ingress and shared evaluation semantics | Ambiguous global/local routing | One global route and phase-aware local cockpit; stable now also requires close work below |
+| [0.5.1](./0.5.1/HADARA_0_5_1_Task_Close_Transaction_Development_Plan.md) | Task-close transaction engine | Partial close, races, premature proof | Folded into 0.5.0 stable scope |
+| [0.5.2](./0.5.2/HADARA_0_5_2_Public_Close_Migration_Development_Plan.md) | Public close promotion and compatibility | Two taught close paths and consumer drift | Folded into 0.5.0 stable scope |
 | [0.5.3](./0.5.3/HADARA_0_5_3_Structured_State_and_Projection_Development_Plan.md) | Structured state and projection ownership | Manual synchronization and projection drift | Proven state-first expansion for selected machine-owned facts |
 | [0.5.4](./0.5.4/HADARA_0_5_4_Dogfood_and_Hardening_Development_Plan.md) | Dogfood and hardening | Hidden regressions across real project shapes | Broad installed-package proof and blocker cleanup |
 | [0.5.5](./0.5.5/HADARA_0_5_5_Stabilization_and_Promotion_Development_Plan.md) | Stabilization and promotion | Overclaiming or unstable compatibility | Agent loop v1 stable promotion decision |
@@ -31,15 +47,15 @@ Using only the original three labels (`0.5.0`, `0.5.1`, `0.5.2+`) would leave `0
 ## Cross-release dependency chain
 
 ```text
-0.5.0 status/evaluation contracts
-  → 0.5.1 close transaction and recovery
-    → 0.5.2 public command migration
-      → 0.5.3 structured-state expansion
-        → 0.5.4 dogfood and hardening
-          → 0.5.5 stabilization and promotion
+0.5.0-rc.0 status/evaluation contracts
+  → 0.5.0 stable close transaction and recovery
+    → 0.5.0 stable public task-close migration
+      → post-0.5.0 structured-state expansion
+        → post-0.5.0 broad dogfood and hardening
+          → post-0.5.0 stabilization and promotion
 ```
 
-Every release is independently releasable. A failed promotion gate delays the next release without forcing a partial public migration.
+`0.5.0-rc.0` remains a valid pre-release snapshot, but **0.5.0 stable is not promotable until close transaction, public close migration, and installed/delegated close dogfood pass**.
 
 ## Capsule budget model
 
@@ -70,7 +86,7 @@ The existing Task Capsule budget remains four unique task-work commands. `hadara
 | Task Capsule loop | 4 (`task status`, `task create`, `validation run`, primary close) | at most 5 from empty selection to close |
 | Combined ordinary path | 5 | at most 6 after init |
 
-`task close` replaces `task finalize` in the task-loop portfolio only after the 0.5.2 promotion gate. The product must never teach both as primary commands in one release.
+`task close` replaces `task finalize` in the task-loop portfolio before 0.5.0 stable promotion. The product must never teach both as primary commands in one release.
 
 ## Cross-cutting invariants
 
@@ -86,13 +102,13 @@ The existing Task Capsule budget remains four unique task-work commands. `hadara
 
 ## Release-wide validation matrix
 
-| Gate | 0.5.0 | 0.5.1 | 0.5.2 | 0.5.3 | 0.5.4 | 0.5.5 |
+| Gate | 0.5.0 rc/status | 0.5.0 close engine | 0.5.0 public close | Post-0.5.0 state | Post-0.5.0 dogfood | Post-0.5.0 promotion |
 |---|---|---|---|---|---|---|
 | Focused unit/schema tests | Required | Required | Required | Required | Required | Required |
 | CLI JSON contract smokes | Required | Required | Required | Required | Required | Required |
 | Race/fault injection | Routing consistency | Required | Compatibility retry | CAS/render conflict | Regression replay | Release gate |
 | Disposable-project workflow | Status ingress | Clean/blocked/recovery close | Primary portfolio | No-op/drift/migration | Multi-scenario dogfood | Stable candidate proof |
-| Installed-package delegated dogfood | Status + task status | Experimental close | Full promoted loop | Projection upgrade/recycle | Broad matrix | Public stable recycle |
+| Installed-package delegated dogfood | Status + task status | Close engine | Full promoted loop | Projection upgrade/recycle | Broad matrix | Public stable recycle |
 | Full Docker validation | Release gate | Release gate | Release gate | Release gate | Release gate | Release gate |
 
 ## Source coverage map
@@ -101,8 +117,8 @@ The existing Task Capsule budget remains four unique task-work commands. `hadara
 |---|---|
 | Remove public `session start`; global `status` routing | 0.5.0 |
 | Health, readiness, evaluation state, write-boundary semantics | 0.5.0 |
-| Clean/blocked close, lock ordering, idempotency, recovery, proof-last | 0.5.1 |
-| One public close surface, compatibility and workflow-budget change | 0.5.2 |
+| Clean/blocked close, lock ordering, idempotency, recovery, proof-last | 0.5.0 stable |
+| One public close surface, compatibility and workflow-budget change | 0.5.0 stable |
 | Projection ownership tiers, Task Board inputs, structured-state expansion gates | 0.5.3 |
 | Broad greenfield, brownfield, delegated-agent, failed-validation, projection-drift, and release-rehearsal hardening | 0.5.4 |
 | Schema freeze, compatibility policy, stable release readiness, public recycle, and promotion decision | 0.5.5 |

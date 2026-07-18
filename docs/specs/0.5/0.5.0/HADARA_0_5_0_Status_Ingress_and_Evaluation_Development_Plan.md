@@ -2,7 +2,9 @@
 
 ## Release objective
 
-Make `hadara status --json` the sole project/session ingress and make status reports distinguish routing, lifecycle phase, operational health, evaluation completeness, and action readiness. This release is read-model first: it does not introduce the public task-close mutation.
+Make `hadara status --json` the sole project/session ingress and make status reports distinguish routing, lifecycle phase, operational health, evaluation completeness, and action readiness.
+
+Scope update after `0.5.0-rc.0`: **0.5.0 stable also includes the task-close transaction and public primary `task close` migration.** The rc0 snapshot proved the status/read-model line; stable promotion requires the close work that was previously split into the 0.5.1 and 0.5.2 planning modules.
 
 ## Entry and exit contracts
 
@@ -11,8 +13,8 @@ Make `hadara status --json` the sole project/session ingress and make status rep
 | Baseline | 0.4.6 status, task status, current-state canon, and `task finalize` remain working. |
 | Entry command | `hadara status --json` |
 | Local decision command | `hadara task status [--task T-XXXX] --json` |
-| Primary close command | `task finalize` remains primary for 0.5.0. |
-| Exit | Global status emits one route; selected-task status emits phase, health, readiness, evaluation state, and one local action. |
+| Primary close command | `task close --task T-XXXX --json` becomes primary before 0.5.0 stable; `task finalize` is compatibility only after migration. |
+| Exit | Global status emits one route; selected-task status emits phase, health, readiness, evaluation state, and one local action; a clean task closes with one public `task close` call. |
 
 ## Capsule budget
 
@@ -26,12 +28,18 @@ Release ceiling: **6 capsules**, at most **2 L**, total planned source ceiling *
 | 050-C04 | Selected-task status v2 cockpit | L | C01 | Phase/readiness/health mapping and phase-relevant compact output |
 | 050-C05 | Remove public `session start` and migrate guidance | M | C02-C04 | Routing/help/scaffold/docs/package-smoke migration |
 | 050-C06 | Cross-profile and installed-package dogfood | S | C02-C05 | Greenfield, brownfield, active, idle, degraded evidence |
+| 050-C07 | Task-close transaction engine | L | C01-C04 | Lock ordering, source snapshot, recovery journal, idempotency, proof-last close |
+| 050-C08 | Public close migration | L | C07 | `task close` primary route, `finalize` compatibility adapter, docs/scaffold/package-smoke migration |
+| 050-C09 | Stable close dogfood and release recycle | L | C08 | Delegated installed-package proof for clean, blocked, recovery, failed-validation repair, and release recycle |
 
 Split triggers:
 
 - Split C02 if adoption/upgrade routing needs mutation planning beyond read-only detection.
 - Split C04 if close-grade diagnostics cannot remain opt-in without touching the close engine.
 - Split C05 by source versus docs only if public-route removal exceeds the M file ceiling.
+- Split C07 if lock/source-snapshot services and recovery journal cannot fit one transaction capsule.
+- Split C08 if public command migration and `finalize` compatibility touch different consumer classes.
+- Split C09 if installed-package close dogfood and release recycle need separate operator approvals.
 
 ## Schema plan
 
@@ -140,9 +148,11 @@ Compatibility requirements:
 | Separation | Active project status routes to task status and does not duplicate local phase evaluation. |
 | Failure semantics | `ok:true` may coexist with non-`ok` health; all skipped/unavailable checks are explicit. |
 | Currentness | `session start` is absent from public routing, help, README, generated guidance, workflow docs, and package smokes. |
-| Regression | 0.4.6 finalize/evidence behavior and task-local evidence locality remain unchanged. |
-| Dogfood | Installed-package runs cover project ingress and selected-task routing without private repo knowledge. |
+| Regression | 0.4.6 finalize/evidence behavior and task-local evidence locality remain available through compatibility while the public primary close path moves to `task close`. |
+| Close safety | Clean, blocked, race, retry, partial recovery, proof-last, and idempotent no-op flows pass through the same transaction engine. |
+| Public close | README, generated workflow docs, help, package smoke, and delegated prompts teach `task close` as the only primary close surface. |
+| Dogfood | Installed-package runs cover project ingress, selected-task routing, clean close, blocked close, recovery, failed-validation repair, and release recycle without private repo knowledge. |
 
 ## Promotion and rollback
 
-Promote 0.5.0 only if compact status is faster than the configured slow threshold on a local temp project and mounted-workspace degradation remains diagnostic rather than correctness-affecting. Roll back public schema selection—not the shared evaluator—if existing consumers cannot migrate cleanly. Do not start 0.5.1 public routing work until C01-C04 contracts are frozen.
+Promote 0.5.0 stable only if compact status is faster than the configured slow threshold on a local temp project, mounted-workspace degradation remains diagnostic rather than correctness-affecting, and the public `task close` path passes installed/delegated dogfood. Roll back public schema selection or public close guidance, not the shared evaluator or transaction engine, if existing consumers cannot migrate cleanly.

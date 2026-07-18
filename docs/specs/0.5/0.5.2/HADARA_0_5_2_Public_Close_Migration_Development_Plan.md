@@ -1,12 +1,14 @@
 # HADARA 0.5.2 Public Close Migration Development Plan
 
+> Status update, 2026-07-18: this plan is no longer a separate post-0.5.0 release boundary. Its public close migration work is folded into the **0.5.0 stable** scope after `0.5.0-rc.0`. Keep this document as the detailed migration design module referenced by 0.5.0 C08.
+
 ## Release objective
 
-Promote the proven 0.5.1 task-close transaction to the single public primary close surface, retain a bounded compatibility path for `finalize`, migrate all generated and installed guidance, and demonstrate that the ordinary lifecycle stays within its invocation budget.
+Promote the proven task-close transaction to the single public primary close surface before 0.5.0 stable, retain a bounded compatibility path for `finalize`, migrate all generated and installed guidance, and demonstrate that the ordinary lifecycle stays within its invocation budget.
 
 ## Promotion prerequisites
 
-- 0.5.1 installed-package dogfood passes clean, blocked, race, retry, and partial recovery flows.
+- 0.5.0 stable transaction dogfood passes clean, blocked, race, retry, and partial recovery flows.
 - No unresolved proof-last, lock-order, or duplicate-evidence defect remains.
 - Project and task status schemas identify close-ready and recovery-required deterministically.
 - The compatibility window and removal policy are recorded before public help changes.
@@ -36,7 +38,7 @@ Primary command:
 {
   "futureCommandId": "task.close",
   "argv": ["task", "close", "--task", "T-XXXX", "--json"],
-  "availability": "0.5.2 target; unavailable in the 0.4.6 planning baseline"
+  "availability": "0.5.0 stable target; unavailable in the 0.5.0-rc.0 snapshot"
 }
 ```
 
@@ -60,7 +62,7 @@ The public response schema is `hadara.task.close.v2`; compatibility `finalize` o
 
 ## Compatibility plan
 
-| Surface | 0.5.2 behavior | Later decision |
+| Surface | 0.5.0 stable behavior | Later decision |
 |---|---|---|
 | `task close` | Stable primary | Retain |
 | `task finalize` | Compatibility route or deprecated alias; omitted from primary help examples | Remove only after installed-consumer telemetry/dogfood shows no required use |

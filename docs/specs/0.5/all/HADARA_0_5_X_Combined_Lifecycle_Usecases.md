@@ -1122,3 +1122,5 @@ hadara task close --task T-XXXX --json
 ```
 
 The clean path should not require manual dry-run/hash ceremony. The safety model remains internal and fail-closed.
+
+`0.5.0-rc.0` shipped the status-ingress half of this loop. `0.5.0 stable` is not complete until the `task close` half also passes installed-package and delegated-agent dogfood for clean close, blocked close, recovery, and failed-validation repair.
