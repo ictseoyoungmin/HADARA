@@ -36,6 +36,18 @@ export interface TaskSelectionStatusV2Report {
     legacyCommand: 'hadara task status --compat v1 --json';
     migration: string;
   };
+  selection: {
+    precedence: Array<{
+      id: string;
+      source: string;
+      description: string;
+    }>;
+    selectedTaskId: string | null;
+    selectedSource: string | null;
+    selectedSourceKind: TaskSelectionRecommendation['sourceKind'] | null;
+    sourceExplanation: string;
+    primaryActionId: string | null;
+  };
   sources: {
     taskSelection: TaskSelectionReport;
   };
@@ -69,6 +81,14 @@ export function createTaskSelectionStatusV2Report(projectRoot: string, now = new
         summary: `${taskSelection.recommendations.length} recommendation(s), source=${taskSelection.summary.source}.`
       },
       {
+        id: 'selection-precedence',
+        state: 'evaluated',
+        health: 'ok',
+        summary: recommendation
+          ? `Selected ${recommendation.taskId} from ${recommendation.source}; precedence is explicit in selection.precedence.`
+          : 'No recommendation matched the task-selection precedence chain.'
+      },
+      {
         id: 'required-reading',
         state: recommendation ? 'evaluated' : 'not-evaluated',
         health: 'ok',
@@ -94,6 +114,16 @@ export function createTaskSelectionStatusV2Report(projectRoot: string, now = new
       legacySchemaVersion: 'hadara.task.status.v1',
       legacyCommand: 'hadara task status --compat v1 --json',
       migration: 'This v2 task-selection report is the default 0.5.x no-selected-task cockpit. Use the explicit v1 compatibility command only for legacy consumers.'
+    },
+    selection: {
+      precedence: taskSelectionPrecedence(),
+      selectedTaskId: recommendation?.taskId ?? null,
+      selectedSource: recommendation?.source ?? null,
+      selectedSourceKind: recommendation?.sourceKind ?? null,
+      sourceExplanation: recommendation
+        ? recommendation.reason
+        : 'No active task, structured next work, Task Board row, slice row, or first-task creation candidate was selected.',
+      primaryActionId: primaryNextAction?.id ?? null
     },
     sources: { taskSelection },
     issues: taskSelection.issues
@@ -169,4 +199,44 @@ function buildReadiness(
   if (phase === 'review-next-work') return { intent: 'plan', status: 'needs-review', reason: 'Current next-work guidance requires operator review before mutation.' };
   if (action?.writes) return { intent: 'plan', status: 'needs-review', reason: 'A task-local create action is available and should be reviewed before execution.' };
   return { intent: 'plan', status: 'ready', reason: 'A read-only task inspection action is available.' };
+}
+
+function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['precedence'] {
+  return [
+    {
+      id: 'active-task',
+      source: '.hadara/state/current.json',
+      description: 'Use the structured activeTask when present and valid.'
+    },
+    {
+      id: 'structured-next-work',
+      source: '.hadara/state/current.json',
+      description: 'Use structured nextWork when it is actionable and not stale bootstrap guidance.'
+    },
+    {
+      id: 'handoff-next-step',
+      source: 'docs/AGENT_HANDOFF.md',
+      description: 'Use explicit handoff next-step guidance when present.'
+    },
+    {
+      id: 'development-slice',
+      source: 'docs/DEVELOPMENT_SLICES.md',
+      description: 'Use the first open development slice when the profile exposes slices.'
+    },
+    {
+      id: 'task-board',
+      source: 'docs/TASK_BOARD.md',
+      description: 'Use the first open Task Board row when no stronger structured source selected work.'
+    },
+    {
+      id: 'first-task',
+      source: 'project scaffold',
+      description: 'Offer first-task creation when the project has no task history.'
+    },
+    {
+      id: 'idle',
+      source: 'none',
+      description: 'Return terminal idle when no source selects work.'
+    }
+  ];
 }

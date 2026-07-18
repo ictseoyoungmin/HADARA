@@ -7,6 +7,7 @@ import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import * as harnessService from '../../src/services/harness-service';
 import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
+import { createTaskStatusV2Report } from '../../src/services/task-status-v2';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../../src/services/task-workbench';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -197,6 +198,15 @@ describe('task workbench status report', () => {
       scope: 'task-selection',
       mode: 'select-work',
       phase: 'select-work',
+      selection: {
+        selectedTaskId: task.id,
+        selectedSource: 'docs/TASK_BOARD.md',
+        primaryActionId: 'inspect-recommended-task',
+        precedence: expect.arrayContaining([
+          expect.objectContaining({ id: 'active-task', source: '.hadara/state/current.json' }),
+          expect.objectContaining({ id: 'task-board', source: 'docs/TASK_BOARD.md' })
+        ])
+      },
       primaryNextAction: {
         command: `hadara task status --task ${task.id} --json`,
         writeBoundary: 'read-only',
@@ -228,6 +238,87 @@ describe('task workbench status report', () => {
     expect(report.recommendations[0]).toMatchObject({ taskId: task.id, taskCapsulePresent: true });
     expect(validateSchema('hadara.task.status.v1', report).ok).toBe(true);
     expect(formatTaskStatusSelectionReport(report)).toContain('Task Status: select work');
+  });
+
+  it('maps selected-task v2 cockpit phases from explicit task-local signals', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench v2 phases');
+    makeTaskAuthored(task.dir, { planStatus: 'Pending' });
+
+    const planWork = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+    expect(planWork).toMatchObject({
+      schemaVersion: 'hadara.task.status.v2',
+      phase: 'plan-work',
+      readiness: { intent: 'plan', status: 'needs-review' },
+      cockpit: {
+        sourcePhase: 'author-task',
+        planState: 'not-started',
+        terminal: false
+      }
+    });
+    expect(validateSchema('hadara.task.status.v2', planWork).ok).toBe(true);
+
+    makeTaskAuthored(task.dir, { planStatus: 'In Progress' });
+    const implement = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+    expect(implement).toMatchObject({
+      phase: 'implement',
+      cockpit: { planState: 'in-progress' }
+    });
+
+    makeTaskAuthored(task.dir, { planStatus: 'Done' });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Validation "Focused tests" failed; command: npm test; exitCode: 1',
+      result: 'failed',
+      visibility: 'public',
+      tags: ['validation-check:phase-test']
+    });
+    const repair = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+    expect(repair).toMatchObject({
+      phase: 'repair-evidence',
+      readiness: { intent: 'close', status: 'needs-review' },
+      cockpit: {
+        planState: 'done',
+        validation: { checks: 1, unresolvedFailedOrBlocked: 1 }
+      }
+    });
+    expect(validateSchema('hadara.task.status.v2', repair).ok).toBe(true);
+  });
+
+  it('maps selected-task v2 terminal and stale close states without active-work guidance', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench v2 closed phases');
+    makeTaskAuthored(task.dir, { planStatus: 'Done' });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Task close validation for T-0001 returned ok:true before close evidence append; reportHash sha256:test; sourceHash sha256:test.',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    const fast = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+    expect(fast).toMatchObject({
+      phase: 'closed-valid',
+      readiness: { status: 'terminal' },
+      cockpit: {
+        terminal: true,
+        hiddenSections: expect.arrayContaining(['authoringGuidance', 'authoringSuggestions', 'nextActions'])
+      }
+    });
+    expect(validateSchema('hadara.task.status.v2', fast).ok).toBe(true);
+
+    const full = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
+    expect(full).toMatchObject({
+      phase: 'closed-stale',
+      readiness: { status: 'needs-review' },
+      cockpit: {
+        terminal: false,
+        closeState: 'closed-valid'
+      }
+    });
+    expect(validateSchema('hadara.task.status.v2', full).ok).toBe(true);
   });
 
   it('returns ok false and exit code 6 for a missing task through CLI', () => {
@@ -645,6 +736,23 @@ function setTaskStatus(taskDir: string, status: string): void {
   const taskPath = path.join(taskDir, 'TASK.md');
   const content = fs.readFileSync(taskPath, 'utf8');
   fs.writeFileSync(taskPath, content.replace(/\| Status \| Draft \|/g, `| Status | ${status} |`), 'utf8');
+}
+
+function makeTaskAuthored(taskDir: string, options: { planStatus: 'Pending' | 'In Progress' | 'Done' }): void {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  let content = fs.readFileSync(taskPath, 'utf8');
+  content = content
+    .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Verify selected-task v2 phase mapping. | Use task-local Plan state as the explicit plan-work signal. |')
+    .replace(/\| 1 \| Define the task contract\. \| (Pending|In Progress|Done) \|/g, `| 1 | Define the task contract. | ${options.planStatus} |`)
+    .replace(/\| 2 \| Implement the smallest useful slice\. \| (Pending|In Progress|Done) \|/g, `| 2 | Implement the smallest useful slice. | ${options.planStatus === 'Done' ? 'Done' : 'Pending'} |`)
+    .replace(/\| 3 \| Validate and record evidence\. \| (Pending|In Progress|Done) \|/g, `| 3 | Validate and record evidence. | ${options.planStatus === 'Done' ? 'Done' : 'Pending'} |`)
+    .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Selected-task v2 phase is explicit. | Met | ev:fixture | `tests/unit/task-workbench.test.ts` |')
+    .replace('| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Met | ev:fixture | `tests/unit/task-workbench.test.ts` |')
+    .replace('| TBD | Yes | Not Run | TBD |', '| Fixture validation | Yes | Passed | ev:fixture |')
+    .replace('| TBD | reference | active | TBD |', '| `tests/unit/task-workbench.test.ts` | implementation-source | active | Fixture source. |')
+    .replace('| N/A | TBD |', '| `src/services/task-status-v2.ts` | Fixture change summary. |')
+    .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Closed | N/A |');
+  fs.writeFileSync(taskPath, content, 'utf8');
 }
 
 function replaceTaskBoardRow(root: string, taskId: string, replacement: string): void {

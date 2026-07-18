@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 202,
+  "rev": 204,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0645",
-    "title": "0.5.0 dogfood UX follow-up cleanup"
+    "id": "T-0646",
+    "title": "0.5.0 task-selection status v2 and selected-task cockpit"
   },
   "activeTask": null,
   "nextWork": null,

@@ -20,6 +20,7 @@
     "primaryNextAction",
     "recommendations",
     "compatibility",
+    "selection",
     "sources",
     "issues"
   ],
@@ -84,6 +85,19 @@
     "recommendations": {
       "type": "array",
       "items": { "type": "object" }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["precedence", "selectedTaskId", "selectedSource", "selectedSourceKind", "sourceExplanation", "primaryActionId"],
+      "properties": {
+        "precedence": { "type": "array", "items": { "type": "object" } },
+        "selectedTaskId": { "type": ["string", "null"] },
+        "selectedSource": { "type": ["string", "null"] },
+        "selectedSourceKind": { "type": ["string", "null"] },
+        "sourceExplanation": { "type": "string" },
+        "primaryActionId": { "type": ["string", "null"] }
+      }
     },
     "compatibility": {
       "type": "object",
