@@ -19,6 +19,8 @@ export interface TaskCloseTransactionOptions {
   lockTimeoutMs?: number;
 }
 
+const TASK_CLOSE_LOCK_STALE_MS = 5 * 60 * 1000;
+
 export type TaskCloseOperationPhase = 'preflight' | 'applying' | 'closed-valid' | 'blocked' | 'recovery-required';
 
 export interface TaskCloseTransactionLockDiagnostics {
@@ -27,6 +29,10 @@ export interface TaskCloseTransactionLockDiagnostics {
   waitedMs: number;
   contended: boolean;
   timeoutMs: number;
+  staleReclaimed?: boolean;
+  staleReason?: 'owner-dead' | 'lease-expired' | 'metadata-invalid';
+  ownerPid?: number;
+  ownerAgeMs?: number;
 }
 
 export interface TaskCloseOperationState {
@@ -39,6 +45,7 @@ export interface TaskCloseOperationState {
   pendingSteps: string[];
   path: string;
   persisted: boolean;
+  resumedFromOperation?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,11 +107,18 @@ export function createTaskCloseTransactionReport(
       });
     }
 
+    let operation: TaskCloseOperationState;
+    const progressWrapper = (event: TaskFinalizeProgressEvent): void => {
+      if (event.phase === 'executed' || event.phase === 'satisfied' || event.phase === 'blocked') {
+        operation = persistCloseOperation(projectRoot, updateCloseOperationFromProgress(operation, event));
+      }
+      options.onProgress?.(event);
+    };
     const finalizeOptions: TaskFinalizeOptions = {
       executeRequested: true,
       actor,
       recordReadinessEvidence: true,
-      onProgress: options.onProgress
+      onProgress: progressWrapper
     };
     const strategy = options.planHash ? 'finalize-reviewed-plan' : 'finalize-auto';
     if (options.planHash) {
@@ -114,8 +128,8 @@ export function createTaskCloseTransactionReport(
     }
 
     const review = createTaskFinalizeReport(projectRoot, taskId, { actor });
-    const operation = createCloseOperation(projectRoot, taskId, review.planHash ?? hashObject({ taskId, state: review.state }), 'applying');
-    persistCloseOperation(projectRoot, operation);
+    operation = createCloseOperation(projectRoot, taskId, review.planHash ?? hashObject({ taskId, state: review.state }), 'applying');
+    operation = persistCloseOperation(projectRoot, operation);
     const finalize = createTaskFinalizeReport(projectRoot, taskId, finalizeOptions);
     const updatedOperation = updateCloseOperationFromFinalize(projectRoot, operation, finalize);
     if (finalize.ok || (finalize.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' && step.writeBoundary !== 'read-only').length === 0) {
@@ -218,7 +232,7 @@ function withTaskCloseTransactionLocks<T>(
   fn: () => T,
   timeoutMs = 5000
 ): T {
-  const acquired: Array<{ path: string; name: TaskCloseTransactionLockDiagnostics['name']; diagnostic: TaskCloseTransactionLockDiagnostics }> = [];
+  const acquired: Array<{ path: string; name: TaskCloseTransactionLockDiagnostics['name']; token: string | null; diagnostic: TaskCloseTransactionLockDiagnostics }> = [];
   const lockSpecs: Array<{ name: TaskCloseTransactionLockDiagnostics['name']; pathParts: string[] }> = [
     { name: 'project-lifecycle', pathParts: ['project-lifecycle.lock'] },
     { name: 'task-board', pathParts: ['task-board.lock'] },
@@ -240,6 +254,7 @@ function withTaskCloseTransactionLocks<T>(
   } finally {
     for (const lock of acquired.reverse()) {
       try {
+        if (lock.token && !lockMetadataTokenMatches(lock.path, lock.token)) continue;
         fs.rmSync(lock.path, { recursive: true, force: true });
       } catch {
         // Directory ownership is the lock; stale locks fail closed on the next run.
@@ -266,12 +281,16 @@ function acquireCloseLock(
   name: TaskCloseTransactionLockDiagnostics['name'],
   pathParts: string[],
   timeoutMs: number
-): { path: string; name: TaskCloseTransactionLockDiagnostics['name']; diagnostic: TaskCloseTransactionLockDiagnostics } {
+): { path: string; name: TaskCloseTransactionLockDiagnostics['name']; token: string | null; diagnostic: TaskCloseTransactionLockDiagnostics } {
   const lockDir = path.join(projectRoot, '.hadara', 'local', 'locks', ...pathParts);
   ensureDir(path.dirname(lockDir));
   const portablePath = toPortablePath(path.relative(projectRoot, lockDir));
   const timer = startMonotonicTimer();
   let contended = false;
+  let staleReclaimed = false;
+  let staleReason: TaskCloseTransactionLockDiagnostics['staleReason'] | undefined;
+  let ownerPid: number | undefined;
+  let ownerAgeMs: number | undefined;
   while (true) {
     try {
       fs.mkdirSync(lockDir);
@@ -279,24 +298,38 @@ function acquireCloseLock(
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
       contended = true;
+      const stale = tryReclaimStaleCloseLock(lockDir);
+      if (stale.reclaimed) {
+        staleReclaimed = true;
+        staleReason = stale.reason;
+        ownerPid = stale.ownerPid;
+        ownerAgeMs = stale.ownerAgeMs;
+        continue;
+      }
       if (timer.elapsedMs() >= timeoutMs) throw new TaskCloseLockError(name, portablePath, timer.elapsedMs(), timeoutMs);
       sleepSync(25);
     }
   }
+  const token = crypto.randomUUID();
   try {
-    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, command: 'task.close', taskId, lock: name, createdAt: new Date().toISOString() })}\n`, 'utf8');
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, token, command: 'task.close', taskId, lock: name, createdAt: new Date().toISOString(), staleMs: TASK_CLOSE_LOCK_STALE_MS })}\n`, 'utf8');
   } catch {
     // Metadata is best-effort diagnostics.
   }
   return {
     path: lockDir,
     name,
+    token,
     diagnostic: {
       name,
       path: portablePath,
       waitedMs: timer.elapsedMs(),
       contended,
-      timeoutMs
+      timeoutMs,
+      ...(staleReclaimed ? { staleReclaimed } : {}),
+      ...(staleReason ? { staleReason } : {}),
+      ...(typeof ownerPid === 'number' ? { ownerPid } : {}),
+      ...(typeof ownerAgeMs === 'number' ? { ownerAgeMs } : {})
     }
   };
 }
@@ -366,22 +399,81 @@ function createTaskCloseLockBlockedReport(
   };
 }
 
+function tryReclaimStaleCloseLock(lockDir: string): { reclaimed: boolean; reason?: TaskCloseTransactionLockDiagnostics['staleReason']; ownerPid?: number; ownerAgeMs?: number } {
+  let metadata: { pid?: number; createdAt?: string } | null = null;
+  try {
+    metadata = JSON.parse(fs.readFileSync(path.join(lockDir, 'lock.json'), 'utf8')) as { pid?: number; createdAt?: string };
+  } catch {
+    try {
+      fs.rmSync(lockDir, { recursive: true, force: true });
+      return { reclaimed: true, reason: 'metadata-invalid' };
+    } catch {
+      return { reclaimed: false };
+    }
+  }
+  const ownerPid = typeof metadata.pid === 'number' ? metadata.pid : undefined;
+  const createdAtMs = metadata.createdAt ? Date.parse(metadata.createdAt) : Number.NaN;
+  const ownerAgeMs = Number.isFinite(createdAtMs) ? Math.max(0, Date.now() - createdAtMs) : undefined;
+  const ownerDead = typeof ownerPid === 'number' && !isProcessAlive(ownerPid);
+  const leaseExpired = typeof ownerAgeMs === 'number' && ownerAgeMs > TASK_CLOSE_LOCK_STALE_MS;
+  if (!ownerDead && !leaseExpired) return { reclaimed: false, ownerPid, ownerAgeMs };
+  try {
+    fs.rmSync(lockDir, { recursive: true, force: true });
+    return { reclaimed: true, reason: ownerDead ? 'owner-dead' : 'lease-expired', ownerPid, ownerAgeMs };
+  } catch {
+    return { reclaimed: false, ownerPid, ownerAgeMs };
+  }
+}
+
+function isProcessAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+function lockMetadataTokenMatches(lockDir: string, token: string): boolean {
+  try {
+    const metadata = JSON.parse(fs.readFileSync(path.join(lockDir, 'lock.json'), 'utf8')) as { token?: string };
+    return metadata.token === token;
+  } catch {
+    return true;
+  }
+}
+
 function createCloseOperation(projectRoot: string, taskId: string, planHash: string, phase: TaskCloseOperationPhase): TaskCloseOperationState {
+  const previous = readCloseOperation(projectRoot, taskId);
+  const reusePrevious = previous?.planHash === planHash;
   const operationId = hashObject({ taskId, planHash }).replace(/^sha256:/, '');
   const now = new Date().toISOString();
   return {
-    operationId,
+    operationId: reusePrevious ? previous.operationId : operationId,
     taskId,
     idempotencyKey: `task-close:${taskId}:${planHash}`,
     phase,
     planHash,
-    completedSteps: [],
-    pendingSteps: ['finish', 'ready', 'close', 'audit-close'],
+    completedSteps: reusePrevious ? previous.completedSteps : [],
+    pendingSteps: reusePrevious ? previous.pendingSteps : ['finish', 'ready', 'close', 'audit-close'],
     path: toPortablePath(path.join('.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`)),
     persisted: false,
-    createdAt: now,
+    ...(reusePrevious ? { resumedFromOperation: true } : {}),
+    createdAt: reusePrevious ? previous.createdAt : now,
     updatedAt: now
   };
+}
+
+function readCloseOperation(projectRoot: string, taskId: string): TaskCloseOperationState | null {
+  const absolutePath = path.join(projectRoot, '.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`);
+  try {
+    const parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8')) as TaskCloseOperationState;
+    if (parsed.taskId !== taskId) return null;
+    return { ...parsed, path: toPortablePath(path.relative(projectRoot, absolutePath)), persisted: true };
+  } catch {
+    return null;
+  }
 }
 
 function persistCloseOperation(projectRoot: string, operation: TaskCloseOperationState): TaskCloseOperationState {
@@ -408,6 +500,21 @@ function updateCloseOperationFromFinalize(projectRoot: string, operation: TaskCl
   };
   if (updated.persisted) return persistCloseOperation(projectRoot, updated);
   return updated;
+}
+
+function updateCloseOperationFromProgress(operation: TaskCloseOperationState, event: TaskFinalizeProgressEvent): TaskCloseOperationState {
+  const allSteps: TaskFinalizeStepId[] = ['finish', 'ready', 'close', 'audit-close'];
+  const completed = new Set(operation.completedSteps);
+  if (event.phase === 'executed' || event.phase === 'satisfied') completed.add(event.step);
+  const completedSteps = allSteps.filter((step) => completed.has(step));
+  return {
+    ...operation,
+    phase: event.phase === 'blocked' ? 'recovery-required' : 'applying',
+    completedSteps,
+    pendingSteps: allSteps.filter((step) => !completed.has(step)),
+    persisted: true,
+    updatedAt: new Date().toISOString()
+  };
 }
 
 function removeCloseOperation(projectRoot: string, portablePath: string): void {

@@ -108,7 +108,12 @@
     "sources": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["workbench"]
+      "required": ["detail", "workbenchSummary"],
+      "properties": {
+        "detail": { "enum": ["fast", "full"] },
+        "workbenchSummary": { "type": "object", "additionalProperties": true },
+        "workbench": { "type": "object", "additionalProperties": true }
+      }
     },
     "issues": { "type": "array", "items": { "type": "object" } }
   }

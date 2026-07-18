@@ -111,6 +111,34 @@ describe('Operations Status JSON', () => {
     });
   });
 
+  it('routes uninitialized projects to init before task creation recommendations', () => {
+    const root = tempProject();
+
+    const report = createProjectStatusV2Report(root);
+
+    expect(report.phase).toBe('uninitialized');
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'initialize-project',
+      command: 'hadara init --json',
+      writeBoundary: 'read-only',
+      writes: false
+    });
+    expect(report.primaryNextAction?.command).not.toContain('task create');
+    expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
+  });
+
+  it('honors status --detail full on the default v2 report path', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+
+    const fast = createProjectStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'));
+    const full = createProjectStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
+
+    expect(fast.sources.opsStatusV1.detail).toBe('fast');
+    expect(full.sources.opsStatusV1.detail).toBe('full');
+    expect(assertSchema('hadara.project.status.v2', full)).toBeUndefined();
+  });
+
   it('builds a dashboard-ready status snapshot from project docs and task capsules', () => {
     const root = tempProject();
     writeProjectDocs(root);

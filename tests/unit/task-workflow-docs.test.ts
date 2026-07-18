@@ -101,8 +101,9 @@ describe('task workflow command semantics docs', () => {
     expect(agents).toContain('equivalent `hadara status --json` projection');
     expect(agents).not.toContain('unless `session start` already exposed it');
     expect(agents).not.toContain('equivalent `session start` projection');
-    expect(contract).toContain('| `task status --json` | `hadara.task.status.v1` | Read-only. | Selection report was generated; not that a capsule exists. |');
-    expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.workbench.v1` | Read-only. | Report generation succeeded for an existing task; not a readiness gate. |');
+    expect(contract).toContain('| `task status --json` | `hadara.taskSelection.status.v2` | Read-only next-work selection. | Selection report was generated; not that a capsule exists. |');
+    expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.status.v2` | Read-only compact selected-task cockpit. Fast mode may skip close-grade checks; use `--detail full` for full diagnostics. | Report generation succeeded for an existing task; not a readiness gate. |');
+    expect(contract).toContain('| `task close --task T-XXXX --json` | `hadara.task.close.v2` | Default proof-last close transaction.');
   });
 
   it('registers task workflow command guidance as required reading', () => {

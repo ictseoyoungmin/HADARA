@@ -286,6 +286,40 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.status.v2', repair).ok).toBe(true);
   });
 
+  it('keeps fast selected-task v2 compact and does not infer close-ready without close-grade checks', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench v2 fast compact');
+    makeTaskAuthored(task.dir, { planStatus: 'Done' });
+    appendEvidence(root, { taskId: task.id, kind: 'note', summary: 'Fixture evidence', result: 'passed', visibility: 'public' });
+
+    const fast = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+    const full = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
+
+    expect(fast.phase).toBe('validate');
+    expect(fast.readiness).toMatchObject({
+      intent: 'validate',
+      status: 'ready',
+      currentReady: false
+    });
+    expect(fast.cockpit.phaseReason).toContain('fast status has not evaluated close-grade checks');
+    expect(fast.sources).toMatchObject({
+      detail: 'fast',
+      workbenchSummary: {
+        readinessChecked: false,
+        evidenceRecords: 1
+      }
+    });
+    expect(fast.sources).not.toHaveProperty('workbench');
+    expect(fast.evaluations).toContainEqual(expect.objectContaining({ id: 'evidence', state: 'evaluated' }));
+    expect(fast.evaluations).toContainEqual(expect.objectContaining({ id: 'close-proof', state: 'evaluated' }));
+    expect(fast.evaluations).toContainEqual(expect.objectContaining({ id: 'close-readiness', state: 'not-evaluated' }));
+
+    expect(full.sources).toHaveProperty('workbench');
+    expect(full.sources).toMatchObject({ detail: 'full', workbenchSummary: { readinessChecked: true } });
+    expect(validateSchema('hadara.task.status.v2', fast).ok).toBe(true);
+    expect(validateSchema('hadara.task.status.v2', full).ok).toBe(true);
+  });
+
   it('maps selected-task v2 terminal and stale close states without active-work guidance', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench v2 closed phases');

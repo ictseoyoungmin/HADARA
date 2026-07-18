@@ -64,7 +64,17 @@ export interface TaskStatusV2Report {
     migration: string;
   };
   sources: {
-    workbench: TaskWorkbenchReport;
+    detail: 'fast' | 'full';
+    workbench?: TaskWorkbenchReport;
+    workbenchSummary: {
+      schemaVersion: TaskWorkbenchReport['schemaVersion'];
+      loopPhase: string;
+      readinessStatus: string;
+      readinessChecked: boolean;
+      closeState: TaskWorkbenchReport['state']['closeState'];
+      evidenceRecords: number;
+      issueCodes: string[];
+    };
   };
   diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   issues: TaskWorkbenchReport['issues'];
@@ -76,11 +86,12 @@ export function createTaskStatusV2Report(
   now = new Date(),
   options: { detail?: 'fast' | 'full' } = {}
 ): TaskStatusV2Report {
-  const workbench = createTaskWorkbenchReport(projectRoot, taskId, now, options);
+  const detail = options.detail ?? 'fast';
+  const workbench = createTaskWorkbenchReport(projectRoot, taskId, now, { detail });
   const health = determineHealth(workbench);
   const nextActions = workbench.nextActions.map(convertNextAction);
   const primaryNextAction = workbench.loop.primaryNextAction ? convertNextAction(workbench.loop.primaryNextAction) : nextActions[0] ?? null;
-  const cockpit = determineCockpit(workbench);
+  const cockpit = determineCockpit(workbench, detail);
 
   return {
     schemaVersion: 'hadara.task.status.v2',
@@ -127,7 +138,19 @@ export function createTaskStatusV2Report(
       legacyCommand: 'hadara task status --task <task-id> --compat v1 --json',
       migration: 'This v2 selected-task cockpit is the default 0.5.x task report. Use explicit --compat v1 only for legacy workbench consumers.'
     },
-    sources: { workbench },
+    sources: {
+      detail,
+      ...(detail === 'full' ? { workbench } : {}),
+      workbenchSummary: {
+        schemaVersion: workbench.schemaVersion,
+        loopPhase: workbench.loop.phase,
+        readinessStatus: workbench.state.readiness.status,
+        readinessChecked: detail === 'full',
+        closeState: workbench.state.closeState,
+        evidenceRecords: workbench.summary.evidenceRecords,
+        issueCodes: workbench.issues.map((issue) => issue.code)
+      }
+    },
     issues: workbench.issues
   };
 }
@@ -167,13 +190,14 @@ function readinessStatus(phase: TaskCockpitPhase, health: ProjectStatusHealth, w
   if (phase === 'repair-evidence' || phase === 'closed-stale') return 'needs-review';
   if (phase === 'plan-work') return 'needs-review';
   if (phase === 'validate') return 'ready';
-  if (phase === 'close-ready') return 'ready';
+  if (phase === 'close-ready') return workbench.state.ready || workbench.state.readiness.currentReady ? 'ready' : 'not-evaluated';
   if (workbench.state.ready || workbench.state.readiness.closeProofValid) return 'ready';
   if (phase === 'author-task') return 'needs-context';
   return 'needs-review';
 }
 
 function buildEvaluations(workbench: TaskWorkbenchReport, health: ProjectStatusHealth): TaskStatusV2Report['evaluations'] {
+  const readinessChecked = !workbench.state.readiness.status.includes('not-checked') && !workbench.state.readiness.summary.includes('Fast task status skipped');
   return [
     {
       id: 'task-workbench',
@@ -183,33 +207,47 @@ function buildEvaluations(workbench: TaskWorkbenchReport, health: ProjectStatusH
     },
     {
       id: 'evidence',
-      state: workbench.summary.evidenceRecords > 0 ? 'evaluated' : 'not-evaluated',
+      state: 'evaluated',
       health: workbench.summary.evidenceRecords > 0 ? 'ok' : 'attention',
       summary: `${workbench.summary.evidenceRecords} evidence record(s) observed.`
     },
     {
       id: 'close-proof',
-      state: workbench.state.readiness.closeProofValid ? 'evaluated' : 'not-evaluated',
+      state: 'evaluated',
       health: workbench.state.readiness.closeProofValid ? 'ok' : 'attention',
       summary: workbench.state.readiness.closeProofValid ? 'Valid close proof is present.' : `Close state is ${workbench.state.closeState}.`
+    },
+    {
+      id: 'close-readiness',
+      state: readinessChecked ? 'evaluated' : 'not-evaluated',
+      health: readinessChecked ? (workbench.state.ready || workbench.state.closedValid ? 'ok' : health) : 'attention',
+      summary: readinessChecked ? workbench.state.readiness.summary : 'Fast selected-task status skipped close-grade checks; use --detail full or task close --dry-run for close readiness.'
     }
   ];
 }
 
 function convertNextAction(action: WorkbenchNextAction): ProjectStatusNextActionV2 {
+  const command = action.command;
+  const executeAlternative = action.executeCommand ? {
+    command: action.executeCommand,
+    writeBoundary: inferWriteBoundary({ ...action, command: action.executeCommand }),
+    requiresReview: true
+  } : undefined;
+  const writeBoundary = inferWriteBoundary(action);
   return {
     id: action.id,
-    kind: action.command ? 'command' : 'review',
-    ...(action.command ? { command: action.command } : {}),
+    kind: command ? 'command' : 'review',
+    ...(command ? { command } : {}),
+    ...(executeAlternative ? { executeAlternative } : {}),
     message: action.message,
-    writeBoundary: inferWriteBoundary(action),
+    writeBoundary,
     risk: action.priority === 'now' ? 'low' : 'none',
-    requiresReview: action.kind === 'review' || !action.command || Boolean(action.executeCommand),
-    writes: Boolean(action.executeCommand || action.kind === 'edit' || action.kind === 'remediation')
+    requiresReview: action.kind === 'review' || !command || Boolean(executeAlternative),
+    writes: writeBoundary !== 'read-only' && writeBoundary !== 'none'
   };
 }
 
-function determineCockpit(workbench: TaskWorkbenchReport): { phase: TaskCockpitPhase; reason: string; planState: TaskStatusV2Report['cockpit']['planState'] } {
+function determineCockpit(workbench: TaskWorkbenchReport, detail: 'fast' | 'full'): { phase: TaskCockpitPhase; reason: string; planState: TaskStatusV2Report['cockpit']['planState'] } {
   const planState = readPlanState(workbench.projectRoot, workbench.task.capsule);
   const validationAttempts = workbench.sources.evidenceList.validationAttempts;
   const unresolvedValidation = validationAttempts?.unresolvedFailedOrBlocked ?? 0;
@@ -248,7 +286,10 @@ function determineCockpit(workbench: TaskWorkbenchReport): { phase: TaskCockpitP
   if (workbench.loop.phase === 'implement') {
     return { phase: 'implement', reason: workbench.loop.summary, planState };
   }
-  return { phase: 'close-ready', reason: 'Task has evidence and is ready for task close or an explicit close dry-run review.', planState };
+  if (detail === 'full' && (workbench.state.ready || workbench.state.readiness.currentReady)) {
+    return { phase: 'close-ready', reason: 'Close-grade checks were evaluated and the task is ready for task close.', planState };
+  }
+  return { phase: 'validate', reason: 'Task has evidence, but fast status has not evaluated close-grade checks; run task close --dry-run or task status --detail full.', planState };
 }
 
 function readPlanState(projectRoot: string, capsulePath: string): TaskStatusV2Report['cockpit']['planState'] {
@@ -266,7 +307,10 @@ function readPlanState(projectRoot: string, capsulePath: string): TaskStatusV2Re
 }
 
 function inferWriteBoundary(action: WorkbenchNextAction): ProjectStatusNextActionV2['writeBoundary'] {
-  if (action.executeCommand?.includes('finalize') || action.command?.includes('finalize')) return 'evidence-append';
+  const command = action.command ?? '';
+  if (command.includes('task close') && !command.includes('--dry-run')) return 'task-close-transaction';
+  if (command.includes('task close') && command.includes('--dry-run')) return 'read-only';
+  if (action.executeCommand?.includes('finalize') || command.includes('finalize')) return 'evidence-append';
   if (action.kind === 'edit' || action.kind === 'remediation') return 'task-local';
   return 'read-only';
 }

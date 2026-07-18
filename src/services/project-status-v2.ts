@@ -33,8 +33,13 @@ export interface ProjectStatusNextActionV2 {
   id: string;
   kind: 'command' | 'review' | 'create' | 'none';
   command?: string;
+  executeAlternative?: {
+    command: string;
+    writeBoundary: ProjectStatusNextActionV2['writeBoundary'];
+    requiresReview: boolean;
+  };
   message: string;
-  writeBoundary: 'read-only' | 'task-local' | 'project-state' | 'evidence-append' | 'none';
+  writeBoundary: 'read-only' | 'task-local' | 'project-state' | 'evidence-append' | 'task-close-transaction' | 'none';
   risk: 'none' | 'low' | 'medium' | 'high';
   requiresReview: boolean;
   writes: boolean;
@@ -71,6 +76,7 @@ export interface ProjectStatusV2Report {
       source: string;
     };
     opsStatusV1: {
+      detail: 'fast' | 'full';
       health: OpsStatusReport['health'];
       issues: number;
     };
@@ -82,16 +88,19 @@ export interface ProjectStatusV2Report {
   }>;
 }
 
-export function createProjectStatusV2Report(projectRoot: string, now = new Date()): ProjectStatusV2Report {
+export function createProjectStatusV2Report(projectRoot: string, now = new Date(), options: { detail?: 'fast' | 'full' } = {}): ProjectStatusV2Report {
+  const detail = options.detail ?? 'fast';
   const currentStateRead = readProjectCurrentState(projectRoot);
   const currentState = currentStateRead.state;
-  const opsStatus = createOpsStatusReport(projectRoot, {
-    includeDebt: false,
-    includeKnownProblems: false,
-    includeStateConsistency: false,
-    taskStatusSource: 'task-board',
-    maxTextLength: 240
-  });
+  const opsStatus = createOpsStatusReport(projectRoot, detail === 'full'
+    ? { includeStateConsistency: true }
+    : {
+        includeDebt: false,
+        includeKnownProblems: false,
+        includeStateConsistency: false,
+        taskStatusSource: 'task-board',
+        maxTextLength: 240
+      });
   const taskSelection = createTaskSelectionReport(projectRoot);
   const currentStateIssues = currentStateRead.issues.map((issue) => ({
     severity: issue.severity,
@@ -133,6 +142,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
         source: taskSelection.summary.source
       },
       opsStatusV1: {
+        detail,
         health: opsStatus.health,
         issues: opsStatus.issues.length
       }
@@ -189,6 +199,12 @@ function buildPrimaryNextAction(input: {
   if (input.health === 'blocked') {
     return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect blocking status diagnostics.');
   }
+  if (input.phase === 'uninitialized') {
+    return readOnlyCommandAction('initialize-project', 'hadara init --json', 'Initialize HADARA or run adoption preview for an existing project.');
+  }
+  if (input.phase === 'adoption-review') {
+    return readOnlyCommandAction('review-adoption', 'hadara init --adopt --json', 'Review HADARA adoption before creating task capsules.');
+  }
   const recommendation = input.taskSelection.recommendations[0];
   if (recommendation?.taskCapsulePresent && recommendation.taskId !== 'TBD') {
     return readOnlyCommandAction('inspect-recommended-task', `hadara task status --task ${recommendation.taskId} --json`, `Inspect recommended task ${recommendation.taskId}.`);
@@ -204,9 +220,6 @@ function buildPrimaryNextAction(input: {
       requiresReview: false,
       writes: true
     };
-  }
-  if (input.phase === 'uninitialized') {
-    return readOnlyCommandAction('initialize-project', 'hadara init --json', 'Initialize HADARA or run adoption preview for an existing project.');
   }
   if (input.health !== 'ok') {
     return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect degraded status diagnostics.');

@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0655 0.5.0 task close partial recovery retry proof |
+| Latest Completed Task | T-0656 0.5.0 pre-stable public surface and close recovery hardening |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0634 through T-0647 implemented the 0.5.0 status-ingress line: `hadara status --json` is the primary session entry point, status/task-status emit v2 read models, selected-task cockpit guidance is available, and public `session start` guidance/routing has been removed. T-0648 prepares `0.5.0-rc.0` source metadata, release notes, and validation evidence; npm/GitHub publication remains operator-controlled.
+v0.4.6 is published and recycled. T-0634 through T-0647 implemented the 0.5.0 status-ingress line: `hadara status --json` is the primary session entry point, status/task-status emit v2 read models, selected-task cockpit guidance is available, and public `session start` guidance/routing has been removed. T-0648 prepares `0.5.0-rc.0` source metadata, release notes, and validation evidence; npm/GitHub publication remains policy-controlled and may be manual, CI-driven, or hybrid.
 
 | Stage | State | Purpose |
 |---|---|---|

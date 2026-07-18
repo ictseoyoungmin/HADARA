@@ -53,7 +53,7 @@ function printStatus(input: StatusCommandInput): void {
   }
 
   if (!compat) {
-    const report = createProjectStatusV2Report(input.projectRoot);
+    const report = createProjectStatusV2Report(input.projectRoot, new Date(), { detail: detail === 'full' ? 'full' : 'fast' });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {

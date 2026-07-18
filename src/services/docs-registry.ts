@@ -500,9 +500,9 @@ function isSemanticCurrentnessIssue(issue: DocsIssue): boolean {
 }
 
 const REMOVED_COMMAND_EXAMPLE_PATTERNS = [
-  /^hadara task (?:next|show|lifecycle|finish|ready|close|audit-close|complete)\b/,
+  /^hadara task (?:next|show|lifecycle|finish|ready|audit-close|complete)\b/,
   /^hadara (?:proof (?:status|explain)|evidence summary|ci gate|state verify|package smoke)\b/,
-  /^hadara help command (?:task\.(?:next|show|lifecycle|finish|ready|close|audit-close|complete)|proof\.(?:status|explain)|evidence\.summary|ci\.gate|state\.verify|package\.smoke)\b/
+  /^hadara help command (?:task\.(?:next|show|lifecycle|finish|ready|audit-close|complete)|proof\.(?:status|explain)|evidence\.summary|ci\.gate|state\.verify|package\.smoke)\b/
 ];
 
 function validateActiveDocumentCurrentness(projectRoot: string, registry: DocumentRegistryFile): DocsIssue[] {

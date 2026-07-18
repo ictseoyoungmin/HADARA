@@ -28,7 +28,7 @@ describe('legacy command routing', () => {
   it('does not handle retired task lifecycle subcommands', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Retired task routes');
-    const subcommands = ['finish', 'ready', 'close', 'audit-close', 'complete', 'lifecycle'];
+    const subcommands = ['finish', 'ready', 'audit-close', 'complete', 'lifecycle'];
 
     for (const sub of subcommands) {
       expect(handleTaskCommand({ args: ['task', sub, '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(false);

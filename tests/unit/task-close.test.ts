@@ -120,7 +120,7 @@ describe('task close report', () => {
     markStateDocsCurrent(root, task.id);
     const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
     fs.mkdirSync(lockDir, { recursive: true });
-    fs.writeFileSync(path.join(lockDir, 'lock.json'), '{"pid":12345,"command":"test-holder"}\n', 'utf8');
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, token: 'fixture-live-lock', command: 'test-holder', createdAt: new Date().toISOString() })}\n`, 'utf8');
     const beforeTask = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     const beforeBoard = fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8');
     const beforeEvidence = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
@@ -149,6 +149,35 @@ describe('task close report', () => {
     expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toBe(beforeTask);
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toBe(beforeBoard);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe(beforeEvidence);
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('reclaims stale transaction locks with dead owners before retrying close', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction stale lock reclaim');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
+    fs.mkdirSync(lockDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(lockDir, 'lock.json'),
+      `${JSON.stringify({ pid: 999999999, token: 'dead-owner', command: 'task.close', createdAt: new Date().toISOString() })}\n`,
+      'utf8'
+    );
+
+    const report = createTaskCloseTransactionReport(root, task.id, { lockTimeoutMs: 100 });
+
+    expect(report.ok).toBe(true);
+    expect(report.transaction.locks).toContainEqual(
+      expect.objectContaining({
+        name: 'task-board',
+        contended: true,
+        staleReclaimed: true,
+        staleReason: 'owner-dead',
+        ownerPid: 999999999
+      })
+    );
+    expect(report.closeState).toBe('closed-valid');
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
   });
 

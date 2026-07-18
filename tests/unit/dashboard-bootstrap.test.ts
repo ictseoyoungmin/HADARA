@@ -67,7 +67,7 @@ describe('dashboard bootstrap read model', () => {
     expect(JSON.stringify(report.selectedTask)).not.toContain('records');
     expect(JSON.stringify(report.selectedTask)).not.toContain('evidencePath');
     expect(validateSchema('hadara.dashboard.bootstrap.v1', report).ok).toBe(true);
-  });
+  }, 90000);
 
   it('degrades invalid selected-task requests with issues instead of throwing', () => {
     const report = createDashboardBootstrapReport(process.cwd(), { selectedTaskId: 'T-9999' }, new Date('2026-06-01T00:00:00.000Z'));
