@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 198,
+  "rev": 200,
   "profile": "governed",
   "currentRelease": "0.4.6",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0643",
-    "title": "0.5.0 latest dist delegated Codex dogfood"
+    "id": "T-0644",
+    "title": "0.5.0 finalize dry-run done-level token parity"
   },
   "activeTask": null,
   "nextWork": null,

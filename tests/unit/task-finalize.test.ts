@@ -469,6 +469,59 @@ describe('task finalize --auto (FD-010)', () => {
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
+  it('preflights done-level table blockers in dry-run before recommending finish writes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize dry run preflight blockers');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const planPath = path.join(task.dir, 'PLAN.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      planPath,
+      fs.readFileSync(planPath, 'utf8').replace('| 1 | Complete fixture. | Done | Fixture. |', '| 1 | Complete fixture. | In Progress | Fixture. |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      boardPath,
+      fs
+        .readFileSync(boardPath, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+        .join('\n'),
+      'utf8'
+    );
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({ ok: false, mode: 'dry-run', state: 'blocked', planStatus: 'blocked', partialExecutionRisk: false });
+    expect(report.pendingWrites).toEqual([]);
+    expect(report.deferredChecks).toEqual([]);
+    expect(report.blockingIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ severity: 'error', code: 'HARNESS_TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN' }),
+        expect.objectContaining({ severity: 'error', code: 'HARNESS_TASK_PLAN_STATUS_DRIFT' })
+      ])
+    );
+    expect(report.blockingIssues.map((issue) => issue.code)).not.toContain('HARNESS_TASK_BOARD_STATUS_NOT_DONE');
+    expect(report.steps).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'finish', status: 'pending', writeBoundary: 'read-only' }),
+        expect.objectContaining({ id: 'ready', status: 'blocked' })
+      ])
+    );
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
   it('preflights hidden post-finish blockers before writing Draft lifecycle status in auto mode', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finalize auto hidden blocker');

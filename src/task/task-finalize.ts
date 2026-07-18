@@ -160,7 +160,14 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
   const issues = collectIssues(taskId, reports);
   const planHash = hashPlan(taskId, steps);
   if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash, options.onProgress, options.recordReadinessEvidence ?? false);
-  return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
+  const report = createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
+  const finishRequired = steps.some((step) => step.id === 'finish' && step.status === 'required');
+  const preflightBlockers = finishRequired && report.authoringGuidance.status !== 'needs-authoring'
+    ? createAutoFinalizePreflightBlockers(projectRoot, taskId, actor).filter(isDryRunPreflightBlocker)
+    : [];
+  const reportPreflightBlockers = report.blockingIssues.filter(isDryRunPreflightBlocker);
+  if (preflightBlockers.length > 0 || reportPreflightBlockers.length > 0) return createAutoPreflightBlockedReport(taskId, report, preflightBlockers);
+  return report;
 }
 
 function executeAutoFinalize(
@@ -239,6 +246,11 @@ function taskFinishIssueToFinalizeIssue(issue: TaskFinishReport['issues'][number
     message: issue.message,
     ...(issue.path ? { path: issue.path } : {})
   };
+}
+
+function isDryRunPreflightBlocker(issue: TaskFinalizeIssue): boolean {
+  if (FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code)) return false;
+  return issue.code.includes('INVALID_TOKEN') || issue.code === 'HARNESS_TASK_PLAN_STATUS_DRIFT';
 }
 
 function createVirtualFinishedProjectRoot(projectRoot: string, taskId: string, finishPlan: TaskFinishReport): string {
@@ -609,7 +621,9 @@ function createFinalizeReport(
   const authoringGuidance: TaskAuthoringGuidance = projectRoot ? createTaskAuthoringGuidance(projectRoot, taskId) : missingTaskAuthoringGuidance();
   const state = deriveFinalizeState(steps, issues, reports);
   const blockingIssues = finalizeBlockingIssues(issues);
-  const deferredChecks = deferredChecksForPlan(steps);
+  const blocked = mode === 'dry-run' && (state === 'blocked' || blockingIssues.length > 0);
+  const deferredChecks = blocked ? [] : deferredChecksForPlan(steps);
+  const pendingWriteList = blocked ? [] : pendingWrites(steps);
   const allIssues = [...issues, ...deferredCheckIssues(deferredChecks)];
   return {
     schemaVersion: 'hadara.task.finalize.v1',
@@ -620,7 +634,7 @@ function createFinalizeReport(
     blockingIssues,
     deferredChecks,
     partialExecutionRisk: deferredChecks.length > 0,
-    pendingWrites: pendingWrites(steps),
+    pendingWrites: pendingWriteList,
     readOnly,
     mode,
     taskId,

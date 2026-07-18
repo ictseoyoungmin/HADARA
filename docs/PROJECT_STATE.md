@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6 |
-| Latest Completed Task | T-0643 0.5.0 latest dist delegated Codex dogfood |
+| Latest Completed Task | T-0644 0.5.0 finalize dry-run done-level token parity |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
