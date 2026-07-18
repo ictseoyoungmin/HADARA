@@ -650,3 +650,4 @@
 | T-0647 | 0.5.0 session-start removal and cross-profile dogfood | Done | tasks/T-0647-0-5-0-session-start-removal-and-cross-profile-dogfood | |
 | T-0648 | 0.5.0-rc.0 release readiness and publish preparation | Done | tasks/T-0648-0-5-0-rc-0-release-readiness-and-publish-preparation | |
 | T-0649 | 0.5.0 full-suite regression cleanup before rc publish | Done | tasks/T-0649-0-5-0-full-suite-regression-cleanup-before-rc-publish | |
+| T-0650 | 0.5.0-rc.0 operator publish record and installed-package recycle | Done | tasks/T-0650-0-5-0-rc-0-operator-publish-record-and-installed-package-recycle | |

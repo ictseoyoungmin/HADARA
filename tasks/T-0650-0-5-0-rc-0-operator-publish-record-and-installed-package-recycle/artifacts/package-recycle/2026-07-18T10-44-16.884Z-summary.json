@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-07-18T10:44:16.874Z",
+  "taskId": "T-0650",
+  "category": "package-recycle",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageRecycle.v1",
+    "command": "package.recycle",
+    "mode": "execute",
+    "ok": false,
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Installed-package recycle uses npm registry/network access only in explicit --execute mode."
+      ]
+    }
+  },
+  "execution": {
+    "npmViewExecuted": true,
+    "npmDistTagExecuted": true,
+    "packageInstallExecuted": false,
+    "installedVersionExecuted": false,
+    "commandSurfaceExecuted": false,
+    "lifecycleHelpExecuted": false,
+    "initExecuted": false,
+    "taskStatusExecuted": false,
+    "taskLifecycleExecuted": false,
+    "contextSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable consumer workspace",
+      "status": "passed",
+      "summary": "Disposable consumer workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-view-version",
+      "label": "Verify registry package version",
+      "status": "failed",
+      "exitCode": 1,
+      "elapsedMs": 70303,
+      "summary": "Registry version lookup failed or returned no version."
+    },
+    {
+      "id": "npm-dist-tags",
+      "label": "Verify registry dist-tags",
+      "status": "failed",
+      "exitCode": 1,
+      "elapsedMs": 70226,
+      "summary": "Registry dist-tag lookup failed."
+    },
+    {
+      "id": "install-package",
+      "label": "Install package from registry into isolated prefix",
+      "status": "skipped",
+      "summary": "Skipped because registry metadata checks failed."
+    },
+    {
+      "id": "installed-version",
+      "label": "Verify installed CLI version",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "command-surface",
+      "label": "Read installed CLI command surface",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "help-lifecycle",
+      "label": "Verify lifecycle help from installed CLI",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "init-project",
+      "label": "Initialize disposable project with installed CLI",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "task-create",
+      "label": "Create disposable task with installed CLI",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "task-status",
+      "label": "Verify task status read model",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "status-ingress",
+      "label": "Verify project status ingress read model",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "task-finalize",
+      "label": "Verify task finalize dry-run report",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "context-pack",
+      "label": "Verify context pack read model",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "context-slice",
+      "label": "Verify context slice raw adapter",
+      "status": "skipped",
+      "summary": "Skipped because package install failed."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "PACKAGE_RECYCLE_NPM_VIEW_FAILED",
+      "message": "npm view failed or did not return a package version.",
+      "stepId": "npm-view-version"
+    },
+    {
+      "severity": "error",
+      "code": "PACKAGE_RECYCLE_DIST_TAG_FAILED",
+      "message": "npm dist-tag lookup failed.",
+      "stepId": "npm-dist-tags"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

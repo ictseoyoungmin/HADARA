@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 210,
+  "rev": 212,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0649",
-    "title": "0.5.0 full-suite regression cleanup before rc publish"
+    "id": "T-0650",
+    "title": "0.5.0-rc.0 operator publish record and installed-package recycle"
   },
   "activeTask": null,
   "nextWork": null,
