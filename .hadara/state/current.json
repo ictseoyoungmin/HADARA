@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 226,
+  "rev": 228,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0657",
-    "title": "0.5.0 pre-stable lock safety and status metadata hardening"
+    "id": "T-0658",
+    "title": "0.5.0 pre-stable close action boundary and blocked status precedence"
   },
   "activeTask": null,
   "nextWork": null,

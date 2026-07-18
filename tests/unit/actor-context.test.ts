@@ -47,6 +47,7 @@ describe('Phase 6 multi-agent command context contract', () => {
   it('exports the Phase 6 role, issue-code, and write-boundary vocabularies', () => {
     expect(HADARA_ACTOR_ROLES).toEqual(['operator', 'coordinator', 'worker', 'reviewer', 'unknown']);
     expect(HADARA_WRITE_BOUNDARIES).toContain('shared-doc');
+    expect(HADARA_WRITE_BOUNDARIES).toContain('task-close-transaction');
     expect(HADARA_WRITE_BOUNDARIES).toContain('release-mutation');
     expect(HADARA_MULTI_AGENT_ISSUE_CODES).toContain('HADARA_SHARED_DOC_WRITE_REQUIRES_BEFORE_HASH');
   });

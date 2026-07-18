@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { initProject } from '../../src/cli/init';
+import { formatLocalDate } from '../../src/core/local-time';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { managedSectionBlock } from '../../src/services/managed-sections';
@@ -29,7 +30,7 @@ describe('task create templates', () => {
 
     expect(report.ok).toBe(true);
     const taskMd = fs.readFileSync(path.join(root, report.task?.capsule ?? '', 'TASK.md'), 'utf8');
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatLocalDate();
     expect(taskMd).toMatch(new RegExp(`\\| Created \\| ${today}T\\d{2}:\\d{2} \\|`));
     expect(taskMd).toMatch(new RegExp(`\\| Updated \\| ${today}T\\d{2}:\\d{2} \\|`));
     expect(taskMd).toContain('Schema hint: use `hadara schema --json`');

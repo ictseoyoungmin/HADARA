@@ -372,7 +372,7 @@ function createTaskCloseLockBlockedReport(
         required: true,
         command: `hadara task close --task ${taskId} --json`,
         summary: `Task close could not acquire the ${error.lockName} lock. Retry after the active close operation finishes, or inspect stale local lock metadata if no close is running.`,
-        writeBoundary: 'task-local',
+        writeBoundary: 'task-close-transaction',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
         stalePlanRisk: 'low'
@@ -383,7 +383,7 @@ function createTaskCloseLockBlockedReport(
       required: true,
       command: `hadara task close --task ${taskId} --json`,
       summary: `Task close could not acquire the ${error.lockName} lock. Retry after the active close operation finishes, or inspect stale local lock metadata if no close is running.`,
-      writeBoundary: 'task-local',
+      writeBoundary: 'task-close-transaction',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
       stalePlanRisk: 'low'
@@ -577,11 +577,13 @@ function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | und
   command = command.replace(`hadara task finalize --task ${taskId} --execute --auto --json`, `hadara task close --task ${taskId} --json`);
   command = command.replace(`hadara task finalize --task ${taskId} --json`, `hadara task close --task ${taskId} --dry-run --json`);
   command = command.replace(`hadara task finalize --task ${taskId} --execute --plan-hash`, `hadara task close --task ${taskId} --execute --plan-hash`);
-  if (command === action.command) return action;
+  const publicCloseWrite = /\bhadara\s+task\s+close\b/.test(command) && command.includes(taskId) && !command.includes('--dry-run');
+  if (command === action.command && (!publicCloseWrite || action.writeBoundary === 'task-close-transaction')) return action;
   return {
     ...action,
     command,
-    summary: action.summary.replace(/\bfinalize\b/gi, 'task close')
+    summary: action.summary.replace(/\bfinalize\b/gi, 'task close'),
+    ...(publicCloseWrite ? { writeBoundary: 'task-close-transaction' as const } : {})
   };
 }
 

@@ -4,6 +4,7 @@ export const HADARA_WRITE_BOUNDARIES = [
   'read-only',
   'task-local',
   'evidence-append',
+  'task-close-transaction',
   'shared-doc',
   'dist-sync',
   'release-artifact',

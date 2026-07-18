@@ -144,6 +144,11 @@ describe('task close report', () => {
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT' }));
     expect(report.recovery?.action.command).toBe(`hadara task close --task ${task.id} --json`);
+    expect(report.recovery?.action.writeBoundary).toBe('task-close-transaction');
+    expect(report.primaryNextAction).toMatchObject({
+      command: `hadara task close --task ${task.id} --json`,
+      writeBoundary: 'task-close-transaction'
+    });
     expect(report.transaction.locks.map((lock) => lock.name)).toEqual(['project-lifecycle']);
     expect(report.transaction.locks[0]?.path).toBe('.hadara/local/locks/project-lifecycle.lock');
     expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toBe(beforeTask);

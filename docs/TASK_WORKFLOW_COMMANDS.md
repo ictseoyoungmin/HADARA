@@ -157,7 +157,7 @@ Phase 6 workflow-compression commands must preserve dry-run reviewability and fu
 |---|---|
 | `actor` | Uses `hadara.actor_context.v1`; defaults to `agentId: "unknown"`, `runId: "local"`, `role: "operator"`, and `parentRunId: null` when optional actor CLI metadata is absent. |
 | `plan` | Uses `hadara.plan_context.v1` for dry-run plans, affected files, optional before-hash, optional idempotency key, and `reviewed:false`. |
-| `nextActions` | Uses `hadara.next_action.v1` records so future workers/coordinators can distinguish read-only, task-local, evidence-append, shared-doc, dist-sync, release-artifact, external-subprocess, and release-mutation boundaries. |
+| `nextActions` | Uses `hadara.next_action.v1` records so future workers/coordinators can distinguish read-only, task-local, evidence-append, task-close-transaction, shared-doc, dist-sync, release-artifact, external-subprocess, and release-mutation boundaries. |
 
 Phase 6.1 added optional actor CLI input for then-existing workflow-compression surfaces. The low-level lifecycle and handoff suggestion surfaces were later removed from public routing; `dev docker-check` remains the current external-subprocess validation wrapper with actor metadata. Future plan/idempotency work should use `--idempotency-key` where a command accepts reviewed write plans.
 

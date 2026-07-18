@@ -124,7 +124,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
   const opsStatusIssues = projectStatusIssuesFromOpsStatus(opsStatus);
   const phase = determineProjectPhase({ currentState, currentStateIssues, opsStatus, taskSelection });
   const health = determineHealth(opsStatus, phase, [...currentStateIssues, ...opsStatusIssues]);
-  const primaryNextAction = buildPrimaryNextAction({ phase, currentState, taskSelection, health });
+  const primaryNextAction = buildPrimaryNextAction({ phase, currentState, taskSelection, health, issues: [...currentStateIssues, ...opsStatusIssues] });
 
   return {
     schemaVersion: 'hadara.project.status.v2',
@@ -228,13 +228,25 @@ function buildPrimaryNextAction(input: {
   currentState: ReturnType<typeof readProjectCurrentState>['state'];
   taskSelection: ReturnType<typeof createTaskSelectionReport>;
   health: ProjectStatusHealth;
+  issues: ProjectStatusV2Report['issues'];
 }): ProjectStatusNextActionV2 | null {
+  if (input.health === 'blocked') {
+    if (input.issues.some((issue) => issue.code === 'STATUS_STATE_CONSISTENCY_ERROR')) {
+      return {
+        id: 'review-state-consistency',
+        kind: 'review',
+        message: 'Resolve blocking state-consistency diagnostics before routing into active work.',
+        writeBoundary: 'read-only',
+        risk: 'medium',
+        requiresReview: true,
+        writes: false
+      };
+    }
+    return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect blocking status diagnostics.');
+  }
   if (input.currentState?.activeTask?.id) {
     const taskId = input.currentState.activeTask.id;
     return readOnlyCommandAction('inspect-active-task', `hadara task status --task ${taskId} --json`, `Inspect active task ${taskId}.`);
-  }
-  if (input.health === 'blocked') {
-    return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect blocking status diagnostics.');
   }
   if (input.phase === 'uninitialized') {
     return {
