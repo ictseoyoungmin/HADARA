@@ -25,7 +25,52 @@
         "internalReview": { "type": "boolean" },
         "planHash": { "type": "string" },
         "proofLast": { "const": true },
-        "stalePlanGuard": { "const": true }
+        "stalePlanGuard": { "const": true },
+        "lockOrder": {
+          "type": "array",
+          "items": { "type": "string" },
+          "prefixItems": [
+            { "const": "project-lifecycle" },
+            { "const": "task-board" },
+            { "const": "task-scoped" },
+            { "const": "evidence-append" }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "locks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["name", "path", "waitedMs", "contended", "timeoutMs"],
+            "properties": {
+              "name": { "enum": ["project-lifecycle", "task-board", "task-scoped"] },
+              "path": { "type": "string" },
+              "waitedMs": { "type": "number" },
+              "contended": { "type": "boolean" },
+              "timeoutMs": { "type": "number" }
+            }
+          }
+        },
+        "operation": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["operationId", "taskId", "idempotencyKey", "phase", "planHash", "completedSteps", "pendingSteps", "path", "persisted", "createdAt", "updatedAt"],
+          "properties": {
+            "operationId": { "type": "string" },
+            "taskId": { "type": "string" },
+            "idempotencyKey": { "type": "string" },
+            "phase": { "enum": ["preflight", "applying", "closed-valid", "blocked", "recovery-required"] },
+            "planHash": { "type": "string" },
+            "completedSteps": { "type": "array", "items": { "type": "string" } },
+            "pendingSteps": { "type": "array", "items": { "type": "string" } },
+            "path": { "type": "string" },
+            "persisted": { "type": "boolean" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          }
+        }
       }
     },
     "writeSummary": {

@@ -653,3 +653,4 @@
 | T-0650 | 0.5.0-rc.0 operator publish record and installed-package recycle | Done | tasks/T-0650-0-5-0-rc-0-operator-publish-record-and-installed-package-recycle | |
 | T-0651 | 0.5.0 stable close scope plan realignment | Done | tasks/T-0651-0-5-0-stable-close-scope-plan-realignment | |
 | T-0652 | 0.5.0 task close transaction route | Done | tasks/T-0652-0-5-0-task-close-transaction-route | |
+| T-0653 | 0.5.0 task close transaction locks and recovery state | Done | tasks/T-0653-0-5-0-task-close-transaction-locks-and-recovery-state | |
