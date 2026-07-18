@@ -264,12 +264,6 @@ function explicitRangeSlices(source: SourceFile, input: BuildContextSliceOptions
   let endLine = input.to;
   if (endLine > source.lines.length) {
     endLine = source.lines.length;
-    issues.push({
-      severity: 'warning',
-      code: 'CONTEXT_SLICE_RANGE_CLAMPED',
-      path: source.path,
-      message: `Range end was clamped to file line count ${source.lines.length}.`
-    });
   }
   const range = clampRangeLineBudget(source.path, { startLine: input.from, endLine }, MAX_RANGE_LINES, issues);
   return [createSlice(source, 'explicit-range', range, 'Explicit line range requested by caller.')];

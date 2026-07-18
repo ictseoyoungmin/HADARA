@@ -645,3 +645,4 @@
 | T-0642 | 0.5.0 task handoff identity timestamp sync | Done | tasks/T-0642-0-5-0-task-handoff-identity-timestamp-sync | |
 | T-0643 | 0.5.0 latest dist delegated Codex dogfood | Done | tasks/T-0643-0-5-0-latest-dist-delegated-codex-dogfood | |
 | T-0644 | 0.5.0 finalize dry-run done-level token parity | Done | tasks/T-0644-0-5-0-finalize-dry-run-done-level-token-parity | |
+| T-0645 | 0.5.0 dogfood UX follow-up cleanup | Done | tasks/T-0645-0-5-0-dogfood-ux-follow-up-cleanup | |

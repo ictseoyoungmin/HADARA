@@ -559,7 +559,7 @@ function createBrownfieldCurrentState(profile: InitProfile, project: InitAdoptio
     },
     nextOperatorIntent: 'Review existing project docs, validation commands, known problems, and authoritative sources before normal feature work.',
     validationBaseline: {
-      summary: 'Existing project adopted; no HADARA validation baseline has been recorded yet.',
+      summary: 'Existing project adopted; no current trusted validation baseline has been promoted yet. Task-local validation evidence may exist, but this field is reserved for the project baseline used to resume work.',
       evidence: []
     }
   };

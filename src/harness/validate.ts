@@ -951,7 +951,7 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
       message: 'Done-level validation requires TASK.md status to be Done.',
       path: relativePath,
       heading: 'Identity',
-      fixHint: 'Run `hadara task finalize --task <task-id> --execute --auto --json` after the capsule is complete, or set the TASK.md Identity status row to Done when repairing a partially completed finalize.',
+      fixHint: 'For normal work, do not hand-edit lifecycle-owned status; run `hadara task finalize --task <task-id> --execute --auto --json` after the capsule is complete. Only set the TASK.md Identity status row to Done when intentionally repairing a partial finalize that already wrote inconsistent lifecycle state.',
       example: '| Status | Done |',
       remediationHint: {
         path: relativePath,
@@ -1473,7 +1473,7 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       message: `Done-level validation requires docs/TASK_BOARD.md status for ${task.id} to be Done.`,
       path: relativePath,
       heading: 'TASK_BOARD',
-      fixHint: `Run \`hadara task finalize --task ${task.id} --execute --auto --json\` after the capsule is complete, or update the Task Board status cell for ${task.id} to Done when repairing a partially completed finalize.`,
+      fixHint: `For normal work, do not hand-edit lifecycle-owned Task Board status; run \`hadara task finalize --task ${task.id} --execute --auto --json\` after the capsule is complete. Only update the Task Board status cell for ${task.id} to Done when intentionally repairing a partial finalize that already wrote inconsistent lifecycle state.`,
       example: `| ${task.id} | ${row.title} | Done | ${row.capsule} | ${row.notes} |`,
       remediationHint: {
         path: relativePath,

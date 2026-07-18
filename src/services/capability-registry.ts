@@ -1547,6 +1547,34 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'project-state.update',
+    command: 'hadara project-state update [--name <name>] [--purpose <purpose>] [--execute --before-hash <hash>] [--json]',
+    summary: 'Update docs/PROJECT_STATE.md product metadata inside the project-state.update managed section.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'project',
+    lifecycleStage: 'work',
+    requiredness: 'conditional',
+    writeBoundary: 'managed-doc-section',
+    readOnly: false,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    since: '0.5.0',
+    schemaVersion: 'hadara.projectState.update.v1',
+    docs: ['docs/PROJECT_STATE.md', 'docs/HADARA_WORKFLOW.md'],
+    implementationFiles: ['src/cli/project-state.ts', 'src/services/project-state-update.ts'],
+    testFiles: ['tests/unit/project-state-update.test.ts'],
+    examples: [
+      example('Preview product metadata update', 'hadara project-state update --name "Quant Battle Arena" --purpose "Backtest and compare trading strategies." --json', 'When generated PROJECT_STATE metadata still contains placeholder project identity.'),
+      example('Execute reviewed metadata update', 'hadara project-state update --name "Quant Battle Arena" --purpose "Backtest and compare trading strategies." --execute --before-hash sha256:... --json', 'After reviewing the dry-run hash.')
+    ],
+    related: ['status', 'docs.managed.list', 'docs.patch'],
+    conflictsWith: [],
+    notes: 'Dry-run first. Execute requires --before-hash and only rewrites the project-state-metadata managed section; it does not change scaffold profile or current-state canon.'
+  }),
+  commandEntry({
     id: 'install.plan',
     command: 'hadara install plan [--platform <platform>] [--source <path>] [--target <path>] [--json]',
     summary: 'Create a read-only installer dry-run plan with redacted path references.',

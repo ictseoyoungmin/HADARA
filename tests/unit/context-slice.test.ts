@@ -52,7 +52,7 @@ describe('context slice report', () => {
     expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
   });
 
-  it('does not mark file-end range clamping as output truncation', () => {
+  it('silently clamps explicit file-end ranges without output truncation noise', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'short.md'), 'one\ntwo\nthree\n', 'utf8');
 
@@ -66,7 +66,7 @@ describe('context slice report', () => {
     expect(report.ok).toBe(true);
     expect(report.slices[0]).toMatchObject({ startLine: 1, endLine: 3 });
     expect(report.summary).toMatchObject({ totalLines: 3, truncated: false });
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_SLICE_RANGE_CLAMPED' }));
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'CONTEXT_SLICE_RANGE_CLAMPED' }));
     expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
   });
 

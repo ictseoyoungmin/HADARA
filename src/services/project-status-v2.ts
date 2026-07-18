@@ -64,6 +64,7 @@ export interface ProjectStatusV2Report {
       nextWork: string | null;
       currentRelease: string | null;
       validationBaseline: string | null;
+      validationBaselineMeaning: string;
     };
     taskSelection: {
       recommendations: number;
@@ -124,7 +125,8 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
         activeTask: currentState?.activeTask?.id ?? null,
         nextWork: currentState?.nextWork?.title ?? null,
         currentRelease: currentState?.currentRelease ?? null,
-        validationBaseline: currentState?.validationBaseline.summary ?? null
+        validationBaseline: currentState?.validationBaseline.summary ?? null,
+        validationBaselineMeaning: 'current trusted validation baseline; not necessarily the latest completed task evidence'
       },
       taskSelection: {
         recommendations: taskSelection.recommendations.length,

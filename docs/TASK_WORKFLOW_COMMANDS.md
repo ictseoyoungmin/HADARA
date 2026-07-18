@@ -37,6 +37,7 @@ hadara task status --task T-XXXX --json
 # Do the scoped work, then run real validation and record evidence.
 
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
+hadara validation run --task T-XXXX --check "Focused tests" --json -- npm test
 hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
 # Or record an already-run validation result:
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
