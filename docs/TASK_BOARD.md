@@ -654,3 +654,4 @@
 | T-0651 | 0.5.0 stable close scope plan realignment | Done | tasks/T-0651-0-5-0-stable-close-scope-plan-realignment | |
 | T-0652 | 0.5.0 task close transaction route | Done | tasks/T-0652-0-5-0-task-close-transaction-route | |
 | T-0653 | 0.5.0 task close transaction locks and recovery state | Done | tasks/T-0653-0-5-0-task-close-transaction-locks-and-recovery-state | |
+| T-0654 | 0.5.0 task close installed package dogfood | Done | tasks/T-0654-0-5-0-task-close-installed-package-dogfood | |
