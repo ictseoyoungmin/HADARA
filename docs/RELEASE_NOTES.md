@@ -1,5 +1,33 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.0
+
+Release candidate for the 0.5 status-first agent loop. This line changes the primary session ingress from legacy session/runtime surfaces to lifecycle-aware `status` and `task status` read models, while keeping 0.4.x lifecycle evidence and finalize guarantees intact.
+
+Highlights:
+
+- Makes `hadara status --json` the primary new-session ingress. The default JSON contract is `hadara.project.status.v2`, with project state, task-selection guidance, release context, current problems, validation baseline, and bounded diagnostics in one read model.
+- Adds explicit lifecycle-aware evaluation fields so agents can distinguish routing, lifecycle phase, health, readiness, next action, and follow-up surfaces instead of inferring them from prose.
+- Adds task-selection status v2 and selected-task cockpit output:
+  - status selection includes precedence and recommendation confidence;
+  - selected task status includes phase, blockers, ready-to-close state, cockpit actions, validation/evidence summaries, and routed context pointers.
+- Removes public `session start` guidance and routing from current 0.5 docs/help/smokes. Session bootstrap facts that still matter are exposed through `status` and `task status`.
+- Preserves 0.4.6 evidence locality and close-proof behavior. Task-local `evidence.jsonl` remains canonical, `task finalize --execute --auto` remains the ordinary guarded close path, and publish/recycle steps remain operator-controlled.
+- Keeps v1 compatibility routes available during 0.5.x for consumers that explicitly request compatibility, but the 0.5.0 default status output is v2.
+
+Validation:
+
+- T-0634 through T-0647 implement and validate the 0.5.0 status ingress, task-selection status v2, selected-task cockpit, cross-profile dogfood, and public session-start removal.
+- T-0647 verified latest built `dist` across fresh `basic`, `standard`, and `governed` projects, including init, status, task create, task status, context pack, and finalize dry-run paths.
+- T-0648 prepares source metadata, release notes, GitHub Release note artifact, focused validation evidence, package-smoke dry-run evidence, and operator publish commands for `hadara@0.5.0-rc.0`.
+
+Boundaries:
+
+- This is a prerelease candidate intended for npm `next`.
+- Stable npm `latest` remains `hadara@0.4.6` until a later stable promotion decision.
+- T-0648 performs no npm publish, GitHub Release publication, Docker image push, installer execution, token loading, or post-publish installed-package recycle.
+- Post-publish installed-package recycle should install `hadara@next` and verify expected version `0.5.0-rc.0` before a stable 0.5.0 decision.
+
 ## 0.4.6
 
 Stable release after the `0.4.6-rc.0` and `0.4.6-rc.1` lines. This release focuses on first-user trust polish: safe brownfield adoption residuals, delegated-agent onboarding friction, validation capture reliability, concurrent task creation safety, minimal init docs, optional docs creation, and a corrected finalize close boundary for clean first-capsule closure.

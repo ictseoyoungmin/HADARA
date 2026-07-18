@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.4.6 |
-| Latest Completed Task | T-0647 0.5.0 session-start removal and cross-profile dogfood |
+| Current Release | 0.5.0-rc.0 |
+| Latest Completed Task | T-0648 0.5.0-rc.0 release readiness and publish preparation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0631 verified 0.4.6 stable publication and consumer recycle: npm registry returned version 0.4.6 with latest=0.4.6 and next=0.4.6-rc.1, GitHub Release v0.4.6 was published publicly, and approved installed-package recycle passed from hadara@latest expected 0.4.6. |
+| Current Trusted Validation Baseline | T-0648 prepared 0.5.0-rc.0 source/readiness and passed TypeScript build, focused status/session workflow tests, context-routing status ingress smoke, package-smoke dry-run, and strict release gate; strict gate resolved the package metadata readiness marker drift before close. |
 
 ### Current Known Problems
 
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0604 through T-0614 prepared and published `0.4.6-rc.0`; T-0615 through T-0619 dogfooded rc.0 and fixed task-create serialization, first-user docs workflow, and Docker sync-build friction. T-0620 prepared and published `0.4.6-rc.1`; T-0621 through T-0628 cleaned up rc.1 release/dogfood findings and verified the finalize close-boundary fix through delegated Quant Battle Arena dogfood. T-0629 prepared stable `0.4.6`; T-0631 records completed npm/GitHub publication and public installed-package recycle.
+v0.4.6 is published and recycled. T-0634 through T-0647 implemented the 0.5.0 status-ingress line: `hadara status --json` is the primary session entry point, status/task-status emit v2 read models, selected-task cockpit guidance is available, and public `session start` guidance/routing has been removed. T-0648 prepares `0.5.0-rc.0` source metadata, release notes, and validation evidence; npm/GitHub publication remains operator-controlled.
 
 | Stage | State | Purpose |
 |---|---|---|
@@ -59,7 +59,7 @@ v0.4.6 is published and recycled. T-0604 through T-0614 prepared and published `
 |---|---|
 | Task lifecycle | Status-first Task Capsules with validation evidence and guarded finalize to `closed-valid`. |
 | Evidence | Canonical append-only `evidence.jsonl`, generated `EVIDENCE.md`, v2 durable ids, resolution and close proof. |
-| Context | Session start, task-scoped context pack/slice, graph/code index, bounded cache-backed reads. |
+| Context | Status-first session ingress, task-scoped context pack/slice, graph/code index, bounded cache-backed reads. |
 | Documents | Registry/read maps, required-reading tiers, docs doctor, managed sections, safe dry-run-first patches. |
 | Operations UI | Read-only Dashboard and TUI over shared read models. |
 | Integrations | Read-only MCP by default; narrow approval-recorded evidence attach; Hermes context export. |

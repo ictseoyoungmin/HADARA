@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.6 | Portable project state. |
-| Latest Completed Task | T-0647 0.5.0 session-start removal and cross-profile dogfood | Highest Done task id, not close timestamp. |
+| Current Release | 0.5.0-rc.0 | Portable project state. |
+| Latest Completed Task | T-0648 0.5.0-rc.0 release readiness and publish preparation | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0631 verified 0.4.6 stable publication and consumer recycle: npm registry returned version 0.4.6 with latest=0.4.6 and next=0.4.6-rc.1, GitHub Release v0.4.6 was published publicly, and approved installed-package recycle passed from hadara@latest expected 0.4.6. | ev:T-0631:c31dd280f6af48d6b8918b02, ev:T-0631:511bb997c92146bf8ffaf02e, ev:T-0631:598918ef009146cc95d3a0f0 |
+| Current Trusted Validation Baseline | T-0648 prepared 0.5.0-rc.0 source/readiness and passed TypeScript build, focused status/session workflow tests, context-routing status ingress smoke, package-smoke dry-run, and strict release gate; strict gate resolved the package metadata readiness marker drift before close. | ev:T-0648:fde14fbcea9b4d71bd5b5001, ev:T-0648:25b814358b374b8083791da1, ev:T-0648:d828f730140f4e8093ef6d8a, ev:T-0648:e7e62d6f7e294ccda8fa1ee6, ev:T-0648:1dbe2f6fdb334ca293963917 |
 
 ### Current Known Problems
 

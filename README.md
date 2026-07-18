@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.6-blue">
+  <img alt="Source release" src="https://img.shields.io/badge/source-0.5.0--rc.0-blue">
   <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.4.5-lightgrey">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
@@ -107,12 +107,12 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.4.6`](docs/RELEASE_NOTES.md#046), validated for stable publication |
+| Prepared source | [`hadara@0.5.0-rc.0`](docs/RELEASE_NOTES.md#050-rc0), release-candidate validation in progress |
 | Published stable npm | `hadara@0.4.6` |
 | Published GitHub Release | [`v0.4.6`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6) |
-| Published RC npm | `hadara@0.4.6-rc.1` on `next` |
-| Published RC GitHub Release | [`v0.4.6-rc.1`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.1), public prerelease |
-| Stable recycle decision | `0.4.6` published and installed-package recycle passed from `hadara@latest` |
+| Published RC npm | `hadara@0.4.6-rc.1` on `next`; `0.5.0-rc.0` pending operator publish |
+| Published RC GitHub Release | [`v0.4.6-rc.1`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.1), public prerelease; `v0.5.0-rc.0` pending |
+| Stable recycle decision | `0.4.6` published and installed-package recycle passed from `hadara@latest`; `0.5.0` stable promotion pending RC recycle |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
