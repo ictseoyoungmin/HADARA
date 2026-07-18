@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0648 0.5.0-rc.0 release readiness and publish preparation |
+| Latest Completed Task | T-0649 0.5.0 full-suite regression cleanup before rc publish |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0648 prepared 0.5.0-rc.0 source/readiness and passed TypeScript build, focused status/session workflow tests, context-routing status ingress smoke, package-smoke dry-run, and strict release gate; strict gate resolved the package metadata readiness marker drift before close. |
+| Current Trusted Validation Baseline | T-0649 resolved the 0.5.0 full-suite regressions found after T-0648, passed focused regression tests, TypeScript build, direct full npm test suite with 154 files / 1132 tests, and strict release gate after release-note/readiness refresh. |
 
 ### Current Known Problems
 

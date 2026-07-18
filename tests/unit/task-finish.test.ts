@@ -33,7 +33,7 @@ describe('task finish status sync', () => {
       taskId: task.id,
       actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       status: { taskStatus: 'Draft', taskBoardStatus: 'Draft', taskBoardPresent: true },
-      summary: { plannedWrites: 2, appliedWrites: 0, advisoryOnly: 3, stateDocsPending: 3 }
+      summary: { plannedWrites: 3, appliedWrites: 0, advisoryOnly: 3, stateDocsPending: 3 }
     });
     expect(report.primaryNextAction).toMatchObject({
       id: 'execute-finish',
@@ -43,7 +43,7 @@ describe('task finish status sync', () => {
       requiresBeforeHash: false,
       stalePlanRisk: 'low'
     });
-    expect(report.writes.map((write) => write.field).sort()).toEqual(['task-board-row', 'task-status']);
+    expect(report.writes.map((write) => write.field).sort()).toEqual(['task-board-row', 'task-handoff-identity', 'task-status']);
     for (const write of report.writes) {
       expect(write.expectedBeforeExists).toBe(true);
       expect(write.expectedBeforeHash).toMatch(/^sha256:/);
@@ -121,14 +121,14 @@ describe('task finish status sync', () => {
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
-  it('executes only TASK.md status and Task Board row status/path sync', () => {
+  it('executes TASK.md, HANDOFF.md, and Task Board row status/path sync', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish execute');
 
     const report = createTaskFinishReport(root, task.id, 'execute');
 
     expect(report.ok).toBe(true);
-    expect(report.summary).toMatchObject({ plannedWrites: 2, appliedWrites: 2 });
+    expect(report.summary).toMatchObject({ plannedWrites: 3, appliedWrites: 3 });
     expect(report.primaryNextAction).toMatchObject({
       id: 'update-state-docs',
       writeBoundary: 'shared-doc',
@@ -137,6 +137,7 @@ describe('task finish status sync', () => {
     });
     expect(readTask(root, task.id)).toContain('| Status | Done |');
     expect(readTask(root, task.id)).not.toMatch(/\n\n$/);
+    expect(fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')).toContain('| Status | Done |');
     expect(readBoard(root)).toContain(`| ${task.id} | Finish execute | Done | tasks/${task.id}-finish-execute | |`);
     expect(readBoard(root)).not.toMatch(/\n\n$/);
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);

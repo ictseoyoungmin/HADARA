@@ -20,12 +20,14 @@ Validation:
 - T-0634 through T-0647 implement and validate the 0.5.0 status ingress, task-selection status v2, selected-task cockpit, cross-profile dogfood, and public session-start removal.
 - T-0647 verified latest built `dist` across fresh `basic`, `standard`, and `governed` projects, including init, status, task create, task status, context pack, and finalize dry-run paths.
 - T-0648 prepares source metadata, release notes, GitHub Release note artifact, focused validation evidence, package-smoke dry-run evidence, and operator publish commands for `hadara@0.5.0-rc.0`.
+- T-0649 resolves broader full-suite regressions found after T-0648: stale task-status v1 fixture expectations, timestamped Identity scaffold expectations, HANDOFF Identity finish writes, and blocked-evidence semantics. Direct full suite passed with 154 files and 1132 tests.
 
 Boundaries:
 
 - This is a prerelease candidate intended for npm `next`.
 - Stable npm `latest` remains `hadara@0.4.6` until a later stable promotion decision.
 - T-0648 performs no npm publish, GitHub Release publication, Docker image push, installer execution, token loading, or post-publish installed-package recycle.
+- If T-0649 is included in the release source, use the refreshed release note artifact in the T-0649 capsule or rerun release readiness from the new HEAD before publishing.
 - Post-publish installed-package recycle should install `hadara@next` and verify expected version `0.5.0-rc.0` before a stable 0.5.0 decision.
 
 ## 0.4.6

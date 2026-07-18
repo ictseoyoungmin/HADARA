@@ -146,7 +146,6 @@ export function findUnexplainedBlockedEvidence(
     if (record.outcome !== 'blocked') return false;
     if (records.slice(index + 1).some((candidate) => hasExactResolutionMarker(candidate, record.id))) return false;
     if (/\b(blocked because|blocked:|cannot|deferred|out of scope)\b/i.test(record.summary)) return false;
-    if (record.issues.length > 0) return false;
     if (hasBlockedDocumentation(record, taskDocs)) return false;
     return true;
   });
@@ -285,7 +284,7 @@ function hasResidualRiskDocumentation(
 function hasBlockedDocumentation(record: NormalizedEvidenceRecord, taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs']): boolean {
   const content = joinTaskDocs(taskDocs);
   if (!content) return false;
-  if (!mentionsRecord(content, record) && !/\b(blocked|deferred|not applicable|accepted risk|out of scope)\b/i.test(content)) return false;
+  if (!mentionsRecord(content, record)) return false;
   return /\b(blocked|deferred|not applicable|accepted risk|out of scope|next step)\b/i.test(content);
 }
 

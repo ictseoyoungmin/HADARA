@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.0 | Portable project state. |
-| Latest Completed Task | T-0648 0.5.0-rc.0 release readiness and publish preparation | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0649 0.5.0 full-suite regression cleanup before rc publish | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0648 prepared 0.5.0-rc.0 source/readiness and passed TypeScript build, focused status/session workflow tests, context-routing status ingress smoke, package-smoke dry-run, and strict release gate; strict gate resolved the package metadata readiness marker drift before close. | ev:T-0648:fde14fbcea9b4d71bd5b5001, ev:T-0648:25b814358b374b8083791da1, ev:T-0648:d828f730140f4e8093ef6d8a, ev:T-0648:e7e62d6f7e294ccda8fa1ee6, ev:T-0648:1dbe2f6fdb334ca293963917 |
+| Current Trusted Validation Baseline | T-0649 resolved the 0.5.0 full-suite regressions found after T-0648, passed focused regression tests, TypeScript build, direct full npm test suite with 154 files / 1132 tests, and strict release gate after release-note/readiness refresh. | ev:T-0649:fcf5b2c078474cbdaf589a14, ev:T-0649:15c4217a525c43a18144f4af, ev:T-0649:a304c064cb734dbfb8d19ba8, ev:T-0649:fea4ab66d9744473aa6877d9 |
 
 ### Current Known Problems
 

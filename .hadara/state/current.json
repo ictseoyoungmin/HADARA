@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 208,
+  "rev": 210,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0648",
-    "title": "0.5.0-rc.0 release readiness and publish preparation"
+    "id": "T-0649",
+    "title": "0.5.0 full-suite regression cleanup before rc publish"
   },
   "activeTask": null,
   "nextWork": null,
@@ -34,13 +34,12 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0648 prepared 0.5.0-rc.0 source/readiness and passed TypeScript build, focused status/session workflow tests, context-routing status ingress smoke, package-smoke dry-run, and strict release gate; strict gate resolved the package metadata readiness marker drift before close.",
+    "summary": "T-0649 resolved the 0.5.0 full-suite regressions found after T-0648, passed focused regression tests, TypeScript build, direct full npm test suite with 154 files / 1132 tests, and strict release gate after release-note/readiness refresh.",
     "evidence": [
-      "ev:T-0648:fde14fbcea9b4d71bd5b5001",
-      "ev:T-0648:25b814358b374b8083791da1",
-      "ev:T-0648:d828f730140f4e8093ef6d8a",
-      "ev:T-0648:e7e62d6f7e294ccda8fa1ee6",
-      "ev:T-0648:1dbe2f6fdb334ca293963917"
+      "ev:T-0649:fcf5b2c078474cbdaf589a14",
+      "ev:T-0649:15c4217a525c43a18144f4af",
+      "ev:T-0649:a304c064cb734dbfb8d19ba8",
+      "ev:T-0649:fea4ab66d9744473aa6877d9"
     ]
   }
 }

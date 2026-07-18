@@ -649,3 +649,4 @@
 | T-0646 | 0.5.0 task-selection status v2 and selected-task cockpit | Done | tasks/T-0646-0-5-0-task-selection-status-v2-and-selected-task-cockpit | |
 | T-0647 | 0.5.0 session-start removal and cross-profile dogfood | Done | tasks/T-0647-0-5-0-session-start-removal-and-cross-profile-dogfood | |
 | T-0648 | 0.5.0-rc.0 release readiness and publish preparation | Done | tasks/T-0648-0-5-0-rc-0-release-readiness-and-publish-preparation | |
+| T-0649 | 0.5.0 full-suite regression cleanup before rc publish | Done | tasks/T-0649-0-5-0-full-suite-regression-cleanup-before-rc-publish | |
