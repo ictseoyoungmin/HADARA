@@ -563,6 +563,25 @@ function validContinuation(value: unknown): boolean {
 
 const PLACEHOLDER_STEP_PATTERN = /^(tbd|step|)$/i;
 
+// A step must carry both a negation-of-work signal and a work-noun signal to count as terminal,
+// so ordinary actionable prose that happens to contain one of these words alone (e.g. "no more
+// than 3 retries") is not misclassified. Deliberately narrow: this catches the reported "no
+// further work" family, not general sentiment ("done"/"complete" alone is too false-positive-prone).
+const TERMINAL_STEP_NEGATION_PATTERN = /\b(no further|no more|no additional|no remaining|nothing further|nothing else|nothing more|no next|no follow-?up)\b/i;
+const TERMINAL_STEP_WORK_NOUN_PATTERN = /\b(work|task|step|item)s?\b|\b(queued|pending|remaining|required)\b/i;
+const TERMINAL_STEP_ALL_COMPLETE_PATTERN = /\ball\b[^.]{0,80}\b(complete|completed|done|finished|implemented)\b/i;
+
+/**
+ * A HANDOFF step that explicitly says no further work is queued must not be promoted as
+ * `actionable`/`createCommandAllowed: true` — that would offer `hadara task create` with the
+ * "no work" sentence itself as the title, which is worse than useless. Deliberately narrow
+ * pattern matching (docx-vocabulary "terminal"), not general sentiment analysis.
+ */
+function isTerminalStep(step: string): boolean {
+  if (TERMINAL_STEP_NEGATION_PATTERN.test(step) && TERMINAL_STEP_WORK_NOUN_PATTERN.test(step)) return true;
+  return TERMINAL_STEP_ALL_COMPLETE_PATTERN.test(step);
+}
+
 /**
  * Promotes a Task Capsule's own HANDOFF "Next Recommended Step" into a project-level
  * continuation. Returns null for placeholder/empty steps so callers never overwrite an
@@ -583,13 +602,14 @@ export function continuationFromTaskHandoffStep(input: {
     .map((entry) => entry.trim())
     .filter((entry) => entry && !PLACEHOLDER_STEP_PATTERN.test(entry))
     .map((entry) => ({ path: entry, required: true }));
+  const terminal = isTerminalStep(step);
   return {
-    disposition: 'actionable',
+    disposition: terminal ? 'terminal' : 'actionable',
     kind: 'task-handoff',
     title: step,
     ...(reason && !PLACEHOLDER_STEP_PATTERN.test(reason) ? { reason } : {}),
     ...(references.length > 0 ? { references } : {}),
-    createCommandAllowed: true,
+    createCommandAllowed: !terminal,
     source: { type: 'work-handoff', workId: input.sourceTaskId, path: `${input.sourceCapsulePath}/HANDOFF.md` }
   };
 }

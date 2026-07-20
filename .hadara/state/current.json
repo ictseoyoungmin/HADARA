@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 240,
+  "rev": 242,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0664",
-    "title": "nextWork origin tracking: fix F-2 stuck bootstrap retirement and add stale-bootstrap advisory"
+    "id": "T-0665",
+    "title": "Continuation terminal-phrase detection: fix actionable/no-further-work contradiction"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,19 +14,19 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "No further work is queued from this dogfood/fix cycle. If resuming external dogfood, note that `/mnt/f/NowWorking/dev/driftlog`'s stuck `nextWork` will self-heal the next time any task closes there under a build that includes this fix.",
-    "reason": "RF-2 in this capsule's Risks/Follow-ups; nothing else is pending.",
+    "title": "Promote `.hadara/state/current.json`'s `validationBaseline` and `currentRelease` to reflect T-0658 through T-0665 (currently still shows T-0649/`0.5.0-rc.0`); do not treat this line as stable-ready without also rerunning strict release gate.",
+    "reason": "Operator flagged the validation baseline as stale (still T-0649) despite T-0664's own full-suite evidence; the baseline must be explicitly promoted, it does not happen automatically.",
     "references": [
       {
-        "path": "N/A",
+        "path": "docs/RELEASE_READINESS.md",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0664",
-      "path": "tasks/T-0664-nextwork-origin-tracking-fix-f-2-stuck-bootstrap-retirement-and-/HANDOFF.md"
+      "workId": "T-0665",
+      "path": "tasks/T-0665-continuation-terminal-phrase-detection-fix-actionable-no-further/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

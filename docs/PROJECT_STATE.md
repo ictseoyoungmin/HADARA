@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0664 nextWork origin tracking: fix F-2 stuck bootstrap retirement and add stale-bootstrap advisory |
+| Latest Completed Task | T-0665 Continuation terminal-phrase detection: fix actionable/no-further-work contradiction |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

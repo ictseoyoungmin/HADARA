@@ -1,5 +1,47 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.1
+
+Release candidate. Adds a project-level `continuation` field so a closing session's declared next
+step survives into the next session instead of being lost when `nextWork` is null, fixes bugs
+found while dogfooding that change, and hardens close-action boundaries and status precedence
+found in `0.5.0-rc.0` review.
+
+Highlights:
+
+- Adds `continuation` to `.hadara/state/current.json`: `task close` promotes a closing task's
+  HANDOFF "Next Recommended Step" into it, and `task status` routes to a `continuation-ready`
+  phase before falling back to `idle` when it is `actionable` or `waiting-for-operator`.
+- Fixes `nextWork` retirement so bootstrap guidance (first-task or brownfield-adoption-baseline)
+  clears once any task closes, not only the one task whose title happens to match it; adds a
+  `STATE_CURRENT_CANON_STALE_BOOTSTRAP_NEXT_WORK` advisory for already-affected projects.
+- Fixes a continuation-promotion contradiction: a HANDOFF step that explicitly says no further
+  work is queued is now classified `disposition: 'terminal'` (falls through to `idle`) instead of
+  `actionable` with `hadara task create` offering that exact "no work" sentence as a task title.
+- Implements `anyOf` in the schema validator; it was previously a silent no-op across six schemas,
+  including `nextWork`/`continuation`.
+- Hardens `task close` recovery action boundaries and blocked project-status routing precedence
+  (T-0658).
+- Warns in generated docs when a differently-versioned `hadara` earlier on PATH could shadow a
+  project-local install candidate.
+
+Validation:
+
+- T-0658 through T-0665 implement and validate this line, including two full-suite runs (165 test
+  files / 1221 tests) and a two-session, four-capsule delegated Claude dogfood in a fresh external
+  project that found and confirmed the fixes above.
+
+Boundaries:
+
+- This is a prerelease candidate intended for npm `next`. `hadara@0.5.0-rc.0` was already published
+  to `next` (per npm registry: published 2 days before this line, 89 downloads); npm does not allow
+  republishing that exact version, so `0.5.0-rc.1` is a new version carrying these fixes on top of
+  it and supersedes it as the `next` candidate once published.
+- No npm publish, GitHub Release publication, or post-publish installed-package recycle has been
+  performed for this line yet.
+- Strict release gate has not been re-run since `0.5.0-rc.0`'s T-0649 baseline; do not treat this
+  as stable-ready without rerunning it.
+
 ## 0.5.0-rc.0
 
 Release candidate for the 0.5 status-first agent loop. This line changes the primary session ingress from legacy session/runtime surfaces to lifecycle-aware `status` and `task status` read models, while keeping 0.4.x lifecycle evidence and finalize guarantees intact.
