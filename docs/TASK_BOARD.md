@@ -659,3 +659,4 @@
 | T-0656 | 0.5.0 pre-stable public surface and close recovery hardening | Done | tasks/T-0656-0-5-0-pre-stable-public-surface-and-close-recovery-hardening | |
 | T-0657 | 0.5.0 pre-stable lock safety and status metadata hardening | Done | tasks/T-0657-0-5-0-pre-stable-lock-safety-and-status-metadata-hardening | |
 | T-0658 | 0.5.0 pre-stable close action boundary and blocked status precedence | Done | tasks/T-0658-0-5-0-pre-stable-close-action-boundary-and-blocked-status-preced | |
+| T-0659 | Status fact model foundations (Phase A: declarative DAG status redesign) | Done | tasks/T-0659-status-fact-model-foundations-phase-a-declarative-dag-status-red | |

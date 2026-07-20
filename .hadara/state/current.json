@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 228,
+  "rev": 230,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0658",
-    "title": "0.5.0 pre-stable close action boundary and blocked status precedence"
+    "id": "T-0659",
+    "title": "Status fact model foundations (Phase A: declarative DAG status redesign)"
   },
   "activeTask": null,
   "nextWork": null,
