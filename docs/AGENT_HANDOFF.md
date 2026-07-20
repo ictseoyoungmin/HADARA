@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.0 | Portable project state. |
-| Latest Completed Task | T-0663 0.5.0-rc.0 delegated Claude dogfood: continuation persistence and adoption-baseline nextWork retirement | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0664 nextWork origin tracking: fix F-2 stuck bootstrap retirement and add stale-bootstrap advisory | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |

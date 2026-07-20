@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 238,
+  "rev": 240,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0663",
-    "title": "0.5.0-rc.0 delegated Claude dogfood: continuation persistence and adoption-baseline nextWork retirement"
+    "id": "T-0664",
+    "title": "nextWork origin tracking: fix F-2 stuck bootstrap retirement and add stale-bootstrap advisory"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,27 +14,19 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Fix F-2: recognize \"establish hadara adoption baseline\" in `isBootstrapFirstTaskNextWork` (or generalize `hasBootstrapNextWork`), then re-check whether F-3 still reproduces once the stale-nextWork trigger is removed.",
-    "reason": "F-2 is root-caused and reproduced independently outside `driftlog`; fixing it likely also resolves F-3 without needing new precedence logic.",
+    "title": "No further work is queued from this dogfood/fix cycle. If resuming external dogfood, note that `/mnt/f/NowWorking/dev/driftlog`'s stuck `nextWork` will self-heal the next time any task closes there under a build that includes this fix.",
+    "reason": "RF-2 in this capsule's Risks/Follow-ups; nothing else is pending.",
     "references": [
       {
-        "path": "`DOGFOOD_REPORT.md` F-2/F-3",
-        "required": true
-      },
-      {
-        "path": "`src/services/project-current-state.ts`",
-        "required": true
-      },
-      {
-        "path": "`src/init/adoption.ts`",
+        "path": "N/A",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0663",
-      "path": "tasks/T-0663-0-5-0-rc-0-delegated-claude-dogfood-continuation-persistence-and/HANDOFF.md"
+      "workId": "T-0664",
+      "path": "tasks/T-0664-nextwork-origin-tracking-fix-f-2-stuck-bootstrap-retirement-and-/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

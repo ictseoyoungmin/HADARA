@@ -91,6 +91,8 @@ node "$(npm prefix -g)/lib/node_modules/hadara/dist/cli/main.js" task status --j
 
 For project-local installs, replace `$(npm prefix -g)/lib/node_modules/hadara` with the project-local package path, for example `.hadara-install/node_modules/hadara`. This is an invocation fallback only; generated docs and task command examples still use the normal `hadara ...` form.
 
+A project-local install does not remove or shadow any `hadara` already earlier on PATH from a different install (for example a global install used by other projects); PATH resolution order decides which one actually runs. Before delegating work or relying on generated guidance, confirm which `hadara` will actually be used with `hadara version --json` (check `cliEntry` and `packageVersion`), especially after installing or updating a project-local candidate.
+
 ## Generated Docs Completion
 
 `hadara init` creates the minimum docs needed for safe task work. Generated docs are not decorative placeholders. They are current-state surfaces that agents must keep aligned when the task changes their subject.

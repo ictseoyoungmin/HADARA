@@ -91,12 +91,13 @@
     "nextWork": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "state", "operatorGuidance", "createCommandAllowed"],
+      "required": ["title", "state", "operatorGuidance", "createCommandAllowed", "origin"],
       "properties": {
         "title": { "type": "string", "minLength": 1 },
         "state": { "enum": ["candidate", "active", "blocked", "waiting-for-operator", "none"] },
         "operatorGuidance": { "type": "string" },
-        "createCommandAllowed": { "type": "boolean" }
+        "createCommandAllowed": { "type": "boolean" },
+        "origin": { "enum": ["bootstrap-first-task", "bootstrap-adoption-baseline", "declared"] }
       }
     },
     "taskRef": {

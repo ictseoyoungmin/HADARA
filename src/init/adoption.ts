@@ -555,7 +555,8 @@ function createBrownfieldCurrentState(profile: InitProfile, project: InitAdoptio
       title: 'Establish HADARA adoption baseline',
       state: 'candidate',
       operatorGuidance: 'Review existing project docs, validation commands, known problems, and authoritative sources before normal feature work.',
-      createCommandAllowed: true
+      createCommandAllowed: true,
+      origin: 'bootstrap-adoption-baseline'
     },
     nextOperatorIntent: 'Review existing project docs, validation commands, known problems, and authoritative sources before normal feature work.',
     validationBaseline: {

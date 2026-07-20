@@ -231,7 +231,7 @@ function scrubBootstrapNextWorkForSession<T extends { nextWork: ProjectNextWork 
   projectRoot: string,
   state: T
 ): T {
-  if (!isBootstrapFirstTaskNextWork(state.nextWork?.title) && !isBootstrapFirstTaskNextWork(state.nextOperatorIntent)) return state;
+  if (!state.nextWork || state.nextWork.origin === 'declared') return state;
   if (!projectHasAnyTask(projectRoot)) return state;
   return {
     ...state,
@@ -246,10 +246,6 @@ function projectHasAnyTask(projectRoot: string): boolean {
   const tasksDir = path.join(projectRoot, 'tasks');
   if (!fs.existsSync(tasksDir)) return false;
   return fs.readdirSync(tasksDir, { withFileTypes: true }).some((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name));
-}
-
-function isBootstrapFirstTaskNextWork(value: string | null | undefined): boolean {
-  return (value ?? '').trim().toLowerCase() === 'create first task capsule';
 }
 
 function createSessionStartDocsReadMap(projectRoot: string, taskId: string, maxReadFirst: number): SessionStartDocsReadMap {

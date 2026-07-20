@@ -226,7 +226,7 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
   const nextWork = state.nextWork;
   if (!nextWork || nextWork.state === 'none') return null;
   if (!isActionableHandoffStep(nextWork.title)) return null;
-  if (isBootstrapFirstTaskNextWork(nextWork.title) && (boardRows.length > 0 || hasAnyTaskCapsule(projectRoot))) return null;
+  if (nextWork.origin === 'bootstrap-first-task' && (boardRows.length > 0 || hasAnyTaskCapsule(projectRoot))) return null;
   const knownTaskId = nextWork.title.match(/\bT-\d{4}\b/)?.[0] ?? null;
   const title = normalizeNextWorkTitle(nextWork.title);
   const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
@@ -237,7 +237,7 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
   const capsule = taskId !== 'TBD' ? findTaskCapsule(projectRoot, taskId) : undefined;
   const resolvedTitle = boardRow?.title ?? title;
   const existingTaskHistory = boardRows.length > 0 || hasAnyTaskCapsule(projectRoot);
-  const adoptionBaselineReviewOnly = isBootstrapAdoptionBaselineNextWork(nextWork.title) && existingTaskHistory;
+  const adoptionBaselineReviewOnly = nextWork.origin === 'bootstrap-adoption-baseline' && existingTaskHistory;
   const createCommandAllowed = adoptionBaselineReviewOnly ? false : nextWork.createCommandAllowed;
   const operatorGuidance = adoptionBaselineReviewOnly
     ? `${nextWork.operatorGuidance} Existing task history is present; review whether the adoption baseline is still needed before creating another capsule.`
@@ -265,14 +265,6 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
 
 function normalizeNextWorkTitle(title: string): string {
   return title.replace(/[.]+$/, '').trim();
-}
-
-function isBootstrapFirstTaskNextWork(title: string): boolean {
-  return normalizeNextWorkTitle(title).toLowerCase() === 'create first task capsule';
-}
-
-function isBootstrapAdoptionBaselineNextWork(title: string): boolean {
-  return normalizeNextWorkTitle(title).toLowerCase() === 'establish hadara adoption baseline';
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {

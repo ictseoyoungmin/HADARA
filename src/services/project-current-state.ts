@@ -21,11 +21,21 @@ export interface ProjectKnownProblem {
 
 export type ProjectNextWorkState = 'candidate' | 'active' | 'blocked' | 'waiting-for-operator' | 'none';
 
+/**
+ * `bootstrap-first-task`/`bootstrap-adoption-baseline` mark system-seeded placeholder guidance
+ * that is retirable once any task closes, regardless of that task's title. `declared` is real
+ * operator/agent-declared next work. Single source of truth for what was previously three
+ * separate title-string-matching detectors (project-current-state.ts, task-selection.ts,
+ * session-start.ts) — see T-0664.
+ */
+export type ProjectNextWorkOrigin = 'bootstrap-first-task' | 'bootstrap-adoption-baseline' | 'declared';
+
 export interface ProjectNextWork {
   title: string;
   state: ProjectNextWorkState;
   operatorGuidance: string;
   createCommandAllowed: boolean;
+  origin: ProjectNextWorkOrigin;
 }
 
 export type ProjectContinuationDisposition = 'actionable' | 'waiting-for-operator' | 'blocked' | 'terminal' | 'unresolved';
@@ -117,7 +127,8 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
       title: 'Create first Task Capsule',
       state: 'candidate',
       operatorGuidance: 'Create or select the first bounded Task Capsule.',
-      createCommandAllowed: true
+      createCommandAllowed: true,
+      origin: 'bootstrap-first-task'
     },
     nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
     continuation: null,
@@ -207,6 +218,8 @@ function normalizeProjectCurrentState(value: unknown): unknown {
     continuation: state.continuation ?? null,
     ...(state.nextWork === undefined && typeof state.nextOperatorIntent === 'string'
       ? { nextWork: nextWorkFromLegacyIntent(state.nextOperatorIntent) }
+      : state.nextWork && typeof state.nextWork === 'object' && !('origin' in state.nextWork)
+      ? { nextWork: { ...(state.nextWork as Partial<ProjectNextWork>), origin: inferNextWorkOrigin(state.nextWork as Partial<ProjectNextWork>) } }
       : {})
   };
 }
@@ -231,6 +244,16 @@ export function inspectProjectCurrentStateSemantics(projectRoot: string): Projec
         suggestion: 'Review init upgrade dry-run, then execute it to regenerate the managed projection.'
       });
     }
+  }
+
+  if (read.state.nextWork && read.state.nextWork.origin !== 'declared' && read.state.latestCompletedTask) {
+    issues.push({
+      severity: 'warning',
+      code: 'STATE_CURRENT_CANON_STALE_BOOTSTRAP_NEXT_WORK',
+      path: PROJECT_CURRENT_STATE_PATH,
+      message: `${PROJECT_CURRENT_STATE_PATH} nextWork is still bootstrap guidance ("${read.state.nextWork.title}") even though ${read.state.latestCompletedTask.id} has already completed.`,
+      suggestion: 'Clear nextWork (set to null) since bootstrap guidance is no longer relevant once a task has completed.'
+    });
   }
 
   const boardContent = readOptional(projectRoot, 'docs/TASK_BOARD.md');
@@ -512,7 +535,8 @@ function validNextWork(value: unknown): boolean {
   return typeof nextWork.title === 'string' && nextWork.title.trim().length > 0 &&
     (nextWork.state === 'candidate' || nextWork.state === 'active' || nextWork.state === 'blocked' || nextWork.state === 'waiting-for-operator' || nextWork.state === 'none') &&
     typeof nextWork.operatorGuidance === 'string' &&
-    typeof nextWork.createCommandAllowed === 'boolean';
+    typeof nextWork.createCommandAllowed === 'boolean' &&
+    (nextWork.origin === 'bootstrap-first-task' || nextWork.origin === 'bootstrap-adoption-baseline' || nextWork.origin === 'declared');
 }
 
 const CONTINUATION_DISPOSITIONS = new Set<ProjectContinuationDisposition>(['actionable', 'waiting-for-operator', 'blocked', 'terminal', 'unresolved']);
@@ -571,11 +595,13 @@ export function continuationFromTaskHandoffStep(input: {
 }
 
 function nextWorkFromLegacyIntent(intent: string): ProjectNextWork {
+  const title = normalizeLegacyIntentTitle(intent);
   return {
-    title: normalizeLegacyIntentTitle(intent),
+    title,
     state: 'candidate',
     operatorGuidance: intent,
-    createCommandAllowed: true
+    createCommandAllowed: true,
+    origin: inferNextWorkOrigin({ title })
   };
 }
 
@@ -602,11 +628,20 @@ function hasRetirableNextWork(state: ProjectCurrentState, completedTask: Project
 }
 
 function hasBootstrapNextWork(state: ProjectCurrentState): boolean {
-  return isBootstrapFirstTaskNextWork(state.nextWork?.title) || isBootstrapFirstTaskNextWork(state.nextOperatorIntent);
+  if (state.nextWork && state.nextWork.origin !== 'declared') return true;
+  return isLegacyBootstrapPhrase(state.nextOperatorIntent);
 }
 
-function isBootstrapFirstTaskNextWork(value: string | null | undefined): boolean {
-  return (value ?? '').trim().toLowerCase() === 'create first task capsule';
+function isLegacyBootstrapPhrase(value: string | null | undefined): boolean {
+  const normalized = (value ?? '').trim().toLowerCase();
+  return normalized === 'create first task capsule' || normalized === 'establish hadara adoption baseline';
+}
+
+export function inferNextWorkOrigin(nextWork: { title?: string | null } | null | undefined): ProjectNextWorkOrigin {
+  const title = (nextWork?.title ?? '').trim().toLowerCase();
+  if (title === 'create first task capsule') return 'bootstrap-first-task';
+  if (title === 'establish hadara adoption baseline') return 'bootstrap-adoption-baseline';
+  return 'declared';
 }
 
 function nextWorkMatchesTask(nextWork: ProjectNextWork | null, task: ProjectCurrentTaskRef): boolean {

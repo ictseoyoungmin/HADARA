@@ -157,6 +157,8 @@ node <installed-hadara-package>/dist/cli/main.js task status --json
 
 Use your package manager to locate \`<installed-hadara-package>\`. For project-local installs, this is usually the local package directory, for example \`.hadara-install/node_modules/hadara\`. This is an invocation fallback only; generated docs and task command examples still use the normal \`hadara ...\` form.
 
+A project-local install does not remove or shadow any \`hadara\` already earlier on PATH from a different install (for example a global install used by other projects); PATH resolution order decides which one actually runs. Before delegating work or relying on generated guidance, confirm which \`hadara\` will actually be used with \`hadara version --json\` (check \`cliEntry\` and \`packageVersion\`), especially after installing or updating a project-local candidate.
+
 ## Generated Docs Completion
 
 \`hadara init\` creates the minimum docs needed for safe work. Generated docs are not decorative placeholders. When a task changes the product, architecture, workflow, validation, security boundary, roadmap, or agent operating model, update the matching generated or project-owned \`docs/\` file before task close.
