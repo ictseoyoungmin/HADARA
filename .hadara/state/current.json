@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 230,
+  "rev": 232,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0659",
-    "title": "Status fact model foundations (Phase A: declarative DAG status redesign)"
+    "id": "T-0660",
+    "title": "DAG evaluator foundations (Phase B: declarative DAG status redesign)"
   },
   "activeTask": null,
   "nextWork": null,
