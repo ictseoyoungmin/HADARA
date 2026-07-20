@@ -248,6 +248,19 @@ function validateValue(value: unknown, schema: JsonObject, rootSchema: JsonObjec
     return;
   }
 
+  const anyOf = arrayProperty(schema, 'anyOf');
+  if (anyOf) {
+    const matchCount = anyOf.filter((candidate) => validateCandidate(value, candidate, rootSchema)).length;
+    if (matchCount < 1) {
+      issues.push({
+        path: valuePath,
+        code: 'SCHEMA_ANY_OF_MISMATCH',
+        message: 'must match at least one schema option'
+      });
+    }
+    return;
+  }
+
   const constValue = schema.const;
   if (Object.prototype.hasOwnProperty.call(schema, 'const') && value !== constValue) {
     issues.push({

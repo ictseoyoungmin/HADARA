@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 234,
+  "rev": 236,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0661",
-    "title": "Continuation model: task-close promotion and idle-precedence fix (Phase C: declarative DAG status redesign)"
+    "id": "T-0662",
+    "title": "Schema validator anyOf support (RF-3 fix)"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,19 +14,19 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Run `hadara task status --json` after this close and confirm the reported phase is `continuation-ready` (not `idle`), dogfooding the exact fix on this repository. Then decide whether to continue into Phase D (context route resolver / registry stable id) or stop the redesign here, since the reported bug is now fixed without it.",
-    "reason": "This close's own HANDOFF next step is the first real end-to-end proof of the fix built in T-0661.",
+    "title": "Compile external dogfood findings into a HADARA-dev report capsule once the delegated multi-capsule dogfood run under /mnt/f/NowWorking/dev completes.",
+    "reason": "Verifies the continuation model (T-0661) and the anyOf fix (T-0662) hold up in a real, freshly-installed, cold-started agent session outside this repository.",
     "references": [
       {
-        "path": "`.hadara/local/tmp_plan/status/redesign_candidate/HADARA_Declarative_DAG_Status_Context_Routing_Design.docx` section 16.3",
+        "path": "tasks/T-0654-0-5-0-task-close-installed-package-dogfood/DOGFOOD_REPORT.md",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0661",
-      "path": "tasks/T-0661-continuation-model-task-close-promotion-and-idle-precedence-fix-/HANDOFF.md"
+      "workId": "T-0662",
+      "path": "tasks/T-0662-schema-validator-anyof-support-rf-3-fix/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

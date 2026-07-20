@@ -24,7 +24,7 @@
     },
     "nextOperatorIntent": { "type": "string", "minLength": 1 },
     "continuation": {
-      "oneOf": [
+      "anyOf": [
         { "$ref": "#/$defs/continuation" },
         { "type": "null" }
       ]

@@ -920,6 +920,40 @@ describe('runtime schema validation', () => {
     );
   });
 
+  it('validates anyOf: matching at least one branch passes, matching none is rejected (RF-3)', () => {
+    const base = {
+      schemaVersion: 'hadara.projectCurrentState.v1',
+      rev: 1,
+      profile: 'governed',
+      currentRelease: '0.5.0-rc.0',
+      latestCompletedTaskBasis: 'highest-done-task-id',
+      latestCompletedTask: null,
+      activeTask: null,
+      nextWork: null,
+      nextOperatorIntent: 'No next work selected.',
+      continuation: null,
+      currentKnownProblems: [],
+      validationBaseline: { summary: 'baseline', evidence: [] }
+    };
+
+    expect(validateSchema('hadara.projectCurrentState.v1', base).ok).toBe(true);
+    expect(
+      validateSchema('hadara.projectCurrentState.v1', {
+        ...base,
+        continuation: { disposition: 'actionable', kind: 'task-handoff', title: 'Real next step' }
+      }).ok
+    ).toBe(true);
+
+    const rejected = validateSchema('hadara.projectCurrentState.v1', {
+      ...base,
+      continuation: { disposition: 'not-a-real-disposition', kind: 'task-handoff', title: 'x' }
+    });
+    expect(rejected.ok).toBe(false);
+    expect(rejected.issues).toEqual(
+      expect.arrayContaining([expect.objectContaining({ path: '$.continuation', code: 'SCHEMA_ANY_OF_MISMATCH' })])
+    );
+  });
+
   it('validates install plan report fixtures', () => {
     expect(
       validateSchema('hadara.install.plan.v1', {

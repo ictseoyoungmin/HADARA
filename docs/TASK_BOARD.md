@@ -662,3 +662,4 @@
 | T-0659 | Status fact model foundations (Phase A: declarative DAG status redesign) | Done | tasks/T-0659-status-fact-model-foundations-phase-a-declarative-dag-status-red | |
 | T-0660 | DAG evaluator foundations (Phase B: declarative DAG status redesign) | Done | tasks/T-0660-dag-evaluator-foundations-phase-b-declarative-dag-status-redesig | |
 | T-0661 | Continuation model: task-close promotion and idle-precedence fix (Phase C: declarative DAG status redesign) | Done | tasks/T-0661-continuation-model-task-close-promotion-and-idle-precedence-fix- | |
+| T-0662 | Schema validator anyOf support (RF-3 fix) | Done | tasks/T-0662-schema-validator-anyof-support-rf-3-fix | |
