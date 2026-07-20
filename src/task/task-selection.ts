@@ -3,7 +3,7 @@ import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
-import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState, type ProjectCurrentState } from '../services/project-current-state';
+import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState, type ProjectContinuation, type ProjectCurrentState } from '../services/project-current-state';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';
@@ -24,6 +24,7 @@ export interface TaskSelectionReport {
       activeTask: string | null;
       nextWork: ProjectCurrentState['nextWork'] | null;
       nextOperatorIntent: string | null;
+      continuation: ProjectContinuation | null;
     };
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
@@ -122,7 +123,8 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
         present: currentState.present,
         activeTask: currentState.state?.activeTask?.id ?? null,
         nextWork: currentState.state?.nextWork ?? null,
-        nextOperatorIntent: currentState.state?.nextOperatorIntent ?? null
+        nextOperatorIntent: currentState.state?.nextOperatorIntent ?? null,
+        continuation: currentState.state?.continuation ?? null
       },
       developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', present: slices.present, rows: slices.rows.length },
       taskBoard: { path: 'docs/TASK_BOARD.md', present: board.present, rows: board.rows.length },

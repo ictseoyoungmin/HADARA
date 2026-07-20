@@ -28,6 +28,29 @@ export interface ProjectNextWork {
   createCommandAllowed: boolean;
 }
 
+export type ProjectContinuationDisposition = 'actionable' | 'waiting-for-operator' | 'blocked' | 'terminal' | 'unresolved';
+
+export interface ProjectContinuationReference {
+  path: string;
+  required: boolean;
+}
+
+export interface ProjectContinuationSource {
+  type: 'work-handoff';
+  workId: string;
+  path: string;
+}
+
+export interface ProjectContinuation {
+  disposition: ProjectContinuationDisposition;
+  kind: string;
+  title: string;
+  reason?: string;
+  references?: ProjectContinuationReference[];
+  createCommandAllowed?: boolean;
+  source?: ProjectContinuationSource;
+}
+
 export interface ProjectCurrentState {
   schemaVersion: 'hadara.projectCurrentState.v1';
   rev: number;
@@ -39,6 +62,11 @@ export interface ProjectCurrentState {
   nextWork: ProjectNextWork | null;
   /** @deprecated Compatibility summary. Use nextWork for task-selection semantics. */
   nextOperatorIntent: string;
+  /**
+   * Explicit project-level continuation decided by a closing session (docx section 9).
+   * Absent/null must never be read as terminal; it means no continuation was declared.
+   */
+  continuation: ProjectContinuation | null;
   currentKnownProblems: ProjectKnownProblem[];
   validationBaseline: {
     summary: string;
@@ -92,6 +120,7 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
       createCommandAllowed: true
     },
     nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
+    continuation: null,
     currentKnownProblems: [],
     validationBaseline: {
       summary: 'No validation baseline has been recorded yet.',
@@ -115,6 +144,7 @@ function canonicalProjectCurrentState(state: ProjectCurrentState): ProjectCurren
     activeTask: state.activeTask,
     nextWork: state.nextWork,
     nextOperatorIntent: state.nextOperatorIntent,
+    continuation: state.continuation,
     currentKnownProblems: state.currentKnownProblems,
     validationBaseline: state.validationBaseline
   };
@@ -174,6 +204,7 @@ function normalizeProjectCurrentState(value: unknown): unknown {
   return {
     ...state,
     latestCompletedTaskBasis: state.latestCompletedTaskBasis ?? 'highest-done-task-id',
+    continuation: state.continuation ?? null,
     ...(state.nextWork === undefined && typeof state.nextOperatorIntent === 'string'
       ? { nextWork: nextWorkFromLegacyIntent(state.nextOperatorIntent) }
       : {})
@@ -324,16 +355,21 @@ export function activateProjectCurrentTask(projectRoot: string, task: ProjectCur
   return mutateProjectCurrentState(projectRoot, (current) => ({ ...current, rev: current.rev + 1, activeTask: task }));
 }
 
-export function completeProjectCurrentTask(projectRoot: string, task: ProjectCurrentTaskRef): ProjectCurrentStateIssue[] {
+export function completeProjectCurrentTask(projectRoot: string, task: ProjectCurrentTaskRef, continuation?: ProjectContinuation | null): ProjectCurrentStateIssue[] {
   return mutateProjectCurrentState(projectRoot, (current) => retireCompletedNextWork({
     ...current,
     rev: current.rev + 1,
     latestCompletedTask: highestTaskRef(current.latestCompletedTask, task),
-    activeTask: current.activeTask?.id === task.id ? null : current.activeTask
+    activeTask: current.activeTask?.id === task.id ? null : current.activeTask,
+    ...(continuation !== undefined ? { continuation } : {})
   }, task));
 }
 
-export function planCompletedProjectCurrentStateWrites(projectRoot: string, task: ProjectCurrentTaskRef): {
+export function planCompletedProjectCurrentStateWrites(
+  projectRoot: string,
+  task: ProjectCurrentTaskRef,
+  continuation?: ProjectContinuation | null
+): {
   writes: ProjectCurrentStateWrite[];
   issues: ProjectCurrentStateIssue[];
 } {
@@ -341,10 +377,12 @@ export function planCompletedProjectCurrentStateWrites(projectRoot: string, task
   if (!read.present) return { writes: [], issues: [] };
   if (!read.state) return { writes: [], issues: read.issues };
   const latestCompletedTask = highestTaskRef(read.state.latestCompletedTask, task);
+  const continuationChanged = continuation !== undefined && JSON.stringify(continuation) !== JSON.stringify(read.state.continuation);
   if (
     read.state.latestCompletedTask?.id === latestCompletedTask.id &&
     read.state.activeTask?.id !== task.id &&
-    !hasRetirableNextWork(read.state, task)
+    !hasRetirableNextWork(read.state, task) &&
+    !continuationChanged
   ) {
     return { writes: [], issues: [] };
   }
@@ -352,7 +390,8 @@ export function planCompletedProjectCurrentStateWrites(projectRoot: string, task
     ...read.state,
     rev: read.state.rev + 1,
     latestCompletedTask,
-    activeTask: read.state.activeTask?.id === task.id ? null : read.state.activeTask
+    activeTask: read.state.activeTask?.id === task.id ? null : read.state.activeTask,
+    ...(continuation !== undefined ? { continuation } : {})
   }, task);
   return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [] };
 }
@@ -445,6 +484,7 @@ function validateProjectCurrentState(value: unknown): ProjectCurrentStateIssue[]
   if (!validTaskRef(state.latestCompletedTask) || !validTaskRef(state.activeTask)) return issue('Task references must be null or { id: T-XXXX, title }.');
   if (!validNextWork(state.nextWork)) return issue('nextWork must be null or { title, state, operatorGuidance, createCommandAllowed }.');
   if (typeof state.nextOperatorIntent !== 'string' || !state.nextOperatorIntent.trim()) return issue('nextOperatorIntent must be a non-empty string.');
+  if (!validContinuation(state.continuation)) return issue('continuation must be null or { disposition, kind, title, ... }.');
   if (!Array.isArray(state.currentKnownProblems) || !state.currentKnownProblems.every(validProblem)) return issue('currentKnownProblems contains an invalid entry.');
   if (!state.validationBaseline || typeof state.validationBaseline.summary !== 'string' || !Array.isArray(state.validationBaseline.evidence) || !state.validationBaseline.evidence.every((item) => typeof item === 'string')) return issue('validationBaseline must contain summary and evidence strings.');
   return [];
@@ -473,6 +513,61 @@ function validNextWork(value: unknown): boolean {
     (nextWork.state === 'candidate' || nextWork.state === 'active' || nextWork.state === 'blocked' || nextWork.state === 'waiting-for-operator' || nextWork.state === 'none') &&
     typeof nextWork.operatorGuidance === 'string' &&
     typeof nextWork.createCommandAllowed === 'boolean';
+}
+
+const CONTINUATION_DISPOSITIONS = new Set<ProjectContinuationDisposition>(['actionable', 'waiting-for-operator', 'blocked', 'terminal', 'unresolved']);
+
+function validContinuation(value: unknown): boolean {
+  if (value === null) return true;
+  if (!value || typeof value !== 'object') return false;
+  const continuation = value as Partial<ProjectContinuation>;
+  if (typeof continuation.disposition !== 'string' || !CONTINUATION_DISPOSITIONS.has(continuation.disposition as ProjectContinuationDisposition)) return false;
+  if (typeof continuation.kind !== 'string' || !continuation.kind.trim()) return false;
+  if (typeof continuation.title !== 'string' || !continuation.title.trim()) return false;
+  if (continuation.reason !== undefined && typeof continuation.reason !== 'string') return false;
+  if (continuation.createCommandAllowed !== undefined && typeof continuation.createCommandAllowed !== 'boolean') return false;
+  if (continuation.references !== undefined) {
+    if (!Array.isArray(continuation.references)) return false;
+    if (!continuation.references.every((ref) => ref && typeof ref === 'object' && typeof (ref as ProjectContinuationReference).path === 'string' && typeof (ref as ProjectContinuationReference).required === 'boolean')) return false;
+  }
+  if (continuation.source !== undefined) {
+    const source = continuation.source as Partial<ProjectContinuationSource>;
+    if (!source || source.type !== 'work-handoff' || typeof source.workId !== 'string' || typeof source.path !== 'string') return false;
+  }
+  return true;
+}
+
+const PLACEHOLDER_STEP_PATTERN = /^(tbd|step|)$/i;
+
+/**
+ * Promotes a Task Capsule's own HANDOFF "Next Recommended Step" into a project-level
+ * continuation. Returns null for placeholder/empty steps so callers never overwrite an
+ * existing continuation with nothing (docx section 1.1/9; T-0658-class loss prevention).
+ */
+export function continuationFromTaskHandoffStep(input: {
+  step: string;
+  reason: string;
+  requiredReading: string;
+  sourceTaskId: string;
+  sourceCapsulePath: string;
+}): ProjectContinuation | null {
+  const step = input.step.trim();
+  if (PLACEHOLDER_STEP_PATTERN.test(step)) return null;
+  const reason = input.reason.trim();
+  const references = input.requiredReading
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry && !PLACEHOLDER_STEP_PATTERN.test(entry))
+    .map((entry) => ({ path: entry, required: true }));
+  return {
+    disposition: 'actionable',
+    kind: 'task-handoff',
+    title: step,
+    ...(reason && !PLACEHOLDER_STEP_PATTERN.test(reason) ? { reason } : {}),
+    ...(references.length > 0 ? { references } : {}),
+    createCommandAllowed: true,
+    source: { type: 'work-handoff', workId: input.sourceTaskId, path: `${input.sourceCapsulePath}/HANDOFF.md` }
+  };
 }
 
 function nextWorkFromLegacyIntent(intent: string): ProjectNextWork {

@@ -1,16 +1,34 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 232,
+  "rev": 234,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0660",
-    "title": "DAG evaluator foundations (Phase B: declarative DAG status redesign)"
+    "id": "T-0661",
+    "title": "Continuation model: task-close promotion and idle-precedence fix (Phase C: declarative DAG status redesign)"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
+  "continuation": {
+    "disposition": "actionable",
+    "kind": "task-handoff",
+    "title": "Run `hadara task status --json` after this close and confirm the reported phase is `continuation-ready` (not `idle`), dogfooding the exact fix on this repository. Then decide whether to continue into Phase D (context route resolver / registry stable id) or stop the redesign here, since the reported bug is now fixed without it.",
+    "reason": "This close's own HANDOFF next step is the first real end-to-end proof of the fix built in T-0661.",
+    "references": [
+      {
+        "path": "`.hadara/local/tmp_plan/status/redesign_candidate/HADARA_Declarative_DAG_Status_Context_Routing_Design.docx` section 16.3",
+        "required": true
+      }
+    ],
+    "createCommandAllowed": true,
+    "source": {
+      "type": "work-handoff",
+      "workId": "T-0661",
+      "path": "tasks/T-0661-continuation-model-task-close-promotion-and-idle-precedence-fix-/HANDOFF.md"
+    }
+  },
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",

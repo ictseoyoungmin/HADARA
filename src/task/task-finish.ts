@@ -3,8 +3,8 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
 import { formatLocalMinuteTimestamp } from '../core/local-time';
-import { readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
-import { planCompletedProjectCurrentStateWrites } from '../services/project-current-state';
+import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
+import { continuationFromTaskHandoffStep, planCompletedProjectCurrentStateWrites } from '../services/project-current-state';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 import { findTaskCapsule, TaskCapsule } from './task-capsule';
 
@@ -112,7 +112,17 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const statusHistoryStatus = readLatestStatusHistoryStatus(task);
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
-  const currentStatePlan = planCompletedProjectCurrentStateWrites(projectRoot, { id: task.id, title: task.title });
+  const handoffNextStep = readTaskHandoffNextStep(task);
+  const promotedContinuation = handoffNextStep
+    ? continuationFromTaskHandoffStep({
+        step: handoffNextStep.step,
+        reason: handoffNextStep.reason,
+        requiredReading: handoffNextStep.requiredReading,
+        sourceTaskId: task.id,
+        sourceCapsulePath: capsule
+      }) ?? undefined
+    : undefined;
+  const currentStatePlan = planCompletedProjectCurrentStateWrites(projectRoot, { id: task.id, title: task.title }, promotedContinuation);
   issues.push(...currentStatePlan.issues.map((issue) => ({
     severity: issue.severity,
     code: issue.code,
@@ -540,6 +550,19 @@ function readTaskStatus(task: TaskCapsule): string {
   if (tableStatus) return tableStatus;
   const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
+}
+
+function readTaskHandoffNextStep(task: TaskCapsule): { step: string; reason: string; requiredReading: string } | null {
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
+  if (!fs.existsSync(handoffPath)) return null;
+  const content = fs.readFileSync(handoffPath, 'utf8');
+  const rows = parseMarkdownRowsUnderHeading(content, '## Next Recommended Step');
+  const row = rows.find((cells) => {
+    const step = (cells[0] ?? '').trim().toLowerCase();
+    return step.length > 0 && step !== 'step' && step !== 'tbd';
+  });
+  if (!row) return null;
+  return { step: row[0] ?? '', reason: row[1] ?? '', requiredReading: row[2] ?? '' };
 }
 
 function readLatestStatusHistoryStatus(task: TaskCapsule): string | null {

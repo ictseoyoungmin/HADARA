@@ -661,3 +661,4 @@
 | T-0658 | 0.5.0 pre-stable close action boundary and blocked status precedence | Done | tasks/T-0658-0-5-0-pre-stable-close-action-boundary-and-blocked-status-preced | |
 | T-0659 | Status fact model foundations (Phase A: declarative DAG status redesign) | Done | tasks/T-0659-status-fact-model-foundations-phase-a-declarative-dag-status-red | |
 | T-0660 | DAG evaluator foundations (Phase B: declarative DAG status redesign) | Done | tasks/T-0660-dag-evaluator-foundations-phase-b-declarative-dag-status-redesig | |
+| T-0661 | Continuation model: task-close promotion and idle-precedence fix (Phase C: declarative DAG status redesign) | Done | tasks/T-0661-continuation-model-task-close-promotion-and-idle-precedence-fix- | |
