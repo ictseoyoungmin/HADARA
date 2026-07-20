@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.5.0-rc.0 | Portable project state. |
-| Latest Completed Task | T-0665 Continuation terminal-phrase detection: fix actionable/no-further-work contradiction | Highest Done task id, not close timestamp. |
+| Current Release | 0.5.0-rc.1 | Portable project state. |
+| Latest Completed Task | T-0666 Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0649 resolved the 0.5.0 full-suite regressions found after T-0648, passed focused regression tests, TypeScript build, direct full npm test suite with 154 files / 1132 tests, and strict release gate after release-note/readiness refresh. | ev:T-0649:fcf5b2c078474cbdaf589a14, ev:T-0649:15c4217a525c43a18144f4af, ev:T-0649:a304c064cb734dbfb8d19ba8, ev:T-0649:fea4ab66d9744473aa6877d9 |
+| Current Trusted Validation Baseline | T-0658 through T-0665 hardened close action boundaries and blocked status precedence, added a project-level continuation field (task-close promotion, idle-precedence fix), implemented anyOf in the schema validator (previously a silent no-op across six schemas), fixed nextWork bootstrap retirement to be origin-based instead of title-matched (was permanently stuck if its one retirement chance was missed), fixed a continuation-promotion contradiction (a "no further work" HANDOFF step was offered as a hadara task create title), and bumped the version to 0.5.0-rc.1. A two-session, four-capsule delegated Claude dogfood in a fresh external project found and confirmed each fix. Direct full suite passed with 166 test files and 1226 tests, clean TypeScript build. Strict release gate has not been rerun since the T-0649 baseline; full release-readiness recycle is still outstanding before any publish decision. | ev:T-0664:ccd90916a8c841b98d58a663, ev:T-0665:527eded82980411281445c9a, ev:T-0666:9c421996f28042b98203fad8, ev:T-0666:743b914bc1a341889cda50d2 |
 
 ### Current Known Problems
 

@@ -666,3 +666,4 @@
 | T-0663 | 0.5.0-rc.0 delegated Claude dogfood: continuation persistence and adoption-baseline nextWork retirement | Done | tasks/T-0663-0-5-0-rc-0-delegated-claude-dogfood-continuation-persistence-and | |
 | T-0664 | nextWork origin tracking: fix F-2 stuck bootstrap retirement and add stale-bootstrap advisory | Done | tasks/T-0664-nextwork-origin-tracking-fix-f-2-stuck-bootstrap-retirement-and- | |
 | T-0665 | Continuation terminal-phrase detection: fix actionable/no-further-work contradiction | Done | tasks/T-0665-continuation-terminal-phrase-detection-fix-actionable-no-further | |
+| T-0666 | Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) | Done | tasks/T-0666-promote-validation-baseline-and-current-release-to-0-5-0-rc-1-t- | |

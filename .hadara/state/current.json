@@ -1,32 +1,32 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 242,
+  "rev": 245,
   "profile": "governed",
-  "currentRelease": "0.5.0-rc.0",
+  "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0665",
-    "title": "Continuation terminal-phrase detection: fix actionable/no-further-work contradiction"
+    "id": "T-0666",
+    "title": "Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665)"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "terminal",
     "kind": "task-handoff",
-    "title": "Promote `.hadara/state/current.json`'s `validationBaseline` and `currentRelease` to reflect T-0658 through T-0665 (currently still shows T-0649/`0.5.0-rc.0`); do not treat this line as stable-ready without also rerunning strict release gate.",
-    "reason": "Operator flagged the validation baseline as stale (still T-0649) despite T-0664's own full-suite evidence; the baseline must be explicitly promoted, it does not happen automatically.",
+    "title": "No further work is queued from this fix/promotion cycle. Before any actual npm/GitHub publish of `0.5.0-rc.1`, rerun `hadara release gate --mode strict --json` and the full release-readiness recycle — this promotion only reflects source validation currency, not full release readiness.",
+    "reason": "RF-1 in this capsule; source is validated and current, but the release process itself has not been rerun since the T-0649/`0.5.0-rc.0` baseline.",
     "references": [
       {
         "path": "docs/RELEASE_READINESS.md",
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0665",
-      "path": "tasks/T-0665-continuation-terminal-phrase-detection-fix-actionable-no-further/HANDOFF.md"
+      "workId": "T-0666",
+      "path": "tasks/T-0666-promote-validation-baseline-and-current-release-to-0-5-0-rc-1-t-/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -52,12 +52,12 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0649 resolved the 0.5.0 full-suite regressions found after T-0648, passed focused regression tests, TypeScript build, direct full npm test suite with 154 files / 1132 tests, and strict release gate after release-note/readiness refresh.",
+    "summary": "T-0658 through T-0665 hardened close action boundaries and blocked status precedence, added a project-level continuation field (task-close promotion, idle-precedence fix), implemented anyOf in the schema validator (previously a silent no-op across six schemas), fixed nextWork bootstrap retirement to be origin-based instead of title-matched (was permanently stuck if its one retirement chance was missed), fixed a continuation-promotion contradiction (a \"no further work\" HANDOFF step was offered as a hadara task create title), and bumped the version to 0.5.0-rc.1. A two-session, four-capsule delegated Claude dogfood in a fresh external project found and confirmed each fix. Direct full suite passed with 166 test files and 1226 tests, clean TypeScript build. Strict release gate has not been rerun since the T-0649 baseline; full release-readiness recycle is still outstanding before any publish decision.",
     "evidence": [
-      "ev:T-0649:fcf5b2c078474cbdaf589a14",
-      "ev:T-0649:15c4217a525c43a18144f4af",
-      "ev:T-0649:a304c064cb734dbfb8d19ba8",
-      "ev:T-0649:fea4ab66d9744473aa6877d9"
+      "ev:T-0664:ccd90916a8c841b98d58a663",
+      "ev:T-0665:527eded82980411281445c9a",
+      "ev:T-0666:9c421996f28042b98203fad8",
+      "ev:T-0666:743b914bc1a341889cda50d2"
     ]
   }
 }

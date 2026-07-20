@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.5.0-rc.0 |
-| Latest Completed Task | T-0665 Continuation terminal-phrase detection: fix actionable/no-further-work contradiction |
+| Current Release | 0.5.0-rc.1 |
+| Latest Completed Task | T-0666 Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0649 resolved the 0.5.0 full-suite regressions found after T-0648, passed focused regression tests, TypeScript build, direct full npm test suite with 154 files / 1132 tests, and strict release gate after release-note/readiness refresh. |
+| Current Trusted Validation Baseline | T-0658 through T-0665 hardened close action boundaries and blocked status precedence, added a project-level continuation field (task-close promotion, idle-precedence fix), implemented anyOf in the schema validator (previously a silent no-op across six schemas), fixed nextWork bootstrap retirement to be origin-based instead of title-matched (was permanently stuck if its one retirement chance was missed), fixed a continuation-promotion contradiction (a "no further work" HANDOFF step was offered as a hadara task create title), and bumped the version to 0.5.0-rc.1. A two-session, four-capsule delegated Claude dogfood in a fresh external project found and confirmed each fix. Direct full suite passed with 166 test files and 1226 tests, clean TypeScript build. Strict release gate has not been rerun since the T-0649 baseline; full release-readiness recycle is still outstanding before any publish decision. |
 
 ### Current Known Problems
 
