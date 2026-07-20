@@ -663,3 +663,4 @@
 | T-0660 | DAG evaluator foundations (Phase B: declarative DAG status redesign) | Done | tasks/T-0660-dag-evaluator-foundations-phase-b-declarative-dag-status-redesig | |
 | T-0661 | Continuation model: task-close promotion and idle-precedence fix (Phase C: declarative DAG status redesign) | Done | tasks/T-0661-continuation-model-task-close-promotion-and-idle-precedence-fix- | |
 | T-0662 | Schema validator anyOf support (RF-3 fix) | Done | tasks/T-0662-schema-validator-anyof-support-rf-3-fix | |
+| T-0663 | 0.5.0-rc.0 delegated Claude dogfood: continuation persistence and adoption-baseline nextWork retirement | Done | tasks/T-0663-0-5-0-rc-0-delegated-claude-dogfood-continuation-persistence-and | |

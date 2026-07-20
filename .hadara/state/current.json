@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 236,
+  "rev": 238,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0662",
-    "title": "Schema validator anyOf support (RF-3 fix)"
+    "id": "T-0663",
+    "title": "0.5.0-rc.0 delegated Claude dogfood: continuation persistence and adoption-baseline nextWork retirement"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,19 +14,27 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Compile external dogfood findings into a HADARA-dev report capsule once the delegated multi-capsule dogfood run under /mnt/f/NowWorking/dev completes.",
-    "reason": "Verifies the continuation model (T-0661) and the anyOf fix (T-0662) hold up in a real, freshly-installed, cold-started agent session outside this repository.",
+    "title": "Fix F-2: recognize \"establish hadara adoption baseline\" in `isBootstrapFirstTaskNextWork` (or generalize `hasBootstrapNextWork`), then re-check whether F-3 still reproduces once the stale-nextWork trigger is removed.",
+    "reason": "F-2 is root-caused and reproduced independently outside `driftlog`; fixing it likely also resolves F-3 without needing new precedence logic.",
     "references": [
       {
-        "path": "tasks/T-0654-0-5-0-task-close-installed-package-dogfood/DOGFOOD_REPORT.md",
+        "path": "`DOGFOOD_REPORT.md` F-2/F-3",
+        "required": true
+      },
+      {
+        "path": "`src/services/project-current-state.ts`",
+        "required": true
+      },
+      {
+        "path": "`src/init/adoption.ts`",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0662",
-      "path": "tasks/T-0662-schema-validator-anyof-support-rf-3-fix/HANDOFF.md"
+      "workId": "T-0663",
+      "path": "tasks/T-0663-0-5-0-rc-0-delegated-claude-dogfood-continuation-persistence-and/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
