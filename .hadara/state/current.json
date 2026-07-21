@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 249,
+  "rev": 252,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0667",
-    "title": "0.5.0-rc.1 release-readiness recycle"
+    "id": "T-0668",
+    "title": "0.5.0-rc.1 post-publish record and GitHub release note"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,19 +14,23 @@
   "continuation": {
     "disposition": "terminal",
     "kind": "task-handoff",
-    "title": "No follow-up task is queued from this recycle capsule.",
-    "reason": "T-0667 release-readiness recycle is green; publish/deploy remains a separate explicit operator-approved mutation requiring npm/GitHub auth.",
+    "title": "No follow-up task is queued from this capsule.",
+    "reason": "npm publish and installed-package recycle are complete; GitHub Release remains an external mutation that requires explicit operator approval/auth if wanted.",
     "references": [
       {
-        "path": "`docs/RELEASE_READINESS.md`; `scripts/release/prepare-publish-env.sh`; `scripts/release/manual-publish-rc.sh`",
+        "path": "`tasks/T-0668-0-5-0-rc-1-post-publish-record-and-github-release-note/GITHUB_RELEASE_NOTE.md`",
+        "required": true
+      },
+      {
+        "path": "`scripts/release/manual-publish-rc.sh`",
         "required": true
       }
     ],
     "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0667",
-      "path": "tasks/T-0667-0-5-0-rc-1-release-readiness-recycle/HANDOFF.md"
+      "workId": "T-0668",
+      "path": "tasks/T-0668-0-5-0-rc-1-post-publish-record-and-github-release-note/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -57,7 +61,7 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container: Docker sync-build passed, package smoke passed with --timeout 300, clean-checkout smoke passed, release artifact passed from a clean ext4 clone, strict release gate passed, release dry-run returned ready/blockers 0, publish dry-run returned ok with token warnings only, docs doctor stayed clean, and npm registry still reports next=0.5.0-rc.0/latest=0.4.6. No npm/GitHub publish mutation has been executed.",
+    "summary": "T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container. T-0668 records that the operator published hadara@0.5.0-rc.1 to npm on next, workspace registry verification returned version=0.5.0-rc.1/next=0.5.0-rc.1/latest=0.4.6, the GitHub Release note artifact exists with evidence, installed-package recycle from hadara@next passed, and GitHub Release publication remains operator-controlled.",
     "evidence": [
       "ev:T-0664:ccd90916a8c841b98d58a663",
       "ev:T-0665:527eded82980411281445c9a",
@@ -67,7 +71,10 @@
       "ev:T-0667:d533bf36c9e74741a12398f3",
       "ev:T-0667:eed4dba170744234a38924bf",
       "ev:T-0667:17932d8a4a684db18a62dbe8",
-      "ev:T-0667:af0b1df9f11c47a0a7e0691c"
+      "ev:T-0667:af0b1df9f11c47a0a7e0691c",
+      "ev:T-0668:f04d19ba0b5f47e3bf51276e",
+      "ev:T-0668:1ec8ae46a0f04aa3830ff767",
+      "ev:T-0668:a16978bfab134da9abadc752"
     ]
   }
 }

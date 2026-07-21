@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0667 0.5.0-rc.1 release-readiness recycle |
+| Latest Completed Task | T-0668 0.5.0-rc.1 post-publish record and GitHub release note |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container: Docker sync-build passed, package smoke passed with --timeout 300, clean-checkout smoke passed, release artifact passed from a clean ext4 clone, strict release gate passed, release dry-run returned ready/blockers 0, publish dry-run returned ok with token warnings only, docs doctor stayed clean, and npm registry still reports next=0.5.0-rc.0/latest=0.4.6. No npm/GitHub publish mutation has been executed. |
+| Current Trusted Validation Baseline | T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container. T-0668 records that the operator published hadara@0.5.0-rc.1 to npm on next, workspace registry verification returned version=0.5.0-rc.1/next=0.5.0-rc.1/latest=0.4.6, the GitHub Release note artifact exists with evidence, installed-package recycle from hadara@next passed, and GitHub Release publication remains operator-controlled. |
 
 ### Current Known Problems
 
@@ -45,7 +45,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 is recycling release readiness evidence for `0.5.0-rc.1`; npm/GitHub publication remains policy-controlled and separate from source/readiness validation.
+v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 recycled release readiness evidence for `0.5.0-rc.1`; T-0668 records the completed npm `next` publish, GitHub Release note artifact, and installed-package recycle from `hadara@next`. GitHub Release publication remains operator-controlled.
 
 | Stage | State | Purpose |
 |---|---|---|

@@ -37,12 +37,15 @@ Boundaries:
   to `next` (per npm registry: published 2 days before this line, 89 downloads); npm does not allow
   republishing that exact version, so `0.5.0-rc.1` is a new version carrying these fixes on top of
   it and supersedes it as the `next` candidate once published.
-- No npm publish, GitHub Release publication, or post-publish installed-package recycle has been
-  performed for this line yet.
+- `hadara@0.5.0-rc.1` has been published to npm on `next`, and post-publish
+  installed-package recycle from `hadara@next` passed.
 - T-0667 reran package smoke, clean-checkout smoke, release artifact generation, strict release
   gate, release dry-run, and publish dry-run from a freshly recreated Docker validation container.
-  The recycle passed; npm/GitHub publication and post-publish installed-package recycle remain
-  separate operator-approved steps.
+  The recycle passed before npm publish.
+- T-0668 recorded the operator npm publish, verified registry metadata
+  (`version=0.5.0-rc.1`, `next=0.5.0-rc.1`, `latest=0.4.6`), created a GitHub
+  Release note artifact for `v0.5.0-rc.1`, and verified the public package through
+  installed-package recycle. GitHub Release creation/publication remains operator-controlled.
 
 ## 0.5.0-rc.0
 
