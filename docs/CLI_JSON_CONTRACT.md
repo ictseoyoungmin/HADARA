@@ -65,7 +65,7 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara protocol migrate --target 0.3.0 --json` returns `hadara.protocol.migration.v1` in dry-run mode by default. It detects pre-0.3, partial-0.3, and 0.3 scaffold signals, then plans bounded project-scope adoption writes for docs registry, command-surface docs, managed Required Reading markers, and protocol version metadata. `--task <task-id>` limits migration to the selected Task Capsule. Execute mode requires `--execute --before-hash <hash>` from the reviewed dry-run report and rechecks per-action before existence/hash before writing.
 
-`hadara status --json` returns `hadara.project.status.v2`. It is the default project/session ingress report. `--detail full` remains on the v2 path and requests richer compatibility-source diagnostics; `--compat v1 --detail full --json` is available only for legacy consumers that still require `hadara.ops.status.v1`.
+`hadara status --json` returns `hadara.project.status.v2`. It is the default project/session ingress report. It routes setup, active work, structured next-work recommendations, explicit current-state continuations, or idle state. When no higher-priority active task/next-work recommendation exists, actionable or waiting-for-operator `continuation` in `.hadara/state/current.json` becomes `phase: "continuation-ready"` with a review or create primary action. `--detail full` remains on the v2 path and requests richer compatibility-source diagnostics; `--compat v1 --detail full --json` is available only for legacy consumers that still require `hadara.ops.status.v1`.
 
 `hadara task status --json` returns `hadara.taskSelection.status.v2`. It is the read-only next-work selection cockpit used when no Task Capsule is selected. It exposes recommendations, selection precedence, compact source explanation, and one primary next action to create or inspect a capsule. Task selection may use `.hadara/state/current.json` as its first source when the structured canon names an active task or actionable next work. It must not create tasks, update project docs, append evidence, infer completion, or execute the reported action. Legacy `hadara.task.status.v1` selection output is available through `hadara task status --compat v1 --json`.
 
@@ -125,7 +125,7 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 
 | Command | JSON Schema | Write Policy | `ok` Semantics |
 |---|---|---|---|
-| `status --json` | `hadara.project.status.v2` | Read-only project/session ingress. Fast by default; routes setup, active work, next-work selection, or idle state. | Project status report was generated. |
+| `status --json` | `hadara.project.status.v2` | Read-only project/session ingress. Fast by default; routes setup, active work, next-work selection, structured continuation, or idle state. | Project status report was generated. |
 | `status --detail full --json` | `hadara.project.status.v2` | Read-only project/session ingress with richer compatibility-source diagnostics. Legacy full operations status remains available with `--compat v1`. | Project status report was generated with full detail sources. |
 | `status --summary-json` | `hadara.ops.statusSummary.v1` | Read-only compact project-status snapshot. | Summary status report was generated. |
 | `status --state-only --json` | `hadara.ops.statusState.v1` | Read-only state-consistency advisory; no lifecycle writes. | State advisory report was generated; `ok:true` does not mean `consistent:true`. |

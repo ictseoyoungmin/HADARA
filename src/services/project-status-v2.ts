@@ -1,4 +1,5 @@
 import { readProjectCurrentState } from './project-current-state';
+import type { ProjectContinuation } from './project-current-state';
 import { createOpsStatusReport, OpsStatusReport } from './operations-status-service';
 import { createTaskSelectionReport } from '../task/task-selection';
 
@@ -11,6 +12,7 @@ export type ProjectStatusPhase =
   | 'active-work'
   | 'release-preparation'
   | 'integration-setup'
+  | 'continuation-ready'
   | 'idle'
   | 'degraded';
 
@@ -210,6 +212,7 @@ function determineProjectPhase(input: {
   if (input.currentState?.nextWork?.state === 'waiting-for-operator') return 'adoption-review';
   if (input.currentState?.nextWork?.state === 'blocked') return 'degraded';
   if (input.taskSelection.recommendations.length > 0) return 'select-work';
+  if (continuationNextAction(input.currentState?.continuation ?? null)) return 'continuation-ready';
   if (input.opsStatus.health !== 'ok') return 'degraded';
   return 'idle';
 }
@@ -279,8 +282,34 @@ function buildPrimaryNextAction(input: {
       writes: true
     };
   }
+  const continuationAction = continuationNextAction(input.currentState?.continuation ?? null);
+  if (continuationAction) return continuationAction;
   if (input.health !== 'ok') {
     return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect degraded status diagnostics.');
+  }
+  return null;
+}
+
+function continuationNextAction(continuation: ProjectContinuation | null): ProjectStatusNextActionV2 | null {
+  if (!continuation) return null;
+  const message = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
+  if (continuation.disposition === 'waiting-for-operator') {
+    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'none', requiresReview: true, writes: false };
+  }
+  if (continuation.disposition === 'actionable') {
+    if (continuation.createCommandAllowed === false) {
+      return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
+    }
+    return {
+      id: 'create-continuation-task',
+      kind: 'create',
+      command: `hadara task create ${shellQuote(continuation.title)}`,
+      message: 'Create a Task Capsule for the declared continuation, then rerun `hadara status --json`.',
+      writeBoundary: 'task-local',
+      risk: 'low',
+      requiresReview: false,
+      writes: true
+    };
   }
   return null;
 }
@@ -303,9 +332,14 @@ function buildReadiness(phase: ProjectStatusPhase, health: ProjectStatusHealth, 
   if (health === 'blocked') return { intent: 'orient', status: 'blocked', reason: 'Status generation found blocking project health issues.' };
   if (phase === 'active-work') return { intent: 'orient', status: 'ready', reason: 'An active task is selected; inspect selected-task status before editing.' };
   if (phase === 'select-work') return { intent: 'plan', status: 'ready', reason: 'A next-work recommendation is available.' };
+  if (phase === 'continuation-ready') return { intent: 'plan', status: 'needs-review', reason: 'A structured current-state continuation was found and requires review before acting.' };
   if (phase === 'uninitialized' || phase === 'adoption-review') return { intent: 'orient', status: 'needs-review', reason: 'Project setup or adoption state needs operator review.' };
   if (health === 'degraded') return { intent: 'orient', status: 'needs-context', reason: 'Project status is degraded; inspect explicit diagnostics before acting.' };
   return { intent: 'orient', status: 'ready', reason: 'Project status is available.' };
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 function projectStatusIssuesFromOpsStatus(opsStatus: OpsStatusReport): ProjectStatusV2Report['issues'] {

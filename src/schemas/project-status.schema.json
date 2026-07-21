@@ -14,7 +14,7 @@
     "generatedAt": { "type": "string" },
     "projectRoot": { "type": "string" },
     "phase": {
-      "enum": ["uninitialized", "adoption-review", "upgrade-required", "select-work", "active-work", "release-preparation", "integration-setup", "idle", "degraded"]
+      "enum": ["uninitialized", "adoption-review", "upgrade-required", "select-work", "active-work", "release-preparation", "integration-setup", "continuation-ready", "idle", "degraded"]
     },
     "health": { "enum": ["ok", "attention", "blocked", "degraded", "unknown"] },
     "readiness": {

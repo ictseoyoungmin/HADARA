@@ -86,6 +86,57 @@ describe('Operations Status JSON', () => {
     });
   });
 
+  it('routes actionable current-state continuation before falling back to idle', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0677 | Structured Continuation Semantics and rc2 Baseline Rollup | Done | tasks/T-0677-x | |\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      '# AGENT_HANDOFF\n\n## Next Recommended Step\n\nNo follow-up work is queued.\n',
+      'utf8'
+    );
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
+      schemaVersion: 'hadara.projectCurrentState.v1',
+      rev: 1,
+      profile: 'governed',
+      currentRelease: '0.5.0-rc.1',
+      latestCompletedTaskBasis: 'highest-done-task-id',
+      latestCompletedTask: { id: 'T-0677', title: 'Structured Continuation Semantics and rc2 Baseline Rollup' },
+      activeTask: null,
+      nextWork: null,
+      nextOperatorIntent: 'No next work selected.',
+      continuation: {
+        disposition: 'actionable',
+        kind: 'task-handoff',
+        title: 'Prepare 0.5.0-rc.2 after Phase D through end',
+        reason: 'Continuation must not be lost by project status.',
+        createCommandAllowed: true
+      },
+      currentKnownProblems: [],
+      validationBaseline: { summary: 'Fixture baseline.', evidence: [] }
+    })}\n`, 'utf8');
+
+    const report = createProjectStatusV2Report(root);
+
+    expect(report.phase).toBe('continuation-ready');
+    expect(report.readiness).toMatchObject({
+      intent: 'plan',
+      status: 'needs-review'
+    });
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'create-continuation-task',
+      kind: 'create',
+      command: "hadara task create 'Prepare 0.5.0-rc.2 after Phase D through end'",
+      writes: true
+    });
+    expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
+  });
+
   it('surfaces malformed current-state canon in project status v2', () => {
     const root = tempProject();
     writeProjectDocs(root);

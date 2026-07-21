@@ -678,3 +678,4 @@
 | T-0675 | Current-State Baseline Promotion Surface | Done | tasks/T-0675-current-state-baseline-promotion-surface | |
 | T-0676 | Reviewer Acceptance Gap Remediation | Done | tasks/T-0676-reviewer-acceptance-gap-remediation | |
 | T-0677 | Structured Continuation Semantics and rc2 Baseline Rollup | Done | tasks/T-0677-structured-continuation-semantics-and-rc2-baseline-rollup | |
+| T-0678 | Project Status Continuation Routing Fix | Done | tasks/T-0678-project-status-continuation-routing-fix | |

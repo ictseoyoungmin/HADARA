@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 276,
+  "rev": 279,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0677",
-    "title": "Structured Continuation Semantics and rc2 Baseline Rollup"
+    "id": "T-0678",
+    "title": "Project Status Continuation Routing Fix"
   },
   "activeTask": null,
   "nextWork": null,
@@ -15,7 +15,7 @@
     "disposition": "actionable",
     "kind": "task-handoff",
     "title": "Prepare 0.5.0-rc.2 after Phase D through end is implemented and release readiness is recycled.",
-    "reason": "T-0677 only fixes the remaining reviewer blockers and records the rc.2 boundary; the implementation/release-readiness line continues after this capsule.",
+    "reason": "T-0678 restores top-level project status routing for this continuation; the rc.2 implementation/release-readiness line continues after this capsule.",
     "references": [
       {
         "path": "docs/RELEASE_READINESS.md",
@@ -33,8 +33,8 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0677",
-      "path": "tasks/T-0677-structured-continuation-semantics-and-rc2-baseline-rollup/HANDOFF.md"
+      "workId": "T-0678",
+      "path": "tasks/T-0678-project-status-continuation-routing-fix/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -65,7 +65,7 @@
     }
   ],
   "validationBaseline": {
-    "summary": "0.5.0-rc.2 planning baseline preserves rollup evidence: source validation and rc1 release-readiness recycle, npm publish record, GitHub Release publication, installed-package recycle/dogfood, reviewer remediation, and T-0677 structured continuation semantic fail-closed validation. This baseline does not supersede T-0667 through T-0669; it carries them forward for session resume until a first-class validationBaseline.rollup schema is introduced.",
+    "summary": "0.5.0-rc.2 planning baseline preserves rollup evidence through T-0678: source validation and rc1 release-readiness recycle, npm publish record, GitHub Release publication, installed-package recycle/dogfood, reviewer remediation, structured continuation semantic fail-closed validation, and project status continuation-ready routing. This baseline carries T-0667 through T-0669 forward for session resume until a first-class validationBaseline.rollup schema is introduced.",
     "evidence": [
       "ev:T-0667:17932d8a4a684db18a62dbe8",
       "ev:T-0667:af0b1df9f11c47a0a7e0691c",
@@ -76,7 +76,8 @@
       "ev:T-0669:39c8691d556943e68141f1fa",
       "ev:T-0676:2f4ac932c93e48d5b9bd9a38",
       "ev:T-0676:a0597da28fc847c2a390bd1c",
-      "ev:T-0677:befc562b23d64cbe82a74623"
+      "ev:T-0677:befc562b23d64cbe82a74623",
+      "ev:T-0678:ec36c75ccc504537b635db44"
     ]
   }
 }
