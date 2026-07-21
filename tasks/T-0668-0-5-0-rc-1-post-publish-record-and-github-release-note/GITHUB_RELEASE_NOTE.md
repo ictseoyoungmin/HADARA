@@ -17,19 +17,6 @@ It supersedes `0.5.0-rc.0` on the npm `next` dist-tag.
 Before publication, the release candidate passed package smoke, clean-checkout smoke, release artifact generation, strict release gates, and publish dry-run checks.
 After publication, the package was installed from npm as `hadara@next` and passed the installed-package recycle checks.
 
-## Installation
-
-Install the prerelease:
-
-```bash
-npm install -g hadara@next
-```
-
-Install the current stable release:
-
-```bash
-npm install -g hadara@latest
-```
 
 ## Notes
 
