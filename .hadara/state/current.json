@@ -1,27 +1,24 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 246,
+  "rev": 249,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0666",
-    "title": "Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665)"
-  },
-  "activeTask": {
     "id": "T-0667",
     "title": "0.5.0-rc.1 release-readiness recycle"
   },
+  "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "terminal",
     "kind": "task-handoff",
-    "title": "Waiting for operator-approved `0.5.0-rc.1` npm/GitHub publish decision. T-0667 release-readiness recycle is green; publish and post-publish installed-package recycle remain separate approval-gated steps.",
-    "reason": "T-0667 refreshed Docker release-readiness evidence: package smoke, clean-checkout smoke, release artifact, strict release gate, release dry-run, and publish dry-run passed; npm registry still reports next=0.5.0-rc.0 and latest=0.4.6.",
+    "title": "No follow-up task is queued from this recycle capsule.",
+    "reason": "T-0667 release-readiness recycle is green; publish/deploy remains a separate explicit operator-approved mutation requiring npm/GitHub auth.",
     "references": [
       {
-        "path": "docs/RELEASE_READINESS.md",
+        "path": "`docs/RELEASE_READINESS.md`; `scripts/release/prepare-publish-env.sh`; `scripts/release/manual-publish-rc.sh`",
         "required": true
       }
     ],
@@ -68,8 +65,9 @@
       "ev:T-0666:743b914bc1a341889cda50d2",
       "ev:T-0667:87eb2cd5efa747458b8e749f",
       "ev:T-0667:d533bf36c9e74741a12398f3",
-      "ev:T-0667:e2c5104a4bfc4df6abb0300c",
-      "ev:T-0667:17932d8a4a684db18a62dbe8"
+      "ev:T-0667:eed4dba170744234a38924bf",
+      "ev:T-0667:17932d8a4a684db18a62dbe8",
+      "ev:T-0667:af0b1df9f11c47a0a7e0691c"
     ]
   }
 }

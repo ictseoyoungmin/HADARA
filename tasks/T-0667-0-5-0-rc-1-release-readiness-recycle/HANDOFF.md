@@ -9,7 +9,6 @@
 | Status | Done |
 | Created | 2026-07-21T19:57 |
 | Updated | 2026-07-21T20:30 |
-
 ## Last Completed
 
 | Item | Evidence |
@@ -22,7 +21,7 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Waiting for operator-approved `0.5.0-rc.1` npm/GitHub publish decision. | T-0667 release-readiness recycle is green, but publish/deploy remains explicit operator mutation and requires npm/GitHub auth outside this task. | `docs/RELEASE_READINESS.md`; `scripts/release/prepare-publish-env.sh`; `scripts/release/manual-publish-rc.sh` |
+| No follow-up task is queued from this recycle capsule. | T-0667 release-readiness recycle is green; publish/deploy remains a separate explicit operator-approved mutation requiring npm/GitHub auth. | `docs/RELEASE_READINESS.md`; `scripts/release/prepare-publish-env.sh`; `scripts/release/manual-publish-rc.sh` |
 
 ## Carry Forward Warnings
 

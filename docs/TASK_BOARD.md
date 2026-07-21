@@ -667,4 +667,4 @@
 | T-0664 | nextWork origin tracking: fix F-2 stuck bootstrap retirement and add stale-bootstrap advisory | Done | tasks/T-0664-nextwork-origin-tracking-fix-f-2-stuck-bootstrap-retirement-and- | |
 | T-0665 | Continuation terminal-phrase detection: fix actionable/no-further-work contradiction | Done | tasks/T-0665-continuation-terminal-phrase-detection-fix-actionable-no-further | |
 | T-0666 | Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) | Done | tasks/T-0666-promote-validation-baseline-and-current-release-to-0-5-0-rc-1-t- | |
-| T-0667 | 0.5.0-rc.1 release-readiness recycle | Draft | tasks/T-0667-0-5-0-rc-1-release-readiness-recycle | |
+| T-0667 | 0.5.0-rc.1 release-readiness recycle | Done | tasks/T-0667-0-5-0-rc-1-release-readiness-recycle | |

@@ -6,9 +6,9 @@
 |---|---|
 | ID | T-0667 |
 | Title | 0.5.0-rc.1 release-readiness recycle |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-07-21T19:57 |
-| Updated | 2026-07-21T19:57 |
+| Updated | 2026-07-21T20:40 |
 
 Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> --json` for controlled values before replacing scaffold tokens.
 
@@ -42,7 +42,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
 | AC-1 | The reusable Docker validation environment is recreated from a freshly pulled Node 22 image and `hadara-dev` runs against `/workspace`. | Met | `ev:T-0667:17932d8a4a684db18a62dbe8` | `docs/HADARA_WORKFLOW.md`, `docs/TEST_STRATEGY.md` |
-| AC-2 | `0.5.0-rc.1` package smoke, clean-checkout smoke, release artifact evidence, strict release gate, release dry-run, and publish dry-run/readiness checks are refreshed or any blocker is recorded honestly. | Met | `ev:T-0667:87eb2cd5efa747458b8e749f`, `ev:T-0667:d533bf36c9e74741a12398f3`, `ev:T-0667:e2c5104a4bfc4df6abb0300c`, `ev:T-0667:17932d8a4a684db18a62dbe8` | `docs/RELEASE_READINESS.md` |
+| AC-2 | `0.5.0-rc.1` package smoke, clean-checkout smoke, release artifact evidence, strict release gate, release dry-run, and publish dry-run/readiness checks are refreshed or any blocker is recorded honestly. | Met | `ev:T-0667:87eb2cd5efa747458b8e749f`, `ev:T-0667:d533bf36c9e74741a12398f3`, `ev:T-0667:eed4dba170744234a38924bf`, `ev:T-0667:17932d8a4a684db18a62dbe8` | `docs/RELEASE_READINESS.md` |
 | AC-3 | Tracked current release/readiness docs do not claim stale rc.0 readiness as current rc.1 readiness. | Met | `ev:T-0667:17932d8a4a684db18a62dbe8` | `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `README.md` |
 | AC-4 | No publish/deploy mutation is executed. | Met | `ev:T-0667:17932d8a4a684db18a62dbe8` | `docs/RELEASE_READINESS.md` |
 
@@ -54,23 +54,23 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Docker build/check validation | Yes | Passed | `ev:T-0667:17932d8a4a684db18a62dbe8` |
 | Package smoke for `0.5.0-rc.1` | Yes | Passed | `ev:T-0667:87eb2cd5efa747458b8e749f` |
 | Clean-checkout smoke for `0.5.0-rc.1` | Yes | Passed | `ev:T-0667:d533bf36c9e74741a12398f3` |
-| Release artifact with attached evidence | Yes | Passed | `ev:T-0667:e2c5104a4bfc4df6abb0300c` |
+| Release artifact with attached evidence | Yes | Passed | `ev:T-0667:eed4dba170744234a38924bf` |
 | Strict release gate | Yes | Passed | `ev:T-0667:17932d8a4a684db18a62dbe8` |
 | Release dry-run | Yes | Passed | `ev:T-0667:17932d8a4a684db18a62dbe8` |
-| Release publish dry-run/readiness report | Yes | Passed with token warnings only | `ev:T-0667:17932d8a4a684db18a62dbe8` |
+| Release publish dry-run/readiness report | Yes | Passed | `ev:T-0667:17932d8a4a684db18a62dbe8`; token absence remained a warning and no mutation executed. |
 | Documentation drift scan | Yes | Passed | `ev:T-0667:17932d8a4a684db18a62dbe8` |
 
 ## Inputs / Constraints
 
 | Source | Role | State | Notes |
 |---|---|---|---|
-| `.hadara/state/current.json` | current-state | active | Canonical release, latest task, active task, continuation, known problems, validation baseline. |
-| `docs/HADARA_WORKFLOW.md` | workflow | active | Docker workflow and task lifecycle routing. |
-| `docs/TASK_WORKFLOW_COMMANDS.md` | workflow | active | Task creation/evidence/close write boundaries. |
-| `docs/RELEASE_READINESS.md` | release-readiness | active | Current release evidence and publish boundary source. |
-| `docs/TEST_STRATEGY.md` | validation | active | Docker dev container command pattern. |
-| `docs/PROJECT_STATE.md` | current-state projection | active | Needs stale prose cleanup if it still describes rc.0 as current. |
-| `docs/AGENT_HANDOFF.md` | handoff projection | active | Must be updated before stopping. |
+| `.hadara/state/current.json` | constraint | active | Canonical release, latest task, active task, continuation, known problems, validation baseline. |
+| `docs/HADARA_WORKFLOW.md` | constraint | active | Docker workflow and task lifecycle routing. |
+| `docs/TASK_WORKFLOW_COMMANDS.md` | constraint | active | Task creation/evidence/close write boundaries. |
+| `docs/RELEASE_READINESS.md` | reference | active | Current release evidence and publish boundary source. |
+| `docs/TEST_STRATEGY.md` | reference | active | Docker dev container command pattern. |
+| `docs/PROJECT_STATE.md` | reference | active | Needed stale prose cleanup because it still described rc.0 as current. |
+| `docs/AGENT_HANDOFF.md` | reference | active | Must be updated before stopping. |
 
 ## Changes
 
@@ -84,9 +84,9 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 
 | ID | Type | Summary | State | Link |
 |---|---|---|---|---|
-| RF-1 | Residual | Actual npm/GitHub publication remains a separate approval-gated operator mutation after recycle evidence is green. | Open | `docs/RELEASE_READINESS.md` |
-| RF-2 | Residual | Package smoke's installed core smoke needs `--timeout 300` in this large HADARA-dev workspace; the default 120s timeout failed twice before the 300s rerun passed. | Watch | `ev:T-0667:17932d8a4a684db18a62dbe8` |
-| RF-3 | Residual | Release artifact should run from a clean ext4 clone because `/workspace` contained untracked `.claude/` state and failed the artifact dirty-worktree preflight. | Watch | `ev:T-0667:17932d8a4a684db18a62dbe8` |
+| RF-1 | Follow-up | Actual npm/GitHub publication remains a separate approval-gated operator mutation after recycle evidence is green. | Open | `docs/RELEASE_READINESS.md` |
+| RF-2 | Risk | Package smoke's installed core smoke needs `--timeout 300` in this large HADARA-dev workspace; the default 120s timeout failed twice before the 300s rerun passed. | Accepted | `ev:T-0667:17932d8a4a684db18a62dbe8` |
+| RF-3 | Risk | Release artifact should run from a clean ext4 clone because `/workspace` contained untracked `.claude/` state and failed the artifact dirty-worktree preflight. | Accepted | `ev:T-0667:17932d8a4a684db18a62dbe8` |
 
 ## History
 

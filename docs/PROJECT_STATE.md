@@ -8,9 +8,9 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0666 Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) |
+| Latest Completed Task | T-0667 0.5.0-rc.1 release-readiness recycle |
 | Latest Completed Task Basis | highest-done-task-id |
-| Active Task | T-0667 0.5.0-rc.1 release-readiness recycle |
+| Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
