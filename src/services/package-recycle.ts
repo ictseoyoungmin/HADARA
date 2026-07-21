@@ -44,6 +44,13 @@ export interface PackageRecycleReport {
     enforced: false;
     notes: string[];
   };
+  timeoutPolicy?: {
+    scope: 'per-step';
+    defaultTimeoutSeconds: number;
+    effectiveTimeoutSeconds: number;
+    timeoutStepIds: string[];
+    notes: string[];
+  };
   execution: {
     npmViewExecuted: boolean;
     npmDistTagExecuted: boolean;
@@ -122,6 +129,7 @@ export type PackageRecycleCommandRunner = (
 ) => PackageRecycleCommandResult;
 
 const DEFAULT_PACKAGE_SPECIFIER = 'hadara@latest';
+const DEFAULT_PACKAGE_RECYCLE_TIMEOUT_SECONDS = 300;
 
 type InstalledCommandSurface = {
   commandIds: Set<string>;
@@ -164,6 +172,7 @@ export function createPackageRecycleDryRunReport(options: PackageRecycleOptions)
     readOnly: true,
     package: packageInfo,
     networkPolicy: createNetworkPolicy(),
+    timeoutPolicy: createTimeoutPolicy(options.timeoutSeconds, DEFAULT_PACKAGE_RECYCLE_TIMEOUT_SECONDS, issues),
     execution: createExecutionFlags(),
     workspace: createWorkspace(options.workspace, options.keepTemp === true),
     rootRoles: roots.report,
@@ -199,7 +208,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
   const execution = createExecutionFlags();
   const artifacts = createArtifacts(options);
   const runner = options.runner ?? runCommand;
-  const timeoutMs = (options.timeoutSeconds ?? 180) * 1000;
+  const timeoutMs = (options.timeoutSeconds ?? DEFAULT_PACKAGE_RECYCLE_TIMEOUT_SECONDS) * 1000;
 
   try {
     if (issues.some((issue) => issue.severity === 'error') || !workspaceSetup.ok) {
@@ -343,6 +352,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
     readOnly: false,
     package: packageInfo,
     networkPolicy: createNetworkPolicy(),
+    timeoutPolicy: createTimeoutPolicy(options.timeoutSeconds, DEFAULT_PACKAGE_RECYCLE_TIMEOUT_SECONDS, issues),
     execution,
     workspace: {
       kind: 'disposable',
@@ -613,6 +623,23 @@ function createExecutionFlags(): PackageRecycleReport['execution'] {
     contextSmokeExecuted: false,
     releaseMutationExecuted: false,
     publishExecuted: false
+  };
+}
+
+function createTimeoutPolicy(
+  timeoutSeconds: number | undefined,
+  defaultTimeoutSeconds: number,
+  issues: PackageRecycleIssue[]
+): NonNullable<PackageRecycleReport['timeoutPolicy']> {
+  return {
+    scope: 'per-step',
+    defaultTimeoutSeconds,
+    effectiveTimeoutSeconds: timeoutSeconds ?? defaultTimeoutSeconds,
+    timeoutStepIds: issues.filter((issue) => issue.code.endsWith('_TIMEOUT') && issue.stepId).map((issue) => String(issue.stepId)),
+    notes: [
+      'Timeouts are applied per subprocess step, not as one opaque installed-package recycle timeout.',
+      'When a timeout occurs, timeoutStepIds identifies the slow step such as npm-view-version, npm-dist-tags, install-package, installed-version, command-surface, init-project, status-ingress, task-close, context-pack, or context-slice.'
+    ]
   };
 }
 

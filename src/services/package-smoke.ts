@@ -36,6 +36,7 @@ export interface PackageSmokeReport {
     command: 'package.smoke';
   };
   networkPolicy: PackageSmokeNetworkPolicy;
+  timeoutPolicy?: PackageSmokeTimeoutPolicy;
   execution: {
     npmPackExecuted: boolean;
     pythonBuildExecuted?: boolean;
@@ -101,6 +102,14 @@ export interface PackageSmokeNetworkPolicy {
   notes: string[];
 }
 
+export interface PackageSmokeTimeoutPolicy {
+  scope: 'per-step';
+  defaultTimeoutSeconds: number;
+  effectiveTimeoutSeconds: number;
+  timeoutStepIds: string[];
+  notes: string[];
+}
+
 export interface PackageSmokeDryRunOptions {
   paths: HadaraPaths;
   dryRun?: boolean;
@@ -142,6 +151,9 @@ interface RootRoleSummary {
   fromOption: '--source-root' | '--evidence-root' | '--smoke-project-root' | '--project' | 'default-disposable';
 }
 
+const DEFAULT_NPM_PACKAGE_SMOKE_TIMEOUT_SECONDS = 300;
+const DEFAULT_PYTHON_PACKAGE_SMOKE_TIMEOUT_SECONDS = 120;
+
 export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions): PackageSmokeReport {
   if (normalizePackageSmokeProvider(options.provider) === 'python') {
     return createPythonPackageSmokeDryRunReport(options);
@@ -178,6 +190,7 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
       command: 'package.smoke'
     },
     networkPolicy,
+    timeoutPolicy: createTimeoutPolicy(options.timeoutSeconds, DEFAULT_NPM_PACKAGE_SMOKE_TIMEOUT_SECONDS, issues),
     execution: {
       npmPackExecuted: false,
       packageInstallExecuted: false,
@@ -256,7 +269,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
   let tarballPath = source.kind === 'source-checkout' ? undefined : resolveInputPath(options.paths.projectRoot, options.from);
   const runner = options.runner ?? runCommand;
-  const timeoutMs = (options.timeoutSeconds ?? 120) * 1000;
+  const timeoutMs = (options.timeoutSeconds ?? DEFAULT_NPM_PACKAGE_SMOKE_TIMEOUT_SECONDS) * 1000;
   const npmEnv = workspaceNpmEnv(workspaceSetup.path);
 
   try {
@@ -552,6 +565,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
       command: 'package.smoke'
     },
     networkPolicy,
+    timeoutPolicy: createTimeoutPolicy(options.timeoutSeconds, DEFAULT_NPM_PACKAGE_SMOKE_TIMEOUT_SECONDS, issues),
     execution,
     workspace: {
       kind: 'disposable',
@@ -722,7 +736,7 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
   }
   const workspaceSetup = prepareExecutionWorkspace(options.paths.projectRoot, options.workspace, options.keepTemp === true, issues);
   const runner = options.runner ?? runCommand;
-  const timeoutMs = (options.timeoutSeconds ?? 120) * 1000;
+  const timeoutMs = (options.timeoutSeconds ?? DEFAULT_PYTHON_PACKAGE_SMOKE_TIMEOUT_SECONDS) * 1000;
   const steps: PackageSmokeReport['steps'] = [
     {
       id: 'validate-source',
@@ -904,6 +918,7 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
       command: 'package.smoke'
     },
     networkPolicy,
+    timeoutPolicy: createTimeoutPolicy(options.timeoutSeconds, DEFAULT_PYTHON_PACKAGE_SMOKE_TIMEOUT_SECONDS, issues),
     execution,
     workspace: {
       kind: 'disposable',
@@ -951,6 +966,19 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
 
   assertSchema('hadara.packageSmoke.v1', report);
   return report;
+}
+
+function createTimeoutPolicy(timeoutSeconds: number | undefined, defaultTimeoutSeconds: number, issues: PackageSmokeIssue[]): PackageSmokeTimeoutPolicy {
+  return {
+    scope: 'per-step',
+    defaultTimeoutSeconds,
+    effectiveTimeoutSeconds: timeoutSeconds ?? defaultTimeoutSeconds,
+    timeoutStepIds: issues.filter((issue) => issue.code.endsWith('_TIMEOUT') && issue.stepId).map((issue) => String(issue.stepId)),
+    notes: [
+      'Timeouts are applied per subprocess step, not as one opaque package-smoke timeout.',
+      'When a timeout occurs, timeoutStepIds identifies the slow step such as npm-pack, install-cli, doctor, command-surface-drift, generated-init-docs, or feature-smoke-core.'
+    ]
+  };
 }
 
 function createNetworkPolicy(networkPolicy: string | undefined, provider: 'npm' | 'python', issues: PackageSmokeIssue[]): PackageSmokeNetworkPolicy {

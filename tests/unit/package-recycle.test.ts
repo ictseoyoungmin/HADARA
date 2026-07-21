@@ -161,6 +161,12 @@ describe('installed package recycle', () => {
       releaseMutationExecuted: false,
       publishExecuted: false
     });
+    expect(report.timeoutPolicy).toMatchObject({
+      scope: 'per-step',
+      defaultTimeoutSeconds: 300,
+      effectiveTimeoutSeconds: 300,
+      timeoutStepIds: []
+    });
     expect(calls).toContain('npm view hadara@latest version --json');
     expect(calls.some((call) => call.includes('commands --json'))).toBe(true);
     expect(calls.some((call) => call.includes('context graph --json'))).toBe(false);

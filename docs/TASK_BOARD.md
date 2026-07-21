@@ -672,3 +672,4 @@
 | T-0669 | 0.5.0-rc.1 GitHub release record and installed-package dogfood | Done | tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood | |
 | T-0670 | Release root separation contract | Done | tasks/T-0670-release-root-separation-contract | |
 | T-0671 | Release Artifact Evidence Journal | Done | tasks/T-0671-release-artifact-evidence-journal | |
+| T-0672 | Package Smoke Isolation and Timeout Policy | Done | tasks/T-0672-package-smoke-isolation-and-timeout-policy | |

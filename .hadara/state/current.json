@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 258,
+  "rev": 260,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0671",
-    "title": "Release Artifact Evidence Journal"
+    "id": "T-0672",
+    "title": "Package Smoke Isolation and Timeout Policy"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,8 +14,8 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Close T-0671 and commit, then start T-0672 Package Smoke Isolation and Timeout Policy.",
-    "reason": "T-0671 validation is complete; remaining reviewer capsules are separate release-readiness recycle work.",
+    "title": "Close T-0672 and commit, then start T-0673 Release Recycle Runbook and Command Contract.",
+    "reason": "T-0672 validation is complete; remaining reviewer capsules are separate release-readiness recycle work.",
     "references": [
       {
         "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
@@ -29,8 +29,8 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0671",
-      "path": "tasks/T-0671-release-artifact-evidence-journal/HANDOFF.md"
+      "workId": "T-0672",
+      "path": "tasks/T-0672-package-smoke-isolation-and-timeout-policy/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -55,9 +55,9 @@
       "guidance": "Use a clean ext4 clone for release artifacts; direct /workspace artifact attempts can fail if local-only untracked state such as .claude/ is present."
     },
     {
-      "summary": "HADARA-dev package smoke installed core smoke can exceed the default 120s timeout in the large source workspace.",
+      "summary": "Historical HADARA-dev package smoke timeout incidents are mitigated by isolated smokeProjectRoot and per-step timeout reporting.",
       "state": "watch",
-      "guidance": "Use `--timeout 300` for release package smoke until the installed smoke path is optimized or decoupled from the large project root."
+      "guidance": "Package smoke/recycle now default to 300s per step for npm/recycle paths and report timeoutStepIds; use explicit `--timeout` only for a reviewed release exception."
     }
   ],
   "validationBaseline": {

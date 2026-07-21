@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0671 Release Artifact Evidence Journal |
+| Latest Completed Task | T-0672 Package Smoke Isolation and Timeout Policy |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -24,7 +24,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
 | Release artifact git-status preflight and full dev Docker workspace copy can exceed useful latency or fail on mounted WSL workspace-local state. | watch | Use a clean ext4 clone for release artifacts; direct /workspace artifact attempts can fail if local-only untracked state such as .claude/ is present. |
-| HADARA-dev package smoke installed core smoke can exceed the default 120s timeout in the large source workspace. | watch | Use `--timeout 300` for release package smoke until the installed smoke path is optimized or decoupled from the large project root. |
+| Historical HADARA-dev package smoke timeout incidents are mitigated by isolated smokeProjectRoot and per-step timeout reporting. | watch | Package smoke/recycle now default to 300s per step for npm/recycle paths and report timeoutStepIds; use explicit `--timeout` only for a reviewed release exception. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership
@@ -45,7 +45,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 recycled release readiness evidence for `0.5.0-rc.1`; T-0668 records the completed npm `next` publish, GitHub Release note artifact, and installed-package recycle from `hadara@next`. T-0669 records public GitHub Release `v0.5.0-rc.1` publication and Docker installed-package dogfood from public `hadara@next`. T-0670 begins the reviewer-requested release-readiness recycle design fixes by separating source, evidence, and disposable smoke project roots in package smoke/recycle commands. T-0671 adds journal-first release artifact evidence handling so clean source artifact preflight is not invalidated by evidence writes.
+v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 recycled release readiness evidence for `0.5.0-rc.1`; T-0668 records the completed npm `next` publish, GitHub Release note artifact, and installed-package recycle from `hadara@next`. T-0669 records public GitHub Release `v0.5.0-rc.1` publication and Docker installed-package dogfood from public `hadara@next`. T-0670 begins the reviewer-requested release-readiness recycle design fixes by separating source, evidence, and disposable smoke project roots in package smoke/recycle commands. T-0671 adds journal-first release artifact evidence handling so clean source artifact preflight is not invalidated by evidence writes. T-0672 adds package smoke/recycle per-step timeout policy with a 300s npm/recycle default and timeoutStepIds for slow-stage attribution.
 
 | Stage | State | Purpose |
 |---|---|---|

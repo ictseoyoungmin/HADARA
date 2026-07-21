@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0671 Release Artifact Evidence Journal | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0672 Package Smoke Isolation and Timeout Policy | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
@@ -24,7 +24,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
 | Release artifact git-status preflight and full dev Docker workspace copy can exceed useful latency or fail on mounted WSL workspace-local state. | watch | Use a clean ext4 clone for release artifacts; direct /workspace artifact attempts can fail if local-only untracked state such as .claude/ is present. |
-| HADARA-dev package smoke installed core smoke can exceed the default 120s timeout in the large source workspace. | watch | Use `--timeout 300` for release package smoke until the installed smoke path is optimized or decoupled from the large project root. |
+| Historical HADARA-dev package smoke timeout incidents are mitigated by isolated smokeProjectRoot and per-step timeout reporting. | watch | Package smoke/recycle now default to 300s per step for npm/recycle paths and report timeoutStepIds; use explicit `--timeout` only for a reviewed release exception. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership

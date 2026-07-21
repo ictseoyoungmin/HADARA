@@ -445,6 +445,12 @@ describe('package smoke local execution', () => {
         smokeProfile: 'npm-package-smoke',
         command: 'package.smoke'
       },
+      timeoutPolicy: {
+        scope: 'per-step',
+        defaultTimeoutSeconds: 300,
+        effectiveTimeoutSeconds: 30,
+        timeoutStepIds: []
+      },
       execution: {
         npmPackExecuted: true,
         packageInstallExecuted: true,
@@ -520,7 +526,7 @@ describe('package smoke local execution', () => {
         };
       }
       if (args[0] === 'install') {
-        return { status: 1, stdout: '', stderr: '/home/alice/private install failure log', elapsedMs: 20 };
+        return { status: null, stdout: '', stderr: '/home/alice/private install failure log', elapsedMs: 20, timedOut: true };
       }
       return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 1 };
     };
@@ -534,9 +540,15 @@ describe('package smoke local execution', () => {
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual({
       severity: 'error',
-      code: 'PACKAGE_SMOKE_INSTALL_FAILED',
-      message: 'Package install failed in the isolated prefix.',
+      code: 'PACKAGE_SMOKE_INSTALL_TIMEOUT',
+      message: 'Package install timed out in the isolated prefix.',
       stepId: 'install-cli'
+    });
+    expect(report.timeoutPolicy).toMatchObject({
+      scope: 'per-step',
+      defaultTimeoutSeconds: 300,
+      effectiveTimeoutSeconds: 300,
+      timeoutStepIds: ['install-cli']
     });
     expect(report.steps).toContainEqual(
       expect.objectContaining({

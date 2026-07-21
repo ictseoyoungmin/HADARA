@@ -52,6 +52,18 @@
         "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
+    "timeoutPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["scope", "defaultTimeoutSeconds", "effectiveTimeoutSeconds", "timeoutStepIds", "notes"],
+      "properties": {
+        "scope": { "const": "per-step" },
+        "defaultTimeoutSeconds": { "type": "integer", "minimum": 1 },
+        "effectiveTimeoutSeconds": { "type": "integer", "minimum": 1 },
+        "timeoutStepIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
     "execution": {
       "type": "object",
       "additionalProperties": true,
