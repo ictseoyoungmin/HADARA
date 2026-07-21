@@ -10,7 +10,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Current Release | 0.5.0-rc.1 | Portable project state. |
 | Latest Completed Task | T-0666 Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
-| Active Task | None | No active task is selected. |
+| Active Task | T-0667 0.5.0-rc.1 release-readiness recycle | Resume this capsule first. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |

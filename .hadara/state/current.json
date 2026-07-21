@@ -1,6 +1,6 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 245,
+  "rev": 246,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
@@ -8,7 +8,10 @@
     "id": "T-0666",
     "title": "Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665)"
   },
-  "activeTask": null,
+  "activeTask": {
+    "id": "T-0667",
+    "title": "0.5.0-rc.1 release-readiness recycle"
+  },
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {

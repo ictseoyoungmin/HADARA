@@ -10,7 +10,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Current Release | 0.5.0-rc.1 |
 | Latest Completed Task | T-0666 Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) |
 | Latest Completed Task Basis | highest-done-task-id |
-| Active Task | None |
+| Active Task | T-0667 0.5.0-rc.1 release-readiness recycle |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0634 through T-0647 implemented the 0.5.0 status-ingress line: `hadara status --json` is the primary session entry point, status/task-status emit v2 read models, selected-task cockpit guidance is available, and public `session start` guidance/routing has been removed. T-0648 prepares `0.5.0-rc.0` source metadata, release notes, and validation evidence; npm/GitHub publication remains policy-controlled and may be manual, CI-driven, or hybrid.
+v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 is recycling release readiness evidence for `0.5.0-rc.1`; npm/GitHub publication remains policy-controlled and separate from source/readiness validation.
 
 | Stage | State | Purpose |
 |---|---|---|
