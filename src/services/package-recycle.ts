@@ -64,6 +64,11 @@ export interface PackageRecycleReport {
     pathRedacted: true;
     retention: 'deleted' | 'kept-temporary';
   };
+  rootRoles: {
+    sourceRoot: RootRoleSummary;
+    evidenceRoot: RootRoleSummary;
+    smokeProjectRoot: RootRoleSummary;
+  };
   steps: PackageRecycleStep[];
   artifacts: Array<{
     kind: 'summary' | 'command-log' | 'install-tree';
@@ -89,6 +94,9 @@ export interface PackageRecycleOptions {
   packageSpecifier?: string;
   expectedVersion?: string;
   workspace?: string;
+  sourceRoot?: string;
+  evidenceRoot?: string;
+  smokeProjectRoot?: string;
   taskId?: string;
   attachEvidence?: boolean;
   noEvidence?: boolean;
@@ -130,6 +138,14 @@ type TaskReadSmoke = {
   compatibility: 'current' | 'legacy';
 };
 
+interface RootRoleSummary {
+  role: 'sourceRoot' | 'evidenceRoot' | 'smokeProjectRoot';
+  displayPath: string;
+  pathRedacted: true;
+  relativePath?: string;
+  fromOption: '--source-root' | '--evidence-root' | '--smoke-project-root' | '--project' | 'default-disposable';
+}
+
 export function createPackageRecycleReport(options: PackageRecycleOptions): PackageRecycleReport {
   return options.execute ? createPackageRecycleExecuteReport(options) : createPackageRecycleDryRunReport(options);
 }
@@ -138,6 +154,7 @@ export function createPackageRecycleDryRunReport(options: PackageRecycleOptions)
   const issues: PackageRecycleIssue[] = [];
   validateOptions(options, issues);
   const packageInfo = createPackageInfo(options.packageSpecifier, options.expectedVersion);
+  const roots = resolvePackageRecycleRoots(options, '<system-temp>/hadara-package-recycle-*', issues);
   const report: PackageRecycleReport = {
     schemaVersion: 'hadara.packageRecycle.v1',
     command: 'package.recycle',
@@ -149,6 +166,7 @@ export function createPackageRecycleDryRunReport(options: PackageRecycleOptions)
     networkPolicy: createNetworkPolicy(),
     execution: createExecutionFlags(),
     workspace: createWorkspace(options.workspace, options.keepTemp === true),
+    rootRoles: roots.report,
     steps: createPlannedSteps(packageInfo, options),
     artifacts: createArtifacts(options),
     privacy: createPrivacy(),
@@ -163,7 +181,11 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
   const issues: PackageRecycleIssue[] = [];
   validateOptions(options, issues);
   const packageInfo = createPackageInfo(options.packageSpecifier, options.expectedVersion);
-  const workspaceSetup = prepareWorkspace(options.paths.projectRoot, options.workspace, options.keepTemp === true, issues);
+  const sourceRoot = resolveRoleRoot(options.paths.projectRoot, options.sourceRoot);
+  const evidenceRoot = resolveRoleRoot(options.paths.projectRoot, options.evidenceRoot);
+  const workspaceSetup = prepareWorkspace(sourceRoot, options.workspace, options.keepTemp === true, issues);
+  const smokeProjectRoot = resolveSmokeProjectRoot(sourceRoot, workspaceSetup.path, options.smokeProjectRoot);
+  const roots = resolvePackageRecycleRoots(options, workspaceSetup.displayPath, issues, sourceRoot, evidenceRoot, smokeProjectRoot);
   const steps: PackageRecycleStep[] = [
     {
       id: 'plan-workspace',
@@ -270,6 +292,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
             installedBin: installedHadaraCommand(prefix),
             installPrefix: prefix,
             workspacePath: workspaceSetup.path,
+            smokeProjectRoot,
             includeGraph: options.includeGraph === true,
             timeoutMs,
             packageInfo,
@@ -327,6 +350,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
       pathRedacted: true,
       retention: options.keepTemp === true ? 'kept-temporary' : 'deleted'
     },
+    rootRoles: roots.report,
     steps,
     artifacts,
     privacy: createPrivacy(),
@@ -335,7 +359,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
 
   if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
     const evidence = attachReducedSmokeEvidence({
-      projectRoot: options.paths.projectRoot,
+      projectRoot: evidenceRoot,
       taskId: options.taskId,
       category: 'package-recycle',
       kind: 'command-log',
@@ -361,6 +385,7 @@ function runInstalledSmokes(input: {
   installedBin: string;
   installPrefix: string;
   workspacePath: string;
+  smokeProjectRoot: string;
   includeGraph: boolean;
   timeoutMs: number;
   packageInfo: PackageRecycleReport['package'];
@@ -411,7 +436,7 @@ function runInstalledSmokes(input: {
   });
 
   const taskReadSmoke = selectTaskReadSmoke(commandSurface);
-  const disposableProject = path.join(input.workspacePath, 'consumer-project');
+  const disposableProject = input.smokeProjectRoot;
   fs.mkdirSync(disposableProject, { recursive: true });
   input.execution.initExecuted = true;
   pushJsonSmokeStep(input, {
@@ -616,6 +641,87 @@ function createWorkspace(workspace: string | undefined, keepTemp: boolean): Pack
     pathRedacted: true,
     retention: keepTemp ? 'kept-temporary' : 'deleted'
   };
+}
+
+function resolveRoleRoot(projectRoot: string, value: string | undefined): string {
+  return value ? path.resolve(projectRoot, value) : projectRoot;
+}
+
+function resolveSmokeProjectRoot(sourceRoot: string, workspacePath: string, value: string | undefined): string {
+  if (value) return path.resolve(sourceRoot, value);
+  return path.join(workspacePath, 'consumer-project');
+}
+
+function resolvePackageRecycleRoots(
+  options: PackageRecycleOptions,
+  workspaceDisplayPath: string,
+  issues: PackageRecycleIssue[],
+  resolvedSourceRoot = resolveRoleRoot(options.paths.projectRoot, options.sourceRoot),
+  resolvedEvidenceRoot = resolveRoleRoot(options.paths.projectRoot, options.evidenceRoot),
+  resolvedSmokeProjectRoot?: string
+): { report: PackageRecycleReport['rootRoles'] } {
+  const smokeRoot = resolvedSmokeProjectRoot ?? (options.smokeProjectRoot ? resolveSmokeProjectRoot(resolvedSourceRoot, '', options.smokeProjectRoot) : null);
+  if (!options.sourceRoot && !options.evidenceRoot) {
+    issues.push({
+      severity: 'warning',
+      code: 'PACKAGE_RECYCLE_PROJECT_ALIAS_ROOTS',
+      message: '`--project` is treated as both sourceRoot and evidenceRoot for compatibility; use --source-root and --evidence-root to make release root roles explicit.'
+    });
+  }
+  if (smokeRoot && samePath(resolvedSourceRoot, smokeRoot)) {
+    issues.push({
+      severity: 'warning',
+      code: 'PACKAGE_RECYCLE_SOURCE_EQUALS_SMOKE_PROJECT',
+      message: 'sourceRoot and smokeProjectRoot resolve to the same path; installed package recycle should use an isolated disposable consumer project.'
+    });
+  }
+  return {
+    report: {
+      sourceRoot: {
+        role: 'sourceRoot',
+        displayPath: rootDisplayPath(options.paths.projectRoot, resolvedSourceRoot, options.sourceRoot ? '--source-root' : '--project', workspaceDisplayPath),
+        pathRedacted: true,
+        ...relativeRoot(options.paths.projectRoot, resolvedSourceRoot),
+        fromOption: options.sourceRoot ? '--source-root' : '--project'
+      },
+      evidenceRoot: {
+        role: 'evidenceRoot',
+        displayPath: rootDisplayPath(options.paths.projectRoot, resolvedEvidenceRoot, options.evidenceRoot ? '--evidence-root' : '--project', workspaceDisplayPath),
+        pathRedacted: true,
+        ...relativeRoot(options.paths.projectRoot, resolvedEvidenceRoot),
+        fromOption: options.evidenceRoot ? '--evidence-root' : '--project'
+      },
+      smokeProjectRoot: {
+        role: 'smokeProjectRoot',
+        displayPath: smokeRoot ? rootDisplayPath(options.paths.projectRoot, smokeRoot, options.smokeProjectRoot ? '--smoke-project-root' : 'default-disposable', workspaceDisplayPath) : `${workspaceDisplayPath}/consumer-project`,
+        pathRedacted: true,
+        ...(smokeRoot ? relativeRoot(options.paths.projectRoot, smokeRoot) : {}),
+        fromOption: options.smokeProjectRoot ? '--smoke-project-root' : 'default-disposable'
+      }
+    }
+  };
+}
+
+function rootDisplayPath(projectRoot: string, resolved: string, fromOption: string, workspaceDisplayPath: string): string {
+  if (fromOption === 'default-disposable') return `${workspaceDisplayPath}/consumer-project`;
+  const rel = path.relative(projectRoot, resolved);
+  if (!rel) return '.';
+  if (!rel.startsWith('..') && !path.isAbsolute(rel)) return `./${toPosix(rel)}`;
+  return '<redacted-root>';
+}
+
+function relativeRoot(projectRoot: string, resolved: string): { relativePath?: string } {
+  const rel = path.relative(projectRoot, resolved);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return {};
+  return { relativePath: toPosix(rel) };
+}
+
+function samePath(a: string, b: string): boolean {
+  return path.resolve(a) === path.resolve(b);
+}
+
+function toPosix(value: string): string {
+  return value.split(path.sep).join('/');
 }
 
 function createArtifacts(options: PackageRecycleOptions): PackageRecycleReport['artifacts'] {

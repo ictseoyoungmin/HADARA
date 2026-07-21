@@ -53,6 +53,11 @@ export interface PackageSmokeReport {
     relativePath?: string;
     retention: 'deleted' | 'kept-temporary';
   };
+  rootRoles?: {
+    sourceRoot: RootRoleSummary;
+    evidenceRoot: RootRoleSummary;
+    smokeProjectRoot: RootRoleSummary;
+  };
   source: {
     kind: 'source-checkout' | 'tarball' | 'release-artifact';
     displayPath: string;
@@ -103,6 +108,9 @@ export interface PackageSmokeDryRunOptions {
   networkPolicy?: string;
   from?: string;
   workspace?: string;
+  sourceRoot?: string;
+  evidenceRoot?: string;
+  smokeProjectRoot?: string;
   taskId?: string;
   attachEvidence?: boolean;
   noEvidence?: boolean;
@@ -126,6 +134,14 @@ export interface PackageSmokeCommandResult {
 
 export type PackageSmokeCommandRunner = (command: string, args: string[], options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }) => PackageSmokeCommandResult;
 
+interface RootRoleSummary {
+  role: 'sourceRoot' | 'evidenceRoot' | 'smokeProjectRoot';
+  displayPath: string;
+  pathRedacted: true;
+  relativePath?: string;
+  fromOption: '--source-root' | '--evidence-root' | '--smoke-project-root' | '--project' | 'default-disposable';
+}
+
 export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions): PackageSmokeReport {
   if (normalizePackageSmokeProvider(options.provider) === 'python') {
     return createPythonPackageSmokeDryRunReport(options);
@@ -142,7 +158,8 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
 
   validateTaskId(options.taskId, issues);
   validateTimeout(options.timeoutSeconds, issues);
-  const source = createSource(options.paths.projectRoot, options.from, issues);
+  const roots = resolvePackageSmokeRoots(options, '<redacted-disposable-workspace>', issues);
+  const source = createSource(roots.sourceRootPath, options.from, issues);
   const workspace = createWorkspace(options.workspace, options.keepTemp === true);
   const steps = createDryRunSteps(source.kind, options);
   const artifacts = createPlannedArtifacts(options);
@@ -169,6 +186,7 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
       publishExecuted: false
     },
     workspace,
+    rootRoles: roots.report,
     source,
     steps,
     artifacts,
@@ -196,8 +214,12 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
   validateTaskId(options.taskId, issues);
   validateTimeout(options.timeoutSeconds, issues);
 
-  const source = createSource(options.paths.projectRoot, options.from, issues);
-  const workspaceSetup = prepareExecutionWorkspace(options.paths.projectRoot, options.workspace, options.keepTemp === true, issues);
+  const sourceRoot = resolveRoleRoot(options.paths.projectRoot, options.sourceRoot);
+  const evidenceRoot = resolveRoleRoot(options.paths.projectRoot, options.evidenceRoot);
+  const source = createSource(sourceRoot, options.from, issues);
+  const workspaceSetup = prepareExecutionWorkspace(sourceRoot, options.workspace, options.keepTemp === true, issues);
+  const smokeProjectPath = resolveSmokeProjectRoot(sourceRoot, workspaceSetup.path, options.smokeProjectRoot);
+  const roots = resolvePackageSmokeRoots(options, workspaceSetup.displayPath, issues, sourceRoot, evidenceRoot, smokeProjectPath);
   const networkPolicy = createNetworkPolicy(options.networkPolicy, 'npm', issues);
   const steps: PackageSmokeReport['steps'] = [
     {
@@ -244,7 +266,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
       if (source.kind === 'source-checkout') {
         execution.npmPackExecuted = true;
         const pack = runner(npmCommand(), ['pack', '--json', '--pack-destination', workspaceSetup.path], {
-          cwd: options.paths.projectRoot,
+          cwd: sourceRoot,
           timeoutMs,
           env: npmEnv
         });
@@ -314,9 +336,10 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
         const installedBin = installedHadaraCommand(installPrefix);
         if (install.status === 0) {
-          const commandEnv = installPathEnv(installPrefix, options.paths.projectRoot);
+          fs.mkdirSync(smokeProjectPath, { recursive: true });
+          const commandEnv = installPathEnv(installPrefix);
           const doctor = runner(installedBin, ['doctor', '--json'], {
-            cwd: workspaceSetup.path,
+            cwd: smokeProjectPath,
             timeoutMs,
             env: commandEnv
           });
@@ -355,7 +378,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             const installedMain = installedMainJsPath(installPrefix);
             if (installedMain) {
               surface = runner(process.execPath, [installedMain, 'commands', '--json'], {
-                cwd: workspaceSetup.path,
+                cwd: smokeProjectPath,
                 timeoutMs,
                 env: commandEnv
               });
@@ -403,7 +426,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
           execution.featureSmokeExecuted = true;
           const smoke = runner(installedBin, ['smoke', 'run', '--profile', 'core', '--json'], {
-            cwd: workspaceSetup.path,
+            cwd: smokeProjectPath,
             timeoutMs,
             env: commandEnv
           });
@@ -537,6 +560,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
       ...(workspaceSetup.relativePath ? { relativePath: workspaceSetup.relativePath } : {}),
       retention: options.keepTemp === true ? 'kept-temporary' : 'deleted'
     },
+    rootRoles: roots.report,
     source,
     steps,
     artifacts,
@@ -552,7 +576,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
   if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
     const evidence = attachReducedSmokeEvidence({
-      projectRoot: options.paths.projectRoot,
+      projectRoot: evidenceRoot,
       taskId: options.taskId,
       category: 'package-smoke',
       kind: 'command-log',
@@ -1065,10 +1089,11 @@ function createPlannedArtifacts(options: PackageSmokeDryRunOptions): PackageSmok
   }
 
   if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
+    const evidenceRoot = resolveRoleRoot(options.paths.projectRoot, options.evidenceRoot);
     artifacts.push({
       kind: 'summary',
       visibility: 'public',
-      evidencePath: `${resolveTaskCapsulePath(options.paths.projectRoot, options.taskId)}/artifacts/package-smoke/dry-run-summary.json`,
+      evidencePath: `${resolveTaskCapsulePath(evidenceRoot, options.taskId)}/artifacts/package-smoke/dry-run-summary.json`,
       rawContentIncluded: false
     });
   }
@@ -1103,6 +1128,90 @@ function createSource(projectRoot: string, from: string | undefined, issues: Pac
     pathRedacted: true,
     ...(relativePath ? { relativePath } : {})
   };
+}
+
+function resolveRoleRoot(projectRoot: string, value: string | undefined): string {
+  return value ? path.resolve(projectRoot, value) : projectRoot;
+}
+
+function resolveSmokeProjectRoot(sourceRoot: string, workspacePath: string, value: string | undefined): string {
+  if (value) return path.resolve(sourceRoot, value);
+  return path.join(workspacePath, 'smoke-project');
+}
+
+function resolvePackageSmokeRoots(
+  options: PackageSmokeDryRunOptions,
+  workspaceDisplayPath: string,
+  issues: PackageSmokeIssue[],
+  resolvedSourceRoot = resolveRoleRoot(options.paths.projectRoot, options.sourceRoot),
+  resolvedEvidenceRoot = resolveRoleRoot(options.paths.projectRoot, options.evidenceRoot),
+  resolvedSmokeProjectRoot?: string
+): { sourceRootPath: string; evidenceRootPath: string; smokeProjectRootPath: string | null; report: PackageSmokeReport['rootRoles'] } {
+  const smokeRoot = resolvedSmokeProjectRoot ?? (options.smokeProjectRoot ? resolveSmokeProjectRoot(resolvedSourceRoot, '', options.smokeProjectRoot) : null);
+  if (!options.sourceRoot && !options.evidenceRoot) {
+    issues.push({
+      severity: 'warning',
+      code: 'PACKAGE_SMOKE_PROJECT_ALIAS_ROOTS',
+      message: '`--project` is treated as both sourceRoot and evidenceRoot for compatibility; use --source-root and --evidence-root to make release root roles explicit.'
+    });
+  }
+  if (smokeRoot && samePath(resolvedSourceRoot, smokeRoot)) {
+    issues.push({
+      severity: 'warning',
+      code: 'PACKAGE_SMOKE_SOURCE_EQUALS_SMOKE_PROJECT',
+      message: 'sourceRoot and smokeProjectRoot resolve to the same path; installed package smoke should use an isolated disposable consumer project.'
+    });
+  }
+  return {
+    sourceRootPath: resolvedSourceRoot,
+    evidenceRootPath: resolvedEvidenceRoot,
+    smokeProjectRootPath: smokeRoot,
+    report: {
+      sourceRoot: {
+        role: 'sourceRoot',
+        displayPath: rootDisplayPath(options.paths.projectRoot, resolvedSourceRoot, options.sourceRoot ? '--source-root' : '--project', workspaceDisplayPath),
+        pathRedacted: true,
+        ...relativeRoot(options.paths.projectRoot, resolvedSourceRoot),
+        fromOption: options.sourceRoot ? '--source-root' : '--project'
+      },
+      evidenceRoot: {
+        role: 'evidenceRoot',
+        displayPath: rootDisplayPath(options.paths.projectRoot, resolvedEvidenceRoot, options.evidenceRoot ? '--evidence-root' : '--project', workspaceDisplayPath),
+        pathRedacted: true,
+        ...relativeRoot(options.paths.projectRoot, resolvedEvidenceRoot),
+        fromOption: options.evidenceRoot ? '--evidence-root' : '--project'
+      },
+      smokeProjectRoot: {
+        role: 'smokeProjectRoot',
+        displayPath: smokeRoot ? rootDisplayPath(options.paths.projectRoot, smokeRoot, options.smokeProjectRoot ? '--smoke-project-root' : 'default-disposable', workspaceDisplayPath) : `${workspaceDisplayPath}/smoke-project`,
+        pathRedacted: true,
+        ...(smokeRoot ? relativeRoot(options.paths.projectRoot, smokeRoot) : {}),
+        fromOption: options.smokeProjectRoot ? '--smoke-project-root' : 'default-disposable'
+      }
+    }
+  };
+}
+
+function rootDisplayPath(projectRoot: string, resolved: string, fromOption: string, workspaceDisplayPath: string): string {
+  if (fromOption === 'default-disposable') return `${workspaceDisplayPath}/smoke-project`;
+  const rel = path.relative(projectRoot, resolved);
+  if (!rel) return '.';
+  if (!rel.startsWith('..') && !path.isAbsolute(rel)) return `./${toPosix(rel)}`;
+  return '<redacted-root>';
+}
+
+function relativeRoot(projectRoot: string, resolved: string): { relativePath?: string } {
+  const rel = path.relative(projectRoot, resolved);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return {};
+  return { relativePath: toPosix(rel) };
+}
+
+function samePath(a: string, b: string): boolean {
+  return path.resolve(a) === path.resolve(b);
+}
+
+function toPosix(value: string): string {
+  return value.split(path.sep).join('/');
 }
 
 function createWorkspace(workspace: string | undefined, keepTemp: boolean): PackageSmokeReport['workspace'] {

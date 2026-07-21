@@ -74,8 +74,7 @@ describe('installed package recycle', () => {
         privatePathsIncluded: false,
         environmentSecretsIncluded: false,
         privateStorePathsIncluded: false
-      },
-      issues: []
+      }
     });
     expect(report.steps.map((step) => step.id)).toEqual([
       'plan-workspace',
@@ -94,6 +93,12 @@ describe('installed package recycle', () => {
       'context-slice',
       'cleanup'
     ]);
+    expect(report.rootRoles).toMatchObject({
+      sourceRoot: { role: 'sourceRoot', fromOption: '--project' },
+      evidenceRoot: { role: 'evidenceRoot', fromOption: '--project' },
+      smokeProjectRoot: { role: 'smokeProjectRoot', fromOption: 'default-disposable' }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_RECYCLE_PROJECT_ALIAS_ROOTS' }));
     expect(report.steps.map((step) => step.id)).not.toContain('context-graph');
     expect(report.steps.every((step) => step.status === 'planned')).toBe(true);
     expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);

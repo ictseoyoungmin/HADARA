@@ -1667,7 +1667,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'smoke.package',
-    command: 'hadara smoke package [--dry-run|--execute] [--from <tarball|dir>] [--json]',
+    command: 'hadara smoke package [--dry-run|--execute] [--from <tarball|dir>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--json]',
     summary: 'Preview or execute reduced npm package smoke validation.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1682,7 +1682,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.packageSmoke.v1',
     docs: ['docs/TEST_STRATEGY.md'],
-    examples: [example('Preview package smoke', 'hadara smoke package --dry-run --json', 'Before executing isolated package smoke validation.')],
+    examples: [
+      example('Preview package smoke', 'hadara smoke package --dry-run --json', 'Before executing isolated package smoke validation.'),
+      example('Execute package smoke with explicit roots', 'hadara smoke package --execute --source-root . --evidence-root . --smoke-project-root /tmp/hadara-package-smoke-consumer --task T-XXXX --attach-evidence --json', 'When release evidence and disposable consumer execution roots must be explicit.')
+    ],
     related: ['smoke.run', 'release.gate'],
     conflictsWith: [],
     notes: 'Canonical package smoke entry after package-smoke naming was consolidated into the smoke family.',
@@ -1696,7 +1699,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         availability: 'default',
         risk: 'low',
         schemaVersion: 'hadara.packageSmoke.v1',
-        notes: 'Read-only package-smoke dry-run planner.'
+        notes: 'Read-only package-smoke dry-run planner. Reports rootRoles for sourceRoot, evidenceRoot, and smokeProjectRoot.'
       },
       {
         name: 'hadara smoke package --execute --json',
@@ -1707,13 +1710,13 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         availability: 'default',
         risk: 'medium',
         schemaVersion: 'hadara.packageSmoke.v1',
-        notes: 'Explicit local package-smoke execution in a disposable workspace.'
+        notes: 'Explicit local package-smoke execution in a disposable smokeProjectRoot; installed subprocesses do not inherit HADARA_PROJECT_ROOT from the source checkout.'
       }
     ]
   }),
   commandEntry({
     id: 'package.recycle',
-    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--include-graph] [--json]',
+    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--include-graph] [--json]',
     summary: 'Preview or execute installed-package recycle validation from the package registry.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1732,7 +1735,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: ['docs/RELEASE_READINESS.md', 'docs/CLI_JSON_CONTRACT.md'],
     examples: [
       example('Preview installed-package recycle', 'hadara package recycle --package hadara@latest --expected-version 0.4.0 --json', 'Before running registry-backed consumer install validation.'),
-      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.'),
+      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --source-root . --evidence-root . --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.'),
+      example('Execute recycle with explicit consumer root', 'hadara package recycle --execute --package hadara@next --expected-version 0.5.0-rc.1 --source-root . --evidence-root . --smoke-project-root /tmp/hadara-recycle-consumer --task T-XXXX --attach-evidence --json', 'When the installed smoke project must be isolated from the source and evidence roots.'),
       example('Execute recycle with graph diagnostics', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --include-graph --json', 'When intentionally running the broader context graph smoke.')
     ],
     related: ['smoke.package', 'release.closeout', 'release.publish'],
@@ -1747,7 +1751,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         availability: 'default',
         risk: 'low',
         schemaVersion: 'hadara.packageRecycle.v1',
-        notes: 'Read-only installed-package recycle dry-run planner.'
+        notes: 'Read-only installed-package recycle dry-run planner. Reports rootRoles for sourceRoot, evidenceRoot, and smokeProjectRoot.'
       },
       {
         name: 'hadara package recycle --execute --json',
@@ -1758,7 +1762,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         availability: 'default',
         risk: 'medium',
         schemaVersion: 'hadara.packageRecycle.v1',
-        notes: 'Explicit npm registry and isolated-prefix consumer package validation. The smoke reads the installed command surface, prefers current task status, and keeps broad context graph diagnostics behind --include-graph.'
+        notes: 'Explicit npm registry and isolated-prefix consumer package validation. The smoke reads the installed command surface, runs inside smokeProjectRoot without inherited HADARA_PROJECT_ROOT, prefers current task status, and keeps broad context graph diagnostics behind --include-graph.'
       }
     ]
   }),

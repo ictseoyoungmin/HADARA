@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 254,
+  "rev": 256,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0669",
-    "title": "0.5.0-rc.1 GitHub release record and installed-package dogfood"
+    "id": "T-0670",
+    "title": "Release root separation contract"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,27 +14,23 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Proceed to the release-workflow design-fix capsule before further Phase D work.",
-    "reason": "`prepare-publish-env.sh` and the manual publish flow must generate or require public GitHub Release notes by construction.",
+    "title": "Close T-0670 and commit, then start T-0671 Release Artifact Evidence Journal.",
+    "reason": "T-0670 validation is complete; remaining reviewer capsules are separate release-readiness recycle work.",
     "references": [
       {
-        "path": "`scripts/release/prepare-publish-env.sh`",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       },
       {
-        "path": "`scripts/release/manual-publish-rc.sh`",
-        "required": true
-      },
-      {
-        "path": "`tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood/DOGFOOD_REPORT.md`",
+        "path": "reviewer release recycle plan",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0669",
-      "path": "tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood/HANDOFF.md"
+      "workId": "T-0670",
+      "path": "tasks/T-0670-release-root-separation-contract/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
