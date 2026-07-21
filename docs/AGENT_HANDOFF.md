@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0676 Reviewer Acceptance Gap Remediation | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0677 Structured Continuation Semantics and rc2 Baseline Rollup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
 | Next Work State | none | Controls whether task creation guidance is emitted. |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0676 completed reviewer acceptance gap remediation and promoted the corrected validation baseline with reviewed-hash execution evidence. | ev:T-0676:2f4ac932c93e48d5b9bd9a38, ev:T-0676:a0597da28fc847c2a390bd1c |
+| Current Trusted Validation Baseline | 0.5.0-rc.2 planning baseline preserves rollup evidence: source validation and rc1 release-readiness recycle, npm publish record, GitHub Release publication, installed-package recycle/dogfood, reviewer remediation, and T-0677 structured continuation semantic fail-closed validation. This baseline does not supersede T-0667 through T-0669; it carries them forward for session resume until a first-class validationBaseline.rollup schema is introduced. | ev:T-0667:17932d8a4a684db18a62dbe8, ev:T-0667:af0b1df9f11c47a0a7e0691c, ev:T-0668:f04d19ba0b5f47e3bf51276e, ev:T-0668:a16978bfab134da9abadc752, ev:T-0669:9d08f787f7d64d85ad72c1b3, ev:T-0669:374d423870f14757ada477b2, ev:T-0669:39c8691d556943e68141f1fa, ev:T-0676:2f4ac932c93e48d5b9bd9a38, ev:T-0676:a0597da28fc847c2a390bd1c, ev:T-0677:befc562b23d64cbe82a74623 |
 
 ### Current Known Problems
 

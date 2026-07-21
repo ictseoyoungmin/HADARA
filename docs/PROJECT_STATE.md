@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0676 Reviewer Acceptance Gap Remediation |
+| Latest Completed Task | T-0677 Structured Continuation Semantics and rc2 Baseline Rollup |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0676 completed reviewer acceptance gap remediation and promoted the corrected validation baseline with reviewed-hash execution evidence. |
+| Current Trusted Validation Baseline | 0.5.0-rc.2 planning baseline preserves rollup evidence: source validation and rc1 release-readiness recycle, npm publish record, GitHub Release publication, installed-package recycle/dogfood, reviewer remediation, and T-0677 structured continuation semantic fail-closed validation. This baseline does not supersede T-0667 through T-0669; it carries them forward for session resume until a first-class validationBaseline.rollup schema is introduced. |
 
 ### Current Known Problems
 
@@ -45,7 +45,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 recycled release readiness evidence for `0.5.0-rc.1`; T-0668 records the completed npm `next` publish, GitHub Release note artifact, and installed-package recycle from `hadara@next`. T-0669 records public GitHub Release `v0.5.0-rc.1` publication and Docker installed-package dogfood from public `hadara@next`. T-0670 begins the reviewer-requested release-readiness recycle design fixes by separating source, evidence, and disposable smoke project roots in package smoke/recycle commands. T-0671 adds journal-first release artifact evidence handling so clean source artifact preflight is not invalidated by evidence writes. T-0672 adds package smoke/recycle per-step timeout policy with a 300s npm/recycle default and timeoutStepIds for slow-stage attribution.
+v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 recycled release readiness evidence for `0.5.0-rc.1`; T-0668 records the completed npm `next` publish, GitHub Release note artifact, and installed-package recycle from `hadara@next`. T-0669 records public GitHub Release `v0.5.0-rc.1` publication and Docker installed-package dogfood from public `hadara@next`. T-0670 through T-0676 addressed reviewer-requested release-readiness recycle design fixes. T-0677 closes the remaining pre-rc.2 reviewer blockers: structured HANDOFF semantic fail-closed behavior and validation-baseline rollup preservation. The `0.5.0-rc.2` scope is the current reviewer-fix state plus Phase D through the end of the 0.5 DAG/status redesign before release readiness is recycled.
 
 | Stage | State | Purpose |
 |---|---|---|

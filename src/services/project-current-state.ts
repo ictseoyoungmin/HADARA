@@ -755,13 +755,14 @@ export function continuationFromTaskHandoffStep(input: {
   const structuredDisposition = normalizeContinuationDisposition(input.disposition);
   const terminal = structuredDisposition ? structuredDisposition === 'terminal' : isTerminalStep(step);
   const createTaskAllowed = normalizeCreateTaskAllowed(input.createTask);
+  const defaultCreateTaskAllowed = structuredDisposition ? structuredDisposition === 'actionable' : !terminal;
   return {
     disposition: structuredDisposition ?? (terminal ? 'terminal' : 'actionable'),
     kind: 'task-handoff',
     title: step,
     ...(reason && !PLACEHOLDER_STEP_PATTERN.test(reason) ? { reason } : {}),
     ...(references.length > 0 ? { references } : {}),
-    createCommandAllowed: createTaskAllowed ?? !terminal,
+    createCommandAllowed: createTaskAllowed ?? defaultCreateTaskAllowed,
     source: { type: 'work-handoff', workId: input.sourceTaskId, path: `${input.sourceCapsulePath}/HANDOFF.md` }
   };
 }

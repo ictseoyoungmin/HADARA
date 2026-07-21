@@ -1,5 +1,21 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.2 planned scope
+
+Planned next release candidate. The scope is the current `0.5.0-rc.1` line plus the reviewer-fix
+capsules and Phase D through the end of the 0.5 DAG/status redesign before release readiness is
+recycled.
+
+Required before rc.2 release readiness:
+
+- Structured HANDOFF continuation semantics must fail closed on malformed machine-readable values
+  and contradictory `Disposition`/`Create Task` combinations.
+- The current validation baseline must preserve rollup evidence for source validation, release
+  readiness, npm/GitHub publication records, installed recycle/dogfood, and latest remediation
+  validation instead of narrowing to only the most recent promotion command.
+- Phase D starts from the deferred context-route resolver / registry stable-id work identified in
+  the T-0660/T-0661 handoff, and rc.2 includes that Phase D-through-end implementation line.
+
 ## 0.5.0-rc.1
 
 Release candidate. Adds a project-level `continuation` field so a closing session's declared next

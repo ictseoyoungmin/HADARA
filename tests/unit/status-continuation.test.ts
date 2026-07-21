@@ -73,6 +73,21 @@ describe('continuationFromTaskHandoffStep (docx section 1.1/9 promotion helper)'
       ]
     });
   });
+
+  it('defaults non-actionable structured dispositions to no task creation', () => {
+    const continuation = continuationFromTaskHandoffStep({
+      step: 'Wait for operator review',
+      disposition: 'waiting-for-operator',
+      reason: 'External review is required.',
+      requiredReading: 'docs/RELEASE_READINESS.md',
+      sourceTaskId: 'T-0677',
+      sourceCapsulePath: 'tasks/T-0677-x'
+    });
+    expect(continuation).toMatchObject({
+      disposition: 'waiting-for-operator',
+      createCommandAllowed: false
+    });
+  });
 });
 
 describe('continuation schema validation', () => {
@@ -192,6 +207,60 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_DISPOSITION_INVALID'
+    }));
+  });
+
+  it('blocks task finish when structured handoff create-task value is malformed', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Malformed create task fixture');
+    const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
+    const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Continue later | actionable | flase | Fixture. | docs/TASK_BOARD.md |'
+    );
+    fs.writeFileSync(handoffPath, handoff, 'utf8');
+
+    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'HANDOFF_CONTINUATION_CREATE_TASK_INVALID'
+    }));
+  });
+
+  it('blocks task finish when structured handoff disposition and create-task conflict', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Conflicting continuation fixture');
+    const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
+    const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| No publish follow-up is queued. | terminal | yes | Done. | docs/RELEASE_READINESS.md |'
+    );
+    fs.writeFileSync(handoffPath, handoff, 'utf8');
+
+    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT'
+    }));
+  });
+
+  it('blocks task finish when actionable structured handoff disables task creation', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Actionable no-create fixture');
+    const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
+    const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Prepare rc2 readiness. | actionable | no | Real task should be created. | docs/RELEASE_READINESS.md |'
+    );
+    fs.writeFileSync(handoffPath, handoff, 'utf8');
+
+    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT'
     }));
   });
 

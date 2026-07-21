@@ -1,40 +1,40 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 273,
+  "rev": 276,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0676",
-    "title": "Reviewer Acceptance Gap Remediation"
+    "id": "T-0677",
+    "title": "Structured Continuation Semantics and rc2 Baseline Rollup"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "terminal",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "No further reviewer recycle capsules are queued.",
-    "reason": "T-0670 through T-0676 now satisfy the reviewer release-readiness recycle plan and remediation audit.",
+    "title": "Prepare 0.5.0-rc.2 after Phase D through end is implemented and release readiness is recycled.",
+    "reason": "T-0677 only fixes the remaining reviewer blockers and records the rc.2 boundary; the implementation/release-readiness line continues after this capsule.",
     "references": [
       {
-        "path": "`docs/AGENT_HANDOFF.md`",
+        "path": "docs/RELEASE_READINESS.md",
         "required": true
       },
       {
-        "path": "`docs/TASK_BOARD.md`",
+        "path": "docs/specs/0.5/README.md",
         "required": true
       },
       {
-        "path": "`.hadara/state/current.json`",
+        "path": "tasks/T-0660-dag-evaluator-foundations-phase-b-declarative-dag-status-redesig/HANDOFF.md",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0676",
-      "path": "tasks/T-0676-reviewer-acceptance-gap-remediation/HANDOFF.md"
+      "workId": "T-0677",
+      "path": "tasks/T-0677-structured-continuation-semantics-and-rc2-baseline-rollup/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -65,10 +65,18 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0676 completed reviewer acceptance gap remediation and promoted the corrected validation baseline with reviewed-hash execution evidence.",
+    "summary": "0.5.0-rc.2 planning baseline preserves rollup evidence: source validation and rc1 release-readiness recycle, npm publish record, GitHub Release publication, installed-package recycle/dogfood, reviewer remediation, and T-0677 structured continuation semantic fail-closed validation. This baseline does not supersede T-0667 through T-0669; it carries them forward for session resume until a first-class validationBaseline.rollup schema is introduced.",
     "evidence": [
+      "ev:T-0667:17932d8a4a684db18a62dbe8",
+      "ev:T-0667:af0b1df9f11c47a0a7e0691c",
+      "ev:T-0668:f04d19ba0b5f47e3bf51276e",
+      "ev:T-0668:a16978bfab134da9abadc752",
+      "ev:T-0669:9d08f787f7d64d85ad72c1b3",
+      "ev:T-0669:374d423870f14757ada477b2",
+      "ev:T-0669:39c8691d556943e68141f1fa",
       "ev:T-0676:2f4ac932c93e48d5b9bd9a38",
-      "ev:T-0676:a0597da28fc847c2a390bd1c"
+      "ev:T-0676:a0597da28fc847c2a390bd1c",
+      "ev:T-0677:befc562b23d64cbe82a74623"
     ]
   }
 }

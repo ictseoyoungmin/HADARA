@@ -598,11 +598,31 @@ function validateStructuredHandoffContinuation(
     };
   }
   const createTask = (handoffNextStep.createTask ?? '').trim().toLowerCase();
-  if (createTask && createTask !== 'tbd' && !['yes', 'y', 'true', 'allowed', 'create', 'no', 'n', 'false', 'not allowed', 'review only', 'review-only'].includes(createTask)) {
+  const yesValues = ['yes', 'y', 'true', 'allowed', 'create'];
+  const noValues = ['no', 'n', 'false', 'not allowed', 'review only', 'review-only'];
+  if (createTask && createTask !== 'tbd' && !yesValues.includes(createTask) && !noValues.includes(createTask)) {
     return {
       severity: 'error',
       code: 'HANDOFF_CONTINUATION_CREATE_TASK_INVALID',
       message: `HANDOFF.md Next Recommended Step uses invalid Create Task "${handoffNextStep.createTask}". Allowed: yes/no or true/false.`,
+      path: 'HANDOFF.md'
+    };
+  }
+  if (!disposition || disposition === 'tbd' || !createTask || createTask === 'tbd') return null;
+  const createTaskAllowed = yesValues.includes(createTask);
+  if (disposition === 'actionable' && !createTaskAllowed) {
+    return {
+      severity: 'error',
+      code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT',
+      message: 'HANDOFF.md Next Recommended Step uses Disposition "actionable" with Create Task disabled. Use Create Task=yes for actionable work, or Disposition=waiting-for-operator for review-only follow-up.',
+      path: 'HANDOFF.md'
+    };
+  }
+  if (disposition !== 'actionable' && createTaskAllowed) {
+    return {
+      severity: 'error',
+      code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT',
+      message: `HANDOFF.md Next Recommended Step uses Disposition "${handoffNextStep.disposition}" with Create Task enabled. Only Disposition=actionable may create a follow-up task.`,
       path: 'HANDOFF.md'
     };
   }

@@ -677,3 +677,4 @@
 | T-0674 | Structured Handoff Continuation Contract | Done | tasks/T-0674-structured-handoff-continuation-contract | |
 | T-0675 | Current-State Baseline Promotion Surface | Done | tasks/T-0675-current-state-baseline-promotion-surface | |
 | T-0676 | Reviewer Acceptance Gap Remediation | Done | tasks/T-0676-reviewer-acceptance-gap-remediation | |
+| T-0677 | Structured Continuation Semantics and rc2 Baseline Rollup | Done | tasks/T-0677-structured-continuation-semantics-and-rc2-baseline-rollup | |
