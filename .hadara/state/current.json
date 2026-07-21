@@ -1,36 +1,40 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 252,
+  "rev": 254,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0668",
-    "title": "0.5.0-rc.1 post-publish record and GitHub release note"
+    "id": "T-0669",
+    "title": "0.5.0-rc.1 GitHub release record and installed-package dogfood"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "terminal",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "No follow-up task is queued from this capsule.",
-    "reason": "npm publish and installed-package recycle are complete; GitHub Release remains an external mutation that requires explicit operator approval/auth if wanted.",
+    "title": "Proceed to the release-workflow design-fix capsule before further Phase D work.",
+    "reason": "`prepare-publish-env.sh` and the manual publish flow must generate or require public GitHub Release notes by construction.",
     "references": [
       {
-        "path": "`tasks/T-0668-0-5-0-rc-1-post-publish-record-and-github-release-note/GITHUB_RELEASE_NOTE.md`",
+        "path": "`scripts/release/prepare-publish-env.sh`",
         "required": true
       },
       {
         "path": "`scripts/release/manual-publish-rc.sh`",
         "required": true
+      },
+      {
+        "path": "`tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood/DOGFOOD_REPORT.md`",
+        "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0668",
-      "path": "tasks/T-0668-0-5-0-rc-1-post-publish-record-and-github-release-note/HANDOFF.md"
+      "workId": "T-0669",
+      "path": "tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -61,7 +65,7 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container. T-0668 records that the operator published hadara@0.5.0-rc.1 to npm on next, workspace registry verification returned version=0.5.0-rc.1/next=0.5.0-rc.1/latest=0.4.6, the GitHub Release note artifact exists with evidence, installed-package recycle from hadara@next passed, and GitHub Release publication remains operator-controlled.",
+    "summary": "T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container. T-0668 records that the operator published hadara@0.5.0-rc.1 to npm on next, workspace registry verification returned version=0.5.0-rc.1/next=0.5.0-rc.1/latest=0.4.6, the GitHub Release note artifact exists with evidence, and installed-package recycle from hadara@next passed. T-0669 records public GitHub Release v0.5.0-rc.1 publication, independent npm/GitHub public-state verification, and Docker installed-package dogfood from public hadara@next across basic, standard, and governed fresh projects plus package recycle.",
     "evidence": [
       "ev:T-0664:ccd90916a8c841b98d58a663",
       "ev:T-0665:527eded82980411281445c9a",
@@ -74,7 +78,11 @@
       "ev:T-0667:af0b1df9f11c47a0a7e0691c",
       "ev:T-0668:f04d19ba0b5f47e3bf51276e",
       "ev:T-0668:1ec8ae46a0f04aa3830ff767",
-      "ev:T-0668:a16978bfab134da9abadc752"
+      "ev:T-0668:a16978bfab134da9abadc752",
+      "ev:T-0669:9d08f787f7d64d85ad72c1b3",
+      "ev:T-0669:374d423870f14757ada477b2",
+      "ev:T-0669:39c8691d556943e68141f1fa",
+      "ev:T-0669:92db1f03c50a4c369243c453"
     ]
   }
 }

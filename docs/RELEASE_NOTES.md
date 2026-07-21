@@ -45,7 +45,10 @@ Boundaries:
 - T-0668 recorded the operator npm publish, verified registry metadata
   (`version=0.5.0-rc.1`, `next=0.5.0-rc.1`, `latest=0.4.6`), created a GitHub
   Release note artifact for `v0.5.0-rc.1`, and verified the public package through
-  installed-package recycle. GitHub Release creation/publication remains operator-controlled.
+  installed-package recycle.
+- T-0669 records the public GitHub Release `v0.5.0-rc.1` and reruns Docker
+  installed-package dogfood from `hadara@next`, covering fresh `basic`, `standard`, and
+  `governed` project smokes plus package recycle.
 
 ## 0.5.0-rc.0
 

@@ -669,3 +669,4 @@
 | T-0666 | Promote validation baseline and current release to 0.5.0-rc.1 (T-0658 through T-0665) | Done | tasks/T-0666-promote-validation-baseline-and-current-release-to-0-5-0-rc-1-t- | |
 | T-0667 | 0.5.0-rc.1 release-readiness recycle | Done | tasks/T-0667-0-5-0-rc-1-release-readiness-recycle | |
 | T-0668 | 0.5.0-rc.1 post-publish record and GitHub release note | Done | tasks/T-0668-0-5-0-rc-1-post-publish-record-and-github-release-note | |
+| T-0669 | 0.5.0-rc.1 GitHub release record and installed-package dogfood | Done | tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood | |
