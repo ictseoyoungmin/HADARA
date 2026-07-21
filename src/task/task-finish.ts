@@ -113,11 +113,15 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
   const handoffNextStep = readTaskHandoffNextStep(task);
-  const promotedContinuation = handoffNextStep
+  const handoffContinuationIssue = validateStructuredHandoffContinuation(handoffNextStep);
+  if (handoffContinuationIssue) issues.push(handoffContinuationIssue);
+  const promotedContinuation = handoffNextStep && !handoffContinuationIssue
     ? continuationFromTaskHandoffStep({
         step: handoffNextStep.step,
         reason: handoffNextStep.reason,
         requiredReading: handoffNextStep.requiredReading,
+        disposition: handoffNextStep.disposition,
+        createTask: handoffNextStep.createTask,
         sourceTaskId: task.id,
         sourceCapsulePath: capsule
       }) ?? undefined
@@ -552,7 +556,7 @@ function readTaskStatus(task: TaskCapsule): string {
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }
 
-function readTaskHandoffNextStep(task: TaskCapsule): { step: string; disposition?: string; createTask?: string; reason: string; requiredReading: string } | null {
+function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured: boolean; disposition?: string; createTask?: string; reason: string; requiredReading: string } | null {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
   const content = fs.readFileSync(handoffPath, 'utf8');
@@ -565,18 +569,44 @@ function readTaskHandoffNextStep(task: TaskCapsule): { step: string; disposition
     return step.length > 0 && step !== 'step' && step !== 'tbd';
   });
   if (!row) return null;
-  if (!structured) return { step: row[0] ?? '', reason: row[1] ?? '', requiredReading: row[2] ?? '' };
+  if (!structured) return { step: row[0] ?? '', structured: false, reason: row[1] ?? '', requiredReading: row[2] ?? '' };
   const cell = (name: string): string => {
     const index = header.findIndex((entry) => entry.trim().toLowerCase() === name.toLowerCase());
     return index >= 0 ? row[index] ?? '' : '';
   };
   return {
     step: cell('Step'),
+    structured: true,
     disposition: cell('Disposition'),
     createTask: cell('Create Task'),
     reason: cell('Reason'),
     requiredReading: cell('Required Reading')
   };
+}
+
+function validateStructuredHandoffContinuation(
+  handoffNextStep: { structured: boolean; disposition?: string; createTask?: string } | null
+): TaskFinishIssue | null {
+  if (!handoffNextStep?.structured) return null;
+  const disposition = (handoffNextStep.disposition ?? '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+  if (disposition && disposition !== 'tbd' && !['actionable', 'waiting-for-operator', 'blocked', 'terminal', 'unresolved'].includes(disposition)) {
+    return {
+      severity: 'error',
+      code: 'HANDOFF_CONTINUATION_DISPOSITION_INVALID',
+      message: `HANDOFF.md Next Recommended Step uses invalid Disposition "${handoffNextStep.disposition}". Allowed: actionable, waiting-for-operator, blocked, terminal, unresolved.`,
+      path: 'HANDOFF.md'
+    };
+  }
+  const createTask = (handoffNextStep.createTask ?? '').trim().toLowerCase();
+  if (createTask && createTask !== 'tbd' && !['yes', 'y', 'true', 'allowed', 'create', 'no', 'n', 'false', 'not allowed', 'review only', 'review-only'].includes(createTask)) {
+    return {
+      severity: 'error',
+      code: 'HANDOFF_CONTINUATION_CREATE_TASK_INVALID',
+      message: `HANDOFF.md Next Recommended Step uses invalid Create Task "${handoffNextStep.createTask}". Allowed: yes/no or true/false.`,
+      path: 'HANDOFF.md'
+    };
+  }
+  return null;
 }
 
 function readLatestStatusHistoryStatus(task: TaskCapsule): string | null {

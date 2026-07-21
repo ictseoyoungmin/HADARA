@@ -23,6 +23,25 @@ function tempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-current-state-'));
 }
 
+function writeEvidence(root: string, capsule: string, taskId: string, id: string, outcome: 'passed' | 'failed'): void {
+  fs.appendFileSync(path.join(root, capsule, 'evidence.jsonl'), `${JSON.stringify({
+    schemaVersion: 'hadara.evidence.v2',
+    id,
+    fingerprint: `sha256:${'a'.repeat(64)}`,
+    idSource: 'persisted',
+    idStability: 'durable',
+    time: '2026-07-21T00:00:00.000Z',
+    taskId,
+    category: 'validation',
+    outcome,
+    visibility: 'public',
+    summary: 'Fixture evidence.',
+    artifacts: [],
+    tags: [],
+    legacy: { kind: 'command-log', result: outcome }
+  })}\n`, 'utf8');
+}
+
 describe('project current-state canon', () => {
   it('scaffolds a schema-valid portable canon and deterministic Markdown projections', () => {
     const root = tempRoot();
@@ -62,13 +81,19 @@ describe('project current-state canon', () => {
   it('plans validation baseline promotion as a current-state/projection bundle', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });
+    const task = createTaskCreateReport(root, 'Baseline evidence fixture');
+    writeEvidence(root, task.task!.capsule, task.taskId!, 'ev:T-0001:abc', 'passed');
+    writeEvidence(root, task.task!.capsule, task.taskId!, 'ev:T-0001:def', 'passed');
 
     const plan = planProjectValidationBaselinePromotion(root, {
       summary: 'Focused validation and Docker sync-build passed.',
-      evidence: ['ev:T-0675:abc', ' ev:T-0675:def ']
+      evidence: ['ev:T-0001:abc', ' ev:T-0001:def '],
+      release: '0.5.0-rc.1',
+      taskId: task.taskId!
     });
 
     expect(plan.issues).toEqual([]);
+    expect(plan.planHash).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(plan.writes.map((write) => write.path).sort()).toEqual([
       '.hadara/state/current.json',
       'docs/AGENT_HANDOFF.md',
@@ -77,9 +102,29 @@ describe('project current-state canon', () => {
     const currentAfter = JSON.parse(plan.writes.find((write) => write.path === '.hadara/state/current.json')!.after);
     expect(currentAfter.validationBaseline).toEqual({
       summary: 'Focused validation and Docker sync-build passed.',
-      evidence: ['ev:T-0675:abc', 'ev:T-0675:def']
+      evidence: ['ev:T-0001:abc', 'ev:T-0001:def']
     });
-    expect(plan.writes.find((write) => write.path === 'docs/AGENT_HANDOFF.md')!.after).toContain('ev:T-0675:abc, ev:T-0675:def');
+    expect(currentAfter.currentRelease).toBe('0.5.0-rc.1');
+    expect(plan.after.currentRelease).toBe('0.5.0-rc.1');
+    expect(plan.writes.find((write) => write.path === 'docs/AGENT_HANDOFF.md')!.after).toContain('ev:T-0001:abc, ev:T-0001:def');
+  });
+
+  it('rejects missing or non-passed evidence during baseline promotion planning', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const task = createTaskCreateReport(root, 'Baseline failed evidence fixture');
+    writeEvidence(root, task.task!.capsule, task.taskId!, 'ev:T-0001:failed', 'failed');
+
+    expect(planProjectValidationBaselinePromotion(root, {
+      summary: 'Should not promote.',
+      evidence: ['ev:T-0001:missing'],
+      taskId: task.taskId!
+    }).issues).toContainEqual(expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_NOT_FOUND' }));
+    expect(planProjectValidationBaselinePromotion(root, {
+      summary: 'Should not promote.',
+      evidence: ['ev:T-0001:failed'],
+      taskId: task.taskId!
+    }).issues).toContainEqual(expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_NOT_PASSED' }));
   });
 
   it('synchronizes active and latest task facts through create and finish without a new command', () => {

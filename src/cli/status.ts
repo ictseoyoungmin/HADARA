@@ -28,8 +28,10 @@ function printStatus(input: StatusCommandInput): void {
     } else {
       console.log([
         `[HADARA] status baseline promote: ${report.ok ? report.mode : 'blocked'}`,
-        `summary: ${report.baseline.summary}`,
-        `evidence: ${report.baseline.evidence.join(', ')}`,
+        `planHash: ${report.planHash}`,
+        `release: ${report.release.before ?? 'none'} -> ${report.release.after ?? 'none'}`,
+        `summary: ${report.baseline.after?.summary ?? 'none'}`,
+        `evidence: ${report.baseline.after?.evidence.join(', ') ?? 'none'}`,
         `plannedWrites: ${report.summary.plannedWrites}`,
         `appliedWrites: ${report.summary.appliedWrites}`
       ].join('\n'));
@@ -110,16 +112,38 @@ function createStatusBaselinePromotionReport(projectRoot: string, args: string[]
   ok: boolean;
   mode: 'dry-run' | 'execute';
   readOnly: boolean;
-  baseline: { summary: string; evidence: string[] };
+  planHash: string;
+  requestedPlanHash?: string;
+  planHashMatched?: boolean;
+  release: { before: string | null; after: string | null };
+  baseline: { before: { summary: string; evidence: string[] } | null; after: { summary: string; evidence: string[] } | null };
   summary: { plannedWrites: number; appliedWrites: number };
   writes: Array<{ path: string; action: 'update' | 'create'; applied: boolean }>;
   issues: Array<{ severity: 'error' | 'warning'; code: string; message: string; path?: string }>;
 } {
   const summary = getStringOption(args, '--summary') ?? '';
   const evidence = getAllStringOptions(args, '--evidence').flatMap(splitEvidenceList);
+  const release = getStringOption(args, '--release');
+  const taskId = getStringOption(args, '--task');
+  const requestedPlanHash = getStringOption(args, '--plan-hash') ?? getStringOption(args, '--before-hash');
   const execute = getFlag(args, '--execute');
-  const plan = planProjectValidationBaselinePromotion(projectRoot, { summary, evidence });
+  const plan = planProjectValidationBaselinePromotion(projectRoot, { summary, evidence, release, taskId });
   const issues = [...plan.issues];
+  if (execute && !requestedPlanHash) {
+    issues.push({
+      severity: 'error',
+      code: 'PROJECT_CURRENT_STATE_BASELINE_PLAN_HASH_REQUIRED',
+      message: 'Baseline promotion execute requires --plan-hash from the reviewed dry-run.',
+      path: '.hadara/state/current.json'
+    });
+  } else if (execute && requestedPlanHash !== plan.planHash) {
+    issues.push({
+      severity: 'error',
+      code: 'PROJECT_CURRENT_STATE_BASELINE_PLAN_HASH_MISMATCH',
+      message: `Baseline promotion plan hash mismatch. Expected current ${plan.planHash}.`,
+      path: '.hadara/state/current.json'
+    });
+  }
   const writes = plan.writes.map((write) => ({ path: write.path, action: write.before === null ? 'create' as const : 'update' as const, applied: false }));
   if (issues.length > 0 || !execute) {
     return {
@@ -128,7 +152,10 @@ function createStatusBaselinePromotionReport(projectRoot: string, args: string[]
       ok: issues.length === 0,
       mode: execute ? 'execute' : 'dry-run',
       readOnly: true,
-      baseline: { summary: summary.trim(), evidence },
+      planHash: plan.planHash,
+      ...(requestedPlanHash ? { requestedPlanHash, planHashMatched: requestedPlanHash === plan.planHash } : {}),
+      release: plan.before.currentRelease === null && plan.after.currentRelease === null ? { before: null, after: release?.trim() ?? null } : { before: plan.before.currentRelease, after: plan.after.currentRelease },
+      baseline: { before: plan.before.validationBaseline, after: plan.after.validationBaseline },
       summary: { plannedWrites: plan.writes.length, appliedWrites: 0 },
       writes,
       issues
@@ -141,7 +168,10 @@ function createStatusBaselinePromotionReport(projectRoot: string, args: string[]
     ok: applyIssues.length === 0,
     mode: 'execute',
     readOnly: false,
-    baseline: { summary: summary.trim(), evidence },
+    planHash: plan.planHash,
+    ...(requestedPlanHash ? { requestedPlanHash, planHashMatched: requestedPlanHash === plan.planHash } : {}),
+    release: { before: plan.before.currentRelease, after: plan.after.currentRelease },
+    baseline: { before: plan.before.validationBaseline, after: plan.after.validationBaseline },
     summary: { plannedWrites: plan.writes.length, appliedWrites: applyIssues.length === 0 ? plan.writes.length : 0 },
     writes: writes.map((write) => ({ ...write, applied: applyIssues.length === 0 })),
     issues: applyIssues

@@ -1,6 +1,8 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import packageJson from '../../package.json';
+import { createEvidenceListReport } from './evidence-list';
 import { managedSectionBlock } from './managed-sections';
 import { parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';
 
@@ -107,6 +109,23 @@ export interface ProjectCurrentStateWrite {
 export interface ProjectValidationBaselineInput {
   summary: string;
   evidence: string[];
+  release?: string;
+  taskId?: string;
+}
+
+export interface ProjectValidationBaselinePromotionPlan {
+  planHash: string;
+  state: ProjectCurrentState | null;
+  before: {
+    currentRelease: string | null;
+    validationBaseline: ProjectCurrentState['validationBaseline'] | null;
+  };
+  after: {
+    currentRelease: string | null;
+    validationBaseline: ProjectCurrentState['validationBaseline'] | null;
+  };
+  writes: ProjectCurrentStateWrite[];
+  issues: ProjectCurrentStateIssue[];
 }
 
 const MANAGED_METADATA = {
@@ -427,17 +446,16 @@ export function planCompletedProjectCurrentStateWrites(
 export function planProjectValidationBaselinePromotion(
   projectRoot: string,
   baseline: ProjectValidationBaselineInput
-): {
-  writes: ProjectCurrentStateWrite[];
-  issues: ProjectCurrentStateIssue[];
-  state: ProjectCurrentState | null;
-} {
+): ProjectValidationBaselinePromotionPlan {
   const summary = baseline.summary.trim();
   const evidence = baseline.evidence.map((item) => item.trim()).filter(Boolean);
   if (!summary) {
     return {
       writes: [],
       state: null,
+      planHash: promotionPlanHash([]),
+      before: { currentRelease: null, validationBaseline: null },
+      after: { currentRelease: null, validationBaseline: null },
       issues: [{
         severity: 'error',
         code: 'PROJECT_CURRENT_STATE_BASELINE_SUMMARY_REQUIRED',
@@ -450,6 +468,9 @@ export function planProjectValidationBaselinePromotion(
     return {
       writes: [],
       state: null,
+      planHash: promotionPlanHash([]),
+      before: { currentRelease: null, validationBaseline: null },
+      after: { currentRelease: null, validationBaseline: null },
       issues: [{
         severity: 'error',
         code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_REQUIRED',
@@ -459,14 +480,91 @@ export function planProjectValidationBaselinePromotion(
     };
   }
   const read = readProjectCurrentState(projectRoot);
-  if (!read.present) return { writes: [], issues: [], state: null };
-  if (!read.state) return { writes: [], issues: read.issues, state: null };
+  if (!read.present) return { writes: [], issues: [], state: null, planHash: promotionPlanHash([]), before: { currentRelease: null, validationBaseline: null }, after: { currentRelease: null, validationBaseline: null } };
+  if (!read.state) return { writes: [], issues: read.issues, state: null, planHash: promotionPlanHash([]), before: { currentRelease: null, validationBaseline: null }, after: { currentRelease: null, validationBaseline: null } };
+  const evidenceIssues = validatePromotionEvidence(projectRoot, evidence, baseline.taskId);
   const next: ProjectCurrentState = {
     ...read.state,
     rev: read.state.rev + 1,
+    ...(baseline.release ? { currentRelease: baseline.release.trim() } : {}),
     validationBaseline: { summary, evidence }
   };
-  return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [], state: next };
+  const writes = evidenceIssues.length > 0 ? [] : planProjectCurrentStateWrites(projectRoot, next);
+  return {
+    writes,
+    issues: evidenceIssues,
+    state: evidenceIssues.length > 0 ? null : next,
+    planHash: promotionPlanHash(writes),
+    before: {
+      currentRelease: read.state.currentRelease,
+      validationBaseline: read.state.validationBaseline
+    },
+    after: evidenceIssues.length > 0 ? { currentRelease: null, validationBaseline: null } : {
+      currentRelease: next.currentRelease,
+      validationBaseline: next.validationBaseline
+    }
+  };
+}
+
+export function promotionPlanHash(writes: ProjectCurrentStateWrite[]): string {
+  const hash = crypto.createHash('sha256');
+  hash.update(JSON.stringify(writes.map((write) => ({ path: write.path, before: write.before, after: write.after }))));
+  return `sha256:${hash.digest('hex')}`;
+}
+
+function validatePromotionEvidence(projectRoot: string, evidenceIds: string[], taskId?: string): ProjectCurrentStateIssue[] {
+  const issues: ProjectCurrentStateIssue[] = [];
+  for (const evidenceId of evidenceIds) {
+    const parsedTaskId = /^ev:(T-\d{4,}):/.exec(evidenceId)?.[1];
+    const evidenceTaskId = taskId ?? parsedTaskId;
+    if (!evidenceTaskId) {
+      issues.push({
+        severity: 'error',
+        code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_TASK_UNKNOWN',
+        path: PROJECT_CURRENT_STATE_PATH,
+        message: `Evidence id ${evidenceId} does not include a task id; pass --task <task-id>.`
+      });
+      continue;
+    }
+    if (taskId && parsedTaskId && parsedTaskId !== taskId) {
+      issues.push({
+        severity: 'error',
+        code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_TASK_MISMATCH',
+        path: PROJECT_CURRENT_STATE_PATH,
+        message: `Evidence id ${evidenceId} belongs to ${parsedTaskId}, not requested task ${taskId}.`
+      });
+      continue;
+    }
+    const report = createEvidenceListReport(projectRoot, { taskId: evidenceTaskId, limit: 500, includePrivate: true });
+    if (!report.ok) {
+      issues.push(...report.issues.map((issue) => ({
+        severity: issue.severity,
+        code: issue.code,
+        path: `tasks/${evidenceTaskId}/evidence.jsonl`,
+        message: issue.message
+      })));
+      continue;
+    }
+    const record = report.records.find((candidate) => candidate.id === evidenceId);
+    if (!record) {
+      issues.push({
+        severity: 'error',
+        code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_NOT_FOUND',
+        path: `tasks/${evidenceTaskId}/evidence.jsonl`,
+        message: `Evidence id ${evidenceId} was not found.`
+      });
+      continue;
+    }
+    if (record.outcome !== 'passed') {
+      issues.push({
+        severity: 'error',
+        code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_NOT_PASSED',
+        path: `tasks/${evidenceTaskId}/evidence.jsonl`,
+        message: `Evidence id ${evidenceId} has outcome ${record.outcome}; validation baseline promotion requires passed evidence.`
+      });
+    }
+  }
+  return issues;
 }
 
 export function applyProjectCurrentStateWrites(projectRoot: string, writes: ProjectCurrentStateWrite[]): ProjectCurrentStateIssue[] {

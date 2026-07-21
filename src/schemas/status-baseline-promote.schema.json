@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "hadara.status.baseline.promote.v1",
+  "x-hadara-schema-id": "hadara.status.baseline.promote.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "command", "ok", "mode", "readOnly", "planHash", "release", "baseline", "summary", "writes", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.status.baseline.promote.v1" },
+    "command": { "const": "status.baseline.promote" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "readOnly": { "type": "boolean" },
+    "planHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "requestedPlanHash": { "type": "string" },
+    "planHashMatched": { "type": "boolean" },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after"],
+      "properties": {
+        "before": { "type": ["string", "null"] },
+        "after": { "type": ["string", "null"] }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after"],
+      "properties": {
+        "before": { "$ref": "#/$defs/baseline" },
+        "after": { "$ref": "#/$defs/baseline" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plannedWrites", "appliedWrites"],
+      "properties": {
+        "plannedWrites": { "type": "integer", "minimum": 0 },
+        "appliedWrites": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "action", "applied"],
+        "properties": {
+          "path": { "type": "string" },
+          "action": { "type": "string", "enum": ["update", "create"] },
+          "applied": { "type": "boolean" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["error", "warning"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "baseline": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["summary", "evidence"],
+          "properties": {
+            "summary": { "type": "string" },
+            "evidence": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

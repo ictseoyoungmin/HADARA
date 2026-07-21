@@ -16,6 +16,13 @@
       "notes": "Lifecycle-aware project/session ingress status report with explicit health, readiness, evaluation state, primary action, and v1 compatibility metadata."
     },
     {
+      "id": "hadara.status.baseline.promote.v1",
+      "path": "src/schemas/status-baseline-promote.schema.json",
+      "status": "fixture",
+      "owner": "cli/status",
+      "notes": "Dry-run-first current-state validation baseline promotion report with reviewed plan hash, evidence validation, release before/after, and managed projection writes."
+    },
+    {
       "id": "hadara.taskSelection.status.v2",
       "path": "src/schemas/task-selection-status.schema.json",
       "status": "fixture",

@@ -177,6 +177,24 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     });
   });
 
+  it('blocks task finish when structured handoff disposition is malformed', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Malformed continuation fixture');
+    const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
+    const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Continue later | maybe | yes | Fixture. | docs/TASK_BOARD.md |'
+    );
+    fs.writeFileSync(handoffPath, handoff, 'utf8');
+
+    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'HANDOFF_CONTINUATION_DISPOSITION_INVALID'
+    }));
+  });
+
   it('does not overwrite an existing continuation when the closing task has only a placeholder next step', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });

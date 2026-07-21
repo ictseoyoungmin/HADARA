@@ -174,17 +174,21 @@ When a reviewed validation set becomes the project’s trusted resume baseline, 
 
 ```bash
 hadara status baseline promote \
+  --release 0.5.0-rc.1 \
+  --task T-XXXX \
   --summary "Focused validation, docs doctor, and Docker sync-build passed." \
   --evidence ev:T-XXXX:abc,ev:T-XXXX:def \
   --json
 
 hadara status baseline promote \
+  --release 0.5.0-rc.1 \
+  --task T-XXXX \
   --summary "Focused validation, docs doctor, and Docker sync-build passed." \
   --evidence ev:T-XXXX:abc,ev:T-XXXX:def \
-  --execute --json
+  --execute --plan-hash sha256:... --json
 ```
 
-The dry-run reports the current-state/projection write set. Execute updates `.hadara/state/current.json` plus the managed current-state sections in `docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md`.
+The dry-run reports the current-state/projection write set and `planHash`. Execute requires the reviewed `--plan-hash`, verifies the supplied evidence ids exist under the task and have `outcome=passed`, then updates `.hadara/state/current.json` plus the managed current-state sections in `docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md`.
 
 ## Selecting or Creating Work
 

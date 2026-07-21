@@ -1576,7 +1576,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'status.baseline.promote',
-    command: 'hadara status baseline promote --summary <text> --evidence <ev:id>[,<ev:id>] [--execute] --json',
+    command: 'hadara status baseline promote --release <version> --task <task-id> --summary <text> --evidence <ev:id>[,<ev:id>] [--execute --plan-hash <hash>] --json',
     summary: 'Promote a reviewed validation evidence set into the structured current-state validation baseline and managed projections.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1592,8 +1592,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.status.baseline.promote.v1',
     docs: ['docs/HADARA_WORKFLOW.md', 'docs/TASK_WORKFLOW_COMMANDS.md'],
     examples: [
-      example('Preview baseline promotion', 'hadara status baseline promote --summary "Full validation passed" --evidence ev:T-0001:abc --json', 'After a reviewed validation set should become the resume baseline.'),
-      example('Apply baseline promotion', 'hadara status baseline promote --summary "Full validation passed" --evidence ev:T-0001:abc --execute --json', 'After reviewing the dry-run write set.')
+      example('Preview baseline promotion', 'hadara status baseline promote --release 0.5.0 --task T-0001 --summary "Full validation passed" --evidence ev:T-0001:abc --json', 'After a reviewed validation set should become the resume baseline.'),
+      example('Apply baseline promotion', 'hadara status baseline promote --release 0.5.0 --task T-0001 --summary "Full validation passed" --evidence ev:T-0001:abc --execute --plan-hash sha256:... --json', 'After reviewing the dry-run write set and planHash.')
     ],
     related: ['status', 'task.close', 'evidence.add-command'],
     conflictsWith: []

@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0675 Current-State Baseline Promotion Surface |
+| Latest Completed Task | T-0676 Reviewer Acceptance Gap Remediation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0675 promoted the current-state validation baseline after focused tests, TypeScript build, docs doctor, Docker sync-build, built CLI baseline-promotion dry-run, and baseline promotion execute passed. |
+| Current Trusted Validation Baseline | T-0676 completed reviewer acceptance gap remediation and promoted the corrected validation baseline with reviewed-hash execution evidence. |
 
 ### Current Known Problems
 

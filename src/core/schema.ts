@@ -63,6 +63,7 @@ import runtimeVersionSchemaJson from '../schemas/runtime-version.schema.json';
 import sessionStartSchemaJson from '../schemas/session-start.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
 import stateProjectionSchemaJson from '../schemas/state-projection.schema.json';
+import statusBaselinePromoteSchemaJson from '../schemas/status-baseline-promote.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
 import taskCloseV2SchemaJson from '../schemas/task-close-v2.schema.json';
@@ -183,6 +184,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.sessionStart.v1': sessionStartSchemaJson as JsonObject,
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
   'hadara.stateProjection.v1': stateProjectionSchemaJson as JsonObject,
+  'hadara.status.baseline.promote.v1': statusBaselinePromoteSchemaJson as JsonObject,
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
   'hadara.task.close.v2': taskCloseV2SchemaJson as JsonObject,
