@@ -271,6 +271,14 @@ Before running `task close`, finish all close-source edits.
 Avoid writing volatile close evidence ids into close-source docs.
 `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before task close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it.
 
+For `HANDOFF.md` `## Next Recommended Step`, prefer the structured continuation table:
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+| Start the next capsule title. | actionable | yes | Why this is the next work. | `docs/TASK_WORKFLOW_COMMANDS.md`; task-specific plan |
+
+Use `terminal` with `Create Task` = `no` when no further work is queued. Use `waiting-for-operator` with `Create Task` = `no` when publication, approval, or external coordination must happen first.
+
 ## Task Document Timing
 
 HADARA Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl`.

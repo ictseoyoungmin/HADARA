@@ -591,6 +591,8 @@ export function continuationFromTaskHandoffStep(input: {
   step: string;
   reason: string;
   requiredReading: string;
+  disposition?: string;
+  createTask?: string;
   sourceTaskId: string;
   sourceCapsulePath: string;
 }): ProjectContinuation | null {
@@ -598,20 +600,41 @@ export function continuationFromTaskHandoffStep(input: {
   if (PLACEHOLDER_STEP_PATTERN.test(step)) return null;
   const reason = input.reason.trim();
   const references = input.requiredReading
-    .split(',')
+    .split(/[;,]/)
     .map((entry) => entry.trim())
     .filter((entry) => entry && !PLACEHOLDER_STEP_PATTERN.test(entry))
     .map((entry) => ({ path: entry, required: true }));
-  const terminal = isTerminalStep(step);
+  const structuredDisposition = normalizeContinuationDisposition(input.disposition);
+  const terminal = structuredDisposition ? structuredDisposition === 'terminal' : isTerminalStep(step);
+  const createTaskAllowed = normalizeCreateTaskAllowed(input.createTask);
   return {
-    disposition: terminal ? 'terminal' : 'actionable',
+    disposition: structuredDisposition ?? (terminal ? 'terminal' : 'actionable'),
     kind: 'task-handoff',
     title: step,
     ...(reason && !PLACEHOLDER_STEP_PATTERN.test(reason) ? { reason } : {}),
     ...(references.length > 0 ? { references } : {}),
-    createCommandAllowed: !terminal,
+    createCommandAllowed: createTaskAllowed ?? !terminal,
     source: { type: 'work-handoff', workId: input.sourceTaskId, path: `${input.sourceCapsulePath}/HANDOFF.md` }
   };
+}
+
+function normalizeContinuationDisposition(value: string | undefined): ProjectContinuationDisposition | null {
+  const normalized = (value ?? '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+  if (!normalized || PLACEHOLDER_STEP_PATTERN.test(normalized)) return null;
+  if (normalized === 'actionable') return 'actionable';
+  if (normalized === 'waiting-for-operator' || normalized === 'waiting' || normalized === 'review' || normalized === 'review-only') return 'waiting-for-operator';
+  if (normalized === 'blocked') return 'blocked';
+  if (normalized === 'terminal' || normalized === 'none' || normalized === 'no-work' || normalized === 'not-applicable') return 'terminal';
+  if (normalized === 'unresolved') return 'unresolved';
+  return null;
+}
+
+function normalizeCreateTaskAllowed(value: string | undefined): boolean | null {
+  const normalized = (value ?? '').trim().toLowerCase();
+  if (!normalized || PLACEHOLDER_STEP_PATTERN.test(normalized)) return null;
+  if (/^(yes|y|true|allowed|create)$/i.test(normalized)) return true;
+  if (/^(no|n|false|not allowed|review only|review-only)$/i.test(normalized)) return false;
+  return null;
 }
 
 function nextWorkFromLegacyIntent(intent: string): ProjectNextWork {

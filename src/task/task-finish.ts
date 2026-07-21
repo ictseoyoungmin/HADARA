@@ -552,17 +552,31 @@ function readTaskStatus(task: TaskCapsule): string {
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }
 
-function readTaskHandoffNextStep(task: TaskCapsule): { step: string; reason: string; requiredReading: string } | null {
+function readTaskHandoffNextStep(task: TaskCapsule): { step: string; disposition?: string; createTask?: string; reason: string; requiredReading: string } | null {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
   const content = fs.readFileSync(handoffPath, 'utf8');
   const rows = parseMarkdownRowsUnderHeading(content, '## Next Recommended Step');
-  const row = rows.find((cells) => {
+  const header = rows[0] ?? [];
+  const structured = header.some((cell) => /^disposition$/i.test(cell)) || header.some((cell) => /^create task$/i.test(cell));
+  const dataRows = structured ? rows.slice(1) : rows;
+  const row = dataRows.find((cells) => {
     const step = (cells[0] ?? '').trim().toLowerCase();
     return step.length > 0 && step !== 'step' && step !== 'tbd';
   });
   if (!row) return null;
-  return { step: row[0] ?? '', reason: row[1] ?? '', requiredReading: row[2] ?? '' };
+  if (!structured) return { step: row[0] ?? '', reason: row[1] ?? '', requiredReading: row[2] ?? '' };
+  const cell = (name: string): string => {
+    const index = header.findIndex((entry) => entry.trim().toLowerCase() === name.toLowerCase());
+    return index >= 0 ? row[index] ?? '' : '';
+  };
+  return {
+    step: cell('Step'),
+    disposition: cell('Disposition'),
+    createTask: cell('Create Task'),
+    reason: cell('Reason'),
+    requiredReading: cell('Required Reading')
+  };
 }
 
 function readLatestStatusHistoryStatus(task: TaskCapsule): string | null {

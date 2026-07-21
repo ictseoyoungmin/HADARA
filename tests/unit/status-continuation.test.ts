@@ -52,6 +52,27 @@ describe('continuationFromTaskHandoffStep (docx section 1.1/9 promotion helper)'
       source: { type: 'work-handoff', workId: 'T-0658', path: 'tasks/T-0658-x/HANDOFF.md' }
     });
   });
+
+  it('uses structured disposition/create-task fields instead of phrase inference', () => {
+    const continuation = continuationFromTaskHandoffStep({
+      step: 'No further wording cleanup label, but still create the next task',
+      disposition: 'actionable',
+      createTask: 'yes',
+      reason: 'The structured table is authoritative.',
+      requiredReading: 'docs/TASK_WORKFLOW_COMMANDS.md; reviewer plan',
+      sourceTaskId: 'T-0674',
+      sourceCapsulePath: 'tasks/T-0674-x'
+    });
+    expect(continuation).toMatchObject({
+      disposition: 'actionable',
+      createCommandAllowed: true,
+      title: 'No further wording cleanup label, but still create the next task',
+      references: [
+        { path: 'docs/TASK_WORKFLOW_COMMANDS.md', required: true },
+        { path: 'reviewer plan', required: true }
+      ]
+    });
+  });
 });
 
 describe('continuation schema validation', () => {
@@ -139,8 +160,8 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     const created = createTaskCreateReport(root, 'Task close promotion fixture');
     const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
     const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
-      '| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |',
-      '| Step | Reason | Required Reading |\n|---|---|---|\n| Publish 0.5.0 stable | rc.0 validation is complete. | docs/ROADMAP.md |'
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Publish 0.5.0 stable | actionable | yes | rc.0 validation is complete. | docs/ROADMAP.md |'
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
@@ -165,8 +186,8 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     fs.writeFileSync(
       firstHandoffPath,
       fs.readFileSync(firstHandoffPath, 'utf8').replace(
-        '| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |',
-        '| Step | Reason | Required Reading |\n|---|---|---|\n| Publish 0.5.0 stable | rc.0 validation is complete. | |'
+        '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+        '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Publish 0.5.0 stable | actionable | yes | rc.0 validation is complete. | |'
       ),
       'utf8'
     );

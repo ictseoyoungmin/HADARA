@@ -137,6 +137,14 @@ Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Tr
 
 Before task close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it. After `task close --json` reaches close proof, changing those documents changes the close source hash and requires rerunning task close; the standalone low-level sequence was removed in 0.4.1-rc.0. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
+Task-local `HANDOFF.md` `## Next Recommended Step` is machine-readable continuation input. New capsules should use this table shape:
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+| Start the next capsule title. | actionable | yes | Why this is the next work. | `docs/TASK_WORKFLOW_COMMANDS.md`; task-specific plan |
+
+`Disposition` controls continuation semantics. Use `actionable` when a new task may be created, `waiting-for-operator` when a human must act before task creation, `blocked` when progress is blocked, `terminal` when no further work is queued, and `unresolved` when the next step is intentionally unclear. `Create Task` controls whether `task status` may emit a task-create command. Legacy three-column rows remain readable for older capsules, but new capsules must not rely on phrase detection such as "no further work" to encode terminal state.
+
 For current v2 `TASK.md`, the manual `## History` table is part of that close-source set. Before task close, append a final row such as `| 2026-06-12 | Done | Finished task capsule. |`. `task status` and `task close --dry-run --json` surface this as authoring guidance before close; done-level validation blocks a `TASK.md` whose persistent status is `Done` but whose latest History row is not `Done`.
 
 ## Documentation Timing and Write Coordination

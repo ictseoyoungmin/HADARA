@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 262,
+  "rev": 264,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0673",
-    "title": "Release Recycle Runbook and Command Contract"
+    "id": "T-0674",
+    "title": "Structured Handoff Continuation Contract"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,19 +14,23 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Start T-0674 Structured Handoff Continuation Contract.",
-    "reason": "actionable",
+    "title": "Start T-0675 Current-State Baseline Promotion Surface.",
+    "reason": "Reviewer queue continues with current-state baseline promotion after structured continuation semantics are fixed.",
     "references": [
       {
-        "path": "yes",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+        "required": true
+      },
+      {
+        "path": "reviewer release recycle plan",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0673",
-      "path": "tasks/T-0673-release-recycle-runbook-and-command-contract/HANDOFF.md"
+      "workId": "T-0674",
+      "path": "tasks/T-0674-structured-handoff-continuation-contract/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
