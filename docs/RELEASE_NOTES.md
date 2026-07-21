@@ -39,8 +39,10 @@ Boundaries:
   it and supersedes it as the `next` candidate once published.
 - No npm publish, GitHub Release publication, or post-publish installed-package recycle has been
   performed for this line yet.
-- Strict release gate has not been re-run since `0.5.0-rc.0`'s T-0649 baseline; do not treat this
-  as stable-ready without rerunning it.
+- T-0667 reran package smoke, clean-checkout smoke, release artifact generation, strict release
+  gate, release dry-run, and publish dry-run from a freshly recreated Docker validation container.
+  The recycle passed; npm/GitHub publication and post-publish installed-package recycle remain
+  separate operator-approved steps.
 
 ## 0.5.0-rc.0
 

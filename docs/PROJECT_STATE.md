@@ -14,7 +14,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0658 through T-0665 hardened close action boundaries and blocked status precedence, added a project-level continuation field (task-close promotion, idle-precedence fix), implemented anyOf in the schema validator (previously a silent no-op across six schemas), fixed nextWork bootstrap retirement to be origin-based instead of title-matched (was permanently stuck if its one retirement chance was missed), fixed a continuation-promotion contradiction (a "no further work" HANDOFF step was offered as a hadara task create title), and bumped the version to 0.5.0-rc.1. A two-session, four-capsule delegated Claude dogfood in a fresh external project found and confirmed each fix. Direct full suite passed with 166 test files and 1226 tests, clean TypeScript build. Strict release gate has not been rerun since the T-0649 baseline; full release-readiness recycle is still outstanding before any publish decision. |
+| Current Trusted Validation Baseline | T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container: Docker sync-build passed, package smoke passed with --timeout 300, clean-checkout smoke passed, release artifact passed from a clean ext4 clone, strict release gate passed, release dry-run returned ready/blockers 0, publish dry-run returned ok with token warnings only, docs doctor stayed clean, and npm registry still reports next=0.5.0-rc.0/latest=0.4.6. No npm/GitHub publish mutation has been executed. |
 
 ### Current Known Problems
 
@@ -23,7 +23,8 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Task-scoped context pack is about 8-10s on the mounted WSL repository. | watch | Prefer bounded status/session paths; revisit performance only with an explicit trust/cache design. |
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
-| Release artifact git-status preflight and full dev Docker workspace copy can exceed useful latency on the mounted WSL workspace. | watch | Use the clean publish ext4 worktree for release artifacts and treat the direct /workspace Docker build path as the fallback when sync-copy stalls. |
+| Release artifact git-status preflight and full dev Docker workspace copy can exceed useful latency or fail on mounted WSL workspace-local state. | watch | Use a clean ext4 clone for release artifacts; direct /workspace artifact attempts can fail if local-only untracked state such as .claude/ is present. |
+| HADARA-dev package smoke installed core smoke can exceed the default 120s timeout in the large source workspace. | watch | Use `--timeout 300` for release package smoke until the installed smoke path is optimized or decoupled from the large project root. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership

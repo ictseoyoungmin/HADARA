@@ -107,7 +107,7 @@ hadara task close --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.5.0-rc.1`](docs/RELEASE_NOTES.md#050-rc1), release-candidate validation in progress |
+| Prepared source | [`hadara@0.5.0-rc.1`](docs/RELEASE_NOTES.md#050-rc1), release-readiness recycle passed; pending operator publish |
 | Published stable npm | `hadara@0.4.6` |
 | Published GitHub Release | [`v0.4.6`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6) |
 | Published RC npm | `hadara@0.5.0-rc.0` on `next` (published, per npm registry); `0.5.0-rc.1` supersedes it as the prepared source, pending operator publish |
