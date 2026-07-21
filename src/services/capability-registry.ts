@@ -1575,6 +1575,30 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'status.baseline.promote',
+    command: 'hadara status baseline promote --summary <text> --evidence <ev:id>[,<ev:id>] [--execute] --json',
+    summary: 'Promote a reviewed validation evidence set into the structured current-state validation baseline and managed projections.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'project',
+    lifecycleStage: 'handoff',
+    requiredness: 'conditional',
+    writeBoundary: 'managed-doc-section',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'operator',
+    status: 'stable',
+    schemaVersion: 'hadara.status.baseline.promote.v1',
+    docs: ['docs/HADARA_WORKFLOW.md', 'docs/TASK_WORKFLOW_COMMANDS.md'],
+    examples: [
+      example('Preview baseline promotion', 'hadara status baseline promote --summary "Full validation passed" --evidence ev:T-0001:abc --json', 'After a reviewed validation set should become the resume baseline.'),
+      example('Apply baseline promotion', 'hadara status baseline promote --summary "Full validation passed" --evidence ev:T-0001:abc --execute --json', 'After reviewing the dry-run write set.')
+    ],
+    related: ['status', 'task.close', 'evidence.add-command'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'project-state.update',
     command: 'hadara project-state update [--name <name>] [--purpose <purpose>] [--execute --before-hash <hash>] [--json]',
     summary: 'Update docs/PROJECT_STATE.md product metadata inside the project-state.update managed section.',

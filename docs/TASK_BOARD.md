@@ -675,3 +675,4 @@
 | T-0672 | Package Smoke Isolation and Timeout Policy | Done | tasks/T-0672-package-smoke-isolation-and-timeout-policy | |
 | T-0673 | Release Recycle Runbook and Command Contract | Done | tasks/T-0673-release-recycle-runbook-and-command-contract | |
 | T-0674 | Structured Handoff Continuation Contract | Done | tasks/T-0674-structured-handoff-continuation-contract | |
+| T-0675 | Current-State Baseline Promotion Surface | Done | tasks/T-0675-current-state-baseline-promotion-surface | |

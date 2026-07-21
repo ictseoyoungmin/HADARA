@@ -1,36 +1,36 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 264,
+  "rev": 268,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0674",
-    "title": "Structured Handoff Continuation Contract"
+    "id": "T-0675",
+    "title": "Current-State Baseline Promotion Surface"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "terminal",
     "kind": "task-handoff",
-    "title": "Start T-0675 Current-State Baseline Promotion Surface.",
-    "reason": "Reviewer queue continues with current-state baseline promotion after structured continuation semantics are fixed.",
+    "title": "No further reviewer recycle capsules are queued in the T-0670 through T-0675 sequence.",
+    "reason": "Release-readiness recycle design fixes T-0670 through T-0675 are implemented, validated, closed-ready, and committed through T-0674; T-0675 remains to close/commit.",
     "references": [
       {
-        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+        "path": "`docs/AGENT_HANDOFF.md`",
         "required": true
       },
       {
-        "path": "reviewer release recycle plan",
+        "path": "`docs/TASK_BOARD.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0674",
-      "path": "tasks/T-0674-structured-handoff-continuation-contract/HANDOFF.md"
+      "workId": "T-0675",
+      "path": "tasks/T-0675-current-state-baseline-promotion-surface/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -61,24 +61,10 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container. T-0668 records that the operator published hadara@0.5.0-rc.1 to npm on next, workspace registry verification returned version=0.5.0-rc.1/next=0.5.0-rc.1/latest=0.4.6, the GitHub Release note artifact exists with evidence, and installed-package recycle from hadara@next passed. T-0669 records public GitHub Release v0.5.0-rc.1 publication, independent npm/GitHub public-state verification, and Docker installed-package dogfood from public hadara@next across basic, standard, and governed fresh projects plus package recycle.",
+    "summary": "T-0675 promoted the current-state validation baseline after focused tests, TypeScript build, docs doctor, Docker sync-build, built CLI baseline-promotion dry-run, and baseline promotion execute passed.",
     "evidence": [
-      "ev:T-0664:ccd90916a8c841b98d58a663",
-      "ev:T-0665:527eded82980411281445c9a",
-      "ev:T-0666:9c421996f28042b98203fad8",
-      "ev:T-0666:743b914bc1a341889cda50d2",
-      "ev:T-0667:87eb2cd5efa747458b8e749f",
-      "ev:T-0667:d533bf36c9e74741a12398f3",
-      "ev:T-0667:eed4dba170744234a38924bf",
-      "ev:T-0667:17932d8a4a684db18a62dbe8",
-      "ev:T-0667:af0b1df9f11c47a0a7e0691c",
-      "ev:T-0668:f04d19ba0b5f47e3bf51276e",
-      "ev:T-0668:1ec8ae46a0f04aa3830ff767",
-      "ev:T-0668:a16978bfab134da9abadc752",
-      "ev:T-0669:9d08f787f7d64d85ad72c1b3",
-      "ev:T-0669:374d423870f14757ada477b2",
-      "ev:T-0669:39c8691d556943e68141f1fa",
-      "ev:T-0669:92db1f03c50a4c369243c453"
+      "ev:T-0675:19d5561063dd413d8bc6418e",
+      "ev:T-0675:3c4042b677f64497bbe6ddbb"
     ]
   }
 }

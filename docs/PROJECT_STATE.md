@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0674 Structured Handoff Continuation Contract |
+| Latest Completed Task | T-0675 Current-State Baseline Promotion Surface |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
 | Next Work State | none |
 | Operator Guidance | No next work selected. Run `hadara task status --json` for current task-selection guidance. |
-| Current Trusted Validation Baseline | T-0658 through T-0666 hardened close action boundaries and blocked status precedence, added and fixed project-level continuation handling, implemented anyOf in the schema validator, fixed stale bootstrap nextWork retirement, classified no-work handoffs as terminal, bumped/promoted the version to 0.5.0-rc.1, and validated the source with full-suite evidence. T-0667 then recycled release readiness from a freshly pulled node:22-bookworm Docker image and newly recreated hadara-dev container. T-0668 records that the operator published hadara@0.5.0-rc.1 to npm on next, workspace registry verification returned version=0.5.0-rc.1/next=0.5.0-rc.1/latest=0.4.6, the GitHub Release note artifact exists with evidence, and installed-package recycle from hadara@next passed. T-0669 records public GitHub Release v0.5.0-rc.1 publication, independent npm/GitHub public-state verification, and Docker installed-package dogfood from public hadara@next across basic, standard, and governed fresh projects plus package recycle. |
+| Current Trusted Validation Baseline | T-0675 promoted the current-state validation baseline after focused tests, TypeScript build, docs doctor, Docker sync-build, built CLI baseline-promotion dry-run, and baseline promotion execute passed. |
 
 ### Current Known Problems
 

@@ -5,6 +5,7 @@ import {
   formatOpsStatusReport
 } from '../services/operations-status-service';
 import { createProjectStatusV2Report, formatProjectStatusV2Report } from '../services/project-status-v2';
+import { applyProjectCurrentStateWrites, planProjectValidationBaselinePromotion } from '../services/project-current-state';
 import { CliArgsError, getFlag, getIntegerOption, getStringOption } from './args';
 
 export interface StatusCommandInput {
@@ -20,6 +21,24 @@ export function handleStatusCommand(input: StatusCommandInput): boolean {
 }
 
 function printStatus(input: StatusCommandInput): void {
+  if (input.args[1] === 'baseline' && input.args[2] === 'promote') {
+    const report = createStatusBaselinePromotionReport(input.projectRoot, input.args);
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log([
+        `[HADARA] status baseline promote: ${report.ok ? report.mode : 'blocked'}`,
+        `summary: ${report.baseline.summary}`,
+        `evidence: ${report.baseline.evidence.join(', ')}`,
+        `plannedWrites: ${report.summary.plannedWrites}`,
+        `appliedWrites: ${report.summary.appliedWrites}`
+      ].join('\n'));
+      for (const issue of report.issues) console.log(`${issue.severity.toUpperCase()}\t${issue.code}\t${issue.message}`);
+    }
+    if (!report.ok) process.exitCode = 6;
+    return;
+  }
+
   const detail = getStringOption(input.args, '--detail', 'fast');
   if (detail !== 'fast' && detail !== 'full') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--detail must be fast or full');
   const compat = getStringOption(input.args, '--compat');
@@ -83,6 +102,67 @@ function printStatus(input: StatusCommandInput): void {
       'legacy: this v1 report is available through hadara status --compat v1 --json during 0.5.x'
     ].join('\n'));
   }
+}
+
+function createStatusBaselinePromotionReport(projectRoot: string, args: string[]): {
+  schemaVersion: 'hadara.status.baseline.promote.v1';
+  command: 'status.baseline.promote';
+  ok: boolean;
+  mode: 'dry-run' | 'execute';
+  readOnly: boolean;
+  baseline: { summary: string; evidence: string[] };
+  summary: { plannedWrites: number; appliedWrites: number };
+  writes: Array<{ path: string; action: 'update' | 'create'; applied: boolean }>;
+  issues: Array<{ severity: 'error' | 'warning'; code: string; message: string; path?: string }>;
+} {
+  const summary = getStringOption(args, '--summary') ?? '';
+  const evidence = getAllStringOptions(args, '--evidence').flatMap(splitEvidenceList);
+  const execute = getFlag(args, '--execute');
+  const plan = planProjectValidationBaselinePromotion(projectRoot, { summary, evidence });
+  const issues = [...plan.issues];
+  const writes = plan.writes.map((write) => ({ path: write.path, action: write.before === null ? 'create' as const : 'update' as const, applied: false }));
+  if (issues.length > 0 || !execute) {
+    return {
+      schemaVersion: 'hadara.status.baseline.promote.v1',
+      command: 'status.baseline.promote',
+      ok: issues.length === 0,
+      mode: execute ? 'execute' : 'dry-run',
+      readOnly: true,
+      baseline: { summary: summary.trim(), evidence },
+      summary: { plannedWrites: plan.writes.length, appliedWrites: 0 },
+      writes,
+      issues
+    };
+  }
+  const applyIssues = applyProjectCurrentStateWrites(projectRoot, plan.writes);
+  return {
+    schemaVersion: 'hadara.status.baseline.promote.v1',
+    command: 'status.baseline.promote',
+    ok: applyIssues.length === 0,
+    mode: 'execute',
+    readOnly: false,
+    baseline: { summary: summary.trim(), evidence },
+    summary: { plannedWrites: plan.writes.length, appliedWrites: applyIssues.length === 0 ? plan.writes.length : 0 },
+    writes: writes.map((write) => ({ ...write, applied: applyIssues.length === 0 })),
+    issues: applyIssues
+  };
+}
+
+function getAllStringOptions(args: string[], name: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== name) continue;
+    const value = args[index + 1];
+    if (value === undefined) throw new CliArgsError('CLI_OPTION_MISSING_VALUE', `${name} requires a value`);
+    if (value.startsWith('--')) throw new CliArgsError('CLI_OPTION_VALUE_LOOKS_LIKE_FLAG', `${name} value must not look like a flag`);
+    values.push(value);
+    index += 1;
+  }
+  return values;
+}
+
+function splitEvidenceList(value: string): string[] {
+  return value.split(/[;,]/).map((item) => item.trim()).filter(Boolean);
 }
 
 function withStatusV1CompatibilityMetadata<T extends { schemaVersion: string }>(report: T): T & {

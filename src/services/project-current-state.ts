@@ -104,6 +104,11 @@ export interface ProjectCurrentStateWrite {
   after: string;
 }
 
+export interface ProjectValidationBaselineInput {
+  summary: string;
+  evidence: string[];
+}
+
 const MANAGED_METADATA = {
   schema: 'hadara.managedSection.v1' as const,
   owner: 'current-state.projection',
@@ -417,6 +422,51 @@ export function planCompletedProjectCurrentStateWrites(
     ...(continuation !== undefined ? { continuation } : {})
   }, task);
   return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [] };
+}
+
+export function planProjectValidationBaselinePromotion(
+  projectRoot: string,
+  baseline: ProjectValidationBaselineInput
+): {
+  writes: ProjectCurrentStateWrite[];
+  issues: ProjectCurrentStateIssue[];
+  state: ProjectCurrentState | null;
+} {
+  const summary = baseline.summary.trim();
+  const evidence = baseline.evidence.map((item) => item.trim()).filter(Boolean);
+  if (!summary) {
+    return {
+      writes: [],
+      state: null,
+      issues: [{
+        severity: 'error',
+        code: 'PROJECT_CURRENT_STATE_BASELINE_SUMMARY_REQUIRED',
+        path: PROJECT_CURRENT_STATE_PATH,
+        message: 'Validation baseline promotion requires a non-empty summary.'
+      }]
+    };
+  }
+  if (evidence.length === 0) {
+    return {
+      writes: [],
+      state: null,
+      issues: [{
+        severity: 'error',
+        code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_REQUIRED',
+        path: PROJECT_CURRENT_STATE_PATH,
+        message: 'Validation baseline promotion requires at least one evidence id.'
+      }]
+    };
+  }
+  const read = readProjectCurrentState(projectRoot);
+  if (!read.present) return { writes: [], issues: [], state: null };
+  if (!read.state) return { writes: [], issues: read.issues, state: null };
+  const next: ProjectCurrentState = {
+    ...read.state,
+    rev: read.state.rev + 1,
+    validationBaseline: { summary, evidence }
+  };
+  return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [], state: next };
 }
 
 export function applyProjectCurrentStateWrites(projectRoot: string, writes: ProjectCurrentStateWrite[]): ProjectCurrentStateIssue[] {

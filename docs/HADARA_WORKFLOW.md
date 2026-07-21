@@ -168,6 +168,24 @@ hadara context pack --task T-XXXX --json
 `status` is the project/session ingress read model. It does not create tasks, append evidence, warm caches, validate completion, or close work.
 When `.hadara/state/current.json` exists, `status` exposes active/latest task, release, next operator intent, validation baseline, and current known problems directly. Use `context pack` only after a task is selected and file context is actually needed.
 
+### Validation Baseline Promotion
+
+When a reviewed validation set becomes the project’s trusted resume baseline, promote it through the structured current-state surface instead of hand-editing managed projection blocks:
+
+```bash
+hadara status baseline promote \
+  --summary "Focused validation, docs doctor, and Docker sync-build passed." \
+  --evidence ev:T-XXXX:abc,ev:T-XXXX:def \
+  --json
+
+hadara status baseline promote \
+  --summary "Focused validation, docs doctor, and Docker sync-build passed." \
+  --evidence ev:T-XXXX:abc,ev:T-XXXX:def \
+  --execute --json
+```
+
+The dry-run reports the current-state/projection write set. Execute updates `.hadara/state/current.json` plus the managed current-state sections in `docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md`.
+
 ## Selecting or Creating Work
 
 ```bash

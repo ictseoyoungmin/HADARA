@@ -9,6 +9,7 @@ import {
   completeProjectCurrentTask,
   PROJECT_CURRENT_STATE_PATH,
   planCompletedProjectCurrentStateWrites,
+  planProjectValidationBaselinePromotion,
   readProjectCurrentState,
   renderHandoffCanonSection,
   renderProjectStateCanonSection
@@ -56,6 +57,29 @@ describe('project current-state canon', () => {
     const active = readProjectCurrentState(root).state!;
     expect(active.activeTask).toEqual({ id: created.taskId, title: 'Active handoff note fixture' });
     expect(renderHandoffCanonSection(active)).toContain(`| Active Task | ${created.taskId} Active handoff note fixture | Resume this capsule first. |`);
+  });
+
+  it('plans validation baseline promotion as a current-state/projection bundle', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+
+    const plan = planProjectValidationBaselinePromotion(root, {
+      summary: 'Focused validation and Docker sync-build passed.',
+      evidence: ['ev:T-0675:abc', ' ev:T-0675:def ']
+    });
+
+    expect(plan.issues).toEqual([]);
+    expect(plan.writes.map((write) => write.path).sort()).toEqual([
+      '.hadara/state/current.json',
+      'docs/AGENT_HANDOFF.md',
+      'docs/PROJECT_STATE.md'
+    ]);
+    const currentAfter = JSON.parse(plan.writes.find((write) => write.path === '.hadara/state/current.json')!.after);
+    expect(currentAfter.validationBaseline).toEqual({
+      summary: 'Focused validation and Docker sync-build passed.',
+      evidence: ['ev:T-0675:abc', 'ev:T-0675:def']
+    });
+    expect(plan.writes.find((write) => write.path === 'docs/AGENT_HANDOFF.md')!.after).toContain('ev:T-0675:abc, ev:T-0675:def');
   });
 
   it('synchronizes active and latest task facts through create and finish without a new command', () => {
