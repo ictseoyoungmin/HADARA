@@ -4,6 +4,49 @@ This document is the dedicated tracked source for release, install, installer, p
 
 `hadara release gate --mode strict --json` may read this document and other tracked evidence, but it must remain read-only. It must not run installer scripts, package smoke, `npm pack`, install packages, publish packages, create GitHub releases, build Docker images, mutate PATH, write shell profiles, call GitHub, execute remote CI, or perform registry mutation.
 
+## Release Readiness Recycle Runbook
+
+Use this canonical recycle order for release-candidate or stable publish preparation. The objective is to keep build source, evidence writes, and installed-package dogfood separated so validation does not dirty the source it is validating.
+
+Root roles:
+
+| Role | Purpose | Default Location |
+|---|---|---|
+| `sourceRoot` | Clean committed source used for build, artifact, package, gate, dry-run, and publish checks. | Container-native ext4 clone, for example `/root/hadara-release-src`. |
+| `evidenceRoot` | Workspace where Task Capsule evidence is appended. | Mounted workspace, for example `/workspace`, or the reviewed release capsule root. |
+| `smokeProjectRoot` | Disposable consumer project used by installed-package smoke/recycle. | Temporary ext4 directory, for example `/tmp/hadara-package-smoke-project`. |
+
+Deterministic recycle sequence:
+
+1. Start from a fresh Docker toolchain. If the existing image/container is suspect, pull `node:22-bookworm`, recreate `hadara-dev`, and mount the repository at `/workspace`; do not reuse stale global `hadara` binaries.
+2. Commit the intended release-readiness source state before cloning. A clean clone only contains committed files.
+3. Inside the container, clone `/workspace` to a container-native ext4 `sourceRoot`; use `/workspace` only as `evidenceRoot` and human review surface.
+4. Build and validate the development CLI from `sourceRoot`, then confirm `package.json` version equals `node dist/cli/main.js version`.
+5. Generate the release artifact from `sourceRoot` to an output directory and write a journal JSON outside the source tree. Do not attach evidence during this artifact build.
+6. Attach the release artifact journal from `evidenceRoot` with `hadara release artifact --from-journal <journal.json> --evidence-root <evidenceRoot> --attach-evidence --task <task> --json`.
+7. Run package smoke and clean-checkout smoke with explicit root roles: `--source-root <sourceRoot> --evidence-root <evidenceRoot>` and, for installed-package paths, a disposable `--smoke-project-root <tmp-ext4-dir>`.
+8. Run `hadara release gate --mode strict --json`, `hadara release dry-run --json`, and `hadara release publish --mode dry-run ... --json` from `sourceRoot`; these checks remain read-only and must observe the evidence attached to `evidenceRoot`.
+9. Only after the gates pass, run the operator-controlled npm publish helper. For release candidates use npm dist-tag `next`; for stable use `latest`.
+10. In the same publish capsule, prepare the public GitHub Release note or draft before handoff. After npm/GitHub publication, run post-publish installed-package recycle from the published package in a dedicated capsule, using `hadara package recycle --execute --package hadara@next|latest --expected-version <version> --source-root <sourceRoot> --evidence-root <evidenceRoot> --smoke-project-root <tmp-ext4-dir> --attach-evidence --task <task> --json`.
+
+Forbidden ordering:
+
+- Do not run clean release artifact generation with `sourceRoot == evidenceRoot` and `--attach-evidence`; this self-invalidates the clean-tree preflight and now fail-closes unless explicitly overridden after review.
+- Do not use the mounted `/workspace` as the heavy build/package-smoke source when Docker ext4 is available; mounted WSL/DrvFs state can be slow and can expose local-only files.
+- Do not reuse the HADARA-dev repository itself as an installed-package `smokeProjectRoot`; installed smoke must use a disposable consumer project.
+- Do not treat npm publish as complete release handling when a GitHub Release note or draft is still missing from the capsule.
+
+Fresh Docker recovery example:
+
+```bash
+docker pull node:22-bookworm
+docker rm -f hadara-dev
+docker run -dit --name hadara-dev -v "$PWD":/workspace -w /workspace node:22-bookworm bash
+docker exec -it hadara-dev bash
+```
+
+`scripts/release/prepare-publish-env.sh <TASK_ID>` is the preferred helper for preparing the ext4 clone and printing the final operator commands. It must keep the GitHub Release note path visible so an npm publish capsule can immediately proceed to a reviewed GitHub Release draft.
+
 ## Package Metadata Release Readiness
 
 Current package metadata preparation mode:

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 260,
+  "rev": 262,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0672",
-    "title": "Package Smoke Isolation and Timeout Policy"
+    "id": "T-0673",
+    "title": "Release Recycle Runbook and Command Contract"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,23 +14,19 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Close T-0672 and commit, then start T-0673 Release Recycle Runbook and Command Contract.",
-    "reason": "T-0672 validation is complete; remaining reviewer capsules are separate release-readiness recycle work.",
+    "title": "Start T-0674 Structured Handoff Continuation Contract.",
+    "reason": "actionable",
     "references": [
       {
-        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
-        "required": true
-      },
-      {
-        "path": "reviewer release recycle plan",
+        "path": "yes",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0672",
-      "path": "tasks/T-0672-package-smoke-isolation-and-timeout-policy/HANDOFF.md"
+      "workId": "T-0673",
+      "path": "tasks/T-0673-release-recycle-runbook-and-command-contract/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

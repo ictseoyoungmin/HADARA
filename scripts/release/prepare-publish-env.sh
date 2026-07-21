@@ -3,7 +3,9 @@
 # so the operator can `npm login` and then run `manual-publish-rc.sh <TASK> --execute`.
 # This script does not run the manual publish helper by default; the helper owns
 # the end-to-end dry-run, release evidence, npm dry-run, and npm publish boundary.
-# The optional GitHub Release step is still operator-controlled and can be run after npm publish.
+# The optional GitHub Release step is still operator-controlled, but this helper
+# prepares a public release note artifact so npm and GitHub publication can stay
+# in the same release capsule when the operator chooses `--github-draft`.
 #
 # Why this script exists (the traps it removes):
 # - The mounted /workspace (/mnt/f, DrvFs) cannot run `npm ci`/`npm run build`: the package
@@ -39,7 +41,8 @@
 #   4. Strict release-gate sanity check (no npm auth needed).
 #   5. Skip the manual helper by default and print the exact command the operator runs next.
 #      An explicit --run-helper-dry-run option is available for manual preview only.
-#   6. Print the exact container + folder + commands to finish npm publish and optional GitHub release handling.
+#   6. Ensure a public GITHUB_RELEASE_NOTE.md exists in the task capsule.
+#   7. Print the exact container + folder + commands to finish npm publish and optional GitHub release handling.
 #
 # This script never publishes. Registry mutation stays in `manual-publish-rc.sh --execute`,
 # which the operator runs interactively after `npm login`.
@@ -153,6 +156,42 @@ echo "built dist version:   $DIST_VERSION"
 [ "$PKG_VERSION" = "$DIST_VERSION" ] || { echo "ERROR: built dist version != package.json version"; exit 1; }
 
 echo
+echo "== 2b. Ensure public GitHub Release note artifact =="
+TASK_DIR="$(find tasks -maxdepth 1 -type d -name "$TASK-*" | sort | head -1 || true)"
+if [ -z "$TASK_DIR" ]; then
+  echo "WARN: task capsule not found for $TASK; cannot prepare GITHUB_RELEASE_NOTE.md."
+else
+  RELEASE_NOTE="$TASK_DIR/GITHUB_RELEASE_NOTE.md"
+  if [ -f "$RELEASE_NOTE" ]; then
+    echo "GitHub Release note already exists: $RELEASE_NOTE"
+  else
+    cat > "$RELEASE_NOTE" <<EOF
+# HADARA $PKG_VERSION
+
+HADARA $PKG_VERSION is a release-candidate build of the HADARA CLI and project protocol.
+
+## Install
+
+\`\`\`bash
+npm install -g hadara@next
+hadara version --json
+\`\`\`
+
+## Validation
+
+- Release readiness evidence is recorded in the $TASK Task Capsule.
+- npm publication should be verified with \`npm view hadara@$PKG_VERSION version\`.
+- Post-publish installed-package recycle should verify \`hadara@next\` resolves to $PKG_VERSION from a disposable consumer project.
+
+## Notes
+
+This note is intended for GitHub Release readers. Internal operator logs, local paths, tokens, and review-only debugging details must stay out of this file.
+EOF
+    echo "Created GitHub Release note: $RELEASE_NOTE"
+  fi
+fi
+
+echo
 echo "== 3. Remove stale global hadara (force the helper to use this clone) =="
 rm -f /usr/local/bin/hadara || true
 if command -v hadara >/dev/null 2>&1; then
@@ -216,10 +255,12 @@ echo
 echo "  docker exec -it $CONTAINER bash"
 echo "  cd $CLONE_DIR"
 echo "  npm login --registry=$REGISTRY        # if 'npm whoami' is not already set"
-echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --execute"
+echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --execute --github-draft \\"
+echo "    --github-release-note tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md"
 echo "  # then type exactly: publish"
+echo "  # then type exactly: github-draft"
 echo
-echo "Optional GitHub Release flow after npm publish:"
+echo "If npm was already published and only the GitHub Release remains:"
 echo
 echo "  # If a draft already exists and has been reviewed:"
 echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false"
@@ -232,8 +273,7 @@ echo "  gh release edit v\$(node -p \"require('./package.json').version\") --rep
 echo
 echo "Notes:"
 echo "  - Publish from this clone, not /workspace (the mounted host repo cannot build)."
-echo "  - The 'Published ...' evidence lands in this clone's $TASK_ID capsule, not /workspace."
-echo "  - If using --github-draft inside this clone, pass --github-release-note explicitly and verify the"
-echo "    remote/tag target first; this helper clones from $WORKSPACE, so many operators prefer the gh"
-echo "    commands above from the normal source checkout after npm publish."
+echo "  - This helper creates tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md if it is missing."
+echo "  - If evidence is generated inside this clone, copy or replay it into /workspace canon before closing."
+echo "  - Review the GitHub draft content and tag target before publishing it publicly."
 echo "============================================================"

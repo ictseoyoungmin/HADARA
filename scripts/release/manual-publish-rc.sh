@@ -7,6 +7,7 @@ CREATE_GITHUB_DRAFT="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 PACKAGE_NAME="hadara"
 DIST_DIR="dist-release"
+RELEASE_RESULTS_DIR="${HADARA_RELEASE_RESULTS_DIR:-/tmp/hadara-release-results}"
 PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"
 NPM_TAG="${NPM_TAG:-}"
 GITHUB_RELEASE_NOTE=""
@@ -421,8 +422,11 @@ echo
 echo "== 2. Build release artifact =="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
+mkdir -p "${RELEASE_RESULTS_DIR}"
 
-run_hadara release artifact --execute --json --output "${DIST_DIR}" --attach-evidence --task "${TASK_ID}"
+ARTIFACT_JOURNAL="${RELEASE_RESULTS_DIR}/release-artifact-${TASK_ID}-${VERSION}.json"
+run_hadara release artifact --execute --json --output "${DIST_DIR}" --journal "${ARTIFACT_JOURNAL}"
+run_hadara release artifact --from-journal "${ARTIFACT_JOURNAL}" --attach-evidence --task "${TASK_ID}" --json
 
 TARBALL="$(ls -1t "${DIST_DIR}"/*.tgz 2>/dev/null | head -n 1 || true)"
 if [[ -z "${TARBALL}" ]]; then

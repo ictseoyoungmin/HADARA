@@ -673,3 +673,4 @@
 | T-0670 | Release root separation contract | Done | tasks/T-0670-release-root-separation-contract | |
 | T-0671 | Release Artifact Evidence Journal | Done | tasks/T-0671-release-artifact-evidence-journal | |
 | T-0672 | Package Smoke Isolation and Timeout Policy | Done | tasks/T-0672-package-smoke-isolation-and-timeout-policy | |
+| T-0673 | Release Recycle Runbook and Command Contract | Done | tasks/T-0673-release-recycle-runbook-and-command-contract | |

@@ -134,6 +134,27 @@ HADARA-dev CLI work should prefer the reusable `hadara-dev` Docker workflow when
 
 Do not assume container-global `/usr/local/bin/hadara` is the latest development build. For source changes, build first, refresh `/workspace/dist`, then run built-CLI smokes from `dist/cli/main.js`.
 
+### Release Recycle Quickstart
+
+Release-readiness recycle uses three separate roots:
+
+| Root | Use |
+|---|---|
+| `sourceRoot` | Clean ext4 clone used for build, artifact, package, gate, dry-run, and publish checks. |
+| `evidenceRoot` | Mounted workspace or reviewed capsule root where evidence is appended. |
+| `smokeProjectRoot` | Disposable ext4 consumer project for installed-package smoke/recycle. |
+
+Minimal Docker flow:
+
+```bash
+docker pull node:22-bookworm
+docker rm -f hadara-dev
+docker run -dit --name hadara-dev -v "$PWD":/workspace -w /workspace node:22-bookworm bash
+bash scripts/release/prepare-publish-env.sh T-XXXX
+```
+
+The full contract and command order are in `docs/RELEASE_READINESS.md` under “Release Readiness Recycle Runbook”. Do not attach release-artifact evidence while generating the clean artifact; write a journal first, then attach that journal to `evidenceRoot`.
+
 ## Session Start
 
 Use status at the beginning of a human/agent work session, after switching tasks, or when project state is unclear.
