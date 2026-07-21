@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
-import { attachReleaseArtifactEvidence } from '../../src/services/release-artifact-evidence';
+import { attachReleaseArtifactEvidence, readReleaseArtifactJournal, writeReleaseArtifactJournal } from '../../src/services/release-artifact-evidence';
 import { createReleaseArtifactReport, ReleaseArtifactCommandRunner } from '../../src/services/release-artifact';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -213,6 +213,64 @@ describe('release artifact builder', () => {
     expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
   });
 
+  it('fail-closes attach evidence when source and evidence roots share a clean git worktree', () => {
+    const root = tempProject();
+    initCleanGit(root);
+    const runner = vi.fn<ReleaseArtifactCommandRunner>();
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      attachEvidence: true,
+      runner
+    });
+
+    expect(report.ok).toBe(false);
+    expect(runner).not.toHaveBeenCalled();
+    expect(report.selfInvalidationRisk).toMatchObject({
+      cleanRequired: true,
+      attachEvidenceRequested: true,
+      sourceEqualsEvidence: true,
+      failClosed: true
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'RELEASE_ARTIFACT_SELF_INVALIDATION_RISK' }));
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('attaches release artifact evidence to a separate evidence root without dirtying the clean source root', () => {
+    const sourceRoot = tempProject();
+    const evidenceRoot = tempProject();
+    initCleanGit(sourceRoot);
+    const task = createTaskCapsule(evidenceRoot, 'Release artifact evidence');
+    const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-artifact-output-'));
+    roots.push(outputRoot);
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: sourceRoot }),
+      execute: true,
+      output: outputRoot,
+      evidenceRoot,
+      attachEvidence: true,
+      runner: successfulPackRunner()
+    });
+
+    const journalPath = path.join(os.tmpdir(), `hadara-release-artifact-journal-${Date.now()}.json`);
+    writeReleaseArtifactJournal({ journalPath, report });
+    roots.push(journalPath);
+    const fromJournal = readReleaseArtifactJournal(journalPath);
+    const attached = attachReleaseArtifactEvidence({
+      projectRoot: evidenceRoot,
+      taskId: task.id,
+      summary: 'release artifact journal attach',
+      report: fromJournal
+    });
+
+    expect(report.ok).toBe(true);
+    expect(fromJournal).toMatchObject({ schemaVersion: 'hadara.releaseArtifact.v1', ok: true });
+    expect(attached.evidence.taskId).toBe(task.id);
+    expect(spawnSync('git', ['status', '--porcelain=v1'], { cwd: sourceRoot, encoding: 'utf8' }).stdout.trim()).toBe('');
+  });
+
   it('fails package content verification when npm pack reports a file outside the whitelist', () => {
     const root = tempProject();
     const runner: ReleaseArtifactCommandRunner = (_command, args) => {
@@ -333,3 +391,34 @@ describe('release artifact builder', () => {
     expect(validateSchema('hadara.releaseArtifact.v1', artifact).ok).toBe(true);
   });
 });
+
+function successfulPackRunner(): ReleaseArtifactCommandRunner {
+  return (_command, args) => {
+    const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+    fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+    return {
+      status: 0,
+      stdout: JSON.stringify([
+        {
+          filename: 'hadara-0.0.0-bootstrap.tgz',
+          files: [
+            { path: 'package.json', size: 240 },
+            { path: 'README.md', size: 9 },
+            { path: 'LICENSE', size: 4 },
+            { path: 'dist/cli/main.js', size: 42 }
+          ]
+        }
+      ]),
+      stderr: '',
+      elapsedMs: 10
+    };
+  };
+}
+
+function initCleanGit(root: string): void {
+  spawnSync('git', ['init', '--quiet'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['config', 'user.email', 'fixture@example.com'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['config', 'user.name', 'Fixture'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['add', '.'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['commit', '--quiet', '-m', 'fixture'], { cwd: root, encoding: 'utf8' });
+}

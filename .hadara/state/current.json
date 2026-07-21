@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 256,
+  "rev": 258,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0670",
-    "title": "Release root separation contract"
+    "id": "T-0671",
+    "title": "Release Artifact Evidence Journal"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,8 +14,8 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Close T-0670 and commit, then start T-0671 Release Artifact Evidence Journal.",
-    "reason": "T-0670 validation is complete; remaining reviewer capsules are separate release-readiness recycle work.",
+    "title": "Close T-0671 and commit, then start T-0672 Package Smoke Isolation and Timeout Policy.",
+    "reason": "T-0671 validation is complete; remaining reviewer capsules are separate release-readiness recycle work.",
     "references": [
       {
         "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
@@ -29,8 +29,8 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0670",
-      "path": "tasks/T-0670-release-root-separation-contract/HANDOFF.md"
+      "workId": "T-0671",
+      "path": "tasks/T-0671-release-artifact-evidence-journal/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

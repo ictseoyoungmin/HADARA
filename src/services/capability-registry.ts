@@ -1858,7 +1858,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'release.artifact',
-    command: 'hadara release artifact --execute [--output <dir>] [--task <task-id>] [--json]',
+    command: 'hadara release artifact --execute [--source-root <dir>] [--evidence-root <dir>] [--output <dir>] [--journal <file>|--from-journal <file>] [--task <task-id>] [--json]',
     summary: 'Build whitelisted release artifact tarball, checksum, and manifest.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1873,7 +1873,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.releaseArtifact.v1',
     docs: ['docs/RELEASE_READINESS.md'],
-    examples: [example('Build release artifact', 'hadara release artifact --execute --json', 'When preparing package artifacts.')],
+    examples: [
+      example('Build release artifact journal from clean source', 'hadara release artifact --execute --source-root /tmp/hadara-release-src --output /tmp/hadara-release-out --journal /tmp/hadara-release-results/artifact.json --json', 'When preparing package artifacts without writing evidence into the clean source tree.'),
+      example('Attach release artifact journal evidence', 'hadara release artifact --from-journal /tmp/hadara-release-results/artifact.json --evidence-root . --attach-evidence --task T-XXXX --json', 'After reviewing the artifact result JSON from a separate evidence workspace.')
+    ],
     related: ['release.dry-run', 'smoke.package'],
     conflictsWith: []
   }),

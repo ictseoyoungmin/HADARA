@@ -37,6 +37,21 @@ export interface ReleaseArtifactReport {
     relativePath?: string;
     retention: 'deleted' | 'kept-temporary' | 'explicit-output';
   };
+  rootRoles?: {
+    sourceRoot: RootRoleSummary;
+    evidenceRoot: RootRoleSummary;
+  };
+  selfInvalidationRisk?: {
+    cleanRequired: boolean;
+    attachEvidenceRequested: boolean;
+    sourceEqualsEvidence: boolean;
+    failClosed: boolean;
+    overrideAllowed: boolean;
+  };
+  source?: {
+    gitCommit?: string;
+    pathRedacted: true;
+  };
   package: {
     name: string;
     version: string;
@@ -74,6 +89,10 @@ export interface ReleaseArtifactOptions {
   paths: HadaraPaths;
   execute?: boolean;
   output?: string;
+  evidenceRoot?: string;
+  sourceFromOption?: '--source-root' | '--project';
+  attachEvidence?: boolean;
+  allowSourceEvidenceWrite?: boolean;
   keepTemp?: boolean;
   timeoutSeconds?: number;
   runner?: ReleaseArtifactCommandRunner;
@@ -93,6 +112,14 @@ export type ReleaseArtifactCommandRunner = (
   args: string[],
   options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }
 ) => ReleaseArtifactCommandResult;
+
+interface RootRoleSummary {
+  role: 'sourceRoot' | 'evidenceRoot';
+  displayPath: string;
+  pathRedacted: true;
+  relativePath?: string;
+  fromOption: '--source-root' | '--evidence-root' | '--project';
+}
 
 const RELEASE_PACKAGE_DESCRIPTION = 'Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and release gates.';
 const RELEASE_PACKAGE_KEYWORDS = [
@@ -157,6 +184,23 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
   }
 
   const packageMetadata = readPackageMetadata(options.paths.projectRoot, issues);
+  const cleanRequired = fs.existsSync(path.join(options.paths.projectRoot, '.git'));
+  const evidenceRoot = resolveRoleRoot(options.paths.projectRoot, options.evidenceRoot);
+  const sourceEqualsEvidence = samePath(options.paths.projectRoot, evidenceRoot);
+  const selfInvalidationRisk = {
+    cleanRequired,
+    attachEvidenceRequested: options.attachEvidence === true,
+    sourceEqualsEvidence,
+    failClosed: cleanRequired && options.attachEvidence === true && sourceEqualsEvidence && options.allowSourceEvidenceWrite !== true,
+    overrideAllowed: options.allowSourceEvidenceWrite === true
+  };
+  if (selfInvalidationRisk.failClosed) {
+    issues.push({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_SELF_INVALIDATION_RISK',
+      message: 'release artifact --attach-evidence would write tracked evidence into the clean sourceRoot; use a separate --evidence-root or an explicit override after reviewing the self-invalidation risk.'
+    });
+  }
   validateCleanGitWorktree(options.paths.projectRoot, issues);
   const output = prepareOutput(options.paths.projectRoot, options.output, options.keepTemp === true, issues);
   const staging = prepareStaging(options.paths.projectRoot, issues);
@@ -261,6 +305,26 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
     ok: issues.every((issue) => issue.severity !== 'error'),
     mode: 'execute',
     execution,
+    rootRoles: {
+      sourceRoot: {
+        role: 'sourceRoot',
+        displayPath: '.',
+        pathRedacted: true,
+        fromOption: options.sourceFromOption ?? '--project'
+      },
+      evidenceRoot: {
+        role: 'evidenceRoot',
+        displayPath: rootDisplayPath(options.paths.projectRoot, evidenceRoot, options.evidenceRoot ? '--evidence-root' : '--project'),
+        pathRedacted: true,
+        ...relativeRoot(options.paths.projectRoot, evidenceRoot),
+        fromOption: options.evidenceRoot ? '--evidence-root' : '--project'
+      }
+    },
+    selfInvalidationRisk,
+    source: {
+      ...readCurrentGitCommit(options.paths.projectRoot),
+      pathRedacted: true
+    },
     output: {
       kind: output.kind,
       displayPath: output.displayPath,
@@ -288,6 +352,17 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
 
   assertSchema('hadara.releaseArtifact.v1', report);
   return report;
+}
+
+function readCurrentGitCommit(projectRoot: string): { gitCommit?: string } {
+  if (!fs.existsSync(path.join(projectRoot, '.git'))) return {};
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    timeout: 10_000
+  });
+  const commit = result.status === 0 ? result.stdout.trim() : '';
+  return /^[a-f0-9]{40}$/i.test(commit) ? { gitCommit: commit } : {};
 }
 
 function readPackageMetadata(projectRoot: string, issues: ReleaseArtifactIssue[]): PackageMetadata {
@@ -356,6 +431,32 @@ function validateCleanGitWorktree(projectRoot: string, issues: ReleaseArtifactIs
       message: 'Release artifact builder requires a clean git worktree so git commit metadata describes the artifact contents.'
     });
   }
+}
+
+function resolveRoleRoot(projectRoot: string, value: string | undefined): string {
+  return value ? path.resolve(projectRoot, value) : projectRoot;
+}
+
+function samePath(left: string, right: string): boolean {
+  return path.resolve(left) === path.resolve(right);
+}
+
+function rootDisplayPath(projectRoot: string, resolved: string, fromOption: string): string {
+  if (fromOption === '--project') return '.';
+  const rel = path.relative(projectRoot, resolved);
+  if (!rel) return '.';
+  if (!rel.startsWith('..') && !path.isAbsolute(rel)) return `./${toPosix(rel)}`;
+  return '<redacted-root>';
+}
+
+function relativeRoot(projectRoot: string, resolved: string): { relativePath?: string } {
+  const rel = path.relative(projectRoot, resolved);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return {};
+  return { relativePath: toPosix(rel) };
+}
+
+function toPosix(value: string): string {
+  return value.split(path.sep).join('/');
 }
 
 function prepareOutput(

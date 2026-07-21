@@ -156,14 +156,14 @@ Evidence freshness and cross-check implementation for T-0140:
 - Release gate strictness means evidence existence, artifact schema validity, source/report `ok`, and expected category/mode/result.
 - Release dry-run strictness is release gate strictness plus freshness checks for current package version, release artifact manifest hash, and git commit when public evidence artifacts include git commit metadata.
 - T-0260 decomposes release dry-run internals into target configuration, provider advisory, evidence validation, readiness, and diagnostics services without changing the `hadara.releaseDryRun.v1` report shape or adding release mutation.
-- Release artifact evidence flow is explicit: run `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>` to attach the reduced `hadara.releaseArtifact.v1` report under `tasks/<task-id>/artifacts/release-artifact/`.
+- Release artifact evidence flow is explicit and must avoid self-invalidating clean-tree loops. Build from a clean source clone with a separate evidence sink: `hadara release artifact --execute --source-root /tmp/hadara-release-src --output /tmp/hadara-release-out --journal /tmp/hadara-release-results/artifact.json --json`, then attach from the workspace with `hadara release artifact --from-journal /tmp/hadara-release-results/artifact.json --evidence-root . --attach-evidence --task <task-id> --json`. Same-root `--attach-evidence` with a clean git preflight fail-closes with `RELEASE_ARTIFACT_SELF_INVALIDATION_RISK` unless explicitly overridden after review.
 - T-0140 still performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
 
 Compatibility markers retained for the read-only strict release gate:
 
 - Evidence freshness must compare evidence to the release candidate window.
 - Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check.
-- Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`.
+- Release artifact evidence flow must be explicit: run `hadara release artifact --execute --source-root <clean-source> --output <artifact-output> --journal <result.json> --json`, then attach the journal from `evidenceRoot`.
 
 ## Installer Script Surface and Schema
 

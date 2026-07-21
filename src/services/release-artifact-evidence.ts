@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { assertSchema } from '../core/schema';
 import { appendEvidenceTextArtifact, PersistedEvidenceRecord, persistedEvidencePath } from '../evidence/evidence';
 import { ReleaseArtifactReport } from './release-artifact';
 import { readCurrentGitCommit } from './release-dry-run';
@@ -19,7 +20,7 @@ export function attachReleaseArtifactEvidence(input: {
     evidence: {
       time,
       taskId: input.taskId,
-      gitCommit: readCurrentGitCommit(input.projectRoot)
+      gitCommit: input.report.source?.gitCommit ?? readCurrentGitCommit(input.projectRoot)
     }
   };
   const content = JSON.stringify(reportArtifact, null, 2);
@@ -46,6 +47,18 @@ export function attachReleaseArtifactEvidence(input: {
       rawContentIncluded: false
     }
   };
+}
+
+export function writeReleaseArtifactJournal(input: { journalPath: string; report: ReleaseArtifactReport }): void {
+  const journalPath = path.resolve(input.journalPath);
+  fs.mkdirSync(path.dirname(journalPath), { recursive: true });
+  fs.writeFileSync(journalPath, `${JSON.stringify(input.report, null, 2)}\n`, 'utf8');
+}
+
+export function readReleaseArtifactJournal(journalPath: string): ReleaseArtifactReport {
+  const parsed: unknown = JSON.parse(fs.readFileSync(path.resolve(journalPath), 'utf8'));
+  assertSchema('hadara.releaseArtifact.v1', parsed);
+  return parsed as ReleaseArtifactReport;
 }
 
 function findTaskDir(projectRoot: string, taskId: string): string | null {

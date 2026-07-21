@@ -59,6 +59,36 @@
         "retention": { "type": "string", "enum": ["deleted", "kept-temporary", "explicit-output"] }
       }
     },
+    "rootRoles": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sourceRoot", "evidenceRoot"],
+      "properties": {
+        "sourceRoot": { "$ref": "#/$defs/rootRole" },
+        "evidenceRoot": { "$ref": "#/$defs/rootRole" }
+      }
+    },
+    "selfInvalidationRisk": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cleanRequired", "attachEvidenceRequested", "sourceEqualsEvidence", "failClosed", "overrideAllowed"],
+      "properties": {
+        "cleanRequired": { "type": "boolean" },
+        "attachEvidenceRequested": { "type": "boolean" },
+        "sourceEqualsEvidence": { "type": "boolean" },
+        "failClosed": { "type": "boolean" },
+        "overrideAllowed": { "type": "boolean" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["pathRedacted"],
+      "properties": {
+        "gitCommit": { "type": "string", "pattern": "^[a-fA-F0-9]{40}$" },
+        "pathRedacted": { "const": true }
+      }
+    },
     "package": {
       "type": "object",
       "additionalProperties": true,
@@ -110,6 +140,18 @@
     }
   },
   "$defs": {
+    "rootRole": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["role", "displayPath", "pathRedacted", "fromOption"],
+      "properties": {
+        "role": { "type": "string", "enum": ["sourceRoot", "evidenceRoot"] },
+        "displayPath": { "type": "string", "minLength": 1 },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "fromOption": { "type": "string", "enum": ["--source-root", "--evidence-root", "--project"] }
+      }
+    },
     "artifact": {
       "type": "object",
       "additionalProperties": true,

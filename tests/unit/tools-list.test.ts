@@ -109,7 +109,7 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.releasePublish.v1'
         }),
         expect.objectContaining({
-          name: 'hadara release artifact --execute [--output <dir>] [--task <task-id>] [--json]',
+          name: 'hadara release artifact --execute [--source-root <dir>] [--evidence-root <dir>] [--output <dir>] [--journal <file>|--from-journal <file>] [--task <task-id>] [--json]',
           category: 'release',
           readOnly: false,
           schemaVersion: 'hadara.releaseArtifact.v1'

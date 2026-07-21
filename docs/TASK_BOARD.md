@@ -671,3 +671,4 @@
 | T-0668 | 0.5.0-rc.1 post-publish record and GitHub release note | Done | tasks/T-0668-0-5-0-rc-1-post-publish-record-and-github-release-note | |
 | T-0669 | 0.5.0-rc.1 GitHub release record and installed-package dogfood | Done | tasks/T-0669-0-5-0-rc-1-github-release-record-and-installed-package-dogfood | |
 | T-0670 | Release root separation contract | Done | tasks/T-0670-release-root-separation-contract | |
+| T-0671 | Release Artifact Evidence Journal | Done | tasks/T-0671-release-artifact-evidence-journal | |
