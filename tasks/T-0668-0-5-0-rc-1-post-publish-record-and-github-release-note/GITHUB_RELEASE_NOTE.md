@@ -1,36 +1,38 @@
 # HADARA 0.5.0-rc.1
 
-Release candidate follow-up for the 0.5 status-ingress and continuation hardening line.
+HADARA 0.5.0-rc.1 is a prerelease for the 0.5 status-ingress and task-continuation line.
+It supersedes `0.5.0-rc.0` on the npm `next` dist-tag.
 
 ## What changed since 0.5.0-rc.0
 
-- Hardened task close recovery action boundaries and blocked-status precedence.
-- Added project-level continuation persistence after task close so selected next work is not silently lost when `nextWork` is null.
-- Fixed stale bootstrap `nextWork` retirement by using origin tracking instead of title matching.
-- Added `anyOf` support to the schema validator; prior support was effectively a silent no-op.
-- Fixed the known "no follow-up work" continuation contradiction by classifying matching handoff text as terminal rather than actionable.
-- Promoted package metadata and release docs to `0.5.0-rc.1`.
-- Recycled release readiness from a freshly pulled Docker image and rebuilt `hadara-dev` environment.
+- Improves task status and close guidance for governed HADARA projects.
+- Preserves explicit project continuation after task close, so the next session can resume intended work instead of falling through to idle.
+- Fixes stale first-task or adoption-baseline guidance after real task work has completed.
+- Fixes schema validation for `anyOf`, improving validation accuracy for structured project state.
+- Avoids offering "no follow-up work" handoff text as a new task suggestion.
+- Keeps npm `latest` on stable `0.4.6`; this prerelease is published on `next`.
 
 ## Validation
 
-- Docker sync build passed from a freshly recreated `hadara-dev` container.
-- Package smoke passed for `hadara@0.5.0-rc.1` with the release timeout profile.
-- Clean-checkout smoke passed.
-- Release artifact generation passed from a clean ext4 clone.
-- Strict release gate passed.
-- Release dry-run returned ready with blockers 0.
-- Publish dry-run returned ok with token warnings only before the operator-approved npm publish.
-- npm registry verification after publish returned `hadara@0.5.0-rc.1`, with `next=0.5.0-rc.1` and `latest=0.4.6`.
+Before publication, the release candidate passed package smoke, clean-checkout smoke, release artifact generation, strict release gates, and publish dry-run checks.
+After publication, the package was installed from npm as `hadara@next` and passed the installed-package recycle checks.
 
-## Release boundary
+## Installation
 
-- npm package: published as `hadara@0.5.0-rc.1` on the `next` dist-tag.
-- Stable package remains `hadara@0.4.6` on `latest`.
-- Docker image publishing remains deferred.
-- GitHub Release publication remains operator-controlled; this note is the release-note artifact for `v0.5.0-rc.1`.
+Install the prerelease:
 
-## Known follow-ups
+```bash
+npm install -g hadara@next
+```
 
-- Run and record installed-package recycle from `hadara@next` expected `0.5.0-rc.1`.
-- Fix release workflow design debt found during the rc1 recycle: source/evidence root coupling, self-invalidating artifact evidence flow, natural-language continuation disposition, and missing release-note artifact contract.
+Install the current stable release:
+
+```bash
+npm install -g hadara@latest
+```
+
+## Notes
+
+- `hadara@next` resolves to `0.5.0-rc.1`.
+- `hadara@latest` remains `0.4.6`.
+- This is a release candidate; use it to evaluate the 0.5 task-status and continuation behavior before stable promotion.
