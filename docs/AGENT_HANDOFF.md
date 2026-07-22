@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0683 Pre-stable dogfood findings remediation | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0684 Remove Redundant Task Lifecycle Note | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0683 completes the pre-stable remediation derived from T-0682 dogfood. Basic/Standard/Governed built scaffolds and doctors are clean, Basic full status no longer asks for `PROJECT_STATE.md`, continuation is review-first without a next-title field, evidence callers may run independently under the internal append lock, and successful close explicitly says to report and stop. The complete non-Dashboard source suite passed 321 suites / 1,193 tests; Dashboard remains intentionally deferred by operator direction.
+T-0683 completes the pre-stable remediation derived from T-0682 dogfood. Basic/Standard/Governed built scaffolds and doctors are clean, Basic full status no longer asks for `PROJECT_STATE.md`, continuation is review-first without a next-title field, evidence callers may run independently under the internal append lock, and successful close explicitly says to report and stop. T-0684 removes the redundant lifecycle note from newly created TASK.md files and records `T-XXXX Task Title` as the capsule commit convention. The complete non-Dashboard source suite passed 321 suites / 1,193 tests; Dashboard remains intentionally deferred by operator direction.
 
 ## Historical Index
 

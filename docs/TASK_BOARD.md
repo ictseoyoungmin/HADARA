@@ -684,3 +684,4 @@
 | T-0681 | Profile scaffold simplification and pre-dogfood validation | Done | tasks/T-0681-profile-scaffold-simplification-and-pre-dogfood-validation | |
 | T-0682 | Three-profile autonomous Codex dogfood | Done | tasks/T-0682-three-profile-autonomous-codex-dogfood | |
 | T-0683 | Pre-stable dogfood findings remediation | Done | tasks/T-0683-pre-stable-dogfood-findings-remediation | |
+| T-0684 | Remove Redundant Task Lifecycle Note | Done | tasks/T-0684-remove-redundant-task-lifecycle-note | |

@@ -959,6 +959,7 @@ ${requiredReadingRows.map(formatTableRow).join('\n')}
 
 - Work inside one Task Capsule whenever possible.
 - If no suitable Task Capsule exists, create one through the HADARA workflow before implementation.
+- Name capsule commits \`T-XXXX Task Title\`, using the capsule ID and title.
 - Prefer HADARA read models before broad manual file reading.
 - Keep committed state reproducible and project-local.
 - Do not write secrets, private logs, raw transcripts, credentials, or machine-local state into committed files.

@@ -221,7 +221,9 @@ describe('task create templates', () => {
     expect(report.schemaVersion).toBe('hadara.task.create.v1');
     expect(report.task.title).toBe('Release Model');
     expect(report.template.id).toBe('release-read-model');
-    expect(fs.readFileSync(path.join(root, report.task.capsule, 'TASK.md'), 'utf8')).toContain('No publish execution');
+    const taskMarkdown = fs.readFileSync(path.join(root, report.task.capsule, 'TASK.md'), 'utf8');
+    expect(taskMarkdown).toContain('No publish execution');
+    expect(taskMarkdown).not.toContain('Lifecycle note:');
     expect(fs.readdirSync(path.join(root, report.task.capsule)).sort()).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
   });
 });

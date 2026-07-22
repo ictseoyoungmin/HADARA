@@ -127,6 +127,7 @@ describe('init profiles', () => {
 
     expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
+    expect(read(root, 'AGENTS.md')).toContain('Name capsule commits `T-XXXX Task Title`');
     expect(read(root, 'AGENTS.md')).not.toContain('| `.hadara/state/current.json` |');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).not.toContain('| `.hadara/state/current.json` | Structured current release');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Quickstart');
