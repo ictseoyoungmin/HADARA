@@ -292,24 +292,13 @@ function buildPrimaryNextAction(input: {
 
 function continuationNextAction(continuation: ProjectContinuation | null): ProjectStatusNextActionV2 | null {
   if (!continuation) return null;
-  const message = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
+  const suggestion = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
+  const message = `Review continuation suggestion: ${suggestion} Current human/reviewer direction has priority. Read routed project/development sources, decide whether work should continue, and choose a concise task title yourself.`;
   if (continuation.disposition === 'waiting-for-operator') {
     return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'none', requiresReview: true, writes: false };
   }
   if (continuation.disposition === 'actionable') {
-    if (continuation.createCommandAllowed === false) {
-      return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
-    }
-    return {
-      id: 'create-continuation-task',
-      kind: 'create',
-      command: `hadara task create ${shellQuote(continuation.title)}`,
-      message: 'Create a Task Capsule for the declared continuation, then rerun `hadara status --json`.',
-      writeBoundary: 'task-local',
-      risk: 'low',
-      requiresReview: false,
-      writes: true
-    };
+    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
   }
   return null;
 }
@@ -336,10 +325,6 @@ function buildReadiness(phase: ProjectStatusPhase, health: ProjectStatusHealth, 
   if (phase === 'uninitialized' || phase === 'adoption-review') return { intent: 'orient', status: 'needs-review', reason: 'Project setup or adoption state needs operator review.' };
   if (health === 'degraded') return { intent: 'orient', status: 'needs-context', reason: 'Project status is degraded; inspect explicit diagnostics before acting.' };
   return { intent: 'orient', status: 'ready', reason: 'Project status is available.' };
-}
-
-function shellQuote(value: string): string {
-  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 function projectStatusIssuesFromOpsStatus(opsStatus: OpsStatusReport): ProjectStatusV2Report['issues'] {

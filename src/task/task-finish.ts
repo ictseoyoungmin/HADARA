@@ -112,8 +112,10 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const statusHistoryStatus = readLatestStatusHistoryStatus(task);
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
+  const handoffTableIssue = validateHandoffNextStepTable(task);
+  if (handoffTableIssue) issues.push(handoffTableIssue);
   const handoffNextStep = readTaskHandoffNextStep(task);
-  const handoffContinuationIssue = validateStructuredHandoffContinuation(handoffNextStep);
+  const handoffContinuationIssue = handoffTableIssue ? null : validateStructuredHandoffContinuation(handoffNextStep);
   if (handoffContinuationIssue) issues.push(handoffContinuationIssue);
   const promotedContinuation = handoffNextStep && !handoffContinuationIssue
     ? continuationFromTaskHandoffStep({
@@ -581,6 +583,36 @@ function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured:
     createTask: cell('Create Task'),
     reason: cell('Reason'),
     requiredReading: cell('Required Reading')
+  };
+}
+
+function validateHandoffNextStepTable(task: TaskCapsule): TaskFinishIssue | null {
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
+  if (!fs.existsSync(handoffPath)) return null;
+  const section = readMarkdownSection(fs.readFileSync(handoffPath, 'utf8'), '## Next Recommended Step');
+  const lines = section.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.startsWith('|') && line.endsWith('|'));
+  if (lines.length === 0) return null;
+  const cells = (line: string): string[] => line.slice(1, -1).split('|').map((cell) => cell.trim());
+  const header = cells(lines[0]);
+  const structured = ['Step', 'Disposition', 'Create Task', 'Reason', 'Required Reading'];
+  const legacy = ['Step', 'Reason', 'Required Reading'];
+  const expected = header.length === structured.length && header.every((cell, index) => cell === structured[index])
+    ? structured
+    : header.length === legacy.length && header.every((cell, index) => cell === legacy[index])
+    ? legacy
+    : null;
+  const divider = lines[1] ? cells(lines[1]) : [];
+  const dividerValid = expected !== null && divider.length === expected.length && divider.every((cell) => /^:?-{3,}:?$/.test(cell));
+  const dataValid = expected !== null && lines.slice(2).every((line) => {
+    const row = cells(line);
+    return row.length === expected.length && !row.every((cell) => /^:?-{3,}:?$/.test(cell));
+  });
+  if (dividerValid && dataValid) return null;
+  return {
+    severity: 'error',
+    code: 'HANDOFF_NEXT_STEP_TABLE_MALFORMED',
+    message: 'HANDOFF.md Next Recommended Step must use a recognized header, an immediate divider row, and consistently sized data rows.',
+    path: 'HANDOFF.md'
   };
 }
 

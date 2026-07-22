@@ -166,7 +166,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     issues.push({
       severity: 'warning',
       code: 'EVIDENCE_APPEND_LOCK_CONTENDED',
-      message: `Evidence append waited ${evidence.appendLock.waitedMs}ms for the task-scoped lock at ${evidence.appendLock.path}. Serialize same-task evidence writes to avoid contention.`
+      message: `Evidence append waited ${evidence.appendLock.waitedMs}ms for the task-scoped lock at ${evidence.appendLock.path}; the append completed under internal serialization.`
     });
   }
   const taskValidationRow = options.updateTask

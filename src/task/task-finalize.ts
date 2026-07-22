@@ -22,6 +22,10 @@ const FINISH_RESOLVABLE_BLOCKER_CODES = new Set([
   'HARNESS_TASK_BOARD_STATUS_NOT_DONE',
   'HARNESS_TASK_BOARD_CAPSULE_MISMATCH'
 ]);
+
+export function isTaskFinishResolvableBlocker(code: string): boolean {
+  return FINISH_RESOLVABLE_BLOCKER_CODES.has(code);
+}
 export type TaskFinalizeStepId = 'finish' | 'ready' | 'close' | 'audit-close';
 export type TaskFinalizeStepStatus = 'satisfied' | 'required' | 'blocked' | 'pending' | 'unknown';
 

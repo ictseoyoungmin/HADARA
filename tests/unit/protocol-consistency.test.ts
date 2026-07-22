@@ -11,6 +11,7 @@ import {
 import { appendEvidence } from '../../src/evidence/evidence';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { createTaskStatusV2Report } from '../../src/services/task-status-v2';
 
 const roots: string[] = [];
 
@@ -18,6 +19,7 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-protocol-consistency-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  writeScaffoldProfile(dir, 'basic');
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n', 'utf8');
   fs.writeFileSync(
     path.join(dir, 'docs', 'AGENT_HANDOFF.md'),
@@ -263,7 +265,7 @@ describe('Docs protocol consistency report', () => {
 });
 
 describe('Profile protocol consistency report', () => {
-  it('reports basic-to-governed metadata drift with concrete manual remediations', () => {
+  it('does not promote a declared basic scaffold because optional docs are present', () => {
     const root = tempProject();
     writeProfileDocs(root, 'governed');
     fs.writeFileSync(
@@ -288,11 +290,11 @@ describe('Profile protocol consistency report', () => {
       summary: {
         checkedTasks: 0,
         activeTaskId: null,
-        detectedProfile: 'governed',
+        detectedProfile: 'basic',
         profile: {
           declared: 'basic',
-          detected: 'governed',
-          target: 'governed',
+          detected: 'basic',
+          target: 'basic',
           source: 'metadata-and-docset'
         },
         issueCounts: {
@@ -300,28 +302,9 @@ describe('Profile protocol consistency report', () => {
         }
       }
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_READING_DRIFT'])
-    );
-    const remediation = report.remediations.find((candidate) => candidate.id === 'profile-metadata-align');
-    expect(remediation).toMatchObject({
-      mode: 'manual',
-      command: 'hadara init upgrade --profile governed --json',
-      targetPaths: expect.arrayContaining(['docs/PROJECT_STATE.md', 'AGENTS.md'])
-    });
-    expect(remediation?.steps.join('\n')).toContain('docs/PROJECT_STATE.md');
-    expect(remediation?.steps.join('\n')).toContain('AGENTS.md');
-    expect(remediation?.issueIds.length).toBeGreaterThan(0);
-    expect(report.issues.find((issue) => issue.path === 'docs/PROJECT_STATE.md')).toMatchObject({
-      suggestedFix: {
-        fix: 'project-state-profile',
-        command: 'hadara protocol remediate --fix project-state-profile --profile governed --json'
-      }
-    });
-    expect(report.remediations.find((candidate) => candidate.command === 'hadara protocol remediate --fix project-state-profile --profile governed --json')).toMatchObject({
-      mode: 'safe-auto',
-      targetPaths: ['docs/PROJECT_STATE.md']
-    });
+    expect(report.issues.map((issue) => issue.code)).toContain('PROFILE_REQUIRED_READING_DRIFT');
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
@@ -332,11 +315,11 @@ describe('Profile protocol consistency report', () => {
     const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
     expect(report.ok).toBe(true);
-    expect(report.summary.detectedProfile).toBe('governed');
+    expect(report.summary.detectedProfile).toBe('basic');
     expect(report.summary.profile).toMatchObject({
-      declared: 'unknown',
-      detected: 'governed',
-      target: 'governed',
+      declared: 'basic',
+      detected: 'basic',
+      target: 'basic',
       source: 'metadata-and-docset'
     });
     expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
@@ -344,8 +327,23 @@ describe('Profile protocol consistency report', () => {
     expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeUndefined();
   });
 
+  it('does not diagnose PROJECT_STATE as missing in full task status for basic', () => {
+    const root = tempProject();
+    fs.rmSync(path.join(root, 'docs', 'PROJECT_STATE.md'));
+    fs.rmSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'));
+    const task = createTaskCapsule(root, 'Basic full status');
+
+    const report = createTaskStatusV2Report(root, task.id, new Date('2026-05-30T00:00:00.000Z'), { detail: 'full' });
+
+    expect(JSON.stringify(report)).not.toContain('PROTOCOL_DOCS_PROJECT_DOC_MISSING');
+    expect(JSON.stringify(report)).not.toContain('PROTOCOL_PROFILE_PROFILE_REQUIRED_DOC_MISSING');
+    expect(JSON.stringify(report)).not.toContain('docs/PROJECT_STATE.md');
+    expect(validateSchema('hadara.task.status.v2', report).ok).toBe(true);
+  });
+
   it('uses declared governed metadata as the target when only standard docs exist', () => {
     const root = tempProject();
+    writeScaffoldProfile(root, 'governed');
     writeProfileDocs(root, 'standard');
     writeProfileMetadata(root, 'governed');
 
@@ -353,16 +351,17 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.summary.profile).toMatchObject({
       declared: 'governed',
-      detected: 'standard',
+      detected: 'governed',
       target: 'governed',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
-    expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeUndefined();
+    expect(report.issues.map((issue) => issue.code)).toContain('PROFILE_REQUIRED_DOC_MISSING');
+    expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeTruthy();
   });
 
   it('uses complete governed docs as the target when metadata is missing', () => {
     const root = tempProject();
+    fs.rmSync(path.join(root, '.hadara', 'scaffold.json'));
     writeProfileDocs(root, 'governed');
 
     const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
@@ -385,18 +384,17 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.summary.profile).toMatchObject({
       declared: 'basic',
-      detected: 'governed',
-      target: 'governed',
+      detected: 'basic',
+      target: 'basic',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_METADATA_DRIFT'])
-    );
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
     expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_REQUIRED_DOC_MISSING');
   });
 
   it('uses complete governed docs as the target when metadata declares standard', () => {
     const root = tempProject();
+    writeScaffoldProfile(root, 'standard');
     writeProfileDocs(root, 'standard');
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
     writeProfileMetadata(root, 'standard');
@@ -405,17 +403,16 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.summary.profile).toMatchObject({
       declared: 'standard',
-      detected: 'governed',
-      target: 'governed',
+      detected: 'standard',
+      target: 'standard',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_METADATA_DRIFT'])
-    );
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
   });
 
   it('uses PROJECT_STATE as the only profile metadata source', () => {
     const root = tempProject();
+    fs.rmSync(path.join(root, '.hadara', 'scaffold.json'));
     writeProfileDocs(root, 'standard');
     writeProfileMetadata(root, 'standard');
 
@@ -435,6 +432,7 @@ describe('Profile protocol consistency report', () => {
 
   it('requires AGENTS profile paths inside the Required Reading table', () => {
     const root = tempProject();
+    writeScaffoldProfile(root, 'governed');
     writeProfileDocs(root, 'governed');
     writeProfileMetadata(root, 'governed');
     fs.writeFileSync(
@@ -447,8 +445,9 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.issues.find((issue) => issue.path === 'AGENTS.md')).toMatchObject({
       code: 'PROFILE_REQUIRED_READING_DRIFT',
-      expected: expect.stringContaining('docs/ROADMAP.md')
+      expected: expect.stringContaining('.hadara/context/HADARA_CONTEXT.md')
     });
+    expect(report.issues.find((issue) => issue.path === 'AGENTS.md')?.expected).not.toContain('docs/ROADMAP.md');
     expect(report.issues.find((issue) => issue.path === 'AGENTS.md')?.expected).not.toContain('docs/REFACTOR_LOG.md');
   });
 });
@@ -654,6 +653,11 @@ function writeProfileDocs(root: string, profile: 'standard' | 'governed'): void 
 
 function writeProfileMetadata(root: string, profile: 'basic' | 'standard' | 'governed'): void {
   writeSplitProfileMetadata(root, profile, profile);
+}
+
+function writeScaffoldProfile(root: string, profile: 'basic' | 'standard' | 'governed'): void {
+  fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), `${JSON.stringify({ profile }, null, 2)}\n`, 'utf8');
 }
 
 function writeSplitProfileMetadata(root: string, projectStateProfile: 'basic' | 'standard' | 'governed', _workflowProfile: 'basic' | 'standard' | 'governed'): void {

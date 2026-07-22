@@ -11,6 +11,8 @@ const roots: string[] = [];
 function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-protocol-cli-'));
   roots.push(dir);
+  fs.mkdirSync(path.join(dir, '.hadara'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.hadara', 'scaffold.json'), `${JSON.stringify({ profile: 'basic' }, null, 2)}\n`, 'utf8');
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nNo active task yet.\n', 'utf8');

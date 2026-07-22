@@ -37,6 +37,7 @@ describe('FD-013 removed lifecycle surface', () => {
     expect(readyReport.ok).toBe(false);
     const readyIssueKeys = readyReport.issues
       .filter((issue) => issue.severity === 'error')
+      .filter((issue) => !['HARNESS_TASK_STATUS_NOT_DONE', 'HARNESS_TASK_STATUS_HISTORY_NOT_DONE', 'HARNESS_TASK_BOARD_STATUS_NOT_DONE', 'HARNESS_TASK_BOARD_CAPSULE_MISMATCH'].includes(issue.code))
       .map((issue) => `${issue.code}::${issue.path ?? ''}`)
       .sort();
     expect(readyIssueKeys.length).toBeGreaterThan(0);

@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0682 Three-profile autonomous Codex dogfood |
+| Latest Completed Task | T-0683 Pre-stable dogfood findings remediation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. The `0.5.0-rc.0` and `0.5.0-rc.1` line proved the status/continuation design but also exposed pre-stable product complexity. T-0679 completed the single adaptive `task status` lifecycle and terminal close contract; T-0680 completed Markdown-first task selection and demoted `current.json` to a compatibility checkpoint; T-0681 made the three fresh profile scaffolds materially distinct, portable, and doctor-clean. T-0682 then completed current-build autonomous dogfood across basic, standard, and governed: nine capsules closed and six fresh-session continuations succeeded without coordinator implementation. The core design is validated, while the accepted spec now records bounded P0-P2 remediation findings that must be reviewed before `0.5.0` stable. Dashboard remains deliberately outside this core-stability line.
+v0.4.6 is published and recycled. The `0.5.0-rc.0` and `0.5.0-rc.1` line proved the status/continuation design but also exposed pre-stable product complexity. T-0679 completed the single adaptive `task status` lifecycle and terminal close contract; T-0680 completed Markdown-first task selection and demoted `current.json` to a compatibility checkpoint; T-0681 made the three fresh profile scaffolds materially distinct, portable, and doctor-clean. T-0682 completed current-build autonomous dogfood across basic, standard, and governed: nine capsules closed and six fresh-session continuations succeeded without coordinator implementation. T-0683 resolved every actionable dogfood finding, including stale Basic profile diagnostics, continuation-title coupling, terminal-close ambiguity, evidence guidance, docs-register metadata loss, close-owned blocker display, HANDOFF table validation, and help exit status. Dashboard remains deliberately outside this core-stability line.
 
 | Stage | State | Purpose |
 |---|---|---|

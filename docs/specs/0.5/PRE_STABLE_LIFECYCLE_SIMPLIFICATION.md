@@ -190,14 +190,20 @@ The following findings must be addressed before `0.5.0` stable:
 
 | Priority | Finding | Required direction |
 |---|---|---|
-| P0 | HANDOFF `Step` prose is reused as a new task title, producing sentence-length titles and truncated capsule paths. | Give continuation a short, explicit task-title field; keep explanatory step/reason prose separate and reject or safely bound pathological titles. |
+| P0 | HANDOFF `Step` prose is reused as a new task title, producing sentence-length titles and truncated capsule paths. | Do not add a structured next-title field. Treat HANDOFF as review input, read routed project/development sources, apply current human/reviewer direction first, decide whether a capsule is warranted, and let the agent choose a concise behavior-focused title. |
 | P0 | `docs register` dry-run `executeCommand` drops requested metadata, so executing the suggested command can register `unknown`/`reference` instead of the reviewed kind, tier, authority, and approval values. | Preserve all reviewed metadata flags in the execute command and add round-trip tests. |
 | P0 | Agents still run `task status` after a successful close in some sessions. | Make successful close output explicitly terminal, omit status-based confirmation guidance, and keep generated agent/workflow prose consistent with that result. |
 | P1 | `task status --detail full` reports lifecycle-owned Draft/Task Board fields as blockers immediately before a close that owns those mutations. | Separate operator-fixable blockers from close-transaction writes so readiness guidance is not circular. |
 | P1 | A basic-profile agent invented `PROJECT_STATE.md` and expanded Required Reading even though the scaffold was doctor-clean. | State profile boundaries explicitly: optional governance documents may be added for a real project need, not merely to satisfy assumed HADARA ceremony. |
 | P1 | Close accepted a malformed Markdown table in HANDOFF. | Validate required table shape, separator placement, and row widths before close proof. |
 | P1 | Unknown help families print an error but return exit code 0. | Return a non-zero usage exit for unknown command families. |
-| P2 | Governed agents attempted parallel same-task evidence writers despite prose requiring serialization; append locks prevented corruption. | Treat the lock as the safety authority and simplify guidance, or make command routing explicitly serialize evidence writes. |
+| P2 | Governed agents ran parallel same-task evidence writers; append locks prevented corruption. | Treat the task-scoped append lock as the safety authority and remove caller-side serialization instructions. Independent validation/evidence commands may run concurrently. |
+
+T-0683 root-cause review refined three observations:
+
+- Basic init output itself did not require `PROJECT_STATE.md`; the false requirement came from stale profile/doc-set logic reached by `task status --detail full`, which still classified that Standard document as universal.
+- Successful close returned an empty `nextActions` list. Agents invoked status on their own to reconfirm or select follow-up work because the terminal boundary was not explicit enough in the top-level close report and generated rules.
+- HANDOFF continuation is useful provenance, but it is neither current reviewer authority nor a task-title generator. When persisted plans and current review conflict, current review wins. When planned milestone work is exhausted, the agent should review for defects or optimizations and propose or request direction instead of manufacturing a task.
 
 An external Codex sandbox observation is not a HADARA release blocker: a direct
 `rm -f` smoke command was rejected while a nested shell inside a validation

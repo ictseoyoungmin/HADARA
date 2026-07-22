@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { renderCommandHelp, renderDefaultHelp, renderFamilyHelp, renderLifecycleHelp } from '../../src/cli/help';
+import { describe, expect, it, vi } from 'vitest';
+import { handleHelpCommand, renderCommandHelp, renderDefaultHelp, renderFamilyHelp, renderLifecycleHelp } from '../../src/cli/help';
 import { findCommandRegistryEntry } from '../../src/services/capability-registry';
 import { createLifecycleGuideReport } from '../../src/services/lifecycle-guide';
 
@@ -98,5 +98,19 @@ describe('registry-backed help', () => {
     expect(output).toContain('task.close');
     expect(output).not.toContain('release.publish');
     expect(output).not.toContain('dashboard.serve');
+  });
+
+  it('sets a usage exit code for an unknown help family', () => {
+    const previousExitCode = process.exitCode;
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    process.exitCode = undefined;
+    try {
+      expect(handleHelpCommand({ args: ['help', 'family', 'not-a-family'] })).toBe(true);
+      expect(process.exitCode).toBe(2);
+      expect(logSpy.mock.calls.at(-1)?.[0]).toContain('Unknown command family: not-a-family');
+    } finally {
+      process.exitCode = previousExitCode;
+      logSpy.mockRestore();
+    }
   });
 });

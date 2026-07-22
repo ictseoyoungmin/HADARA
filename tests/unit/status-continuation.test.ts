@@ -12,6 +12,7 @@ import {
 } from '../../src/services/project-current-state';
 import { createTaskCreateReport } from '../../src/task/task-create';
 import { createTaskFinishReport } from '../../src/task/task-finish';
+import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
 
 const roots: string[] = [];
 
@@ -121,6 +122,43 @@ describe('continuation schema validation', () => {
     const read = readProjectCurrentState(root);
     expect(read.issues).toEqual([]);
     expect(read.state?.continuation).toBeNull();
+  });
+});
+
+describe('continuation selection guidance', () => {
+  it('reviews persisted continuation without generating a task-create command or title', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const completed = createTaskCreateReport(root, 'Completed history fixture');
+    completeProjectCurrentTask(root, { id: completed.taskId!, title: 'Completed history fixture' });
+    const taskMarkdownPath = path.join(root, completed.task!.capsule, 'TASK.md');
+    fs.writeFileSync(taskMarkdownPath, fs.readFileSync(taskMarkdownPath, 'utf8').replace(/\bDraft\b/g, 'Done'), 'utf8');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(boardPath, fs.readFileSync(boardPath, 'utf8').replace('| Draft |', '| Done |'), 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nNo queued task.\n', 'utf8');
+    const statePath = path.join(root, '.hadara', 'state', 'current.json');
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    state.continuation = continuationFromTaskHandoffStep({
+      step: 'Implement every remaining DAG capability and revise all affected documentation',
+      reason: 'Persisted handoff suggestion.',
+      requiredReading: 'docs/PROJECT_STATE.md, docs/AGENT_HANDOFF.md',
+      sourceTaskId: completed.taskId!,
+      sourceCapsulePath: completed.task!.capsule
+    });
+    fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+    expect(readProjectCurrentState(root).state?.continuation).toMatchObject({ disposition: 'actionable' });
+
+    const report = createTaskSelectionStatusV2Report(root, new Date('2026-06-02T00:00:00.000Z'));
+
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'review-continuation',
+      kind: 'review',
+      writes: false,
+      message: expect.stringContaining('Current human/reviewer direction has priority')
+    });
+    expect(report.primaryNextAction).not.toHaveProperty('command');
+    expect(JSON.stringify(report)).not.toContain("hadara task create 'Implement every remaining");
+    expect(validateSchema('hadara.taskSelection.status.v2', report).ok).toBe(true);
   });
 });
 

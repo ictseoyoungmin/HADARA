@@ -47,7 +47,7 @@ All profiles passed `hadara init doctor --json` with `ok: true` and no issues.
 
 | Profile | Fresh generated project surface | Assessment |
 |---|---|---|
-| Basic | `AGENTS.md`, compact workflow, Task Board, registries/scaffold metadata, compatibility `current.json` | Correct minimal generated surface. The agent later invented `PROJECT_STATE.md`, revealing that the profile boundary needs stronger prose. |
+| Basic | `AGENTS.md`, compact workflow, Task Board, registries/scaffold metadata, compatibility `current.json` | Correct minimal generated surface. Later tracing showed the agent's `PROJECT_STATE.md` expansion was prompted by stale full-status profile diagnostics, not by init output. |
 | Standard | Basic plus `HADARA_CONTEXT.md` and `PROJECT_STATE.md` | Correct middle surface; sufficient read routing without global handoff. |
 | Governed | Standard plus `AGENT_HANDOFF.md` | Correct cumulative surface; strongest continuity and close guidance. |
 
@@ -100,10 +100,11 @@ governance controls.
 | T-0003 | Redacted audit, deterministic export, and corrupt-ledger recovery inspection | Closed valid |
 
 The governed agents followed the richest read graph effectively and produced
-the strongest evidence trail. They nevertheless attempted concurrent
-same-capsule evidence writers despite prose requiring serialization; HADARA's
-append lock prevented corruption. Unknown help families also printed an error
-while returning exit code 0.
+the strongest evidence trail. They ran concurrent same-capsule evidence
+writers; HADARA's append lock correctly serialized the appends and prevented
+corruption. The caller-side serialization prose was therefore unnecessary and
+misleading. Unknown help families also printed an error while returning exit
+code 0.
 
 ## Continuity Results
 
@@ -144,14 +145,22 @@ Evidence: `ev:T-0682:73af078f28aa4c9c8baf89dc`, resolving
 
 | Priority | Finding | Observed effect |
 |---|---|---|
-| P0 | Continuation step prose becomes the next task title. | Sessions two and three created sentence-length titles and truncated directory slugs. |
+| P0 | Continuation step prose becomes the next task title. | Sessions two and three created sentence-length titles and truncated directory slugs. No new title field is needed; selection must review routed sources and current reviewer direction, then choose a concise title only if a new capsule is warranted. |
 | P0 | `docs register` execute commands lose reviewed metadata flags. | Registered documents fell back to `unknown`/`reference` metadata. |
-| P0 | Successful close does not stop agents strongly enough. | Several agents ran `task status` after close to reconfirm state. |
+| P0 | Successful close does not stop agents strongly enough. | Several agents ran `task status` after close to reconfirm state. Trace review found close returned no next action; generated guidance and the top-level terminal result were too weak. |
 | P1 | Full task status mixes operator blockers with close-owned mutations. | Draft identity/board state appeared circularly blocking immediately before close. |
-| P1 | Basic profile boundaries are implicit. | An agent added Standard-style project state and Required Reading without a project need. |
+| P1 | Basic full-status diagnostics used stale universal/profile rules. | `task status --detail full` emitted missing-`PROJECT_STATE.md` and profile-reading diagnostics even though Basic init doctor was clean; this—not Basic scaffold prose—caused the expansion. |
 | P1 | Required Markdown table shape is under-validated. | A malformed HANDOFF table passed close. |
 | P1 | Unknown help family exits successfully. | Automation cannot distinguish the usage error by exit code. |
-| P2 | Evidence serialization depends on prose compliance. | An agent launched independent evidence writers concurrently; the append lock was the real protection. |
+| P2 | Evidence guidance duplicated an already-enforced lock invariant. | Independent evidence writers were safe because the task-scoped append lock serialized them; caller-side serialization wording should be removed. |
+
+T-0683 remediates the complete table as one pre-stable capsule: continuation
+selection is review-first without a next-title field; docs registration
+round-trips flags; close reports explicit terminal guidance; full status hides
+finish-owned bookkeeping blockers; Basic profile diagnostics honor scaffold
+metadata; HANDOFF table shape is checked; unknown help exits non-zero; and
+generated evidence guidance permits safe parallel calls backed by the append
+lock.
 
 The accepted specification records the required remediation direction in
 `docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`.

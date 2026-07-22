@@ -61,6 +61,8 @@ export interface TaskCloseTransactionReport {
   actor: HadaraActorContext;
   closeState: TaskFinalizeReport['state'];
   planStatus: TaskFinalizeReport['planStatus'];
+  terminal: boolean;
+  operatorGuidance: string;
   readOnly: boolean;
   transaction: {
     strategy: 'finalize-auto' | 'finalize-reviewed-plan' | 'review-only';
@@ -152,6 +154,8 @@ export function formatTaskCloseTransactionReport(report: TaskCloseTransactionRep
   const lines = [
     `[HADARA] task close ${report.taskId}: ${report.ok ? 'ok' : 'blocked'}`,
     `state\t${report.closeState}`,
+    `terminal\t${report.terminal}`,
+    `guidance\t${report.operatorGuidance}`,
     `mode\t${report.mode}`,
     `strategy\t${report.transaction.strategy}`,
     `writes\tplanned=${report.writeSummary.plannedWrites} executed=${report.writeSummary.executedWrites}`,
@@ -203,6 +207,10 @@ function fromFinalizeReport(
     actor: finalize.actor,
     closeState: finalize.state,
     planStatus: finalize.planStatus,
+    terminal: finalize.ok && finalize.state === 'closed-valid',
+    operatorGuidance: finalize.ok && finalize.state === 'closed-valid'
+      ? 'Close is complete. Report closed-valid and stop; do not run task status to reconfirm or discover follow-up work unless the current human/reviewer instruction explicitly requires continuation.'
+      : 'Resolve the reported blocker or recovery action before treating this capsule as closed.',
     readOnly: finalize.readOnly,
     transaction: {
       strategy: options.strategy,

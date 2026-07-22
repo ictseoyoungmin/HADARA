@@ -119,7 +119,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('prefers actionable handoff next step and keeps legacy Task Board rows as backlog', () => {
+  it('routes actionable handoff context for review without copying it into a task-create title', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with task capsule upgrade/remediation dry-run hardening.',
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
@@ -138,7 +138,8 @@ describe('task selection recommendation', () => {
           source: 'docs/AGENT_HANDOFF.md',
           sourceKind: 'handoff',
           taskCapsulePresent: false,
-          createCommand: "hadara task create 'Task capsule upgrade/remediation dry-run hardening'"
+          createCommand: null,
+          operatorGuidance: expect.stringContaining('choose a concise title yourself')
         })
       ],
       sources: {

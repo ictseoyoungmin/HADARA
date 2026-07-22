@@ -697,7 +697,22 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     issues
   };
   if (report.mode === 'dry-run' && report.ok && report.action === 'create') {
-    report.executeCommand = `hadara docs register --path ${shellQuote(normalized)} --execute --before-hash ${mutationState.beforeHash} --json`;
+    const metadataArgs = [
+      options.title ? `--title ${shellQuote(options.title)}` : '',
+      options.kind ? `--kind ${shellQuote(options.kind)}` : '',
+      options.status ? `--status ${shellQuote(options.status)}` : '',
+      options.readWhen ? `--read-when ${shellQuote(options.readWhen)}` : '',
+      options.readTier ? `--read-tier ${shellQuote(options.readTier)}` : '',
+      options.authority ? `--authority ${shellQuote(options.authority)}` : '',
+      options.editPolicy ? `--edit-policy ${shellQuote(options.editPolicy)}` : '',
+      options.activeForTasks?.length ? `--active-for-task ${shellQuote(options.activeForTasks.join(','))}` : '',
+      options.driftRisk ? `--drift ${shellQuote(options.driftRisk)}` : '',
+      options.driftReviewRequired ? '--drift-review-required' : '',
+      options.driftReason ? `--drift-reason ${shellQuote(options.driftReason)}` : '',
+      options.requiredReading ? '--required-reading' : '',
+      options.requireExists ? '--require-exists' : ''
+    ].filter(Boolean).join(' ');
+    report.executeCommand = `hadara docs register --path ${shellQuote(normalized)}${metadataArgs ? ` ${metadataArgs}` : ''} --execute --before-hash ${mutationState.beforeHash} --json`;
   }
   return report;
 }

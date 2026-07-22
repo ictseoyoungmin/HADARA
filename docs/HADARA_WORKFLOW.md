@@ -176,6 +176,8 @@ hadara task status --task T-XXXX --json
 
 Use `task status --json` to decide what to work on when no task is selected. Use `task create` only when no suitable capsule exists. Use `task status --task T-XXXX --json` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use `task close --task T-XXXX --dry-run --json` or `task status --task T-XXXX --detail full --json` when you need close-grade readiness diagnostics.
 
+Task selection is a review decision, not title generation. Current human or reviewer instructions have highest priority. Then read the routed project state, governed handoff when present, development/roadmap sources, Task Board, and the previous capsule handoff. A handoff `Next Recommended Step` is one input and must not be copied verbatim as a task title. If a new capsule is still warranted, choose a short behavior-focused title. If planned work is exhausted, review for design gaps or useful optimization and propose a next step or ask the reviewer instead of manufacturing work.
+
 ## Task Context
 
 ```bash
@@ -321,7 +323,7 @@ For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.t
 Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `evidence list` to find durable evidence ids for docs and resolution markers.
 
 Do not hand-edit `evidence.jsonl`.
-Evidence appends are task-scoped and serialized by a local lock. Do not start multiple `validation run` or `evidence add-command` writes for the same task in parallel; JSON evidence responses include `evidence.appendLock` so lock contention and wait time are visible when it happens.
+Evidence appends are task-scoped and internally serialized by a local lock, so independent `validation run` or `evidence add-command` calls may run in parallel. JSON evidence responses include `evidence.appendLock` so lock contention and wait time are visible when it happens.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 

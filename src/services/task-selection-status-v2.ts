@@ -200,30 +200,15 @@ function determinePhase(
  */
 function continuationNextAction(continuation: ProjectContinuation | null): StatusNextAction | null {
   if (!continuation) return null;
-  const message = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
+  const suggestion = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
+  const message = `Review continuation suggestion: ${suggestion} Current human/reviewer direction has priority. Read the routed project, handoff, and development sources; then decide whether work should continue, choose a concise task title yourself, propose a better next step, or ask the reviewer.`;
   if (continuation.disposition === 'waiting-for-operator') {
     return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'none', requiresReview: true, writes: false };
   }
   if (continuation.disposition === 'actionable') {
-    if (continuation.createCommandAllowed === false) {
-      return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
-    }
-    return {
-      id: 'create-continuation-task',
-      kind: 'create',
-      command: `hadara task create ${continuationShellQuote(continuation.title)}`,
-      message: `Create a Task Capsule for the declared continuation, then rerun \`hadara task status --task <task-id> --json\`.`,
-      writeBoundary: 'task-local',
-      risk: 'low',
-      requiresReview: false,
-      writes: true
-    };
+    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
   }
   return null;
-}
-
-function continuationShellQuote(value: string): string {
-  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 function nextActionFromRecommendation(recommendation: TaskSelectionRecommendation): StatusNextAction {
@@ -254,8 +239,7 @@ function nextActionFromRecommendation(recommendation: TaskSelectionRecommendatio
   return {
     id: 'review-next-work-guidance',
     kind: 'review',
-    command: 'hadara task status --json',
-    message: recommendation.operatorGuidance || 'Review current-state next-work guidance before creating or selecting a Task Capsule.',
+    message: recommendation.operatorGuidance || 'Review current human/reviewer direction and routed project/development sources before creating or selecting a Task Capsule; choose a concise title yourself.',
     writeBoundary: 'read-only',
     risk: 'low',
     requiresReview: true,
@@ -279,6 +263,11 @@ function buildReadiness(
 function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['precedence'] {
   return [
     {
+      id: 'current-reviewer-direction',
+      source: 'current session',
+      description: 'Apply current human/reviewer instructions before persisted project suggestions; the CLI cannot infer or override live conversation intent.'
+    },
+    {
       id: 'active-task',
       source: '.hadara/state/current.json',
       description: 'Use the structured activeTask when present and valid.'
@@ -291,7 +280,7 @@ function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['pr
     {
       id: 'handoff-next-step',
       source: 'docs/AGENT_HANDOFF.md',
-      description: 'Use explicit handoff next-step guidance when present.'
+      description: 'Treat explicit handoff next-step guidance as review input alongside routed project/development sources; do not use it verbatim as a task title.'
     },
     {
       id: 'development-slice',
@@ -311,7 +300,7 @@ function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['pr
     {
       id: 'continuation',
       source: '.hadara/state/current.json',
-      description: 'Use an explicit actionable or waiting-for-operator continuation before falling back to idle.'
+      description: 'Review an explicit actionable or waiting-for-operator continuation before falling back to idle; task creation and title choice remain agent/reviewer decisions.'
     },
     {
       id: 'idle',

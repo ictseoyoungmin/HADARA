@@ -78,8 +78,9 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('## Documentation Timing and Write Coordination');
     expect(workflow).toContain('Do not defer all documentation until after implementation.');
     expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
-    expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
-    expect(workflow).toContain('JSON evidence responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.');
+    expect(workflow).toContain('Serialize same-file prose writes, Task Capsule doc writes, Task Board writes');
+    expect(workflow).toContain('Evidence commands may run in parallel because every append is internally serialized');
+    expect(workflow).toContain('JSON responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.');
     expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning task close');
     expect(workflow).toContain('After close proof is recorded, close-source document edits intentionally invalidate the previous close proof.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
@@ -95,7 +96,8 @@ describe('task workflow command semantics docs', () => {
     expect(hadaraWorkflow).toContain('hadara harness validate --task T-XXXX --level done --json');
     expect(agents).toContain('Do not defer all documentation until after implementation.');
     expect(agents).toContain('Parallelize read-only discovery, file inspection, independent validation');
-    expect(agents).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
+    expect(agents).toContain('Serialize same-file prose writes, Task Capsule doc writes');
+    expect(agents).toContain('Evidence commands are internally serialized by their task-scoped append lock.');
     expect(agents).toContain('agents should use `task status` for next-work selection, phase checks, and next-action guidance');
     expect(agents).toContain('`.hadara/state/current.json` is a command-owned compatibility checkpoint, not Required Reading');
     expect(agents).toContain('Task Board, Task Capsules, and human-readable project docs own inspectable intent');

@@ -105,7 +105,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     issues.push({
       severity: 'warning',
       code: 'EVIDENCE_APPEND_LOCK_CONTENDED',
-      message: `Evidence append waited ${appendResult.appendLock.waitedMs}ms for the task-scoped lock at ${appendResult.appendLock.path}. Serialize same-task evidence writes to avoid contention.`
+      message: `Evidence append waited ${appendResult.appendLock.waitedMs}ms for the task-scoped lock at ${appendResult.appendLock.path}; the append completed under internal serialization.`
     });
   }
 

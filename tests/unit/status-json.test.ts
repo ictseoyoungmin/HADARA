@@ -129,11 +129,12 @@ describe('Operations Status JSON', () => {
       status: 'needs-review'
     });
     expect(report.primaryNextAction).toMatchObject({
-      id: 'create-continuation-task',
-      kind: 'create',
-      command: "hadara task create 'Prepare 0.5.0-rc.2 after Phase D through end'",
-      writes: true
+      id: 'review-continuation',
+      kind: 'review',
+      message: expect.stringContaining('Current human/reviewer direction has priority'),
+      writes: false
     });
+    expect(report.primaryNextAction).not.toHaveProperty('command');
     expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
   });
 

@@ -8,6 +8,7 @@ import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/task-close';
 import { createTaskCloseTransactionReport } from '../../src/task/task-close-transaction';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 
 const roots: string[] = [];
 
@@ -45,6 +46,8 @@ describe('task close report', () => {
       mode: 'execute',
       taskId: task.id,
       closeState: 'closed-valid',
+      terminal: true,
+      operatorGuidance: expect.stringContaining('Report closed-valid and stop'),
       planStatus: 'satisfied',
       readOnly: false,
       transaction: {
@@ -80,6 +83,7 @@ describe('task close report', () => {
     expect(report.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(report.primaryNextAction).toBeUndefined();
     expect(report.nextActions).toEqual([]);
+    expect(report.operatorGuidance).toContain('do not run task status');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
   });
@@ -113,6 +117,25 @@ describe('task close report', () => {
     expect(report.nextActions.map((action) => action.command ?? '').join('\n')).not.toContain('task finalize');
     expect(report.source.finalize.mode).toBe('dry-run');
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('does not expose finish-owned Draft bookkeeping as a full-status blocker', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close status bookkeeping');
+    completeTask(root, task.id, task.dir);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(boardPath, fs.readFileSync(boardPath, 'utf8').replace('| Done |', '| Draft |'), 'utf8');
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-06-02T00:00:00.000Z'), { detail: 'full' });
+
+    expect(report.state.ready).toBe(true);
+    expect(report.issues.map((issue) => issue.code)).not.toEqual(
+      expect.arrayContaining(['HARNESS_TASK_STATUS_NOT_DONE', 'HARNESS_TASK_BOARD_STATUS_NOT_DONE'])
+    );
+    expect(report.nextActions).toContainEqual(expect.objectContaining({ command: `hadara task close --task ${task.id} --dry-run --json` }));
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 
   it('fails closed with zero lifecycle-owned writes when a transaction lock is contended', () => {

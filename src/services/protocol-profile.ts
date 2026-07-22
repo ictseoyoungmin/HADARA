@@ -50,18 +50,18 @@ export interface ProtocolProfileSummary {
   source: 'metadata-and-docset';
 }
 
-const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md'];
 const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
-const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
-const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md'];
+const OPTIONAL_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md', 'docs/SECURITY_MODEL.md'];
 
 export function createProfileConsistencyDiagnostics(projectRoot: string): ProfileDiagnostics {
   const checkedDocs = new Set<string>();
   const issues: ProfileDiagnosticIssue[] = [];
   const docSet = getProfileDocSet(projectRoot);
   const metadata = readProfileMetadata(projectRoot);
-  const detectedProfile = detectProfileFromDocSet(docSet);
   const declaredProfile = inferDeclaredProfile(metadata);
+  const detectedProfile = declaredProfile === 'unknown' ? detectProfileFromDocSet(docSet) : declaredProfile;
   const targetProfile = inferTargetProfile(docSet, declaredProfile);
   const profileSummary = {
     declared: declaredProfile,
@@ -69,10 +69,10 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
     target: targetProfile,
     source: 'metadata-and-docset' as const
   };
-  const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile, docSet);
+  const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile);
   const missingTargetDocs = requiredDocs.filter((relativePath) => !exists(projectRoot, relativePath));
 
-  for (const relativePath of new Set([...CORE_PROJECT_DOCS, ...GOVERNED_MINIMAL_DOCS, ...STANDARD_PROJECT_DOCS, ...GOVERNED_PROJECT_DOCS])) {
+  for (const relativePath of new Set([...CORE_PROJECT_DOCS, ...STANDARD_MINIMAL_DOCS, ...GOVERNED_MINIMAL_DOCS, ...OPTIONAL_PROJECT_DOCS])) {
     checkedDocs.add(relativePath);
   }
 
@@ -134,7 +134,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
       }
     }
 
-    const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile, docSet);
+    const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile);
     const agentsMissing = missingRequiredReadingPaths(projectRoot, 'AGENTS.md', requiredReadingDocs);
     if (agentsMissing.length > 0) {
       issues.push({
@@ -230,14 +230,14 @@ function getProfileDocSet(projectRoot: string): {
   return {
     core: splitDocPresence(projectRoot, CORE_PROJECT_DOCS),
     governedMinimal: splitDocPresence(projectRoot, GOVERNED_MINIMAL_DOCS),
-    standard: splitDocPresence(projectRoot, STANDARD_PROJECT_DOCS),
-    governed: splitDocPresence(projectRoot, GOVERNED_PROJECT_DOCS)
+    standard: splitDocPresence(projectRoot, STANDARD_MINIMAL_DOCS),
+    governed: splitDocPresence(projectRoot, [])
   };
 }
 
 function detectProfileFromDocSet(docSet: ReturnType<typeof getProfileDocSet>): ProtocolProfile {
   const standardAny = docSet.standard.present.length > 0;
-  const governedAny = docSet.governed.present.length > 0;
+  const governedAny = docSet.governedMinimal.present.length > 0 || docSet.governed.present.length > 0;
   const coreAny = docSet.core.present.length > 0;
   if (governedAny) return 'governed';
   if (standardAny) return 'standard';
@@ -246,41 +246,46 @@ function detectProfileFromDocSet(docSet: ReturnType<typeof getProfileDocSet>): P
 }
 
 function inferTargetProfile(docSet: ReturnType<typeof getProfileDocSet>, declaredProfile: ProtocolProfile): TargetProtocolProfile | 'unknown' {
-  const candidates = [highestDocSetProfile(docSet), declaredProfile].filter(
-    (profile): profile is TargetProtocolProfile => profile === 'basic' || profile === 'standard' || profile === 'governed'
-  );
-  return candidates.sort((a, b) => profileRank(b) - profileRank(a))[0] ?? 'unknown';
+  if (declaredProfile === 'basic' || declaredProfile === 'standard' || declaredProfile === 'governed') return declaredProfile;
+  return highestDocSetProfile(docSet);
 }
 
 function highestDocSetProfile(docSet: ReturnType<typeof getProfileDocSet>): TargetProtocolProfile | 'unknown' {
-  if (docSet.governed.present.length > 0) return 'governed';
+  if (docSet.governedMinimal.present.length > 0 || docSet.governed.present.length > 0) return 'governed';
   if (docSet.standard.present.length > 0) return 'standard';
   if (docSet.core.present.length > 0) return 'basic';
   return 'unknown';
 }
 
-function requiredDocsForProfile(profile: TargetProtocolProfile, docSet: ReturnType<typeof getProfileDocSet>): string[] {
+function requiredDocsForProfile(profile: TargetProtocolProfile): string[] {
   const docs = [...CORE_PROJECT_DOCS];
+  if (profile === 'standard' || profile === 'governed') docs.push(...STANDARD_MINIMAL_DOCS);
   if (profile === 'governed') docs.push(...GOVERNED_MINIMAL_DOCS);
-  docs.push(...docSet.standard.present, ...docSet.governed.present);
   return Array.from(new Set(docs));
 }
 
-function requiredReadingDocsForProfile(profile: TargetProtocolProfile, docSet: ReturnType<typeof getProfileDocSet>): string[] {
-  return requiredDocsForProfile(profile, docSet).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
+function requiredReadingDocsForProfile(profile: TargetProtocolProfile): string[] {
+  return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
 }
 
-function readProfileMetadata(projectRoot: string): { projectState: TargetProtocolProfile | null } {
+function readProfileMetadata(projectRoot: string): { scaffold: TargetProtocolProfile | null; projectState: TargetProtocolProfile | null } {
   return {
+    scaffold: readScaffoldProfile(projectRoot),
     projectState: readProjectStateProfile(projectRoot)
   };
 }
 
-function inferDeclaredProfile(metadata: { projectState: TargetProtocolProfile | null }): ProtocolProfile {
-  const declared = [metadata.projectState].filter((profile): profile is TargetProtocolProfile => Boolean(profile));
-  if (declared.length === 0) return 'unknown';
-  if (new Set(declared).size > 1) return 'mixed';
-  return declared[0];
+function inferDeclaredProfile(metadata: { scaffold: TargetProtocolProfile | null; projectState: TargetProtocolProfile | null }): ProtocolProfile {
+  return metadata.scaffold ?? metadata.projectState ?? 'unknown';
+}
+
+function readScaffoldProfile(projectRoot: string): TargetProtocolProfile | null {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(projectRoot, '.hadara', 'scaffold.json'), 'utf8')) as { profile?: unknown };
+    return normalizeProfile(typeof parsed.profile === 'string' ? parsed.profile : null);
+  } catch {
+    return null;
+  }
 }
 
 function readProjectStateProfile(projectRoot: string): TargetProtocolProfile | null {
@@ -331,10 +336,4 @@ function firstMatch(content: string, pattern: RegExp): string | null {
 function normalizeProfile(value: string | null | undefined): TargetProtocolProfile | null {
   const normalized = value?.trim().replace(/`/g, '').toLowerCase();
   return normalized === 'basic' || normalized === 'standard' || normalized === 'governed' ? normalized : null;
-}
-
-function profileRank(profile: TargetProtocolProfile): number {
-  if (profile === 'governed') return 3;
-  if (profile === 'standard') return 2;
-  return 1;
 }

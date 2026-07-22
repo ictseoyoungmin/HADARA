@@ -4,6 +4,7 @@ import path from 'node:path';
 import { withInvocationFsMemo } from '../core/invocation-fs-memo';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
+import { isTaskFinishResolvableBlocker } from '../task/task-finalize';
 import { findTaskCapsule } from '../task/task-capsule';
 import { summarizeTask } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
@@ -255,8 +256,7 @@ function selectionNextAction(recommendation: TaskSelectionRecommendation): Workb
     kind: 'review',
     required: true,
     priority: 'now',
-    command: 'hadara task status --json',
-    message: recommendation.operatorGuidance || 'Review current-state next-work guidance before creating or selecting a Task Capsule.',
+    message: recommendation.operatorGuidance || 'Review current human/reviewer direction and routed project/development sources before creating or selecting a Task Capsule; choose a concise title yourself.',
     sourceIssueCodes: ['TASK_STATUS_SELECT_WORK'],
     loopBoundary: true
   };
@@ -290,12 +290,13 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
   const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, task.capsule, task.title);
   const useFullChecks = detail === 'full';
   const closePlan = useFullChecks ? createTaskCloseReport(projectRoot, taskId, 'dry-run') : null;
+  const closePlanIssues = closePlan?.issues.filter((issue) => !isTaskFinishResolvableBlocker(issue.code)) ?? [];
   const docsDoctor = useFullChecks ? createDocsProtocolConsistencyReport(projectRoot, now) : null;
   const profileDoctor = useFullChecks ? createProfileProtocolConsistencyReport(projectRoot, now) : null;
-  const currentReady = closePlan?.ok ?? false;
+  const currentReady = closePlan !== null && !closePlanIssues.some((issue) => issue.severity === 'error');
   const readiness = useFullChecks ? buildTaskWorkbenchReadiness(currentReady, closedValid) : buildTaskWorkbenchReadinessDeferred(closedValid, taskId);
   const issues = [
-    ...(closePlan?.issues ?? []),
+    ...closePlanIssues,
     ...buildTaskBoardIssues(task.id, task.status, task.capsule, taskBoard),
     ...evidenceList.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `EVIDENCE_LIST_${issue.code}`, message: issue.message })),
     ...(docsDoctor?.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_DOCS_${issue.code}`, message: issue.message, path: issue.path })) ?? []),
@@ -306,7 +307,7 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
         taskId,
         closed: closedValid,
         closeEvidenceFound,
-        closePlanOk: closePlan?.ok ?? false,
+        closePlanOk: currentReady,
         evidenceRecords: evidenceList.count,
         authoringStatus: authoringGuidance.status,
         closeActions: closePlan?.nextActions ?? [],
@@ -318,7 +319,7 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
     taskBoardStatus: taskBoard.status,
     authoringGuidance,
     evidenceRecords: evidenceList.count,
-    closePlanOk: closePlan?.ok ?? false,
+    closePlanOk: currentReady,
     closePlanEvaluated: useFullChecks,
     closedValid,
     issues,
@@ -359,10 +360,10 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
     loop,
     sources: {
       taskClosePlan: {
-        ok: closePlan?.ok ?? false,
+        ok: currentReady,
         mode: 'dry-run',
-        blockers: closePlan?.summary.blockers ?? 0,
-        warnings: closePlan?.summary.warnings ?? 0
+        blockers: closePlanIssues.filter((issue) => issue.severity === 'error').length,
+        warnings: closePlanIssues.filter((issue) => issue.severity === 'warning').length
       },
       evidenceLint: {
         ok: closePlan?.evidenceLint.ok ?? true,

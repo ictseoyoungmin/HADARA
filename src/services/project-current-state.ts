@@ -340,7 +340,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use \`h
 | Latest Completed Task | ${taskCell(state.latestCompletedTask)} | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | ${state.latestCompletedTaskBasis} | Out-of-order close chronology is not tracked here. |
 | Active Task | ${taskCell(state.activeTask)} | ${activeTaskNote(state)} |
-| Next Work | ${nextWorkTitleCell(state.nextWork)} | Structured continuation title; not operator prose. |
+| Next Work | ${nextWorkTitleCell(state.nextWork)} | Compatibility planning hint; never copy it verbatim as a task title. |
 | Next Work State | ${state.nextWork?.state ?? 'none'} | Controls whether task creation guidance is emitted. |
 | Operator Guidance | ${tableCell(nextWorkGuidance(state))} | Human constraints; never used as a task title. |
 | Current Trusted Validation Baseline | ${tableCell(state.validationBaseline.summary)} | ${tableCell(state.validationBaseline.evidence.join(', ') || 'No evidence ids recorded.')} |

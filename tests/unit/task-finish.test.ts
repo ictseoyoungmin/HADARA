@@ -241,6 +241,23 @@ describe('task finish status sync', () => {
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
+  it('rejects a malformed HANDOFF next-step table before lifecycle writes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Malformed handoff table');
+    const handoffPath = path.join(task.dir, 'HANDOFF.md');
+    const malformed = fs.readFileSync(handoffPath, 'utf8').replace(
+      '|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      '| Continue later | actionable | yes | Fixture. | docs/TASK_BOARD.md |\n|---|---|---|---|---|'
+    );
+    fs.writeFileSync(handoffPath, malformed, 'utf8');
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.appliedWrites).toBe(0);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HANDOFF_NEXT_STEP_TABLE_MALFORMED' }));
+  });
+
   it('blocks TASK.md status writes when status frames cannot be replaced', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish broken task status');

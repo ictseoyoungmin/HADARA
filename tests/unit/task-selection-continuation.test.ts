@@ -55,7 +55,8 @@ describe('task-selection-status-v2 continuation routing (T-0658-class fix)', () 
     expect(report.phase).toBe('continuation-ready');
     expect(report.health).not.toBe('degraded');
     expect(report.readiness.status).not.toBe('terminal');
-    expect(report.primaryNextAction).toMatchObject({ id: 'create-continuation-task', kind: 'create', command: "hadara task create 'Publish 0.5.0 stable'", writes: true });
+    expect(report.primaryNextAction).toMatchObject({ id: 'review-continuation', kind: 'review', message: expect.stringContaining('Current human/reviewer direction has priority'), writes: false });
+    expect(report.primaryNextAction?.command).toBeUndefined();
   });
 
   it('routes waiting-for-operator to a review-only action with no invented command', () => {

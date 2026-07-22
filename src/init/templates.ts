@@ -195,6 +195,8 @@ hadara task status --task T-XXXX --json
 
 Use \`task status --json\` to decide what to work on when no task is selected. Use \`task create\` only when no suitable capsule exists. Use \`task status --task T-XXXX --json\` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use \`task close --task T-XXXX --dry-run --json\` or \`task status --task T-XXXX --detail full --json\` when you need close-grade readiness diagnostics.
 
+Task selection is a review decision, not title generation. Current human or reviewer instructions have highest priority. Then read the routed project state, governed handoff when present, development/roadmap sources, Task Board, and the previous capsule handoff. A handoff \`Next Recommended Step\` is one input and must not be copied verbatim as a task title. If a new capsule is still warranted, choose a short behavior-focused title. If planned work is exhausted, review for design gaps or useful optimization and propose a next step or ask the reviewer instead of manufacturing work.
+
 ## Task Context
 
 \`\`\`bash
@@ -317,7 +319,7 @@ hadara validation run --task T-XXXX --check "Focused tests" --direct-result pass
 Use \`evidence add-command\` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use \`evidence list\` to find durable evidence ids for docs and resolution markers.
 
 Do not hand-edit \`evidence.jsonl\`.
-Evidence appends are task-scoped and serialized by a local lock. Do not start multiple \`validation run\` or \`evidence add-command\` writes for the same task in parallel; JSON evidence responses include \`evidence.appendLock\` so lock contention and wait time are visible when it happens.
+Evidence appends are task-scoped and internally serialized by a local lock, so independent \`validation run\` or \`evidence add-command\` calls may run in parallel. JSON evidence responses include \`evidence.appendLock\` so lock contention and wait time are visible when it happens.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 
@@ -874,7 +876,7 @@ Do not defer all documentation until after implementation. Keep \`PLAN.md\` curr
 
 Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task close\`, compatibility \`task finalize --execute\`, and release artifact or publish operations. Evidence appends are also protected by a task-scoped local lock; JSON evidence responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
+Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task close\`, compatibility \`task finalize --execute\`, and release artifact or publish operations. Evidence commands may run in parallel because each append is internally serialized by a task-scoped local lock; JSON responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
 
 ## Command Semantics
 
@@ -904,6 +906,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - Evidence v2 deferred scope remains explicit: rebuild preview/execute, \`check-id\`, \`subject\`, and a new add-command report schema id are future candidates. Do not infer those commands or schema changes from the current \`evidence list\` and \`evidence add-command\` ergonomics.
 - Finalize may update only the bounded Task Capsule status bookkeeping, the matching \`docs/TASK_BOARD.md\` row's command-owned cells, and close evidence append. It must not update handoff, Project State, roadmap docs, or arbitrary evidence after the close-source hash is captured.
 - After close proof is recorded, close-source document edits intentionally invalidate the previous close proof. Make those edits before task close, or rerun task close if the edit is unavoidable.
+- When \`task close\` returns \`ok:true\` and \`closed-valid\`, report the result and stop. Do not call \`task status\` to reconfirm the audit or select follow-up work unless the current human/reviewer instruction explicitly requires continued work.
 
 ## State Documents
 
@@ -963,6 +966,10 @@ ${requiredReadingRows.map(formatTableRow).join('\n')}
 - Do not mark work done without evidence.
 - Keep Task Capsule docs current as work changes; do not defer all documentation until after implementation.
 - Keep generated or project-owned \`docs/\` files current when a task changes their subject. Use \`hadara docs add <type>\` for optional docs, or create Markdown directly and register it with \`hadara docs register\`.
+- The selected init profile intentionally omits some project-state and governance documents. Their absence is not a defect. Add optional documents only for a concrete project need, never merely to imitate a larger profile.
+- Current human or reviewer instructions override persisted \`Next Recommended Step\` prose when they conflict. Treat handoff next steps as review input, read the routed current/project/development sources, and choose a concise task title yourself only after deciding that a new capsule is still appropriate.
+- When planned milestone work is exhausted and no explicit instruction remains, review the result and either propose a justified next step, identify a planning flaw or optimization, or ask the reviewer what to do next. Do not turn stale handoff prose into an automatic task.
+- A successful \`task close\` result with \`closed-valid\` is terminal for that capsule. Report it and stop; do not run \`task status\` merely to confirm close or discover another capsule unless the current human/reviewer instruction explicitly requires continued work.
 - Do not execute destructive commands.
 - Do not run release, publish, package, installer, or other external mutation workflows without explicit operator approval.
 

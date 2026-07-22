@@ -368,6 +368,14 @@ describe('Phase 7.3 docs registry', () => {
       })).toBe(true);
       const dryRun = JSON.parse(logSpy.mock.calls.at(-1)?.[0] as string);
       expect(dryRun).toMatchObject({ ok: true, mode: 'dry-run', action: 'create', writes: [] });
+      expect(dryRun.executeCommand).toContain("--title 'CLI Spec'");
+      expect(dryRun.executeCommand).toContain("--read-tier 'active-spec'");
+      expect(dryRun.executeCommand).toContain("--authority 'implementation-source'");
+      expect(dryRun.executeCommand).toContain("--edit-policy 'agent-editable-with-review'");
+      expect(dryRun.executeCommand).toContain("--active-for-task 'T-04A13,T-04A14'");
+      expect(dryRun.executeCommand).toContain("--drift 'medium'");
+      expect(dryRun.executeCommand).toContain('--drift-review-required');
+      expect(dryRun.executeCommand).toContain("--drift-reason 'Reviewer requested a fresh read before use.'");
       expect(handleDocsCommand({
         args: [
           'docs', 'register',

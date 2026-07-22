@@ -202,7 +202,10 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
     requiredReading: requiredReadingForProject(projectRoot),
-    createCommand: capsule || boardRow ? null : `hadara task create ${shellQuote(title)}`
+    createCommand: null,
+    operatorGuidance: capsule || boardRow
+      ? 'Inspect the existing matching capsule after applying current human/reviewer direction.'
+      : 'Treat this handoff step as review input. Apply current human/reviewer direction first, read the routed project and development sources, then decide whether a new capsule is warranted and choose a concise title yourself.'
   };
 }
 

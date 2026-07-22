@@ -84,10 +84,9 @@ export interface ProtocolConsistencyReport {
 
 const REQUIRED_TASK_FILES = Object.keys(TASK_FILES);
 const DONE_STATUSES = new Set(['done']);
-const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md'];
 const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
-const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
-const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md'];
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
   const task = findTaskCapsule(projectRoot, taskId);
@@ -300,10 +299,9 @@ function countIssues(issues: ProtocolConsistencyIssue[]): { error: number; warni
 
 function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
   const docs = [...CORE_PROJECT_DOCS];
-  const profile = detectProfile(projectRoot);
-  const docSet = getProjectDocSet(projectRoot);
+  const profile = createProtocolProfileSummary(projectRoot).target;
+  if (profile === 'standard' || profile === 'governed') docs.push(...STANDARD_MINIMAL_DOCS);
   if (profile === 'governed') docs.push(...GOVERNED_MINIMAL_DOCS);
-  docs.push(...docSet.standard.present, ...docSet.governed.present);
 
   for (const relativePath of Array.from(new Set(docs))) {
     checkedDocs.add(relativePath);
@@ -988,27 +986,6 @@ function findActiveTaskId(rows: TaskBoardRow[], tasks: TaskCapsule[]): string | 
   return activeTask?.id ?? null;
 }
 
-function getProjectDocSet(projectRoot: string): {
-  governedMinimal: { present: string[]; missing: string[] };
-  standard: { present: string[]; missing: string[] };
-  governed: { present: string[]; missing: string[] };
-} {
-  return {
-    governedMinimal: splitDocPresence(projectRoot, GOVERNED_MINIMAL_DOCS),
-    standard: splitDocPresence(projectRoot, STANDARD_PROJECT_DOCS),
-    governed: splitDocPresence(projectRoot, GOVERNED_PROJECT_DOCS)
-  };
-}
-
-function splitDocPresence(projectRoot: string, relativePaths: string[]): { present: string[]; missing: string[] } {
-  const present: string[] = [];
-  const missing: string[] = [];
-  for (const relativePath of relativePaths) {
-    (fs.existsSync(path.join(projectRoot, relativePath)) ? present : missing).push(relativePath);
-  }
-  return { present, missing };
-}
-
 function readKeyValueRows(content: string): Map<string, string> {
   const fields = new Map<string, string>();
   for (const row of parseMarkdownRows(content)) {
@@ -1130,14 +1107,7 @@ function slugify(value: string): string {
 }
 
 function detectProfile(projectRoot: string): 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed' {
-  const hasGovernedDocs = fs.existsSync(path.join(projectRoot, 'docs', 'SECURITY_MODEL.md'));
-  const hasStandardDocs = ['ARCHITECTURE.md', 'DECISIONS.md', 'ROADMAP.md'].some((file) =>
-    fs.existsSync(path.join(projectRoot, 'docs', file))
-  );
-  if (hasGovernedDocs) return 'governed';
-  if (hasStandardDocs) return 'standard';
-  if (fs.existsSync(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'))) return 'basic';
-  return 'unknown';
+  return createProtocolProfileSummary(projectRoot).target;
 }
 
 function isDoneStatus(status: string | null | undefined): boolean {

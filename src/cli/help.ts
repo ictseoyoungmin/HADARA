@@ -32,9 +32,9 @@ export function handleHelpCommand(input: HelpCommandInput): boolean {
   if (topic === 'command') {
     const id = input.args[2];
     if (!id) {
-      console.log(renderUnknownHelp('Missing command id. Use `hadara help command <id>`.'));
-      return true;
+      return printInvalidHelp('Missing command id. Use `hadara help command <id>`.');
     }
+    if (!findCommandRegistryEntry(id)) return printInvalidHelp(`Unknown command id: ${id}`);
     console.log(renderCommandHelp(id));
     return true;
   }
@@ -42,15 +42,14 @@ export function handleHelpCommand(input: HelpCommandInput): boolean {
   if (topic === 'family') {
     const family = input.args[2] as CommandFamily | undefined;
     if (!family) {
-      console.log(renderUnknownHelp('Missing family. Use `hadara help family <family>`.'));
-      return true;
+      return printInvalidHelp('Missing family. Use `hadara help family <family>`.');
     }
+    if (listCommandRegistryEntries({ family }).length === 0) return printInvalidHelp(`Unknown command family: ${family}`);
     console.log(renderFamilyHelp(family));
     return true;
   }
 
-  console.log(renderUnknownHelp(`Unknown help topic: ${topic}`));
-  return true;
+  return printInvalidHelp(`Unknown help topic: ${topic}`);
 }
 
 export function renderDefaultHelp(): string {
@@ -184,6 +183,12 @@ export function renderFamilyHelp(family: CommandFamily): string {
 
 function renderUnknownHelp(message: string): string {
   return [message, '', 'Use `hadara commands --json` to inspect valid command ids and families.'].join('\n');
+}
+
+function printInvalidHelp(message: string): true {
+  process.exitCode = 2;
+  console.log(renderUnknownHelp(message));
+  return true;
 }
 
 function formatLifecycle(entries: CommandRegistryEntry[]): string {

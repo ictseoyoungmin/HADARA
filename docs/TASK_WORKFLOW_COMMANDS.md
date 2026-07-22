@@ -51,7 +51,7 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 `task close --json` is the ordinary guarded close transaction. It reviews the current lifecycle step, write boundaries, expected write paths, and close-proof repair internally, rechecks the current plan before writing, runs the underlying phases serially, stops on the first blocker, and succeeds only after the final close audit is `closed-valid`.
 
-Successful close is terminal for that capsule. When the report returns `ok:true` and `closed-valid`, do not run `task status` merely to confirm the same audit; continue only from explicit operator intent or the closed capsule's handoff.
+Successful close is terminal for that capsule. When the report returns `ok:true` and `closed-valid`, report the result and stop. Do not run `task status` merely to confirm the same audit or discover another capsule. Continue only when the current human/reviewer instruction explicitly requires more work; persisted handoff prose alone does not override that boundary.
 
 For review/debug flows, `hadara task close --task T-XXXX --dry-run --json` returns the current transaction plan and `planHash` without writes. `hadara task close --task T-XXXX --execute --plan-hash ... --json` rechecks that plan hash before writing. Keep the explicit `--plan-hash` flow when a separate reviewer approves the plan.
 
@@ -155,7 +155,7 @@ Do not defer all documentation until after implementation. Keep `PLAN.md` curren
 
 Parallelize read-only discovery, `rg`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task close`, compatibility `task finalize --execute`, and release artifact or publish operations. Evidence appends are also protected by a task-scoped local lock; JSON evidence responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.
+Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task close`, compatibility `task finalize --execute`, and release artifact or publish operations. Evidence commands may run in parallel because every append is internally serialized by a task-scoped local lock; JSON responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.
 
 Dry-run-first remediation commands use a separate guard: when `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes. This extra copy step is intentional UX friction: remediation writes fail closed so operators review the current plan before any scaffold/remediation write.
 

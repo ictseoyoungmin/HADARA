@@ -15,6 +15,8 @@
     "actor": { "type": "object", "additionalProperties": true },
     "closeState": { "enum": ["blocked", "ready-to-close", "closed-valid", "closed-stale", "in-progress"] },
     "planStatus": { "enum": ["blocked", "executable", "executable-with-deferred-checks", "satisfied", "pending"] },
+    "terminal": { "type": "boolean" },
+    "operatorGuidance": { "type": "string", "minLength": 1 },
     "readOnly": { "type": "boolean" },
     "transaction": {
       "type": "object",

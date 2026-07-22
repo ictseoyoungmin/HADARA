@@ -77,7 +77,7 @@ Budget rules:
 - Generated outputs such as `dist/` do not count as source files, but source schemas and tests do.
 - Docs-only migration may exceed the LOC ceiling when changes are mechanical; touched-doc count must still be explicit.
 - Crossing either file ceiling or implementation ceiling requires splitting the capsule or recording a reviewed exception in its `TASK.md`.
-- Same-file writers, evidence appenders, close/finalize execution, and release mutations remain serialized.
+- Same-file prose writers, close/finalize execution, and release mutations remain caller-serialized. Evidence appenders may run concurrently because the task-scoped lock serializes them internally.
 - Each implementation capsule must be created through the active HADARA task workflow; the IDs below are planning IDs, not preallocated `T-XXXX` IDs.
 
 ## Workflow budget target

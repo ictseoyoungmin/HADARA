@@ -214,7 +214,7 @@ function renderEvidenceCommandHelp(sub: string | undefined): string {
       '  --idempotency-key <key>   Reuse an existing keyed record instead of appending duplicates.',
       '  --private                 Store as private evidence metadata.',
       '',
-      'Evidence appends are task-scoped and serialized; JSON output includes evidence.appendLock diagnostics when lock contention occurs.'
+      'Evidence appends are task-scoped and internally serialized, so independent evidence commands may run concurrently; JSON output includes evidence.appendLock diagnostics when contention occurs.'
     ].join('\n');
   }
 

@@ -1,40 +1,40 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 287,
+  "rev": 289,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0682",
-    "title": "Three-profile autonomous Codex dogfood"
+    "id": "T-0683",
+    "title": "Pre-stable dogfood findings remediation"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Remediate the prioritized autonomous-dogfood findings before 0.5.0 stable.",
-    "reason": "Core lifecycle continuity passed, but the report/spec record three P0 and several P1/P2 agent-UX defects that should not ship unchanged.",
+    "title": "Review stable readiness after current human/reviewer assessment.",
+    "reason": "The requested pre-dogfood core remediation is complete; do not manufacture another capsule from stale handoff prose.",
     "references": [
       {
-        "path": "`DOGFOOD_REPORT.md`",
+        "path": "`docs/PROJECT_STATE.md`",
         "required": true
       },
       {
-        "path": "`docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md#autonomous-dogfood-findings`",
+        "path": "`docs/AGENT_HANDOFF.md`",
         "required": true
       },
       {
-        "path": "T-0682 evidence",
+        "path": "`docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0682",
-      "path": "tasks/T-0682-three-profile-autonomous-codex-dogfood/HANDOFF.md"
+      "workId": "T-0683",
+      "path": "tasks/T-0683-pre-stable-dogfood-findings-remediation/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
