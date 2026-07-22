@@ -33,7 +33,7 @@
     "generatedAt": { "type": "string" },
     "projectRoot": { "type": "string" },
     "phase": {
-      "enum": ["select-work", "idle", "review-next-work", "degraded"]
+      "enum": ["select-work", "idle", "review-next-work", "continuation-ready", "degraded"]
     },
     "health": {
       "enum": ["ok", "attention", "blocked", "degraded", "unknown"]
@@ -89,7 +89,7 @@
     "selection": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["precedence", "selectedTaskId", "selectedSource", "selectedSourceKind", "sourceExplanation", "primaryActionId"],
+      "required": ["selectedTaskId", "selectedSource", "selectedSourceKind", "sourceExplanation", "primaryActionId"],
       "properties": {
         "precedence": { "type": "array", "items": { "type": "object" } },
         "selectedTaskId": { "type": ["string", "null"] },
@@ -112,7 +112,15 @@
     "sources": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["taskSelection"]
+      "required": ["detail", "summary"],
+      "properties": {
+        "detail": { "enum": ["fast", "full"] },
+        "summary": {
+          "type": "object",
+          "required": ["recommendations", "selectedSource", "currentStatePresent", "taskBoardPresent", "taskBoardRows", "agentHandoffPresent", "issueCodes"]
+        },
+        "taskSelection": { "type": "object" }
+      }
     },
     "issues": {
       "type": "array",

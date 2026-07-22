@@ -93,6 +93,7 @@ describe('schema fixtures', () => {
       'hadara.slice.report.v1',
       'hadara.smokeEvidenceSummary.v1',
       'hadara.stateProjection.v1',
+      'hadara.status.baseline.promote.v1',
       'hadara.task.audit_close.v1',
       'hadara.task.close.v1',
       'hadara.task.close.v2',

@@ -189,7 +189,7 @@ describe('task workbench status report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench next selection');
 
-    const v2Report = createTaskSelectionStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'));
+    const v2Report = createTaskSelectionStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
     const report = createTaskStatusSelectionReport(root, new Date('2026-05-31T00:00:00.000Z'));
 
     expect(v2Report).toMatchObject({
@@ -388,7 +388,7 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.status.v2', payload).ok).toBe(true);
   });
 
-  it('routes task status without --task through v2 by default and v1 through compat', () => {
+  it('opens the sole open Markdown capsule through v2 while keeping v1 selection compat', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Workbench CLI selection');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -402,11 +402,11 @@ describe('task workbench status report', () => {
     expect(handled).toBe(true);
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({
-      schemaVersion: 'hadara.taskSelection.status.v2',
+      schemaVersion: 'hadara.task.status.v2',
       command: 'task.status',
-      scope: 'task-selection',
-      mode: 'select-work',
-      phase: 'select-work',
+      scope: 'task',
+      mode: 'selected-task',
+      phase: 'author-task',
       diagnostics: {
         generatedBy: 'cli',
         commandPath: 'task.status',
@@ -415,7 +415,9 @@ describe('task workbench status report', () => {
       }
     });
     expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
-    expect(validateSchema('hadara.taskSelection.status.v2', payload).ok).toBe(true);
+    expect(payload.sources).toMatchObject({ detail: 'fast', workbenchSummary: { loopPhase: 'author-task' } });
+    expect(payload.sources).not.toHaveProperty('workbench');
+    expect(validateSchema('hadara.task.status.v2', payload).ok).toBe(true);
 
     const compatHandled = handleTaskCommand({
       args: ['task', 'status', '--compat', 'v1', '--json'],
@@ -434,6 +436,31 @@ describe('task workbench status report', () => {
       }
     });
     expect(validateSchema('hadara.task.status.v1', compat).ok).toBe(true);
+  });
+
+  it('opens the Markdown capsule and reports a malformed compatibility checkpoint as advisory', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench active default');
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), '{not-json', 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    expect(handleTaskCommand({ args: ['task', 'status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.task.status.v2',
+      command: 'task.status',
+      scope: 'task',
+      mode: 'selected-task',
+      taskId: task.id
+    });
+    expect(payload.ok).toBe(true);
+    expect(payload.issues).toContainEqual(expect.objectContaining({
+      severity: 'warning',
+      code: 'PROJECT_CURRENT_STATE_INVALID_JSON'
+    }));
+    expect(validateSchema('hadara.task.status.v2', payload).ok).toBe(true);
   });
 
   it('uses fast selected-task CLI status by default and full diagnostics only on request', () => {

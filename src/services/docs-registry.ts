@@ -324,7 +324,7 @@ This file is not the Required Reading authority, workflow manual, project histor
 | HADARA Protocol | 0.4 |
 | Profile | ${profile} |
 | Workflow Reference | \`docs/HADARA_WORKFLOW.md\` |
-| Structured Current State | \`.hadara/state/current.json\` |
+| Compatibility Checkpoint | \`.hadara/state/current.json\` (command-owned; not normal reading) |
 | Product / Phase Projection | \`docs/PROJECT_STATE.md\` |
 | Task Board | \`docs/TASK_BOARD.md\` |
 | Handoff | \`docs/AGENT_HANDOFF.md\` when present |
@@ -335,16 +335,16 @@ This file is not the Required Reading authority, workflow manual, project histor
 | Need | Read |
 |---|---|
 | Required reading and safety rules | \`AGENTS.md\` |
-| Current release, task continuity, next intent, problems, and validation | \`hadara status --json\` or \`.hadara/state/current.json\` |
+| Current or next task | \`hadara task status --json\`, then \`docs/TASK_BOARD.md\` and the selected Task Capsule |
 | Product and phase projection | \`docs/PROJECT_STATE.md\` |
-| Current or next task | \`docs/TASK_BOARD.md\` |
+| Task queue and completed-task index | \`docs/TASK_BOARD.md\` |
 | HADARA command workflow | \`docs/HADARA_WORKFLOW.md\` |
 | Task-specific scope and acceptance | Active \`tasks/T-*/TASK.md\` |
 | Task continuation notes | Active \`tasks/T-*/HANDOFF.md\` |
 
 ## Rule
 
-Prefer \`hadara status --json\`, \`hadara task status --task T-XXXX --json\`, and \`hadara context pack --task T-XXXX --json\` before broad manual reading.
+Prefer \`hadara task status --json\`, \`hadara task status --task T-XXXX --json\`, and \`hadara context pack --task T-XXXX --json\` before broad manual reading.
 
 ## Project-Specific Notes
 
@@ -1405,15 +1405,20 @@ function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {
 
 function seedEntries(profile: InitProfile | 'hadara-dev'): DocumentRegistryEntry[] {
   const coreProfiles: DocumentRegistryEntry['profiles'] = ['basic', 'standard', 'governed'];
+  const routedProfiles: DocumentRegistryEntry['profiles'] = ['standard', 'governed'];
   const governedProfiles: DocumentRegistryEntry['profiles'] = ['governed'];
   const entries: DocumentRegistryEntry[] = [
-    entry('.hadara/state/current.json', 'CURRENT_STATE', 'schema-reference', 'canonical', ['session-start'], true, 'hadara-init', coreProfiles),
-    entry('.hadara/context/HADARA_CONTEXT.md', 'HADARA_CONTEXT', 'project-context', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
+    entry('.hadara/state/current.json', 'CURRENT_STATE', 'schema-reference', 'reference', [], false, 'hadara-init', coreProfiles),
     entry('AGENTS.md', 'AGENTS', 'protocol', 'canonical', ['session-start'], true, 'mixed', coreProfiles, 'repo'),
     entry('docs/HADARA_WORKFLOW.md', 'HADARA_WORKFLOW', 'workflow-guide', 'canonical', ['session-start', 'task-start'], true, 'mixed', coreProfiles),
-    entry('docs/PROJECT_STATE.md', 'PROJECT_STATE', 'project-state', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
     entry('docs/TASK_BOARD.md', 'TASK_BOARD', 'task-board', 'active', ['task-start'], true, 'hadara-task', coreProfiles)
   ];
+  if (profile === 'standard' || profile === 'governed' || profile === 'hadara-dev') {
+    entries.push(
+      entry('.hadara/context/HADARA_CONTEXT.md', 'HADARA_CONTEXT', 'project-context', 'canonical', ['session-start'], true, 'mixed', routedProfiles),
+      entry('docs/PROJECT_STATE.md', 'PROJECT_STATE', 'project-state', 'canonical', ['session-start'], true, 'mixed', routedProfiles)
+    );
+  }
   if (profile === 'governed' || profile === 'hadara-dev') {
     entries.push(
       entry('docs/AGENT_HANDOFF.md', 'AGENT_HANDOFF', 'handoff', 'canonical', ['session-start'], true, 'mixed', governedProfiles)

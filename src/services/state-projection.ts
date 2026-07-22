@@ -481,7 +481,9 @@ function readCloseProof(projectRoot: string, task: TaskCapsule): StateProjection
 }
 
 function extractProjectState(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
-  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Canonical Current State');
+  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Compatibility State Checkpoint').length > 0
+    ? parseMarkdownRowsUnderHeading(source.content, '## Compatibility State Checkpoint')
+    : parseMarkdownRowsUnderHeading(source.content, '## Canonical Current State');
   const rows = canonicalRows.length > 0 ? canonicalRows : parseMarkdownRowsUnderHeading(source.content, '## Metadata');
   return {
     latestCompletedTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? ''),
@@ -490,7 +492,9 @@ function extractProjectState(source: SourceText): { latestCompletedTaskId: strin
 }
 
 function extractAgentHandoff(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
-  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Canonical Continuation State');
+  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Compatibility Continuation Checkpoint').length > 0
+    ? parseMarkdownRowsUnderHeading(source.content, '## Compatibility Continuation Checkpoint')
+    : parseMarkdownRowsUnderHeading(source.content, '## Canonical Continuation State');
   const currentRows = canonicalRows.length > 0 ? canonicalRows : parseMarkdownRowsUnderHeading(source.content, '## Current State');
   const latest = findMarkdownRowByCell(currentRows, 0, 'Latest Completed Task')?.[1] ?? '';
   const active = findMarkdownRowByCell(currentRows, 0, 'Active Task')?.[1] ?? findMarkdownRowByCell(currentRows, 0, 'Active / Next Task')?.[1] ?? '';

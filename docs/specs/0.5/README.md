@@ -4,6 +4,10 @@
 **Baseline:** HADARA 0.4.6  
 **Source set:** [`all/`](./all/) combined agent-loop and lifecycle/use-case plans
 
+## Pre-Stable Contract Override
+
+[`PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`](./PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md) supersedes the earlier global-status/local-task-status split before `0.5.0` stable. `task status` is the single lifecycle ingress, top-level `status` is a temporary compatibility alias, successful `task close` is terminal, and structured current state is being demoted from public reading authority before profile dogfood.
+
 ## Decision Update: 0.5.0 Stable Absorbs Close
 
 After `0.5.0-rc.0`, the stable scope changed: **0.5.0 stable must include the one-command task close path**, not only status ingress.
@@ -78,13 +82,13 @@ Budget rules:
 
 ## Workflow budget target
 
-The existing Task Capsule budget remains four unique task-work commands. `hadara status` is the project/session ingress outside that bounded task loop.
+The existing Task Capsule budget remains four unique task-work commands. `task status` now owns both session ingress and the selected-capsule cockpit.
 
 | Layer | Unique commands | Clean invocation target |
 |---|---:|---:|
-| Project/session ingress | 1 (`status`) | 1 |
+| Project/session ingress | Included in `task status` | 1 |
 | Task Capsule loop | 4 (`task status`, `task create`, `validation run`, primary close) | at most 5 from empty selection to close |
-| Combined ordinary path | 5 | at most 6 after init |
+| Combined ordinary path | 4 | at most 5 after init, plus diagnostics only on failure |
 
 `task close` replaces `task finalize` in the task-loop portfolio before 0.5.0 stable promotion. The product must never teach both as primary commands in one release.
 

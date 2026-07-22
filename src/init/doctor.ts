@@ -9,17 +9,23 @@ import { readProjectText } from './files';
 export function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   const issues: InitIssue[] = [];
   const actions: InitAction[] = [];
+  const profile = inferProfileFromGeneratedDocs(projectRoot);
   const requiredCore: Array<{ path: string; code: string }> = [
     { path: 'AGENTS.md', code: 'INIT_CORE_DOC_MISSING' },
     { path: '.gitignore', code: 'INIT_GITIGNORE_MISSING' },
-    { path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' },
     { path: '.hadara/scaffold.json', code: 'INIT_PROTOCOL_MISSING' },
     { path: '.hadara/docs-registry.json', code: 'INIT_DOCS_REGISTRY_MISSING' },
     { path: '.hadara/slot-registry.json', code: 'INIT_SLOT_REGISTRY_MISSING' },
-    { path: 'docs/PROJECT_STATE.md', code: 'INIT_CORE_DOC_MISSING' },
     { path: 'docs/TASK_BOARD.md', code: 'INIT_CORE_DOC_MISSING' },
     { path: 'docs/HADARA_WORKFLOW.md', code: 'INIT_WORKFLOW_DOC_MISSING' }
   ];
+  if (profile === 'standard' || profile === 'governed') {
+    requiredCore.push(
+      { path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' },
+      { path: 'docs/PROJECT_STATE.md', code: 'INIT_CORE_DOC_MISSING' }
+    );
+  }
+  if (profile === 'governed') requiredCore.push({ path: 'docs/AGENT_HANDOFF.md', code: 'INIT_CORE_DOC_MISSING' });
   for (const required of requiredCore) {
     const relativePath = required.path;
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {

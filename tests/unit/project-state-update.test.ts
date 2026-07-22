@@ -60,7 +60,7 @@ describe('project-state update', () => {
 
   it('fails execute on stale reviewed hash without mutating project state', () => {
     const root = tempProject();
-    initProject(root, 'basic', { silent: true });
+    initProject(root, 'standard', { silent: true });
 
     const report = createProjectStateUpdateReport(root, {
       name: 'Changed',

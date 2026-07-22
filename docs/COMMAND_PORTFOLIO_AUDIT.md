@@ -29,7 +29,7 @@ Low-level `task.finish`, `task.ready`, `task.audit-close`, `task.complete`, and 
 
 | Family | Command IDs | Use Boundary | Hidden From Primary Lifecycle Because |
 |---|---|---|---|
-| `project-health` | `doctor`, `version`, `status`, `debt.list`, `debt.show` | Project health and status reads. | They do not advance one capsule through close. |
+| `project-health` | `doctor`, `version`, `debt.list`, `debt.show`; deprecated `status` alias | Project health and explicit diagnostics. | Project health does not advance one capsule; lifecycle ingress belongs to `task.status`. |
 | `release-package` | `release.dry-run`, `release.publish`, `release.artifact`, `release.gate`, `smoke.package`, `package.recycle` | Release/package operator work. | Release readiness is not ordinary task readiness. |
 | `dev-validation` | `dev.docker-check`, `smoke.run`, `smoke.clean-checkout` | HADARA-dev validation. | They run broader external validation only when a task requires it. |
 | `ui` | `dashboard.serve`, `tui` | Operator observation surfaces. | UI observation is not a task lifecycle mutation. |
@@ -42,9 +42,10 @@ Low-level `task.finish`, `task.ready`, `task.audit-close`, `task.complete`, and 
 
 | Decision | Commands | Rule | Evidence |
 |---|---|---|---|
-| Task status is the default lifecycle cockpit. | `task.status`, `task.close`, `task.finalize`, `task.ready`, `harness.validate` | `task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces are no longer public routes. | 0.4 agent UX lifecycle cockpit refactor. |
+| Task status is the single lifecycle ingress and cockpit. | `task.status`, deprecated `status`, `task.close`, `task.finalize`, `harness.validate` | Default `task status` opens the active capsule when selected and next-work selection otherwise; `--task` explicitly inspects another capsule. Top-level `status` is a temporary alias, not a second evaluator. | T-0679 pre-stable simplification. |
 | Task close is the default agent close path. | `task.close`, `task.finalize`, `task.complete`, `task.finish` | `task close --task T-XXXX --json` is the ordinary guarded close path. `task finalize` remains the compatibility/debug route for the underlying finish/ready/close/audit plan. | 0.5.0 close transaction route. |
 | Close composes finish, readiness, proof append, and audit. | `task.finalize`, `task.close`, `task.audit-close` | `task close` preserves the proof boundaries internally through the finalize engine: finish bookkeeping, done readiness, close evidence append, and post-close audit. | 0.5.0 close-first lifecycle default. |
+| Successful close is terminal. | `task.close`, `task.status` | When public close returns `ok:true` and `closed-valid`, it emits no next status action; status remains available only for later explicit inspection or drift diagnosis. | T-0679 pre-stable simplification. |
 | Status and finalize diagnose readiness; close owns ordinary execution. | `task.status`, `task.finalize`, `task.close` | `task status --detail full`, `task close --dry-run`, and `task finalize --json` explain readiness; `task close --task T-XXXX --json` owns the ordinary proof-last close transaction. | T-0522 command-surface reduction and 0.5.0 close transaction route. |
 | Shared handoff edits are manual reviewed docs work. | `task.status`, `task.close`, `task.finalize` | No current CLI command writes or generates handoff fragments; use task status/close diagnostics and edit shared handoff docs deliberately before close. | T-0496 removed the broken handoff update write surface; T-0506 removed the stale handoff suggestion surface. |
 | Release and dev validation are not ordinary capsule lifecycle steps. | `release.gate`, `task.close`, `task.finalize`, `task.ready`, `dev.docker-check` | Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help. | Phase 7.2 advanced family boundary. |

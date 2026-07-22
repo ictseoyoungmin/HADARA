@@ -47,13 +47,13 @@ Implemented:
 - Minimal deterministic agent loop over ScriptedProvider and fake shell observations
 - Read-only MCP stdio server and read tools
 - Opt-in MCP evidence attach with approval metadata and private audit records
-- Operations status JSON read model
+- Adaptive task-status read model; top-level `status` is a deprecated alias, not a second evaluator
 - Live read-only dashboard APIs, projection cache, Preact single-asset operator console, and local server
 - Integrated read-only terminal TUI with snapshot, interactive, cache, and shared read-model paths
 - Release artifact, package smoke, clean-checkout smoke, release gate, dry-run, and approval-gated publish planning surfaces
 - Context graph, code index, context pack/slice, session-start routing, and local cache read models
 - Document registry, read maps, managed section patch plans, and protocol consistency diagnostics
-- Portable structured current-state canon with managed PROJECT_STATE/HANDOFF projections and session-start fast resume
+- Markdown-first task routing with a command-owned 0.5.x compatibility checkpoint
 
 Partially implemented:
 
@@ -81,7 +81,7 @@ Not implemented:
 
 `docs/`, `tasks/`, `.hadara/context`, `.hadara/state`, and agent context files belong to the project repository.
 
-`.hadara/state/current.json` owns the compact current release, latest/active task, next operator intent, current known problems, and validation baseline. `docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md` retain human-authored product/phase/history context but project those six current facts through managed sections. New-session read models prefer the structured canon and retain a 0.4.2 Markdown fallback for unmigrated projects.
+`docs/TASK_BOARD.md`, Task Capsules, and project-authored Markdown own inspectable task and project intent. `.hadara/state/current.json` remains a command-owned 0.5.x compatibility checkpoint, not Required Reading; default task selection prefers Markdown sources and treats a missing or malformed checkpoint as advisory. Managed checkpoint projections keep older readers operable during migration without becoming the human authoring surface.
 
 ### TUI Boundary
 

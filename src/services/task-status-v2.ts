@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createTaskWorkbenchReport, type TaskWorkbenchReport } from './task-workbench';
-import type { EvaluationState, ProjectStatusHealth, ProjectStatusNextActionV2, StatusReadinessV1 } from './project-status-v2';
+import type { EvaluationState, StatusHealth, StatusNextAction, StatusReadiness } from '../status/model';
 import type { WorkbenchNextAction } from './workbench-next-actions';
 import { parseMarkdownRowsUnderHeading } from './markdown-table';
+import { createTaskSelectionStatusV2Report, type TaskSelectionStatusV2Report } from './task-selection-status-v2';
 
 export type TaskCockpitPhase =
   | 'author-task'
@@ -26,15 +27,15 @@ export interface TaskStatusV2Report {
   generatedAt: string;
   projectRoot: string;
   phase: TaskCockpitPhase;
-  health: ProjectStatusHealth;
-  readiness: StatusReadinessV1 & {
+  health: StatusHealth;
+  readiness: StatusReadiness & {
     closeProofValid: boolean;
     currentReady: boolean;
   };
   evaluations: Array<{
     id: string;
     state: EvaluationState;
-    health: ProjectStatusHealth;
+    health: StatusHealth;
     summary: string;
   }>;
   task: TaskWorkbenchReport['task'];
@@ -44,8 +45,8 @@ export interface TaskStatusV2Report {
     evidenceRecords: number;
     nextActions: number;
   };
-  primaryNextAction: ProjectStatusNextActionV2 | null;
-  nextActions: ProjectStatusNextActionV2[];
+  primaryNextAction: StatusNextAction | null;
+  nextActions: StatusNextAction[];
   cockpit: {
     sourcePhase: string;
     phaseReason: string;
@@ -155,6 +156,20 @@ export function createTaskStatusV2Report(
   };
 }
 
+export function createAdaptiveTaskStatusV2Report(
+  projectRoot: string,
+  now = new Date(),
+  options: { detail?: 'fast' | 'full'; taskId?: string } = {}
+): TaskStatusV2Report | TaskSelectionStatusV2Report {
+  if (options.taskId) return createTaskStatusV2Report(projectRoot, options.taskId, now, options);
+  const selection = createTaskSelectionStatusV2Report(projectRoot, now, options);
+  const recommended = selection.recommendations[0];
+  if (!recommended?.taskCapsulePresent || !/^(draft|in progress)$/i.test(recommended.taskBoardStatus ?? '')) return selection;
+  const task = createTaskStatusV2Report(projectRoot, recommended.taskId, now, options);
+  task.issues.push(...selection.issues);
+  return task;
+}
+
 export function formatTaskStatusV2Report(report: TaskStatusV2Report): string {
   return [
     `[HADARA] task status ${report.taskId} ${report.phase} (${report.health})`,
@@ -166,7 +181,7 @@ export function formatTaskStatusV2Report(report: TaskStatusV2Report): string {
   ].join('\n');
 }
 
-function determineHealth(workbench: TaskWorkbenchReport): ProjectStatusHealth {
+function determineHealth(workbench: TaskWorkbenchReport): StatusHealth {
   if (!workbench.ok) return 'blocked';
   if (workbench.state.closeState === 'close-evidence-found-invalid' || workbench.state.closeState === 'close-evidence-malformed') return 'attention';
   if (workbench.state.readiness.status === 'closed-valid-current-blocked') return 'attention';
@@ -176,7 +191,7 @@ function determineHealth(workbench: TaskWorkbenchReport): ProjectStatusHealth {
   return 'ok';
 }
 
-function readinessIntent(phase: TaskCockpitPhase): StatusReadinessV1['intent'] {
+function readinessIntent(phase: TaskCockpitPhase): StatusReadiness['intent'] {
   if (phase === 'plan-work') return 'plan';
   if (phase === 'validate') return 'validate';
   if (phase === 'close-ready' || phase === 'repair-evidence' || phase === 'closed-stale') return 'close';
@@ -184,7 +199,7 @@ function readinessIntent(phase: TaskCockpitPhase): StatusReadinessV1['intent'] {
   return 'edit';
 }
 
-function readinessStatus(phase: TaskCockpitPhase, health: ProjectStatusHealth, workbench: TaskWorkbenchReport): StatusReadinessV1['status'] {
+function readinessStatus(phase: TaskCockpitPhase, health: StatusHealth, workbench: TaskWorkbenchReport): StatusReadiness['status'] {
   if (health === 'blocked') return 'blocked';
   if (phase === 'closed-valid') return 'terminal';
   if (phase === 'repair-evidence' || phase === 'closed-stale') return 'needs-review';
@@ -196,7 +211,7 @@ function readinessStatus(phase: TaskCockpitPhase, health: ProjectStatusHealth, w
   return 'needs-review';
 }
 
-function buildEvaluations(workbench: TaskWorkbenchReport, health: ProjectStatusHealth): TaskStatusV2Report['evaluations'] {
+function buildEvaluations(workbench: TaskWorkbenchReport, health: StatusHealth): TaskStatusV2Report['evaluations'] {
   const readinessChecked = !workbench.state.readiness.status.includes('not-checked') && !workbench.state.readiness.summary.includes('Fast task status skipped');
   return [
     {
@@ -226,7 +241,7 @@ function buildEvaluations(workbench: TaskWorkbenchReport, health: ProjectStatusH
   ];
 }
 
-function convertNextAction(action: WorkbenchNextAction): ProjectStatusNextActionV2 {
+function convertNextAction(action: WorkbenchNextAction): StatusNextAction {
   const command = action.command;
   const executeAlternative = action.executeCommand ? {
     command: action.executeCommand,
@@ -306,7 +321,7 @@ function readPlanState(projectRoot: string, capsulePath: string): TaskStatusV2Re
   return 'unknown';
 }
 
-function inferWriteBoundary(action: WorkbenchNextAction): ProjectStatusNextActionV2['writeBoundary'] {
+function inferWriteBoundary(action: WorkbenchNextAction): StatusNextAction['writeBoundary'] {
   const command = action.command ?? '';
   if (command.includes('task close') && !command.includes('--dry-run')) return 'task-close-transaction';
   if (command.includes('task close') && command.includes('--dry-run')) return 'read-only';

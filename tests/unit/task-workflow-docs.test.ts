@@ -97,11 +97,11 @@ describe('task workflow command semantics docs', () => {
     expect(agents).toContain('Parallelize read-only discovery, file inspection, independent validation');
     expect(agents).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
     expect(agents).toContain('agents should use `task status` for next-work selection, phase checks, and next-action guidance');
-    expect(agents).toContain('unless `hadara status --json` already exposed it');
-    expect(agents).toContain('equivalent `hadara status --json` projection');
+    expect(agents).toContain('`.hadara/state/current.json` is a command-owned compatibility checkpoint, not Required Reading');
+    expect(agents).toContain('Task Board, Task Capsules, and human-readable project docs own inspectable intent');
     expect(agents).not.toContain('unless `session start` already exposed it');
     expect(agents).not.toContain('equivalent `session start` projection');
-    expect(contract).toContain('| `task status --json` | `hadara.taskSelection.status.v2` | Read-only next-work selection. | Selection report was generated; not that a capsule exists. |');
+    expect(contract).toContain('| `task status --json` | `hadara.taskSelection.status.v2` or `hadara.task.status.v2` | Adaptive lifecycle ingress: selected-task cockpit when an active capsule is selected, otherwise next-work selection. | Status report was generated; not that work is ready to close. |');
     expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.status.v2` | Read-only compact selected-task cockpit. Fast mode may skip close-grade checks; use `--detail full` for full diagnostics. | Report generation succeeded for an existing task; not a readiness gate. |');
     expect(contract).toContain('| `task close --task T-XXXX --json` | `hadara.task.close.v2` | Default proof-last close transaction.');
   });

@@ -1,6 +1,6 @@
 import { createTaskSelectionReport, type TaskSelectionIssue, type TaskSelectionRecommendation, type TaskSelectionReport } from '../task/task-selection';
 import type { ProjectContinuation } from './project-current-state';
-import type { EvaluationState, ProjectStatusHealth, ProjectStatusNextActionV2, StatusReadinessV1 } from './project-status-v2';
+import type { EvaluationState, StatusHealth, StatusNextAction, StatusReadiness } from '../status/model';
 
 export interface TaskSelectionStatusV2Report {
   schemaVersion: 'hadara.taskSelection.status.v2';
@@ -11,15 +11,15 @@ export interface TaskSelectionStatusV2Report {
   generatedAt: string;
   projectRoot: string;
   phase: 'select-work' | 'idle' | 'review-next-work' | 'continuation-ready' | 'degraded';
-  health: ProjectStatusHealth;
-  readiness: StatusReadinessV1;
+  health: StatusHealth;
+  readiness: StatusReadiness;
   evaluations: Array<{
     id: string;
     state: EvaluationState;
-    health: ProjectStatusHealth;
+    health: StatusHealth;
     summary: string;
   }>;
-  primaryNextAction: ProjectStatusNextActionV2 | null;
+  primaryNextAction: StatusNextAction | null;
   recommendations: Array<{
     taskId: string;
     title: string;
@@ -38,7 +38,7 @@ export interface TaskSelectionStatusV2Report {
     migration: string;
   };
   selection: {
-    precedence: Array<{
+    precedence?: Array<{
       id: string;
       source: string;
       description: string;
@@ -50,13 +50,28 @@ export interface TaskSelectionStatusV2Report {
     primaryActionId: string | null;
   };
   sources: {
-    taskSelection: TaskSelectionReport;
+    detail: 'fast' | 'full';
+    summary: {
+      recommendations: number;
+      selectedSource: string;
+      currentStatePresent: boolean;
+      taskBoardPresent: boolean;
+      taskBoardRows: number;
+      agentHandoffPresent: boolean;
+      issueCodes: string[];
+    };
+    taskSelection?: TaskSelectionReport;
   };
   diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   issues: TaskSelectionIssue[];
 }
 
-export function createTaskSelectionStatusV2Report(projectRoot: string, now = new Date()): TaskSelectionStatusV2Report {
+export function createTaskSelectionStatusV2Report(
+  projectRoot: string,
+  now = new Date(),
+  options: { detail?: 'fast' | 'full' } = {}
+): TaskSelectionStatusV2Report {
+  const detail = options.detail ?? 'fast';
   const taskSelection = createTaskSelectionReport(projectRoot);
   const recommendation = taskSelection.recommendations[0] ?? null;
   const continuation = taskSelection.sources.currentState.continuation;
@@ -88,7 +103,7 @@ export function createTaskSelectionStatusV2Report(projectRoot: string, now = new
         state: 'evaluated',
         health: 'ok',
         summary: recommendation
-          ? `Selected ${recommendation.taskId} from ${recommendation.source}; precedence is explicit in selection.precedence.`
+          ? `Selected ${recommendation.taskId} from ${recommendation.source}.`
           : 'No recommendation matched the task-selection precedence chain.'
       },
       {
@@ -127,7 +142,7 @@ export function createTaskSelectionStatusV2Report(projectRoot: string, now = new
       migration: 'This v2 task-selection report is the default 0.5.x no-selected-task cockpit. Use the explicit v1 compatibility command only for legacy consumers.'
     },
     selection: {
-      precedence: taskSelectionPrecedence(),
+      ...(detail === 'full' ? { precedence: taskSelectionPrecedence() } : {}),
       selectedTaskId: recommendation?.taskId ?? null,
       selectedSource: recommendation?.source ?? null,
       selectedSourceKind: recommendation?.sourceKind ?? null,
@@ -138,7 +153,19 @@ export function createTaskSelectionStatusV2Report(projectRoot: string, now = new
         : 'No active task, structured next work, Task Board row, slice row, first-task creation candidate, or structured continuation was selected.',
       primaryActionId: primaryNextAction?.id ?? null
     },
-    sources: { taskSelection },
+    sources: {
+      detail,
+      summary: {
+        recommendations: taskSelection.recommendations.length,
+        selectedSource: taskSelection.summary.source,
+        currentStatePresent: taskSelection.sources.currentState.present,
+        taskBoardPresent: taskSelection.sources.taskBoard.present,
+        taskBoardRows: taskSelection.sources.taskBoard.rows,
+        agentHandoffPresent: taskSelection.sources.agentHandoff.present,
+        issueCodes: taskSelection.issues.map((issue) => issue.code)
+      },
+      ...(detail === 'full' ? { taskSelection } : {})
+    },
     issues: taskSelection.issues
   };
 }
@@ -157,8 +184,8 @@ export function formatTaskSelectionStatusV2Report(report: TaskSelectionStatusV2R
 function determinePhase(
   taskSelection: TaskSelectionReport,
   recommendation: TaskSelectionRecommendation | null,
-  action: ProjectStatusNextActionV2 | null,
-  continuationAction: ProjectStatusNextActionV2 | null
+  action: StatusNextAction | null,
+  continuationAction: StatusNextAction | null
 ): TaskSelectionStatusV2Report['phase'] {
   if (!taskSelection.ok) return 'degraded';
   if (recommendation && action) return action.kind === 'review' ? 'review-next-work' : 'select-work';
@@ -171,7 +198,7 @@ function determinePhase(
  * idle. Only "actionable" and "waiting-for-operator" override idle in this MVP;
  * "blocked"/"terminal"/"unresolved" intentionally fall through unchanged (T-0661 scope).
  */
-function continuationNextAction(continuation: ProjectContinuation | null): ProjectStatusNextActionV2 | null {
+function continuationNextAction(continuation: ProjectContinuation | null): StatusNextAction | null {
   if (!continuation) return null;
   const message = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
   if (continuation.disposition === 'waiting-for-operator') {
@@ -199,7 +226,7 @@ function continuationShellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-function nextActionFromRecommendation(recommendation: TaskSelectionRecommendation): ProjectStatusNextActionV2 {
+function nextActionFromRecommendation(recommendation: TaskSelectionRecommendation): StatusNextAction {
   if (recommendation.taskCapsulePresent && recommendation.taskId !== 'TBD') {
     return {
       id: 'inspect-recommended-task',
@@ -238,9 +265,9 @@ function nextActionFromRecommendation(recommendation: TaskSelectionRecommendatio
 
 function buildReadiness(
   phase: TaskSelectionStatusV2Report['phase'],
-  health: ProjectStatusHealth,
-  action: ProjectStatusNextActionV2 | null
-): StatusReadinessV1 {
+  health: StatusHealth,
+  action: StatusNextAction | null
+): StatusReadiness {
   if (health === 'degraded') return { intent: 'orient', status: 'needs-context', reason: 'Task selection has degraded source diagnostics.' };
   if (phase === 'idle') return { intent: 'plan', status: 'terminal', reason: 'No open task recommendation was found.' };
   if (phase === 'continuation-ready') return { intent: 'plan', status: 'needs-review', reason: 'A structured current-state continuation was found and requires review before acting.' };

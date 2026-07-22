@@ -3,10 +3,12 @@ import type { InitProfile, InitProfileSpec } from './types';
 export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   basic: {
     profile: 'basic',
-    generatedDocsDescription: 'Core current-state docs, workflow reference, registries, and task directory',
-    intendedUse: 'Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead.',
-    specialNotes: 'Basic keeps continuation fields in PROJECT_STATE instead of generating AGENT_HANDOFF.',
+    generatedDocsDescription: 'Agent contract, compact workflow, Task Board, registries, and task directory',
+    intendedUse: 'Small projects that need Task Capsules and evidence without shared project-state or handoff documents.',
+    specialNotes: 'Basic routes work directly from AGENTS, Task Board, and Task Capsules.',
     docs: {
+      contextRouter: false,
+      projectState: false,
       architecture: false,
       developmentSlices: false,
       decisions: false,
@@ -19,10 +21,12 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   },
   standard: {
     profile: 'standard',
-    generatedDocsDescription: 'Core current-state docs, workflow reference, registries, and task directory',
+    generatedDocsDescription: 'Basic scaffold plus project state and compact read routing',
     intendedUse: 'Most multi-session projects that need lightweight planning and decision context.',
     specialNotes: 'Default profile. Add architecture, decisions, roadmap, security, test, or agent guide docs only when the project needs them.',
     docs: {
+      contextRouter: true,
+      projectState: true,
       architecture: false,
       developmentSlices: false,
       decisions: false,
@@ -39,6 +43,8 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
     intendedUse: 'Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.',
     specialNotes: 'Governed projects generate AGENT_HANDOFF for compact continuation state. Add reference docs only when they are project-owned and maintained.',
     docs: {
+      contextRouter: true,
+      projectState: true,
       architecture: false,
       developmentSlices: false,
       decisions: false,
@@ -57,7 +63,8 @@ export function parseInitProfile(value: string): InitProfile {
 }
 
 export function requiredDocsForProfile(profile: InitProfile): string[] {
-  const docs = ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+  const docs = ['docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+  if (profile === 'standard' || profile === 'governed') docs.unshift('docs/PROJECT_STATE.md');
   if (profile === 'governed') {
     docs.push('docs/AGENT_HANDOFF.md');
   }

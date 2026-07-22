@@ -39,8 +39,8 @@ export function createInitUpgradeReport(projectRoot: string, profile: InitProfil
       path: write.path,
       status: mode === 'execute' ? (write.before === null ? 'created' : 'updated') : 'planned',
       summary: write.before === null
-        ? `${write.path} ${mode === 'execute' ? 'was created' : 'would be created'} as the structured current-state canon.`
-        : `${write.path} ${mode === 'execute' ? 'was synchronized' : 'would be synchronized'} from the structured current-state canon.`
+        ? `${write.path} ${mode === 'execute' ? 'was created' : 'would be created'} as a command-owned compatibility checkpoint.`
+        : `${write.path} ${mode === 'execute' ? 'was synchronized' : 'would be synchronized'} from the compatibility checkpoint.`
     });
     if (mode === 'execute') {
       const existing = writes.find((candidate) => candidate.path === write.path);
@@ -283,23 +283,17 @@ function mergeAgentsRequiredReading(content: string | null, profile: InitProfile
 
 function agentsRequiredReadingRowsForProfile(profile: InitProfile): Array<{ document: string; when: string; purpose: string }> {
   const rows: Array<{ document: string; when: string; purpose: string }> = [
-    { document: '`.hadara/state/current.json`', when: 'Every session unless `hadara status --json` already exposed it', purpose: 'Structured current release, task continuity, next intent, problems, and validation baseline.' },
-    { document: '`docs/PROJECT_STATE.md`', when: 'Every session', purpose: 'Current product and capability state.' },
     { document: '`docs/TASK_BOARD.md`', when: 'Every session', purpose: 'Current task queue and status.' },
     { document: '`docs/HADARA_WORKFLOW.md`', when: 'Every session', purpose: 'Workflow rules and command-surface routing.' }
   ];
   if (profile === 'standard' || profile === 'governed') {
-    rows.push(
-      { document: '`docs/ARCHITECTURE.md`', when: 'Architecture, component, or boundary work', purpose: 'Current system shape and ownership boundaries.' },
-      { document: '`docs/DECISIONS.md`', when: 'Project-level decision work', purpose: 'Durable project decisions.' },
-      { document: '`docs/ROADMAP.md`', when: 'Roadmap, milestone, or scope planning', purpose: 'Longer-term priorities and deferred work.' }
+    rows.unshift(
+      { document: '`.hadara/context/HADARA_CONTEXT.md`', when: 'Every session', purpose: 'Compact project-local read routing.' },
+      { document: '`docs/PROJECT_STATE.md`', when: 'Every session', purpose: 'Current product and capability state.' }
     );
   }
   if (profile === 'governed') {
-    rows.push(
-      { document: '`docs/AGENT_HANDOFF.md`', when: 'Every session', purpose: 'Compact continuation state.' },
-      { document: '`docs/SECURITY_MODEL.md`', when: 'Security, secret, permission, or evidence-safety work', purpose: 'Project security invariants.' },
-    );
+    rows.push({ document: '`docs/AGENT_HANDOFF.md`', when: 'Every session', purpose: 'Compact continuation state.' });
   }
   return rows;
 }

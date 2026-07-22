@@ -1,14 +1,14 @@
 # PROJECT_STATE
 
-<!-- hadara:managed:start current-state-canon {"schema":"hadara.managedSection.v1","owner":"current-state.projection","kind":"single-block","mode":"replace","version":1,"required":true,"closeSourceRole":"included"} -->
-## Canonical Current State
+<!-- hadara:managed:start current-state-canon {"schema":"hadara.managedSection.v1","owner":"current-state.checkpoint-projection","kind":"single-block","mode":"replace","version":1,"required":false,"closeSourceRole":"included"} -->
+## Compatibility State Checkpoint
 
-This section is projected from `.hadara/state/current.json`. Edit the structured state, then use the existing init-upgrade projection path; do not hand-edit this block.
+This command-owned projection keeps older 0.5.x readers compatible. It is not Required Reading or the human source of project intent; Task Board, Task Capsules, and project-authored Markdown take precedence.
 
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0678 Project Status Continuation Routing Fix |
+| Latest Completed Task | T-0682 Three-profile autonomous Codex dogfood |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -29,8 +29,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 ## Ownership
 
-This document is the compact human projection for product and phase context.
-The six current-state facts live in `.hadara/state/current.json`; this document is not their prose source or a completed-task log.
+This document is the human source for product and phase context. Task identity and lifecycle state come from the Task Board and Task Capsules; completed history belongs in the Historical Index.
 
 ## Product
 
@@ -45,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. T-0634 through T-0649 produced and published the `0.5.0-rc.0` status-ingress release candidate on npm `next`. T-0658 through T-0666 promoted the source candidate to `0.5.0-rc.1` after close-boundary hardening, continuation fixes, schema-validator `anyOf` support, and external dogfood follow-up. T-0667 recycled release readiness evidence for `0.5.0-rc.1`; T-0668 records the completed npm `next` publish, GitHub Release note artifact, and installed-package recycle from `hadara@next`. T-0669 records public GitHub Release `v0.5.0-rc.1` publication and Docker installed-package dogfood from public `hadara@next`. T-0670 through T-0676 addressed reviewer-requested release-readiness recycle design fixes. T-0677 closes the remaining pre-rc.2 reviewer blockers: structured HANDOFF semantic fail-closed behavior and validation-baseline rollup preservation. The `0.5.0-rc.2` scope is the current reviewer-fix state plus Phase D through the end of the 0.5 DAG/status redesign before release readiness is recycled.
+v0.4.6 is published and recycled. The `0.5.0-rc.0` and `0.5.0-rc.1` line proved the status/continuation design but also exposed pre-stable product complexity. T-0679 completed the single adaptive `task status` lifecycle and terminal close contract; T-0680 completed Markdown-first task selection and demoted `current.json` to a compatibility checkpoint; T-0681 made the three fresh profile scaffolds materially distinct, portable, and doctor-clean. T-0682 then completed current-build autonomous dogfood across basic, standard, and governed: nine capsules closed and six fresh-session continuations succeeded without coordinator implementation. The core design is validated, while the accepted spec now records bounded P0-P2 remediation findings that must be reviewed before `0.5.0` stable. Dashboard remains deliberately outside this core-stability line.
 
 | Stage | State | Purpose |
 |---|---|---|
@@ -84,7 +83,9 @@ v0.4.6 is published and recycled. T-0634 through T-0649 produced and published t
 
 | Concern | Source |
 |---|---|
-| Release/task continuity, next intent, current problems, validation baseline | `.hadara/state/current.json` |
+| Product phase, project intent, current problems | `docs/PROJECT_STATE.md` |
+| Active and completed task lifecycle | `docs/TASK_BOARD.md` and `tasks/T-*/TASK.md` |
+| Compatibility checkpoint for older 0.5.x readers | `.hadara/state/current.json` |
 | Product and phase projection | `docs/PROJECT_STATE.md` |
 | Next-agent continuity projection | `docs/AGENT_HANDOFF.md` |
 | Task queue | `docs/TASK_BOARD.md` |

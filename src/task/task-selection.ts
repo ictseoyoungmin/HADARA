@@ -13,13 +13,14 @@ export interface TaskSelectionReport {
   summary: {
     recommendations: number;
     source: string;
-    policy?: 'handoff-first';
+    policy?: 'markdown-first';
   };
   recommendations: TaskSelectionRecommendation[];
   backlog?: TaskSelectionBacklogItem[];
   sources: {
     currentState: {
       path: string;
+      authority: 'compatibility-checkpoint';
       present: boolean;
       activeTask: string | null;
       nextWork: ProjectCurrentState['nextWork'] | null;
@@ -94,7 +95,7 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
   const taskBoardRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
   const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows);
   const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : taskBoardRecommendation;
-  const recommendation = currentStateRecommendation ?? handoffRecommendation ?? defaultRecommendation ?? firstTaskRecommendation;
+  const recommendation = handoffRecommendation ?? defaultRecommendation ?? currentStateRecommendation ?? firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(projectRoot, board.rows, recommendation?.taskId ?? null);
   if (!recommendation) {
@@ -113,13 +114,14 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
     summary: {
       recommendations: recommendations.length,
       source: recommendation?.source ?? 'none',
-      policy: 'handoff-first'
+      policy: 'markdown-first'
     },
     recommendations,
     backlog,
     sources: {
       currentState: {
         path: PROJECT_CURRENT_STATE_PATH,
+        authority: 'compatibility-checkpoint',
         present: currentState.present,
         activeTask: currentState.state?.activeTask?.id ?? null,
         nextWork: currentState.state?.nextWork ?? null,
@@ -138,7 +140,7 @@ function readCurrentState(projectRoot: string, issues: TaskSelectionIssue[]): { 
   const read = readProjectCurrentState(projectRoot);
   for (const issue of read.issues) {
     issues.push({
-      severity: issue.severity === 'error' ? 'error' : 'warning',
+      severity: 'warning',
       code: issue.code,
       message: issue.message,
       path: issue.path
@@ -211,7 +213,7 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     return {
       taskId: state.activeTask.id,
       title: boardRow?.title ?? state.activeTask.title,
-      reason: `Structured current-state canon names ${state.activeTask.id} as the active task.`,
+      reason: `Compatibility current-state checkpoint names ${state.activeTask.id} as the active task.`,
       source: PROJECT_CURRENT_STATE_PATH,
       sourceKind: 'current-state',
       taskBoardStatus: boardRow?.status ?? null,
@@ -246,10 +248,10 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     taskId,
     title: resolvedTitle,
     reason: adoptionBaselineReviewOnly
-      ? 'Structured current-state canon names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
+      ? 'Compatibility current-state checkpoint names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
       : boardRow && !knownTaskId
       ? 'Existing open Task Board row closely matches the structured current-state next work.'
-      : 'Next work from the structured current-state canon.',
+      : 'Fallback next work from the compatibility current-state checkpoint.',
     source: PROJECT_CURRENT_STATE_PATH,
     sourceKind: 'current-state',
     taskBoardStatus: boardRow?.status ?? null,

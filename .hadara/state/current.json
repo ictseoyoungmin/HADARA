@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 279,
+  "rev": 287,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0678",
-    "title": "Project Status Continuation Routing Fix"
+    "id": "T-0682",
+    "title": "Three-profile autonomous Codex dogfood"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,27 +14,27 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Prepare 0.5.0-rc.2 after Phase D through end is implemented and release readiness is recycled.",
-    "reason": "T-0678 restores top-level project status routing for this continuation; the rc.2 implementation/release-readiness line continues after this capsule.",
+    "title": "Remediate the prioritized autonomous-dogfood findings before 0.5.0 stable.",
+    "reason": "Core lifecycle continuity passed, but the report/spec record three P0 and several P1/P2 agent-UX defects that should not ship unchanged.",
     "references": [
       {
-        "path": "docs/RELEASE_READINESS.md",
+        "path": "`DOGFOOD_REPORT.md`",
         "required": true
       },
       {
-        "path": "docs/specs/0.5/README.md",
+        "path": "`docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md#autonomous-dogfood-findings`",
         "required": true
       },
       {
-        "path": "tasks/T-0660-dag-evaluator-foundations-phase-b-declarative-dag-status-redesig/HANDOFF.md",
+        "path": "T-0682 evidence",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0678",
-      "path": "tasks/T-0678-project-status-continuation-routing-fix/HANDOFF.md"
+      "workId": "T-0682",
+      "path": "tasks/T-0682-three-profile-autonomous-codex-dogfood/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

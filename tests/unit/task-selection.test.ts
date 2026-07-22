@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('task selection recommendation', () => {
-  it('prefers structured current-state active task over handoff prose', () => {
+  it('keeps human-readable handoff routing ahead of the compatibility checkpoint', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with stale handoff work.',
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
@@ -28,15 +28,12 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: '.hadara/state/current.json', policy: 'handoff-first' },
+      summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'markdown-first' },
       recommendations: [
         expect.objectContaining({
-          taskId: active.id,
-          title: 'Structured Active Work',
-          source: '.hadara/state/current.json',
-          sourceKind: 'current-state',
-          taskCapsulePresent: true,
-          createCommand: null
+          title: 'Stale handoff work',
+          source: 'docs/AGENT_HANDOFF.md',
+          sourceKind: 'handoff'
         })
       ],
       sources: {
@@ -133,7 +130,7 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'handoff-first' },
+      summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'markdown-first' },
       recommendations: [
         expect.objectContaining({
           taskId: 'TBD',
@@ -173,7 +170,7 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: 'docs/DEVELOPMENT_SLICES.md', policy: 'handoff-first' },
+      summary: { recommendations: 1, source: 'docs/DEVELOPMENT_SLICES.md', policy: 'markdown-first' },
       recommendations: [
         expect.objectContaining({
           taskId: 'T-0190',
@@ -285,7 +282,7 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: 'project-scaffold', policy: 'handoff-first' },
+      summary: { recommendations: 1, source: 'project-scaffold', policy: 'markdown-first' },
       recommendations: [
         expect.objectContaining({
           taskId: 'TBD',
@@ -349,7 +346,7 @@ describe('task selection recommendation', () => {
       sourceKind: 'current-state',
       createCommand: null,
       createCommandAllowed: false,
-      reason: 'Structured current-state canon names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
+      reason: 'Compatibility current-state checkpoint names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
     });
     expect(report.recommendations[0].operatorGuidance).toContain('Existing task history is present');
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
@@ -482,7 +479,7 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report.recommendations).toEqual([]);
-    expect(report.summary).toMatchObject({ recommendations: 0, source: 'none', policy: 'handoff-first' });
+    expect(report.summary).toMatchObject({ recommendations: 0, source: 'none', policy: 'markdown-first' });
     expect(report.backlog).toEqual([
       expect.objectContaining({
         taskId: legacy.id,

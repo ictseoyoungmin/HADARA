@@ -1,5 +1,7 @@
 # HADARA 0.5.x Combined Agent Loop Plan
 
+> Pre-stable override: `docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md` replaces this document's separate global `status` router with adaptive `task status`. Retain the material below as design history for evaluation and close semantics, not as the stable command contract.
+
 **Document status:** Final-candidate draft / local planning only  
 **Target:** HADARA 0.5.0 through 0.5.x  
 **Baseline:** HADARA 0.4.6 stable  

@@ -9,7 +9,7 @@ This is a product boundary, not a claim that every diagnostic or integration com
 
 | Command ID | Role | Ordinary use |
 |---|---|---|
-| `task.status` | Select and inspect work. | Before create and after selecting a capsule. |
+| `task.status` | Enter the lifecycle, select work, or inspect the active capsule. | At session start and after creating or deliberately switching capsules. |
 | `task.create` | Create one bounded Task Capsule. | Once when no suitable capsule exists. |
 | `validation.run` | Execute or honestly record validation evidence. | At least once before close. |
 | `task.close` | Execute the guarded proof-last close transaction. | Once after implementation, evidence, and close-source docs are ready. |
@@ -24,7 +24,7 @@ Bootstrap `hadara init` and human/agent implementation edits are outside this co
 |---|---|---|
 | 1 | `hadara task status --json` | One safe next action. |
 | 2 | `hadara task create "..." --json` | One capsule id and path. |
-| 3 | `hadara task status --task T-XXXX --json` | Current phase, blockers, and next action. |
+| 3 | `hadara task status --json` | Active capsule phase, blockers, and next action; `--task` is only needed for an explicit non-default capsule. |
 | 4 | `hadara validation run ...` | Durable command-log evidence. |
 | 5 | `hadara task close --task T-XXXX --json` | `closed-valid` or a specific actionable blocker; internally reviews and guards the close transaction. |
 | 6 | `hadara task close --task T-XXXX --dry-run --json` or `hadara task status --task T-XXXX --detail full --json` | Optional diagnostic/review call when the primary close reports a blocker. |
@@ -45,7 +45,7 @@ The ordinary path budget is `<= 6` invocations after init. Clean work should usu
 
 The first-file metric is an explicit generated-instruction-following simulation, not a claim about human reading speed. The default built-CLI run reports `includesPackageInstallation:false`; release readiness must repeat the measurement with an installed package and pass its real install duration via `--installation-mode installed-package --installation-duration-ms <ms>`.
 
-Setup (`init`) and the post-close `docs doctor` measurement probe appear in `cliCalls` but do not consume the six-call primary lifecycle budget. Manual edits count operator/agent-authored Task Capsule documents; CLI-owned evidence, Task Board, structured state, and managed projections are not mislabeled as manual edits.
+Setup (`init`) and any explicit diagnostics appear in `cliCalls` but do not consume the primary lifecycle budget. Successful close is terminal; measurement must not run task status merely to reconfirm `closed-valid`. Manual edits count operator/agent-authored Task Capsule documents; CLI-owned evidence and indexes are not mislabeled as manual edits.
 
 The initial observational target on a local temp filesystem is `<= 15,000 ms` total for the six CLI calls and `closed-valid` on the first clean finalize execution. Mounted-workspace timings are environment signals, not correctness gates.
 

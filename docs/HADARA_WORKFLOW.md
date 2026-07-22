@@ -72,10 +72,9 @@ After init, review:
 |---|---|---|
 | 1 | `AGENTS.md` | Entry rules and required reading. |
 | 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |
-| 3 | `.hadara/state/current.json` | Structured current release, task continuity, next intent, problems, and validation baseline. |
-| 4 | `docs/PROJECT_STATE.md` | Human-readable product/phase projection. |
-| 5 | `docs/TASK_BOARD.md` | Task index. |
-| 6 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
+| 3 | `docs/PROJECT_STATE.md` | Human-readable product and phase state. |
+| 4 | `docs/TASK_BOARD.md` | Inspectable task index and active-work source. |
+| 5 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
@@ -157,38 +156,15 @@ The full contract and command order are in `docs/RELEASE_READINESS.md` under “
 
 ## Session Start
 
-Use status at the beginning of a human/agent work session, after switching tasks, or when project state is unclear.
+Use task status at the beginning of a human/agent work session, after switching tasks, or when project state is unclear.
 
 ```bash
-hadara status --json
+hadara task status --json
 hadara task status --task T-XXXX --json
 hadara context pack --task T-XXXX --json
 ```
 
-`status` is the project/session ingress read model. It does not create tasks, append evidence, warm caches, validate completion, or close work.
-When `.hadara/state/current.json` exists, `status` exposes active/latest task, release, next operator intent, validation baseline, and current known problems directly. Use `context pack` only after a task is selected and file context is actually needed.
-
-### Validation Baseline Promotion
-
-When a reviewed validation set becomes the project’s trusted resume baseline, promote it through the structured current-state surface instead of hand-editing managed projection blocks:
-
-```bash
-hadara status baseline promote \
-  --release 0.5.0-rc.1 \
-  --task T-XXXX \
-  --summary "Focused validation, docs doctor, and Docker sync-build passed." \
-  --evidence ev:T-XXXX:abc,ev:T-XXXX:def \
-  --json
-
-hadara status baseline promote \
-  --release 0.5.0-rc.1 \
-  --task T-XXXX \
-  --summary "Focused validation, docs doctor, and Docker sync-build passed." \
-  --evidence ev:T-XXXX:abc,ev:T-XXXX:def \
-  --execute --plan-hash sha256:... --json
-```
-
-The dry-run reports the current-state/projection write set and `planHash`. Execute requires the reviewed `--plan-hash`, verifies the supplied evidence ids exist under the task and have `outcome=passed`, then updates `.hadara/state/current.json` plus the managed current-state sections in `docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md`.
+`task status` reads the Task Board, Task Capsules, and human-readable routing docs. It does not create tasks, append evidence, warm caches, validate completion, or close work. The deprecated top-level `status` alias calls the same evaluator. Use `context pack` only after a task is selected and file context is actually needed.
 
 ## Selecting or Creating Work
 
@@ -262,7 +238,7 @@ Use the high-level lifecycle path for ordinary work:
 hadara task status --task T-XXXX --json
 
 # Finalize Task Capsule docs and tracked state docs before closing.
-# Active/latest task facts in the structured canon are synchronized by task close; separately authored product/phase context must already be current.
+# Task Board and Task Capsule prose must be current before close; project-authored product/phase context is updated deliberately.
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --dry-run --json

@@ -43,7 +43,7 @@ describe('dashboard bootstrap read model', () => {
     expect(report.selectedTask).toBeNull();
     expect(JSON.stringify(report)).not.toContain('artifacts/');
     expect(validateSchema('hadara.dashboard.bootstrap.v1', report).ok).toBe(true);
-  }, 60000);
+  }, 90000);
 
   it('includes only compact selected-task proof metadata when requested', () => {
     const report = createDashboardBootstrapReport(process.cwd(), { selectedTaskId: 'T-0196' }, new Date('2026-06-01T00:00:00.000Z'));

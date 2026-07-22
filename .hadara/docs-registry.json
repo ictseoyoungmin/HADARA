@@ -8,7 +8,7 @@
       "title": "HADARA_CONTEXT",
       "owner": "hadara-docs",
       "kind": "project-context",
-      "status": "canonical",
+      "status": "reference",
       "scope": "project",
       "profiles": [
         "basic",
@@ -16,13 +16,13 @@
         "governed"
       ],
       "readWhen": [
-        "session-start"
+        "never-default"
       ],
-      "requiredReading": true,
+      "requiredReading": false,
       "updateOwner": "mixed",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "included",
+      "closeSourceRole": "excluded",
       "supersedes": [],
       "generatedBy": "hadara init",
       "origin": {
@@ -2211,6 +2211,32 @@
       }
     },
     {
+      "path": "docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md",
+      "title": "PRE STABLE LIFECYCLE SIMPLIFICATION",
+      "owner": "project",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review"
+    },
+    {
       "path": "docs/specs/0.5/README.md",
       "title": "HADARA 0.5.x Development Plan Index",
       "owner": "project",
@@ -2354,7 +2380,7 @@
       }
     }
   ],
-  "generatedAt": "2026-07-17T10:33:48.208Z",
+  "generatedAt": "2026-07-22T08:19:21.257Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"

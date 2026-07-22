@@ -1,14 +1,14 @@
 # AGENT_HANDOFF
 
-<!-- hadara:managed:start current-state-canon {"schema":"hadara.managedSection.v1","owner":"current-state.projection","kind":"single-block","mode":"replace","version":1,"required":true,"closeSourceRole":"included"} -->
-## Canonical Continuation State
+<!-- hadara:managed:start current-state-canon {"schema":"hadara.managedSection.v1","owner":"current-state.checkpoint-projection","kind":"single-block","mode":"replace","version":1,"required":false,"closeSourceRole":"included"} -->
+## Compatibility Continuation Checkpoint
 
-This section is projected from `.hadara/state/current.json` so a new session can resume without reconstructing project history from scratch.
+This command-owned projection supports older 0.5.x readers. New sessions use `hadara task status`, the Task Board, and the selected Task Capsule; raw `.hadara/state/current.json` is not normal reading.
 
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0678 Project Status Continuation Routing Fix | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0682 Three-profile autonomous Codex dogfood | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |
@@ -29,8 +29,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 ## Ownership
 
-This document is the compact human projection for next-session continuity.
-The structured canon owns the active task, next intent, live warnings, and validation baseline; completed history belongs to the Historical Index.
+This optional document owns explicit cross-session handoff prose and live warnings for governed projects. Task identity and lifecycle state remain inspectable in the Task Board and Task Capsules; completed history belongs to the Historical Index.
 
 ## Historical Index
 

@@ -623,7 +623,7 @@ describe('Operations Status JSON', () => {
     expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
   });
 
-  it('prints v2 fast JSON by default and keeps v1 compatibility and diagnostics explicit', () => {
+  it('aliases default status to task status and keeps legacy diagnostics explicit', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -641,14 +641,14 @@ describe('Operations Status JSON', () => {
     const stateOnly = JSON.parse(String(log.mock.calls[3]?.[0]));
     const summary = JSON.parse(String(log.mock.calls[4]?.[0]));
     const compatFull = JSON.parse(String(log.mock.calls[5]?.[0]));
-    expect(first.schemaVersion).toBe('hadara.project.status.v2');
-    expect(first.command).toBe('status');
-    expect(first.compatibility.legacyCommand).toBe('hadara status --compat v1 --json');
+    expect(first.schemaVersion).toBe('hadara.taskSelection.status.v2');
+    expect(first.command).toBe('task.status');
+    expect(first.compatibility.legacyCommand).toBe('hadara task status --compat v1 --json');
     expect(compat.schemaVersion).toBe('hadara.ops.status.v1');
     expect(compat.command).toBe('ops.status');
     expect(compat.compatibility).toMatchObject({
-      defaultSchemaVersion: 'hadara.project.status.v2',
-      recommendedCommand: 'hadara status --json'
+      defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+      recommendedCommand: 'hadara task status --json'
     });
     expect(compat.stateConsistency).toBeUndefined();
     expect(compat.handoff.knownProblems).toEqual([]);
@@ -657,8 +657,8 @@ describe('Operations Status JSON', () => {
       open: 0,
       highOpen: 0
     });
-    expect(full.schemaVersion).toBe('hadara.project.status.v2');
-    expect(full.command).toBe('status');
+    expect(full.schemaVersion).toBe('hadara.taskSelection.status.v2');
+    expect(full.command).toBe('task.status');
     expect(compatFull.schemaVersion).toBe('hadara.ops.status.v1');
     expect(compatFull.stateConsistency).toMatchObject({
       mode: 'advisory',
@@ -689,6 +689,17 @@ describe('Operations Status JSON', () => {
       }
     });
     expect(summary.stateConsistency).toBeUndefined();
+  });
+
+  it('does not keep validation-baseline mutation under the deprecated status alias', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+
+    expect(() => handleStatusCommand({
+      args: ['status', 'baseline', 'promote', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    })).toThrow('status baseline promote was removed before 0.5 stable');
   });
 
   it('can count task board statuses without scanning task capsules', () => {
@@ -722,6 +733,38 @@ describe('Operations Status JSON', () => {
       Done: 1,
       'In Progress': 1,
       'Needs Review': 1
+    });
+  });
+
+  it('uses the active-capsule task cockpit through the deprecated status alias', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    const task = createTaskCapsule(root, 'Status alias active capsule');
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
+      schemaVersion: 'hadara.projectCurrentState.v1',
+      rev: 1,
+      profile: 'governed',
+      currentRelease: 'unversioned',
+      latestCompletedTaskBasis: 'highest-done-task-id',
+      latestCompletedTask: null,
+      activeTask: { id: task.id, title: task.title },
+      nextWork: null,
+      nextOperatorIntent: 'Resume active work.',
+      continuation: null,
+      currentKnownProblems: [],
+      validationBaseline: { summary: 'No validation baseline.', evidence: [] }
+    }, null, 2)}\n`, 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+
+    expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
+      schemaVersion: 'hadara.task.status.v2',
+      command: 'task.status',
+      scope: 'task',
+      mode: 'selected-task',
+      taskId: task.id
     });
   });
 

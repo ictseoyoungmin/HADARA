@@ -6,7 +6,6 @@ This repository must be developed using the HADARA protocol.
 
 | Document | When to Read | Purpose |
 |---|---|---|
-| `.hadara/state/current.json` | Every session, unless `hadara status --json` already exposed it | Structured release, active/latest task, next intent, current problems, and validation baseline. |
 | `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |
 | `docs/PROJECT_STATE.md` | Every session | Current project state. |
 | `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff. |
@@ -37,7 +36,7 @@ Use semantic tiers to keep session startup compact:
 | `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
 | `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
 
-`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `.hadara/state/current.json` or the equivalent `hadara status --json` projection before task-work or conditional-reference docs. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; use `docs/AGENT_HANDOFF.md` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
+`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `hadara task status --json`, `docs/TASK_BOARD.md`, and the selected Task Capsule before conditional-reference docs. `.hadara/state/current.json` is a command-owned compatibility checkpoint, not Required Reading or a human authoring surface. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; use its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
 
 ## Rules
 
@@ -55,7 +54,7 @@ Use semantic tiers to keep session startup compact:
 - Preserve the portable/project store boundary.
 - Follow validation constraints recorded in `docs/AGENT_HANDOFF.md` and the active Task Capsule.
 - Update `EVIDENCE.md` and `evidence.jsonl` for meaningful checks.
-- Keep `.hadara/state/current.json` and its managed PROJECT_STATE/HANDOFF projections aligned; task create/close owns active/latest task synchronization when the canon is present.
+- Treat `.hadara/state/current.json` as a command-owned compatibility checkpoint. Do not require agents to read or edit it; Task Board, Task Capsules, and human-readable project docs own inspectable intent.
 - Update `docs/TASK_BOARD.md`, product/phase prose in `docs/PROJECT_STATE.md`, and `docs/DEVELOPMENT_SLICES.md` when their separately owned state changes.
 - Update `docs/AGENT_HANDOFF.md` before stopping.
 - Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`; do not jump to deferred dashboard, real provider, MCP, or full agent-controller work before the required harness, policy, and evidence gates are ready.

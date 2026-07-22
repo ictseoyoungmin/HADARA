@@ -1,5 +1,29 @@
 export type EvaluationState = 'evaluated' | 'not-evaluated' | 'unavailable' | 'stale' | 'invalid' | 'partial';
 
+export type StatusHealth = 'ok' | 'attention' | 'blocked' | 'degraded' | 'unknown';
+
+export interface StatusReadiness {
+  intent: 'orient' | 'plan' | 'edit' | 'validate' | 'close' | 'release';
+  status: 'ready' | 'needs-context' | 'needs-review' | 'not-evaluated' | 'blocked' | 'terminal';
+  reason: string;
+}
+
+export interface StatusNextAction {
+  id: string;
+  kind: 'command' | 'review' | 'create' | 'none';
+  command?: string;
+  executeAlternative?: {
+    command: string;
+    writeBoundary: StatusNextAction['writeBoundary'];
+    requiresReview: boolean;
+  };
+  message: string;
+  writeBoundary: 'read-only' | 'task-local' | 'project-state' | 'evidence-append' | 'task-close-transaction' | 'none';
+  risk: 'none' | 'low' | 'medium' | 'high';
+  requiresReview: boolean;
+  writes: boolean;
+}
+
 export type FactAuthority = 'canonical' | 'declared' | 'projection' | 'fallback' | 'observed';
 
 export type FactState = 'present' | 'missing' | 'invalid' | 'stale' | 'ambiguous';

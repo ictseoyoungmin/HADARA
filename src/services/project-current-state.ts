@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
-import packageJson from '../../package.json';
 import { createEvidenceListReport } from './evidence-list';
 import { managedSectionBlock } from './managed-sections';
 import { parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';
@@ -130,11 +129,11 @@ export interface ProjectValidationBaselinePromotionPlan {
 
 const MANAGED_METADATA = {
   schema: 'hadara.managedSection.v1' as const,
-  owner: 'current-state.projection',
+  owner: 'current-state.checkpoint-projection',
   kind: 'single-block' as const,
   mode: 'replace' as const,
   version: 1,
-  required: true,
+  required: false,
   closeSourceRole: 'included' as const
 };
 
@@ -143,7 +142,7 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
     schemaVersion: 'hadara.projectCurrentState.v1',
     rev: 1,
     profile,
-    currentRelease: packageJson.version,
+    currentRelease: 'unversioned',
     latestCompletedTaskBasis: 'highest-done-task-id',
     latestCompletedTask: null,
     activeTask: null,
@@ -309,9 +308,9 @@ export function inspectProjectCurrentStateSemantics(projectRoot: string): Projec
 }
 
 export function renderProjectStateCanonSection(state: ProjectCurrentState): string {
-  return managedSectionBlock(PROJECT_STATE_SECTION_ID, MANAGED_METADATA, `## Canonical Current State
+  return managedSectionBlock(PROJECT_STATE_SECTION_ID, MANAGED_METADATA, `## Compatibility State Checkpoint
 
-This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\`. Edit the structured state, then use the existing init-upgrade projection path; do not hand-edit this block.
+This command-owned projection keeps older 0.5.x readers compatible. It is not Required Reading or the human source of project intent; Task Board, Task Capsules, and project-authored Markdown take precedence.
 
 | Field | Value |
 |---|---|
@@ -331,9 +330,9 @@ ${knownProblemsTable(state.currentKnownProblems)}
 }
 
 export function renderHandoffCanonSection(state: ProjectCurrentState): string {
-  return managedSectionBlock(HANDOFF_STATE_SECTION_ID, MANAGED_METADATA, `## Canonical Continuation State
+  return managedSectionBlock(HANDOFF_STATE_SECTION_ID, MANAGED_METADATA, `## Compatibility Continuation Checkpoint
 
-This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\` so a new session can resume without reconstructing project history from scratch.
+This command-owned projection supports older 0.5.x readers. New sessions use \`hadara task status\`, the Task Board, and the selected Task Capsule; raw \`${PROJECT_CURRENT_STATE_PATH}\` is not normal reading.
 
 | Area | State | Notes |
 |---|---|---|

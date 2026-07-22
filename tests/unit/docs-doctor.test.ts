@@ -70,7 +70,7 @@ describe('Phase 7.3 docs doctor', () => {
 
   it('warns when project product metadata remains placeholder after completed task history exists', () => {
     const root = tempProject();
-    initProject(root, 'basic', { silent: true });
+    initProject(root, 'standard', { silent: true });
     fs.appendFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       '\n| T-0001 | First finished task | Done | 2026-07-10 | |\n',

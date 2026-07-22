@@ -117,3 +117,24 @@ Reason:
 - Existing 0.4.2 projects retain Markdown fallback and migrate through reviewed `init upgrade`; unrelated project-authored prose is not overwritten.
 - Task create and task finish synchronize active/latest task facts only when the canon is present, preserving compatibility and the four-command primary workflow budget.
 - Evidence: T-0561.
+
+## D-0015: 0.5 stable uses task status as the single lifecycle ingress
+
+Reason:
+- Default `hadara status` and no-task `hadara task status` had become independent evaluators over the same active-task, next-work, continuation, and selection inputs and could disagree on readiness.
+- `task status` already has the required two modes: next-work selection when no capsule is selected and a task-local cockpit when a capsule is selected.
+- Before 0.5 stable, default `task status` therefore opens the active capsule automatically or selects work when none is active; `--task` remains the explicit override.
+- Top-level `status` is a deprecated 0.5.x alias to the same evaluator, not a second routing authority.
+- Successful public `task close` already performs final audit and is terminal; it must not recommend a confirming status call.
+- Structured current-state authority and generated profile scaffolds are migrated in subsequent substantial capsules under `docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`.
+- Evidence: T-0679.
+
+## D-0016: Markdown owns inspectable intent; structured current state is a compatibility checkpoint
+
+Reason:
+- D-0014 made `.hadara/state/current.json` authoritative to eliminate duplicated prose, but that made an internal implementation file mandatory reading and let checkpoint corruption block otherwise inspectable work.
+- Before 0.5 stable, Task Board rows, Task Capsules, PROJECT_STATE, and explicit HANDOFF prose regain authority for task and project intent.
+- Default task selection reads those Markdown sources before the structured checkpoint; a missing or malformed checkpoint is advisory and cannot hide an open capsule.
+- `.hadara/state/current.json` remains readable and command-owned during the 0.5.x migration window, but it is not Required Reading, a human authoring surface, or a place for public mutation commands under the deprecated `status` alias.
+- Managed state blocks are labelled compatibility projections so old readers remain operable without implying that humans should edit or start sessions from the raw JSON file.
+- This decision supersedes D-0014 where it calls structured current state the portable canon. Evidence: T-0680.

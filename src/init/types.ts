@@ -7,6 +7,8 @@ export interface InitProfileSpec {
   intendedUse: string;
   specialNotes: string;
   docs: {
+    contextRouter: boolean;
+    projectState: boolean;
     architecture: boolean;
     developmentSlices: boolean;
     decisions: boolean;

@@ -115,9 +115,8 @@ describe('task finish status sync', () => {
 
     const report = createTaskFinishReport(root, task.id, 'dry-run');
 
-    expect(report.summary).toMatchObject({ advisoryOnly: 1, stateDocsPending: 1 });
-    expect(report.stateDocs.map((doc) => doc.path)).toEqual(['docs/PROJECT_STATE.md']);
-    expect(report.stateDocs[0]).toMatchObject({ present: true, mentionsTask: false, state: 'pending' });
+    expect(report.summary).toMatchObject({ advisoryOnly: 0, stateDocsPending: 0 });
+    expect(report.stateDocs).toEqual([]);
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 

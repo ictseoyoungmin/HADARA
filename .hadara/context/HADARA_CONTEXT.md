@@ -20,9 +20,9 @@ Use it to decide what to read next.
 
 | Need | Read |
 |---|---|
-| Current release/task/intent/problem/validation facts | `.hadara/state/current.json` or `hadara status --json` |
-| Product/phase projection and deeper routing | `docs/PROJECT_STATE.md` |
-| Next-agent continuity, next action, and live warnings | `docs/AGENT_HANDOFF.md` |
+| Current task or next-work choice | `hadara task status --json`, then the selected `tasks/T-XXXX/TASK.md` |
+| Product/phase state and deeper routing | `docs/PROJECT_STATE.md` |
+| Explicit cross-session handoff and live warnings when present | `docs/AGENT_HANDOFF.md` |
 | Task list | `docs/TASK_BOARD.md` |
 | Workflow guide | `docs/HADARA_WORKFLOW.md` |
 | Command lifecycle | `docs/TASK_WORKFLOW_COMMANDS.md` |
@@ -41,7 +41,7 @@ Use it to decide what to read next.
 
 ## Project-Specific Notes
 
-HADARA-dev builds HADARA, the local-first evidence control plane for trustworthy agentic development. Its structured current-state canon lets a new session resume active work without reconstructing the project from historical prose.
+HADARA-dev builds HADARA, the local-first evidence control plane for trustworthy agentic development. The Task Board, Task Capsules, and compact Markdown routing let a new session resume without reconstructing project history. `.hadara/state/current.json` is a command-owned compatibility checkpoint and is not normal reading.
 
 Do not store credentials, private logs, raw model transcripts, private user data, machine-local absolute paths, or large design documents here.
 

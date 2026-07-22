@@ -15,20 +15,20 @@ describe('HADARA-dev compact current-state ownership', () => {
 
     expect(projectState.trimEnd().split(/\r?\n/).length).toBeLessThanOrEqual(120);
     expect(handoff.trimEnd().split(/\r?\n/).length).toBeLessThanOrEqual(100);
-    expect(projectState).toContain('The six current-state facts live in `.hadara/state/current.json`');
-    expect(projectState).toContain('## Canonical Current State');
-    expect(handoff).toContain('## Canonical Continuation State');
-    expect(handoff).toContain('new session can resume without reconstructing project history from scratch');
+    expect(projectState).toContain('Task Board, Task Capsules, and project-authored Markdown take precedence');
+    expect(projectState).toContain('## Compatibility State Checkpoint');
+    expect(handoff).toContain('## Compatibility Continuation Checkpoint');
+    expect(handoff).toContain('raw `.hadara/state/current.json` is not normal reading');
   });
 
   it('keeps required current sections and routes historical detail explicitly', () => {
     const projectState = read('docs/PROJECT_STATE.md');
     const handoff = read('docs/AGENT_HANDOFF.md');
 
-    for (const heading of ['## Canonical Current State', '## Metadata', '## Current Phase', '## Current Capabilities', '## Historical Index', '## Single Source of Truth']) {
+    for (const heading of ['## Compatibility State Checkpoint', '## Metadata', '## Current Phase', '## Current Capabilities', '## Historical Index', '## Single Source of Truth']) {
       expect(projectState).toContain(heading);
     }
-    for (const heading of ['## Canonical Continuation State', '## Historical Index']) {
+    for (const heading of ['## Compatibility Continuation Checkpoint', '## Historical Index']) {
       expect(handoff).toContain(heading);
     }
     expect(projectState).not.toContain('## Next Planned Line');

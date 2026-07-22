@@ -22,17 +22,17 @@ export function createGeneratedScaffoldFiles(profile: InitProfile, metadata: Ini
   const docsRegistry = createSeedDocumentRegistry(profile);
   const currentState = createInitialProjectCurrentState(profile);
   const files: GeneratedScaffoldFile[] = [
-    { path: '.hadara/context/HADARA_CONTEXT.md', content: createHadaraContextDoc(profile) },
     { path: '.hadara/scaffold.json', content: createScaffoldJson(profile) },
     { path: '.hadara/docs-registry.json', content: registryJson(docsRegistry) },
     { path: '.hadara/slot-registry.json', content: createSlotRegistryJson() },
     { path: PROJECT_CURRENT_STATE_PATH, content: serializeProjectCurrentState(currentState) },
-    { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile, currentState, metadata) },
     { path: 'docs/TASK_BOARD.md', content: createTaskBoardDoc() },
-    { path: 'docs/HADARA_WORKFLOW.md', content: createHadaraWorkflowDoc() },
+    { path: 'docs/HADARA_WORKFLOW.md', content: createHadaraWorkflowDoc(profile) },
     { path: 'AGENTS.md', content: createAgentsDoc(spec) },
     { path: '.gitignore', content: createGitignoreDoc() }
   ];
+  if (spec.docs.contextRouter) files.push({ path: '.hadara/context/HADARA_CONTEXT.md', content: createHadaraContextDoc(profile) });
+  if (spec.docs.projectState) files.push({ path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile, currentState, metadata) });
   if (spec.docs.architecture) files.push({ path: 'docs/ARCHITECTURE.md', content: createArchitectureDoc(profile) });
   if (spec.docs.decisions) files.push({ path: 'docs/DECISIONS.md', content: createDecisionsDoc() });
   if (spec.docs.securityModel) files.push({ path: 'docs/SECURITY_MODEL.md', content: createSecurityModelDoc() });

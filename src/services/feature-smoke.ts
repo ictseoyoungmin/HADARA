@@ -2,7 +2,7 @@ import { HadaraPaths } from '../core/paths';
 import { assertSchema, validateSchema } from '../core/schema';
 import { createDoctorReport } from '../cli/doctor';
 import { createReleaseGateReport } from './operational-debt';
-import { createProjectStatusV2Report } from './project-status-v2';
+import { createAdaptiveTaskStatusV2Report } from './task-status-v2';
 import { createTaskListReport } from './task-read-model';
 import { createToolsListReport } from './tools-list';
 import { createTuiReadModel } from '../tui/read-model';
@@ -99,10 +99,10 @@ function createCoreSteps(paths: HadaraPaths, issues: FeatureSmokeIssue[]): Featu
     }),
     runStep(issues, {
       id: 'status',
-      command: 'hadara status --json',
-      schemaVersion: 'hadara.project.status.v2',
-      run: () => createProjectStatusV2Report(paths.projectRoot),
-      summarize: (report) => `Project status completed with phase ${report.phase} and health ${report.health}.`
+      command: 'hadara task status --json',
+      schemaVersion: (report) => report.schemaVersion,
+      run: () => createAdaptiveTaskStatusV2Report(paths.projectRoot),
+      summarize: (report) => `Task status completed in ${report.mode} mode with phase ${report.phase}.`
     }),
     runStep(issues, {
       id: 'task-list',
@@ -143,14 +143,15 @@ function runStep<T extends { ok: boolean }>(
   step: {
     id: string;
     command: string;
-    schemaVersion: string;
+    schemaVersion: string | ((report: T) => string);
     run: () => T;
     summarize: (report: T) => string;
   }
 ): FeatureSmokeStep {
   try {
     const result = step.run();
-    const schemaStatus = validateRegisteredStepSchema(step.schemaVersion, result);
+    const schemaVersion = typeof step.schemaVersion === 'function' ? step.schemaVersion(result) : step.schemaVersion;
+    const schemaStatus = validateRegisteredStepSchema(schemaVersion, result);
     if (schemaStatus === 'invalid') {
       issues.push({
         severity: 'error',
@@ -172,7 +173,7 @@ function runStep<T extends { ok: boolean }>(
       command: step.command,
       executionMode: 'service-read-model',
       status: result.ok && schemaStatus !== 'invalid' ? 'passed' : 'failed',
-      schemaVersion: step.schemaVersion,
+      schemaVersion,
       schemaStatus,
       summary: step.summarize(result)
     };
@@ -188,7 +189,7 @@ function runStep<T extends { ok: boolean }>(
       command: step.command,
       executionMode: 'service-read-model',
       status: 'failed',
-      schemaVersion: step.schemaVersion,
+      schemaVersion: typeof step.schemaVersion === 'string' ? step.schemaVersion : undefined,
       summary: 'Step failed before producing a reduced report.'
     };
   }

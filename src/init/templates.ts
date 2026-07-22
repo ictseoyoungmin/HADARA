@@ -64,7 +64,7 @@ export function createSlotRegistryJson(): string {
   }, null, 2)}\n`;
 }
 
-export function createHadaraWorkflowDoc(): string {
+export function createHadaraWorkflowDoc(profile: InitProfile): string {
   return `# HADARA_WORKFLOW
 
 ## Purpose
@@ -79,7 +79,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 
 | Situation | First Action |
 |---|---|
-| New project created | Read \`AGENTS.md\`, then \`.hadara/context/HADARA_CONTEXT.md\`, then this Quickstart. |
+| New project created | Read \`AGENTS.md\`, then follow its profile-specific Required Reading. |
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
 | Need project-specific docs | Use \`hadara docs add <type> --json\`, or create a Markdown file directly and register it with \`hadara docs register\`. |
@@ -138,26 +138,10 @@ After init, review:
 | Step | Document | Purpose |
 |---|---|---|
 | 1 | \`AGENTS.md\` | Entry rules and required reading. |
-| 2 | \`.hadara/context/HADARA_CONTEXT.md\` | Compact read routing. |
-| 3 | \`.hadara/state/current.json\` | Structured current release, task continuity, next intent, problems, and validation baseline. |
-| 4 | \`docs/PROJECT_STATE.md\` | Human-readable product and phase projection. |
-| 5 | \`docs/TASK_BOARD.md\` | Task index. |
-| 6 | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
+${profile === 'basic' ? '' : '| 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |\n| 3 | `docs/PROJECT_STATE.md` | Human-readable product and phase state. |\n'}| ${profile === 'basic' ? '2' : '4'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
+| ${profile === 'basic' ? '3' : '5'} | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
-
-### Installed Package Fallback
-
-Most projects should run the installed \`hadara\` command directly. In environments where the package manager cannot create executable bin links, such as some Windows-mounted prefixes, use its \`--no-bin-links\` mode and invoke the installed package entrypoint with Node:
-
-\`\`\`bash
-node <installed-hadara-package>/dist/cli/main.js version --json
-node <installed-hadara-package>/dist/cli/main.js task status --json
-\`\`\`
-
-Use your package manager to locate \`<installed-hadara-package>\`. For project-local installs, this is usually the local package directory, for example \`.hadara-install/node_modules/hadara\`. This is an invocation fallback only; generated docs and task command examples still use the normal \`hadara ...\` form.
-
-A project-local install does not remove or shadow any \`hadara\` already earlier on PATH from a different install (for example a global install used by other projects); PATH resolution order decides which one actually runs. Before delegating work or relying on generated guidance, confirm which \`hadara\` will actually be used with \`hadara version --json\` (check \`cliEntry\` and \`packageVersion\`), especially after installing or updating a project-local candidate.
 
 ## Generated Docs Completion
 
@@ -167,7 +151,7 @@ At minimum:
 
 | Document | Update When |
 |---|---|
-| \`docs/PROJECT_STATE.md\` | Product name, purpose, current phase, or capability state changes. |
+| \`docs/PROJECT_STATE.md\` | When present, product name, purpose, current phase, or capability state changes. |
 | \`docs/TASK_BOARD.md\` | Task lifecycle changes; normally \`task create\` and \`task close\` own this. |
 | \`docs/AGENT_HANDOFF.md\` | Present in governed projects and continuation state or warnings change. |
 | Optional docs | Their subject changes after they are added. |
@@ -191,15 +175,15 @@ hadara docs add agent-guide --json
 
 ## Session Start
 
-Use status at the beginning of a human/agent work session, after switching tasks, or when project state is unclear.
+Use task status at the beginning of a human/agent work session, after switching tasks, or when project state is unclear.
 
 \`\`\`bash
-hadara status --json
+hadara task status --json
 hadara task status --task T-XXXX --json
 hadara context pack --task T-XXXX --json
 \`\`\`
 
-\`status\` is the project/session ingress read model. It does not create tasks, append evidence, warm caches, validate completion, or close work. When the structured current-state canon exists, status exposes it directly so a new session can resume without reconstructing project history. Use \`context pack\` only after a task is selected and file context is actually needed.
+\`task status\` reads the Task Board, Task Capsules, and human-readable routing docs. It does not create tasks, append evidence, warm caches, validate completion, or close work. The deprecated top-level \`status\` alias calls the same evaluator. Use \`context pack\` only after a task is selected and file context is actually needed.
 
 ## Selecting or Creating Work
 
@@ -929,12 +913,11 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 export function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
-    ['`.hadara/state/current.json`', 'Every session unless `hadara status --json` already exposed it', 'Structured release, active/latest task, next intent, current problems, and validation baseline.'],
-    ['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.'],
-    ['`docs/PROJECT_STATE.md`', 'Every session', 'Human-readable product and phase projection.'],
     ['`docs/TASK_BOARD.md`', 'Every session', 'Task queue, task status, and capsule paths.'],
     ['`docs/HADARA_WORKFLOW.md`', 'Every session; whenever using HADARA CLI workflow commands', 'Project start, task lifecycle, evidence, context, document timing, repair, and useful CLI guidance.']
   ];
+  if (spec.docs.contextRouter) requiredReadingRows.unshift(['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.']);
+  if (spec.docs.projectState) requiredReadingRows.splice(spec.docs.contextRouter ? 1 : 0, 0, ['`docs/PROJECT_STATE.md`', 'Every session', 'Human-readable product and phase projection.']);
   if (spec.docs.agentHandoff) requiredReadingRows.push(['`docs/AGENT_HANDOFF.md`', 'When present in governed or long-running projects', 'Compact continuation handoff and current coordination notes.']);
   if (spec.docs.architecture) requiredReadingRows.push(['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
   if (spec.docs.decisions) requiredReadingRows.push(['`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
@@ -956,7 +939,7 @@ This repository uses the HADARA protocol for scoped, evidenced, resumable AI-ass
 |---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
-\`AGENTS.md\` owns Required Reading. \`.hadara/context/HADARA_CONTEXT.md\` is a compact routing anchor that points to current-state and workflow documents; it is not a second Required Reading authority.
+\`AGENTS.md\` owns Required Reading.${spec.docs.contextRouter ? ' `.hadara/context/HADARA_CONTEXT.md` is a compact routing anchor that points to current-state and workflow documents; it is not a second Required Reading authority.' : ''}
 
 ## Required Reading Tiers
 
@@ -986,10 +969,7 @@ ${requiredReadingRows.map(formatTableRow).join('\n')}
 ## Workflow Reference
 
 Use \`docs/HADARA_WORKFLOW.md\` for project start, task lifecycle, context, evidence, document timing, repair, docs read-map, and useful CLI guidance.
-
-## Project Context
-
-Use \`.hadara/context/HADARA_CONTEXT.md\` as the compact project-local context anchor.
+${spec.docs.contextRouter ? '\n## Project Context\n\nUse `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.\n' : ''}
 `;
 }
 

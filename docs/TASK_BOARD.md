@@ -679,3 +679,7 @@
 | T-0676 | Reviewer Acceptance Gap Remediation | Done | tasks/T-0676-reviewer-acceptance-gap-remediation | |
 | T-0677 | Structured Continuation Semantics and rc2 Baseline Rollup | Done | tasks/T-0677-structured-continuation-semantics-and-rc2-baseline-rollup | |
 | T-0678 | Project Status Continuation Routing Fix | Done | tasks/T-0678-project-status-continuation-routing-fix | |
+| T-0679 | Pre-stable lifecycle and scaffold simplification | Done | tasks/T-0679-pre-stable-lifecycle-and-scaffold-simplification | |
+| T-0680 | Markdown current-state authority simplification | Done | tasks/T-0680-markdown-current-state-authority-simplification | |
+| T-0681 | Profile scaffold simplification and pre-dogfood validation | Done | tasks/T-0681-profile-scaffold-simplification-and-pre-dogfood-validation | |
+| T-0682 | Three-profile autonomous Codex dogfood | Done | tasks/T-0682-three-profile-autonomous-codex-dogfood | |

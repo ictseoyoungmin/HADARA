@@ -189,7 +189,9 @@ function fromFinalizeReport(
   const idempotentNoop = finalize.ok && finalize.state === 'closed-valid' && executedWrites === 0 && finalize.pendingWrites.length === 0;
   const recoveryAction = finalize.ok ? undefined : normalizeCloseNextAction(taskId, finalize.primaryNextAction ?? finalize.nextActions.find((action) => action.required));
   const transactionPlanHash = finalize.execution?.requestedPlanHash ?? finalize.planHash ?? hashObject({ taskId, state: finalize.state, issues: finalize.issues });
-  const nextActions = finalize.nextActions.map((action) => normalizeCloseNextAction(taskId, action) ?? action);
+  const nextActions = finalize.ok
+    ? []
+    : finalize.nextActions.map((action) => normalizeCloseNextAction(taskId, action) ?? action);
 
   return {
     schemaVersion: 'hadara.task.close.v2',
@@ -220,7 +222,7 @@ function fromFinalizeReport(
       closeProofAppended,
       idempotentNoop
     },
-    ...(recoveryAction ? { recovery: { required: true, action: recoveryAction }, primaryNextAction: recoveryAction } : finalize.primaryNextAction ? { primaryNextAction: finalize.primaryNextAction } : {}),
+    ...(recoveryAction ? { recovery: { required: true, action: recoveryAction }, primaryNextAction: recoveryAction } : {}),
     nextActions,
     source: { finalize },
     issues: finalize.issues

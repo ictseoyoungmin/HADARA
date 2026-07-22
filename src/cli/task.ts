@@ -11,7 +11,7 @@ import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createTaskListReport, formatTaskListReport } from './task-json';
 import { createTaskSelectionStatusV2Report, formatTaskSelectionStatusV2Report } from '../services/task-selection-status-v2';
-import { createTaskStatusV2Report, formatTaskStatusV2Report } from '../services/task-status-v2';
+import { createAdaptiveTaskStatusV2Report, createTaskStatusV2Report, formatTaskStatusV2Report } from '../services/task-status-v2';
 
 export interface TaskCommandInput {
   args: string[];
@@ -148,13 +148,18 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     const summaryJsonOutput = getFlag(input.args, '--summary-json');
     const compat = getStringOption(input.args, '--compat');
     if (compat && compat !== 'v1') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', 'task status --compat must be v1');
+    const detail = getStringOption(input.args, '--detail');
+    if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
+    const workbenchOptions = { detail: detail === 'full' ? 'full' as const : 'fast' as const };
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) {
       if (!compat && !summaryJsonOutput) {
-        const report = createTaskSelectionStatusV2Report(input.projectRoot);
+        const report = createAdaptiveTaskStatusV2Report(input.projectRoot, new Date(), workbenchOptions);
         attachCliDiagnostics(report, timer, 'task.status');
         if (input.jsonOutput) {
           console.log(JSON.stringify(report, null, 2));
+        } else if (report.scope === 'task') {
+          console.log(formatTaskStatusV2Report(report));
         } else {
           console.log(formatTaskSelectionStatusV2Report(report));
         }
@@ -173,9 +178,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       if (!report.ok) process.exitCode = 6;
       return true;
     }
-    const detail = getStringOption(input.args, '--detail');
-    if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
-    const workbenchOptions = { detail: detail === 'full' ? 'full' as const : 'fast' as const };
     if (!compat && !summaryJsonOutput) {
       const report = createTaskStatusV2Report(input.projectRoot, id, new Date(), workbenchOptions);
       attachCliDiagnostics(report, timer, 'task.status');

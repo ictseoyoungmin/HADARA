@@ -78,6 +78,8 @@ describe('task close report', () => {
     });
     expect(fs.existsSync(path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`))).toBe(false);
     expect(report.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(report.primaryNextAction).toBeUndefined();
+    expect(report.nextActions).toEqual([]);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
   });
@@ -400,6 +402,8 @@ describe('task close report', () => {
       }
     });
     expect(retry.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(retry.primaryNextAction).toBeUndefined();
+    expect(retry.nextActions).toEqual([]);
     expect(afterRetry).toBe(afterFirst);
     expect(validateSchema('hadara.task.close.v2', retry).ok).toBe(true);
   });

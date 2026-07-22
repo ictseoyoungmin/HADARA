@@ -80,11 +80,11 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `handoff suggest`, `evidence collect`, `ops status`, `init register-doc`, `docs archive`, `task lifecycle`, `task finish`, `task ready`, `task audit-close`, `task complete`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`.
 
-Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task close`, compatibility/debug `task finalize`, `validation run`, `evidence add-command`, `policy preflight-shell`, `status`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`.
+Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task close`, compatibility/debug `task finalize`, `validation run`, `evidence add-command`, `policy preflight-shell`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`. Top-level `status` remains only as a deprecated `0.5.x` alias for `task status`.
 
 No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task close`; use `task status` and `task close --dry-run --json` for phase/readiness guidance.
 
-Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and `status` explain blockers or drift. They do not replace the primary close loop.
+Diagnostics such as `harness.validate`, `evidence.lint`, and `protocol.doctor` explain blockers or drift. They do not replace the primary close loop.
 
 ## 0.4 Planned Surfaces
 
@@ -92,7 +92,7 @@ Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and 
 
 ## State Consistency
 
-`hadara status --json` and `hadara protocol doctor --scope all --json` expose compact state consistency summaries derived from the internal `hadara.stateProjection.v1` read model, so workers can see Task Board, Task Capsule, handoff, shared-state, docs-registry, and close-proof drift before close.
+`hadara task status --detail full --json` and `hadara protocol doctor --scope all --json` expose state consistency diagnostics so workers can inspect Task Board, Task Capsule, handoff, shared-state, docs-registry, and close-proof drift before close.
 
 State consistency rollout is advisory in `0.3.1-rc.1`; state projection issues remain diagnostic unless a specific close or release gate promotes them.
 
@@ -104,7 +104,7 @@ State consistency rollout is advisory in `0.3.1-rc.1`; state projection issues r
 
 `hadara context slice --path <path> --from <line> --to <line> --json` emits a read-only `hadara.contextSlice.v1` original-text slice from one explicit project file. The same command supports `--tail <lines>`, `--keyword <text> --window <lines>`, `--managed-section <section-id>`, and `--symbol <name>` for bounded C2 symbol neighborhoods. `hadara context slice --task T-XXXX --candidate <candidate-id> --json` resolves a C3 context-pack `sliceCandidates[]` id and delegates to the candidate's source-addressed slice strategy. It rejects outside-project/private/generated/local-state boundaries, including `.hadara/local/**`, and binary-looking files. It returns source hashes and line bounds, applies bounded line/window budgets, fails with `CONTEXT_SLICE_TOO_LARGE` without returning `slices[]` text when the raw payload would exceed the byte budget, and does not warm cache or mutate project state.
 
-Public `session start` routing was removed in 0.5.0. Use `hadara status --json` for session ingress, `hadara task status --task T-XXXX --json` for selected-task guidance, and `hadara context pack --task T-XXXX --json` when file-routing context is needed. The historical `hadara.sessionStart.v1` schema remains implementation history only.
+Public `session start` routing was removed in 0.5.0. Use `hadara task status --json` for session ingress and the active-capsule cockpit, `--task T-XXXX` for an explicit capsule, and `hadara context pack --task T-XXXX --json` when file-routing context is needed. The historical `hadara.sessionStart.v1` schema remains implementation history only.
 
 `hadara context cache status --json` emits the read-only `hadara.context.cacheStatus.v1` report. It inspects the local source-manifest cache path, compares any cached manifest with current metadata-first source discovery, and reports hit, miss, stale, or corrupt status plus stale extractor keys. It does not create cache files, warm projections, append evidence, run validation, or mutate source/docs.
 

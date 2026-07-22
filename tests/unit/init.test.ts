@@ -119,16 +119,22 @@ describe('init profiles', () => {
       'docs/TASK_WORKFLOW_COMMANDS.md',
       'docs/DOC_REGISTRY.md'
     ]));
+    expect(registry.documents.find((doc: any) => doc.path === '.hadara/state/current.json')).toMatchObject({
+      status: 'reference',
+      readWhen: [],
+      requiredReading: false
+    });
 
     expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
+    expect(read(root, 'AGENTS.md')).not.toContain('| `.hadara/state/current.json` |');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).not.toContain('| `.hadara/state/current.json` | Structured current release');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Quickstart');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Minimal Loop');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Generated Docs Completion');
-    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('### Installed Package Fallback');
-    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('`--no-bin-links` mode');
-    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('node <installed-hadara-package>/dist/cli/main.js task status --json');
-    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('.hadara-install/node_modules/hadara');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).not.toContain('Installed Package Fallback');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).not.toContain('--no-bin-links');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).not.toContain('<installed-hadara-package>');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('hadara docs add agent-guide --json');
 
     const slotRegistry = JSON.parse(read(root, '.hadara/slot-registry.json'));
@@ -158,7 +164,7 @@ describe('init profiles', () => {
     expect(context).toContain('Compact project-local context anchor and read router.');
     expect(context).toContain('not the Required Reading authority');
     expect(context).toContain('| Required reading and safety rules | `AGENTS.md` |');
-    expect(context).toContain('Prefer `hadara status --json`');
+    expect(context).toContain('Prefer `hadara task status --json`');
     expect(context).not.toContain('| Document | When to Read | Purpose |');
     expect(context).not.toContain('## Minimal Loop');
     expect(context).not.toContain('## Task Document Timing');
@@ -217,11 +223,21 @@ describe('init profiles', () => {
     initProject(basic, 'basic');
 
     expect(exists(basic, 'docs/HADARA_WORKFLOW.md')).toBe(true);
+    expect(exists(basic, '.hadara/context/HADARA_CONTEXT.md')).toBe(false);
+    expect(exists(basic, 'docs/PROJECT_STATE.md')).toBe(false);
     expect(exists(basic, 'docs/ARCHITECTURE.md')).toBe(false);
     expect(exists(basic, 'docs/ROADMAP.md')).toBe(false);
     expect(exists(basic, 'docs/DECISIONS.md')).toBe(false);
     expect(exists(basic, 'docs/AGENT_HANDOFF.md')).toBe(false);
     expect(JSON.parse(read(basic, '.hadara/scaffold.json')).profile).toBe('basic');
+    expect(read(basic, 'AGENTS.md')).not.toContain('.hadara/context/HADARA_CONTEXT.md');
+    expect(read(basic, 'AGENTS.md')).not.toContain('docs/PROJECT_STATE.md');
+
+    const standard = tempProject();
+    initProject(standard, 'standard');
+    expect(exists(standard, '.hadara/context/HADARA_CONTEXT.md')).toBe(true);
+    expect(exists(standard, 'docs/PROJECT_STATE.md')).toBe(true);
+    expect(exists(standard, 'docs/AGENT_HANDOFF.md')).toBe(false);
 
     const governed = tempProject();
     initProject(governed, 'governed');
@@ -235,6 +251,10 @@ describe('init profiles', () => {
     expect(exists(governed, 'docs/IMPLEMENTATION_SOP.md')).toBe(false);
     expect(exists(governed, 'docs/TASK_WORKFLOW_COMMANDS.md')).toBe(false);
     expect(JSON.parse(read(governed, '.hadara/scaffold.json')).profile).toBe('governed');
+    for (const root of [basic, standard, governed]) {
+      expect(JSON.parse(read(root, '.hadara/state/current.json')).currentRelease).toBe('unversioned');
+      expect(JSON.parse(read(root, '.hadara/scaffold.json')).createdWith).toBe(`hadara@${packageJson.version}`);
+    }
   });
 
   it('returns a zero-write brownfield adoption plan when package metadata exists', () => {
@@ -288,7 +308,7 @@ describe('init profiles', () => {
       profile: 'basic'
     });
     expect(exists(root, 'AGENTS.md')).toBe(true);
-    expect(exists(root, 'docs/PROJECT_STATE.md')).toBe(true);
+    expect(exists(root, 'docs/PROJECT_STATE.md')).toBe(false);
     expect(read(root, 'init.json')).toBe('');
   });
 
@@ -947,6 +967,7 @@ function productDefaultLeak(content: string): string | null {
   const checks: Array<[RegExp, string]> = [
     [/\bHADARA-dev\b/, 'HADARA-dev'],
     [/\bDocker\b|\bdocker\s+(?:exec|run|compose|ps|build)\b/i, 'Docker'],
+    [/\bWSL\b|--no-bin-links|installed-hadara-package|\.hadara-install/i, 'installed-package fallback'],
     [/\bnpm\s+(?:run|publish|view|ci|install|pack)\b/i, 'npm'],
     [/\bnode\s+dist\/cli\/main\.js\b/i, 'node dist/cli/main.js'],
     [/\bhadara\s+(?:release|package|smoke)\s+(?:publish|artifact|gate|dry-run|closeout|smoke|recycle|clean-checkout)\b/i, 'release/package command'],

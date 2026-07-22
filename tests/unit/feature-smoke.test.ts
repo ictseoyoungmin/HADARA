@@ -47,13 +47,13 @@ describe('major feature smoke runner', () => {
     });
     expect(report.steps.every((step) => step.executionMode === 'service-read-model')).toBe(true);
     expect(report.steps.filter((step) => step.schemaStatus === 'validated').map((step) => step.command)).toEqual([
-      'hadara status --json',
+      'hadara task status --json',
       'hadara tools list --json',
       'hadara release gate --mode advisory --json'
     ]);
     expect(report.steps.map((step) => step.command)).toEqual([
       'hadara doctor --json',
-      'hadara status --json',
+      'hadara task status --json',
       'hadara task list --json',
       'hadara tools list --json',
       'hadara tui --snapshot --json',
