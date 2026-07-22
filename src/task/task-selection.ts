@@ -90,12 +90,21 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
   const handoff = readAgentHandoff(projectRoot);
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
+  const activeTaskRecommendation = currentState.state ? recommendationFromActiveCurrentState(projectRoot, currentState.state, board.rows) : null;
   const currentStateRecommendation = currentState.state ? recommendationFromCurrentState(projectRoot, currentState.state, board.rows) : null;
   const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows) : null;
-  const taskBoardRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
+  const inProgressRecommendation = recommendationFromTaskBoard(projectRoot, board.rows, ['in progress', 'in-progress']);
+  const openTaskRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
   const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows);
-  const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : taskBoardRecommendation;
-  const recommendation = handoffRecommendation ?? defaultRecommendation ?? currentStateRecommendation ?? firstTaskRecommendation;
+  const sliceRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : null;
+  const recommendation =
+    inProgressRecommendation ??
+    activeTaskRecommendation ??
+    openTaskRecommendation ??
+    sliceRecommendation ??
+    handoffRecommendation ??
+    currentStateRecommendation ??
+    firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(projectRoot, board.rows, recommendation?.taskId ?? null);
   if (!recommendation) {
@@ -209,25 +218,27 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
   };
 }
 
-function recommendationFromCurrentState(projectRoot: string, state: ProjectCurrentState, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
-  if (state.activeTask) {
-    const boardRow = boardRows.find((row) => row.taskId === state.activeTask?.id);
-    const capsule = findTaskCapsule(projectRoot, state.activeTask.id);
-    return {
-      taskId: state.activeTask.id,
-      title: boardRow?.title ?? state.activeTask.title,
-      reason: `Compatibility current-state checkpoint names ${state.activeTask.id} as the active task.`,
-      source: PROJECT_CURRENT_STATE_PATH,
-      sourceKind: 'current-state',
-      taskBoardStatus: boardRow?.status ?? null,
-      taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
-      taskCapsulePresent: Boolean(capsule),
-      capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
-      requiredReading: requiredReadingForProject(projectRoot),
-      createCommand: null
-    };
-  }
+function recommendationFromActiveCurrentState(projectRoot: string, state: ProjectCurrentState, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
+  if (!state.activeTask) return null;
+  const boardRow = boardRows.find((row) => row.taskId === state.activeTask?.id && isPrimaryOpenBoardStatus(row.status));
+  if (!boardRow) return null;
+  const capsule = findTaskCapsule(projectRoot, state.activeTask.id);
+  return {
+    taskId: state.activeTask.id,
+    title: boardRow.title || state.activeTask.title,
+    reason: `Compatibility current-state checkpoint names ${state.activeTask.id} as the active task and docs/TASK_BOARD.md still lists it as ${boardRow.status || 'open'}.`,
+    source: PROJECT_CURRENT_STATE_PATH,
+    sourceKind: 'current-state',
+    taskBoardStatus: boardRow.status,
+    taskBoardPath: 'docs/TASK_BOARD.md',
+    taskCapsulePresent: Boolean(capsule),
+    capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow.capsule || null,
+    requiredReading: requiredReadingForProject(projectRoot),
+    createCommand: null
+  };
+}
 
+function recommendationFromCurrentState(projectRoot: string, state: ProjectCurrentState, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
   const nextWork = state.nextWork;
   if (!nextWork || nextWork.state === 'none') return null;
   if (!isActionableHandoffStep(nextWork.title)) return null;
@@ -272,11 +283,11 @@ function normalizeNextWorkTitle(title: string): string {
   return title.replace(/[.]+$/, '').trim();
 }
 
-function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
+function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[], statusPrefixes?: string[]): TaskSelectionRecommendation | null {
   // `Partial` is a deliberate terminal/deferred status, not an active queue
   // signal. Keep those rows visible in backlog, but never revive an old
   // capsule merely because no Draft/In Progress work exists.
-  const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status));
+  const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status) && matchesStatusPrefix(candidate.status, statusPrefixes));
   if (!row) return null;
   const capsule = findTaskCapsule(projectRoot, row.taskId);
   return {
@@ -457,6 +468,12 @@ function isOpenBoardStatus(status: string): boolean {
 
 function isPrimaryOpenBoardStatus(status: string): boolean {
   return isOpenBoardStatus(status) && !status.trim().toLowerCase().startsWith('partial');
+}
+
+function matchesStatusPrefix(status: string, prefixes: string[] | undefined): boolean {
+  if (!prefixes) return true;
+  const normalized = status.trim().toLowerCase();
+  return prefixes.some((prefix) => normalized.startsWith(prefix));
 }
 
 function toPortablePath(value: string): string {

@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('task selection recommendation', () => {
-  it('keeps human-readable handoff routing ahead of the compatibility checkpoint', () => {
+  it('keeps active current-state work ahead of stale project handoff guidance', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with stale handoff work.',
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
@@ -28,12 +28,14 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'markdown-first' },
+      summary: { recommendations: 1, source: '.hadara/state/current.json', policy: 'markdown-first' },
       recommendations: [
         expect.objectContaining({
-          title: 'Stale handoff work',
-          source: 'docs/AGENT_HANDOFF.md',
-          sourceKind: 'handoff'
+          taskId: active.id,
+          title: 'Structured Active Work',
+          source: '.hadara/state/current.json',
+          sourceKind: 'current-state',
+          taskBoardStatus: 'Draft'
         })
       ],
       sources: {
@@ -45,6 +47,29 @@ describe('task selection recommendation', () => {
         })
       }
     });
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('keeps an In Progress Task Board row ahead of handoff and development slice guidance', () => {
+    const root = tempProject({
+      handoffNextStep: 'Continue with stale handoff work.',
+      developmentRows: ['| 1 | Planned Slice | T-0190 | Continue. | Planned after current. |']
+    });
+    const draft = createTaskCapsule(root, 'Draft Work');
+    const active = createTaskCapsule(root, 'Actual In Progress Work');
+    updateTaskBoardStatus(root, active.id, 'In Progress');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: active.id,
+      title: 'Actual In Progress Work',
+      source: 'docs/TASK_BOARD.md',
+      sourceKind: 'task-board-fallback',
+      taskBoardStatus: 'In Progress',
+      createCommand: null
+    });
+    expect(report.recommendations[0].taskId).not.toBe(draft.id);
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
@@ -262,13 +287,12 @@ describe('task selection recommendation', () => {
     expect(report.recommendations[0]).toMatchObject({
       taskId: existing.id,
       title: 'Finalize taskflow toy dogfood report',
-      source: 'docs/AGENT_HANDOFF.md',
-      sourceKind: 'handoff',
+      source: 'docs/TASK_BOARD.md',
+      sourceKind: 'task-board-fallback',
       taskBoardStatus: 'Draft',
       taskCapsulePresent: true,
       createCommand: null
     });
-    expect(report.recommendations[0].reason).toContain('closely matches');
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
@@ -356,6 +380,7 @@ describe('task selection recommendation', () => {
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');
+    updateTaskBoardStatus(root, done.id, 'Done');
     const next = createTaskCapsule(root, 'Next Slice');
     writeDevelopmentSlices(root, [
       `| 1 | Already Done | ${done.id} | Done objective. | Done: complete. |`,
@@ -370,11 +395,13 @@ describe('task selection recommendation', () => {
       schemaVersion: 'hadara.task.selection.v1',
       command: 'task.selection',
       ok: true,
-      summary: { recommendations: 1, source: 'docs/DEVELOPMENT_SLICES.md' },
+      summary: { recommendations: 1, source: 'docs/TASK_BOARD.md' },
       recommendations: [
         expect.objectContaining({
           taskId: next.id,
           title: 'Next Slice',
+          source: 'docs/TASK_BOARD.md',
+          sourceKind: 'task-board-fallback',
           taskBoardStatus: 'Draft',
           taskBoardPath: 'docs/TASK_BOARD.md',
           taskCapsulePresent: true,

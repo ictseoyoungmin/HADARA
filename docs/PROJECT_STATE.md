@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0684 Remove Redundant Task Lifecycle Note |
+| Latest Completed Task | T-0685 Stable Readiness Review |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -44,7 +44,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.6 is published and recycled. The `0.5.0-rc.0` and `0.5.0-rc.1` line proved the status/continuation design but also exposed pre-stable product complexity. T-0679 completed the single adaptive `task status` lifecycle and terminal close contract; T-0680 completed Markdown-first task selection and demoted `current.json` to a compatibility checkpoint; T-0681 made the three fresh profile scaffolds materially distinct, portable, and doctor-clean. T-0682 completed current-build autonomous dogfood across basic, standard, and governed: nine capsules closed and six fresh-session continuations succeeded without coordinator implementation. T-0683 resolved every actionable dogfood finding, including stale Basic profile diagnostics, continuation-title coupling, terminal-close ambiguity, evidence guidance, docs-register metadata loss, close-owned blocker display, HANDOFF table validation, and help exit status. T-0684 removes redundant lifecycle prose from new TASK scaffolds and makes `T-XXXX Task Title` the explicit capsule commit convention. Dashboard remains deliberately outside this core-stability line.
+v0.4.6 is published and recycled. The `0.5.0-rc.0` and `0.5.0-rc.1` line proved the status/continuation design but also exposed pre-stable product complexity. T-0679 completed the single adaptive `task status` lifecycle and terminal close contract; T-0680 completed Markdown-first task selection and demoted `current.json` to a compatibility checkpoint; T-0681 made the three fresh profile scaffolds materially distinct, portable, and doctor-clean. T-0682 completed current-build autonomous dogfood across basic, standard, and governed: nine capsules closed and six fresh-session continuations succeeded without coordinator implementation. T-0683 resolved every actionable dogfood finding, including stale Basic profile diagnostics, continuation-title coupling, terminal-close ambiguity, evidence guidance, docs-register metadata loss, close-owned blocker display, HANDOFF table validation, and help exit status. T-0684 removes redundant lifecycle prose from new TASK scaffolds and makes `T-XXXX Task Title` the explicit capsule commit convention. T-0685 fixes the reviewer-identified stale handoff precedence gap so open work wins before project handoff/continuation suggestions, and confirms strict release gate compatibility with the current release artifact evidence flow. Dashboard remains deliberately outside this core-stability line.
 
 | Stage | State | Purpose |
 |---|---|---|

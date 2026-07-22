@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0684 Remove Redundant Task Lifecycle Note | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0685 Stable Readiness Review | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0683 completes the pre-stable remediation derived from T-0682 dogfood. Basic/Standard/Governed built scaffolds and doctors are clean, Basic full status no longer asks for `PROJECT_STATE.md`, continuation is review-first without a next-title field, evidence callers may run independently under the internal append lock, and successful close explicitly says to report and stop. T-0684 removes the redundant lifecycle note from newly created TASK.md files and records `T-XXXX Task Title` as the capsule commit convention. The complete non-Dashboard source suite passed 321 suites / 1,193 tests; Dashboard remains intentionally deferred by operator direction.
+T-0685 fixes the reviewer-identified stale handoff precedence gap: In Progress Task Board rows, cross-checked current-state active tasks, and existing open Task Board rows now beat development slices, project handoff, structured nextWork, continuation, and first-task fallback. It also updates task-selection precedence metadata and strict release gate compatibility with the current clean-source/journal/attach release artifact evidence flow. Focused precedence/release-gate tests, TypeScript build, built task status, built strict release gate, and built docs doctor passed. Next work should be a post-remediation three-profile fresh-session dogfood on current HEAD before any rc.2 release-readiness/baseline promotion. Release dry-run still correctly blocks until release artifact evidence is refreshed for the current commit in a dedicated release-readiness capsule.
 
 ## Historical Index
 

@@ -204,7 +204,7 @@ describe('task workbench status report', () => {
         primaryActionId: 'inspect-recommended-task',
         precedence: expect.arrayContaining([
           expect.objectContaining({ id: 'active-task', source: '.hadara/state/current.json' }),
-          expect.objectContaining({ id: 'task-board', source: 'docs/TASK_BOARD.md' })
+          expect.objectContaining({ id: 'task-board-open', source: 'docs/TASK_BOARD.md' })
         ])
       },
       primaryNextAction: {

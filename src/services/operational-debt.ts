@@ -537,7 +537,8 @@ function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: R
 }
 
 function checkReleaseWorkflowTargetDecision(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const ok = includesAll(releaseReadiness, [
+  const ok =
+    includesAll(releaseReadiness, [
     'CI Release Workflow Target Decision',
     'Primary release target: npm package',
     'Secondary release target: GitHub Release with tarball, checksum, and manifest',
@@ -548,9 +549,12 @@ function checkReleaseWorkflowTargetDecision(releaseReadiness: string | null, mod
     'Publish/deploy remains explicit approval only',
     'T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading',
     'Evidence freshness must compare evidence to the release candidate window',
-    'Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check',
-    'Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`'
-  ]);
+    'Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check'
+    ]) &&
+    includesAny(releaseReadiness, [
+      'Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`',
+      'Release artifact evidence flow is explicit and must avoid self-invalidating clean-tree loops.'
+    ]);
   return {
     code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION',
     name: 'CI/release workflow target decision',

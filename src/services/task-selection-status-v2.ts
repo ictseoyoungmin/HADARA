@@ -268,29 +268,34 @@ function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['pr
       description: 'Apply current human/reviewer instructions before persisted project suggestions; the CLI cannot infer or override live conversation intent.'
     },
     {
+      id: 'task-board-in-progress',
+      source: 'docs/TASK_BOARD.md',
+      description: 'Use an In Progress Task Board row before persisted handoff or continuation guidance.'
+    },
+    {
       id: 'active-task',
       source: '.hadara/state/current.json',
-      description: 'Use the structured activeTask when present and valid.'
+      description: 'Use activeTask only when it cross-checks against an open Task Board row.'
     },
     {
-      id: 'structured-next-work',
-      source: '.hadara/state/current.json',
-      description: 'Use structured nextWork when it is actionable and not stale bootstrap guidance.'
-    },
-    {
-      id: 'handoff-next-step',
-      source: 'docs/AGENT_HANDOFF.md',
-      description: 'Treat explicit handoff next-step guidance as review input alongside routed project/development sources; do not use it verbatim as a task title.'
+      id: 'task-board-open',
+      source: 'docs/TASK_BOARD.md',
+      description: 'Use an existing Draft, Blocked, or other primary open Task Board row before creating or selecting new work.'
     },
     {
       id: 'development-slice',
       source: 'docs/DEVELOPMENT_SLICES.md',
-      description: 'Use the first open development slice when the profile exposes slices.'
+      description: 'Use the first open development slice only when no open Task Board row is already queued.'
     },
     {
-      id: 'task-board',
-      source: 'docs/TASK_BOARD.md',
-      description: 'Use the first open Task Board row when no stronger structured source selected work.'
+      id: 'handoff-next-step',
+      source: 'docs/AGENT_HANDOFF.md',
+      description: 'Treat explicit handoff next-step guidance as review input only after open task and slice sources are exhausted.'
+    },
+    {
+      id: 'structured-next-work',
+      source: '.hadara/state/current.json',
+      description: 'Use structured nextWork when it is actionable, not stale bootstrap guidance, and no stronger Markdown work source selected work.'
     },
     {
       id: 'first-task',

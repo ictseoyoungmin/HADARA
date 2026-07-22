@@ -86,7 +86,10 @@ describe('task-selection-status-v2 continuation routing (T-0658-class fix)', () 
 
   it('lets an existing recommendation (higher authority) win over a declared continuation', () => {
     const continuation: ProjectContinuation = { disposition: 'actionable', kind: 'task-handoff', title: 'Should not be selected' };
-    const root = tempProject({ continuation, activeTask: { id: 'T-0700', title: 'Active work' } });
+    const root = tempProject(
+      { continuation, activeTask: { id: 'T-0700', title: 'Active work' } },
+      ['| T-0700 | Active work | In Progress | tasks/T-0700-active-work | |']
+    );
     const report = createTaskSelectionStatusV2Report(root);
 
     expect(report.phase).not.toBe('continuation-ready');
