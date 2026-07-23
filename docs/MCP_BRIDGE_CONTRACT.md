@@ -17,7 +17,6 @@ T-0076 completed `hadara.evidence.list` as a read-only extension.
 T-0077 completed `hadara.context.export` as a read-only memory-payload extension.
 T-0078 completed `hadara.tools.list` as a read-only capability discovery extension.
 T-0086 completed `hadara.active.run.read` and `hadara.active.run.resume` as read-only active-run projection extensions.
-T-0087 completed `hadara.debt.list` and `hadara.debt.show` as read-only operational-debt extensions.
 
 ## Non-Goals
 
@@ -109,8 +108,6 @@ hadara.context.export
 hadara.tools.list
 hadara.active.run.read
 hadara.active.run.resume
-hadara.debt.list
-hadara.debt.show
 ```
 
 Planned v1.0 read-only candidates:

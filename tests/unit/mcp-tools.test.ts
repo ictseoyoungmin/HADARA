@@ -367,12 +367,6 @@ describe('MCP read tools', () => {
           category: 'read',
           readOnly: true,
           enabledByDefault: true,
-          availability: 'default'
-        }),
-        expect.objectContaining({
-          name: 'hadara.debt.list',
-          category: 'read',
-          readOnly: true,
           enabledByDefault: true,
           availability: 'default'
         }),
@@ -436,39 +430,28 @@ describe('MCP read tools', () => {
     });
   });
 
-  it('reads operational debt list and show reports without mutating state', () => {
+  it('returns not-found for removed operational debt MCP tools', () => {
     const root = tempProject();
 
-    const listPayload = parseToolPayload(callTool(root, 'hadara.debt.list'));
-    const showPayload = parseToolPayload(callTool(root, 'hadara.debt.show', { id: 'OD-0008' }));
-
-    expect(listPayload).toMatchObject({
-      schemaVersion: 'hadara.operational_debt.v1',
-      command: 'operational-debt.report',
-      ok: true,
-      aggregate: {
-        total: 8,
-        highOpen: 0
-      },
-      records: expect.arrayContaining([
-        expect.objectContaining({
-          id: 'OD-0008',
-          severity: 'high',
-          status: 'mitigated'
-        })
-      ])
+    expect(callTool(root, 'hadara.debt.list')).toMatchObject({
+      error: {
+        code: -32602,
+        data: {
+          issue: {
+            code: 'TOOL_NOT_FOUND'
+          }
+        }
+      }
     });
-    expect(showPayload).toMatchObject({
-      schemaVersion: 'hadara.operational_debt.show.v1',
-      command: 'operational-debt.show',
-      ok: true,
-      id: 'OD-0008',
-      record: {
-        id: 'OD-0008',
-        severity: 'high',
-        status: 'mitigated'
+    expect(callTool(root, 'hadara.debt.show', { id: 'OD-0008' })).toMatchObject({
+      error: {
+        code: -32602,
+        data: {
+          issue: {
+            code: 'TOOL_NOT_FOUND'
+          }
+        }
       },
-      issues: []
     });
   });
 });

@@ -2154,29 +2154,6 @@ export const HADARA_MCP_READ_CAPABILITIES: McpCapabilityDefinition[] = [
       properties: {}
     },
     surface: { ...DEFAULT_READ, name: 'hadara.active.run.resume', schemaVersion: 'hadara.active_run.resume.v1' }
-  },
-  {
-    name: 'hadara.debt.list',
-    description: 'List operational debt records, aggregate counts, and debt-related warnings without mutating state.',
-    inputSchema: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {}
-    },
-    surface: { ...DEFAULT_READ, name: 'hadara.debt.list', schemaVersion: 'hadara.operational_debt.v1' }
-  },
-  {
-    name: 'hadara.debt.show',
-    description: 'Read one operational debt record by id without mutating state.',
-    inputSchema: {
-      type: 'object',
-      required: ['id'],
-      additionalProperties: false,
-      properties: {
-        id: { type: 'string', pattern: '^OD-[0-9]{4}$' }
-      }
-    },
-    surface: { ...DEFAULT_READ, name: 'hadara.debt.show', schemaVersion: 'hadara.operational_debt.show.v1' }
   }
 ];
 

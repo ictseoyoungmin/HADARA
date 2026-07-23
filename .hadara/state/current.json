@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 300,
+  "rev": 302,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0689",
-    "title": "RC2 Developer Test Surface Split"
+    "id": "T-0690",
+    "title": "RC2 Debt Consumer Cleanup"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,23 +14,23 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Clean the remaining developer-only runtime coupling in dashboard/TUI/MCP debt consumers or release/readiness internals now that both command routing and default-test exposure are split away from public workflows.",
-    "reason": "RC2 still carries developer-only runtime code behind repo-local tooling; the next capsule can either retarget those consumers into `tools/`/scripts or delete dead paths.",
+    "title": "Remove the remaining dashboard/TUI debt projections or retarget them out of the public user surfaces now that both CLI/MCP command exposure and default tests are split away from developer-only debt code.",
+    "reason": "RC2 still leaks developer-only debt state through read-only UI consumers even after the MCP bridge cleanup.",
     "references": [
       {
         "path": "`tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md`",
         "required": true
       },
       {
-        "path": "`tasks/T-0689-rc2-developer-test-surface-split/TASK.md`",
+        "path": "`tasks/T-0690-rc2-debt-consumer-cleanup/TASK.md`",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0689",
-      "path": "tasks/T-0689-rc2-developer-test-surface-split/HANDOFF.md"
+      "workId": "T-0690",
+      "path": "tasks/T-0690-rc2-debt-consumer-cleanup/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

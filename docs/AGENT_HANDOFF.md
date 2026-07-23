@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0689 RC2 Developer Test Surface Split | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0690 RC2 Debt Consumer Cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0689 completes the next RC2 isolation step at the test boundary. Default/public `npm test` now excludes the HADARA-dev-only release/debt/dev/package-smoke unit suite, while explicit `test:hadara-dev` and `test:all` scripts keep repo-maintenance coverage intentional and available. The next cleanup boundary is runtime coupling that still exists behind repo-local tooling: dashboard/TUI debt reads, MCP debt tooling, and release/readiness internals that may now be retargeted into `tools/`/scripts or deleted.
+T-0690 completes the next RC2 isolation step at the integration boundary. The default read-only MCP bridge no longer advertises or dispatches `hadara.debt.list/show`, so developer-only operational-debt state is no longer exposed through public MCP discovery. The next cleanup boundary is the remaining read-only UI coupling: dashboard/TUI debt projections and related release/readiness internals that still surface developer-only state.
 
 ## Previous Handoff
 
-T-0688 completes the first RC2 developer-surface extraction step. The installed/public CLI no longer routes or advertises `debt`, `dev`, `release`, `smoke`, or `package recycle`; those HADARA-dev workflows now run through `tools/dev-surfaces.ts` and the retargeted release helper scripts. Package smoke no longer depends on an installed hidden `smoke run` surface.
+T-0689 completes the next RC2 isolation step at the test boundary. Default/public `npm test` now excludes the HADARA-dev-only release/debt/dev/package-smoke unit suite, while explicit `test:hadara-dev` and `test:all` scripts keep repo-maintenance coverage intentional and available.
 
 ## Historical Index
 

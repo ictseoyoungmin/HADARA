@@ -84,12 +84,6 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.active_run.resume.v1'
         }),
         expect.objectContaining({
-          name: 'hadara.debt.show',
-          category: 'read',
-          readOnly: true,
-          schemaVersion: 'hadara.operational_debt.show.v1'
-        }),
-        expect.objectContaining({
           name: 'hadara.evidence.attach',
           category: 'write',
           readOnly: false,
@@ -109,6 +103,9 @@ describe('tools list read model', () => {
     );
     expect(report.surfaces.mcp).not.toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          name: expect.stringContaining('debt')
+        }),
         expect.objectContaining({
           name: expect.stringContaining('release')
         })
