@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleDebtCommand } from '../../src/cli/debt';
-import { handleReleaseGateCommand } from '../../src/cli/release-gate';
+import { handleReleaseGateCommand } from '../../tools/dev-surface-handlers';
 import {
   createOperationalDebtReport,
   createOperationalDebtShowReport,
@@ -79,8 +79,8 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
   );
   fs.mkdirSync(path.join(root, 'docs', 'design'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, 'docs', 'design', 'DASHBOARD_DESIGN_NOTES.md'),
-    'The Dashboard is served through read-only local API routes.\n',
+    path.join(root, 'docs', 'design', 'TUI_DESIGN_NOTES.md'),
+    'The TUI cache and other generated operator artifacts remain machine-local and ignored.\n',
     'utf8'
   );
   fs.writeFileSync(

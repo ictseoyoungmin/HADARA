@@ -693,3 +693,4 @@
 | T-0690 | RC2 Debt Consumer Cleanup | Done | tasks/T-0690-rc2-debt-consumer-cleanup | Default MCP bridge exposure for `hadara.debt.list/show` is removed; focused bridge/discovery validation passed pending close. |
 | T-0691 | RC2 Dashboard Debt Projection Cleanup | Done | tasks/T-0691-rc2-dashboard-debt-projection-cleanup | |
 | T-0692 | Post-close continuation stale state cleanup | Done | tasks/T-0692-post-close-continuation-stale-state-cleanup | Clear the stale T-0691 close reminder from current-state continuation and harden self-close suppression. |
+| T-0693 | RC2 Release Readiness Surface Cleanup | Done | tasks/T-0693-rc2-release-readiness-surface-cleanup | Extracted repo-local release/smoke/package/dev wrappers into `tools/`; deeper service and TUI cleanup remains. |

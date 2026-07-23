@@ -1,36 +1,44 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 307,
+  "rev": 309,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0692",
-    "title": "Post-close continuation stale state cleanup"
+    "id": "T-0693",
+    "title": "RC2 Release Readiness Surface Cleanup"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Run `hadara task close --task T-0692 --json` after a final close-readiness check.",
-    "reason": "Implementation, shared-state cleanup, and focused validation are complete; only proof-last capsule close remains.",
+    "title": "Start a narrow capsule that removes or demotes the remaining release/readiness service and TUI debt/release consumers from the shipped `src/services`/`src/tui` tree while keeping repo-local `tools/dev-surfaces.ts` workflows intact.",
+    "reason": "Wrapper extraction removed the developer-only command entrypoints from the installed source tree, but deeper release/readiness internals still remain in shipped services and TUI consumers.",
     "references": [
       {
-        "path": "`tasks/T-0692-post-close-continuation-stale-state-cleanup/TASK.md`",
+        "path": "`tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md`",
         "required": true
       },
       {
-        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+        "path": "`docs/PROJECT_STATE.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/ARCHITECTURE.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/TEST_STRATEGY.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0692",
-      "path": "tasks/T-0692-post-close-continuation-stale-state-cleanup/HANDOFF.md"
+      "workId": "T-0693",
+      "path": "tasks/T-0693-rc2-release-readiness-surface-cleanup/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

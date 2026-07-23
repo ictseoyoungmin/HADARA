@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
-import { createDevDockerCheckReport, type DevDockerCommandRunner } from '../../src/dev/docker-check';
+import { createDevDockerCheckReport, type DevDockerCommandRunner } from '../../tools/dev-docker-check';
 
 const roots: string[] = [];
 

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleHarnessCommand } from '../../src/cli/harness';
 import { main } from '../../src/cli/main';
-import { handlePackageCommand } from '../../src/cli/package-smoke';
+import { handlePackageCommand } from '../../tools/dev-surface-handlers';
 import { handlePolicyCommand } from '../../src/cli/policy';
 import { handleTaskCommand } from '../../src/cli/task';
 import { resolveHadaraPaths } from '../../src/core/paths';

@@ -1,6 +1,16 @@
 import { getFlag, getStringOption } from '../src/cli/args';
 import { cliErrorExitCode, createCliErrorReport } from '../src/cli/errors';
 import { resolveHadaraPaths } from '../src/core/paths';
+import {
+  handleDevCommand,
+  handlePackageCommand,
+  handleReleaseArtifactCommand,
+  handleReleaseCloseoutCommand,
+  handleReleaseDryRunCommand,
+  handleReleaseGateCommand,
+  handleReleasePublishCommand,
+  handleSmokeCommand
+} from './dev-surface-handlers';
 
 function renderUsage(): string {
   return [
@@ -34,30 +44,22 @@ async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
     case 'dev': {
-      const { handleDevCommand } = await import('../src/cli/dev');
       if (handleDevCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
     case 'smoke': {
-      const { handleSmokeCommand } = await import('../src/cli/smoke');
       if (handleSmokeCommand({ args, paths, jsonOutput })) return;
       break;
     }
     case 'package': {
-      const { handlePackageCommand } = await import('../src/cli/package-smoke');
       if (handlePackageCommand({ args, paths, jsonOutput })) return;
       break;
     }
     case 'release': {
-      const { handleReleaseCloseoutCommand } = await import('../src/cli/release-closeout');
       if (handleReleaseCloseoutCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      const { handleReleaseDryRunCommand } = await import('../src/cli/release-dry-run');
       if (handleReleaseDryRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      const { handleReleasePublishCommand } = await import('../src/cli/release-publish');
       if (handleReleasePublishCommand({ args, paths, jsonOutput })) return;
-      const { handleReleaseArtifactCommand } = await import('../src/cli/release-artifact');
       if (handleReleaseArtifactCommand({ args, paths, jsonOutput })) return;
-      const { handleReleaseGateCommand } = await import('../src/cli/release-gate');
       if (handleReleaseGateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }

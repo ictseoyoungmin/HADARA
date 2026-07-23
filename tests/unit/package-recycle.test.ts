@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handlePackageCommand } from '../../src/cli/package-smoke';
+import { handlePackageCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
 import {

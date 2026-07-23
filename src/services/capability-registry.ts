@@ -1739,7 +1739,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'release-operator',
     status: 'stable',
     schemaVersion: 'hadara.packageRecycle.v1',
-    implementationFiles: ['src/cli/package-smoke.ts', 'src/services/package-recycle.ts'],
+    implementationFiles: ['tools/dev-surface-handlers.ts', 'src/services/package-recycle.ts'],
     testFiles: ['tests/unit/package-recycle.test.ts'],
     docs: ['docs/RELEASE_READINESS.md', 'docs/CLI_JSON_CONTRACT.md'],
     examples: [
@@ -1793,7 +1793,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.releaseDryRun.v1',
     docs: ['docs/RELEASE_READINESS.md'],
-    implementationFiles: ['src/cli/release-dry-run.ts', 'src/services/release-dry-run.ts'],
+    implementationFiles: ['tools/dev-surface-handlers.ts', 'src/services/release-dry-run.ts'],
     testFiles: ['tests/unit/release-dry-run.test.ts'],
     examples: [example('Run release dry-run', 'hadara release dry-run --json', 'Before publish/deploy readiness checks.')],
     related: ['release.gate', 'release.publish', 'release.artifact'],

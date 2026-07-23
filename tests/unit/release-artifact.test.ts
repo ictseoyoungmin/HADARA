@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
+import { handleReleaseArtifactCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
 import { attachReleaseArtifactEvidence, readReleaseArtifactJournal, writeReleaseArtifactJournal } from '../../src/services/release-artifact-evidence';

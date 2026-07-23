@@ -6,7 +6,7 @@ import { resolveHadaraPaths } from '../../src/core/paths';
 import { handleDocsCommand } from '../../src/cli/docs';
 import { handleEvidenceCommand } from '../../src/cli/evidence';
 import { handleInitCommand, initProject } from '../../src/cli/init';
-import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
+import { handleReleaseArtifactCommand } from '../../tools/dev-surface-handlers';
 import { handleTaskCommand } from '../../src/cli/task';
 
 const roots: string[] = [];

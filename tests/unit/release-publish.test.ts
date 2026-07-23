@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
-import { handleReleasePublishCommand } from '../../src/cli/release-publish';
+import { handleReleasePublishCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { createReleasePublishReport } from '../../src/services/release-publish';
 

@@ -2,9 +2,9 @@ import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { HadaraActorContext } from '../core/actor-context';
-import { startMonotonicTimer } from '../core/timing';
-import { defaultTaskLifecycleActor } from '../task/lifecycle-next-actions';
+import type { HadaraActorContext } from '../src/core/actor-context';
+import { startMonotonicTimer } from '../src/core/timing';
+import { defaultTaskLifecycleActor } from '../src/task/lifecycle-next-actions';
 
 export interface DevDockerCheckReport {
   schemaVersion: 'hadara.dev.docker_check.v1';
@@ -16,10 +16,6 @@ export interface DevDockerCheckReport {
   execution: {
     subprocessExecuted: true;
     dockerUsed: true;
-    /**
-     * Compatibility alias from T-0258. It means project source files are not
-     * mutated; use projectSourceMutation/outputMutation for precise meaning.
-     */
     projectMutation: false;
     projectSourceMutation: false;
     outputMutation: boolean;
@@ -318,12 +314,12 @@ function hashFile(filePath: string): string | undefined {
 
 function evaluateDistSyncGuard(syncDist: boolean, beforeHash: string | undefined, reviewedBeforeHash: string | undefined, allowMissingBeforeHash: boolean, issues: DevDockerCheckIssue[]): { allowed: boolean } {
   if (!syncDist) return { allowed: false };
-  if (beforeHash === undefined) {
-    if (allowMissingBeforeHash && reviewedBeforeHash === undefined) return { allowed: true };
+  if (!beforeHash) {
+    if (allowMissingBeforeHash) return { allowed: true };
     issues.push({
       severity: 'error',
       code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
-      message: 'dev docker-check --sync-dist requires --allow-missing-before-hash without --before-hash when workspace dist has no pre-sync hash.'
+      message: 'dist sync requires --before-hash <current dist hash> unless --allow-missing-before-hash is explicitly set for a first-time sync.'
     });
     return { allowed: false };
   }
@@ -331,57 +327,65 @@ function evaluateDistSyncGuard(syncDist: boolean, beforeHash: string | undefined
     issues.push({
       severity: 'error',
       code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
-      message: `dev docker-check --sync-dist requires --before-hash ${beforeHash} before copying Docker-built dist to the workspace.`
+      message: 'dist sync requires --before-hash <current dist hash>.'
     });
     return { allowed: false };
   }
-  if (reviewedBeforeHash !== beforeHash) {
+  if (beforeHash !== reviewedBeforeHash) {
     issues.push({
       severity: 'error',
       code: 'HADARA_DIST_SYNC_BEFORE_HASH_MISMATCH',
-      message: 'Workspace dist changed since the reviewed before-hash; rerun dev docker-check and review the current dist hash before syncing.'
+      message: 'dist sync before-hash does not match the current workspace dist hash.'
     });
     return { allowed: false };
   }
   return { allowed: true };
 }
 
-function normalizeOptionalString(value: string | null | undefined): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
+function normalizeOptionalString(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function hashSourceHints(projectRoot: string): string | undefined {
+  const packagePath = path.join(projectRoot, 'package.json');
+  const lockPath = path.join(projectRoot, 'package-lock.json');
+  if (!fs.existsSync(packagePath) && !fs.existsSync(lockPath)) return undefined;
   const hash = crypto.createHash('sha256');
-  let included = 0;
-  for (const relativePath of ['package.json', 'package-lock.json', 'tsconfig.json']) {
-    const filePath = path.join(projectRoot, relativePath);
-    if (!fs.existsSync(filePath)) continue;
-    hash.update(relativePath);
-    hash.update(fs.readFileSync(filePath));
-    included += 1;
-  }
-  return included > 0 ? `sha256:${hash.digest('hex')}` : undefined;
+  if (fs.existsSync(packagePath)) hash.update(fs.readFileSync(packagePath));
+  if (fs.existsSync(lockPath)) hash.update(fs.readFileSync(lockPath));
+  return `sha256:${hash.digest('hex')}`;
 }
 
-function buildEvidenceSummary(ok: boolean, mode: DevDockerCheckReport['mode'], focusedTests: string[], syncDist: boolean, execution: DevDockerCheckReport['execution']): DevDockerCheckReport['evidenceSummary'] {
-  const focused = focusedTests.length > 0 ? ` focused tests ${focusedTests.join(', ')}` : '';
-  const dist = syncDist ? `; dist sync ${execution.distSyncExecuted ? 'executed' : 'requested but not executed'}` : '';
-  const summary = `Dev Docker validation ${ok ? 'passed' : 'failed'} in ${mode} mode.${focused}${dist}.`;
+function buildEvidenceSummary(
+  ok: boolean,
+  mode: DevDockerCheckReport['mode'],
+  focusedTests: string[],
+  syncDist: boolean,
+  execution: DevDockerCheckReport['execution']
+): DevDockerCheckReport['evidenceSummary'] {
+  const focused = focusedTests.length > 0 ? `Focused tests: ${focusedTests.join(', ')}.` : 'Focused tests: none.';
+  const summary = `Docker ${mode} validation ${ok ? 'passed' : 'failed'}. ${focused} Full check executed: ${execution.fullCheckExecuted}. Dist sync requested: ${syncDist}.`;
   return {
     summary,
-    suggestedEvidenceCommand: `hadara evidence add-command --task T-XXXX --summary "${summary}" --result ${ok ? 'passed' : 'failed'} --json`
+    suggestedEvidenceCommand: `hadara evidence add-command --task T-XXXX --summary ${shellSingleQuote(summary)} --result ${ok ? 'passed' : 'failed'} --json`
   };
+}
+
+function shellSingleQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 const defaultRunner: DevDockerCommandRunner = {
   run(command, args, env) {
     try {
-      execFileSync(command, args, { env: { ...process.env, ...env }, stdio: 'pipe' });
+      execFileSync(command, args, {
+        stdio: 'pipe',
+        env: { ...process.env, ...env }
+      });
       return { ok: true, exitCode: 0 };
     } catch (error) {
-      const exitCode = typeof (error as { status?: unknown }).status === 'number' ? ((error as { status: number }).status) : 1;
+      const exitCode = typeof (error as { status?: unknown })?.status === 'number' ? Number((error as { status: number }).status) : undefined;
       return { ok: false, exitCode };
     }
   }

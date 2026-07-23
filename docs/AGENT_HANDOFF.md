@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0692 Post-close continuation stale state cleanup | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0693 RC2 Release Readiness Surface Cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0692 is the active current-state cleanup capsule. The regression is not in dashboard removal itself; it is the stale project-level continuation left behind when a closed capsule's HANDOFF only told that same capsule to run `hadara task close`. The current work clears the persisted T-0691 close reminder from shared state, keeps unrelated continuation preservation intact, and hardens the close path so self-close reminders do not survive as project continuation again.
+T-0693 extracts the remaining developer-only release/smoke/package/dev wrapper entrypoints out of the shipped `src/cli`/`src/dev` tree and into repo-local `tools/`, so installed CLI sources no longer carry those handlers. The next RC2 boundary is deeper: remove or demote the remaining release/readiness services and TUI debt/release consumers that still live in shipped `src/services`/`src/tui`.
 
 ## Previous Handoff
 
-T-0689 completes the next RC2 isolation step at the test boundary. Default/public `npm test` now excludes the HADARA-dev-only release/debt/dev/package-smoke unit suite, while explicit `test:hadara-dev` and `test:all` scripts keep repo-maintenance coverage intentional and available.
+T-0692 fixed the stale post-close continuation path where a closed capsule's HANDOFF could leave a self-close reminder behind in project-level continuation state.
 
 ## Historical Index
 
