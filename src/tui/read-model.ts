@@ -1,7 +1,13 @@
 import { createActiveRunResumeReport, ActiveRunResumeReport } from '../services/active-run-state';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
+import {
+  createDeferredReleaseGateReport,
+  createPlaceholderOperationalDebtReport,
+  createPlaceholderReleaseGateReport,
+  OperationalDebtReport,
+  ReleaseGateReport
+} from '../services/developer-surface-placeholders';
 import { createEvidenceListReport, EvidenceListRecord, EvidenceListReport, parseEvidenceIndexFile } from '../services/evidence-list';
-import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
 import { extractHandoffSectionValues } from '../services/handoff-summary-parser';
@@ -249,24 +255,8 @@ export function createTuiLoadingReadModel(): TuiReadModel {
         issues: []
       } as ActiveRunResumeReport
     },
-    debt: ({
-      schemaVersion: 'hadara.operational_debt.list.v1',
-      command: 'debt.list',
-      ok: true,
-      aggregate: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: {} },
-      records: [],
-      debts: [],
-      capsuleSizeIndicators: [],
-      issues: []
-    } as unknown) as OperationalDebtReport,
-    releaseGate: ({
-      schemaVersion: 'hadara.releaseGate.v1',
-      command: 'release.gate',
-      ok: true,
-      mode: 'advisory',
-      checks: [],
-      issues: []
-    } as unknown) as ReleaseGateReport,
+    debt: createPlaceholderOperationalDebtReport(),
+    releaseGate: createPlaceholderReleaseGateReport(),
     tools: ({
       schemaVersion: 'hadara.tools.list.v1',
       command: 'tools.list',
@@ -301,8 +291,8 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
   const selectedTask = selectedSummary ? createSelectedTaskReadModel(projectRoot, selectedSummary, options) : null;
 
   const activeRunResume = createActiveRunResumeReport(projectRoot);
-  const debt = createOperationalDebtReport(projectRoot);
-  const releaseGate = createReleaseGateReport(projectRoot, 'advisory');
+  const debt = createPlaceholderOperationalDebtReport();
+  const releaseGate = createPlaceholderReleaseGateReport();
   const tools = createToolsListReport();
   const writePreview = createWritePreflightReport(projectRoot, ['task', 'create', options.writePreviewTitle ?? DEFAULT_WRITE_PREVIEW_TITLE]);
   const overview = createOverview(projectRoot, tasks.tasks, selectedTask, status, options.includePrivateEvidence);
@@ -385,7 +375,7 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
       projection: status.activeRun,
       resume: activeRunResume
     },
-    debt: createDeferredDebtReport(),
+    debt: createPlaceholderOperationalDebtReport(),
     releaseGate: createDeferredReleaseGateReport(),
     tools: createDeferredToolsListReport(),
     writePreview: createDeferredWritePreflightReport(),
@@ -837,36 +827,6 @@ function aggregateStatus(status: string): keyof OpsStatusReport['tasks']['counts
   if (status === 'superseded') return 'superseded';
   if (status === 'inProgress' || status === 'active' || status === 'doing') return 'inProgress';
   return 'unknown';
-}
-
-function createDeferredDebtReport(): OperationalDebtReport {
-  return {
-    schemaVersion: 'hadara.operational_debt.v1',
-    command: 'operational-debt.report',
-    ok: true,
-    records: [],
-    aggregate: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: { high: 0, medium: 0, low: 0 } },
-    capsuleSizeIndicators: [],
-    issues: []
-  };
-}
-
-function createDeferredReleaseGateReport(): ReleaseGateReport {
-  return {
-    schemaVersion: 'hadara.releaseGate.v1',
-    command: 'release.gate',
-    mode: 'advisory',
-    ok: true,
-    checks: [
-      {
-        code: 'TUI_FAST_RELEASE_GATE_DEFERRED',
-        name: 'Deferred release-gate check',
-        status: 'warning',
-        summary: 'Release-gate debt scan is deferred in the TUI fast read model.'
-      }
-    ],
-    issues: []
-  };
 }
 
 function createDeferredToolsListReport(): ToolsListReport {

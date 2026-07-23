@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { listTaskCapsules } from '../task/task-capsule';
+import { listTaskCapsules } from '../../src/task/task-capsule';
 
 export interface ReleaseCloseoutReport {
   schemaVersion: 'hadara.releaseCloseout.v1';

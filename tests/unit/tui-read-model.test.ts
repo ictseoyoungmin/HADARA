@@ -112,11 +112,11 @@ describe('TUI read-model aggregator', () => {
     expect(model.tasks.tasks.map((task) => task.id)).toEqual([first.id, second.id]);
     expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
     expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
-    expect(model.debt.aggregate.total).toBeGreaterThan(0);
+    expect(model.debt.aggregate.total).toBe(0);
     expect(model.debt.aggregate.highOpen).toBe(0);
     expect(model.tools.surfaces.cli.length).toBeGreaterThan(0);
     expect(model.writePreview.writes).toContain(`tasks/T-0003-tui-follow-up/TASK.md`);
-    expect(model.issues).not.toContainEqual(expect.objectContaining({ source: 'release-gate', code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
+    expect(model.releaseGate.checks).toEqual([]);
   });
 
   it('falls back to the latest task when no active task is selectable', () => {

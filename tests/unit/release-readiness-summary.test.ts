@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createReadinessSummary } from '../../src/services/release-readiness-summary';
-import type { ReleaseDryRunReport } from '../../src/services/release-dry-run';
+import { createReadinessSummary } from '../../tools/dev-surface/release-readiness-summary';
+import type { ReleaseDryRunReport } from '../../tools/dev-surface/release-dry-run';
 
 describe('release readiness summary service', () => {
   it('returns review-publish-dry-run when all checks and evidence pass', () => {

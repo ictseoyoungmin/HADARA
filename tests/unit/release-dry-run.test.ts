@@ -3,9 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createReleaseDryRunReport } from '../../src/services/release-dry-run';
+import { createReleaseDryRunReport } from '../../tools/dev-surface/release-dry-run';
 import { validateSchema } from '../../src/core/schema';
-import { readPythonProjectPreview } from '../../src/services/release-targets';
+import { readPythonProjectPreview } from '../../tools/dev-surface/release-targets';
 
 const roots: string[] = [];
 const commit = '0123456789abcdef0123456789abcdef01234567';
@@ -779,7 +779,11 @@ function writeReleaseReadinessFiles(root: string): void {
   fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'Compact current release, task, intent, problem, and validation projection.\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), 'TUI cache is ignored machine-local state under .hadara/local/tui/.\n', 'utf8');
   fs.mkdirSync(path.join(root, 'docs', 'design'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'design', 'DASHBOARD_DESIGN_NOTES.md'), 'The Dashboard is served through read-only local API routes.\n', 'utf8');
+  fs.writeFileSync(
+    path.join(root, 'docs', 'design', 'TUI_DESIGN_NOTES.md'),
+    'TUI cache is machine-local and ignored state under .hadara/local/tui/.\n',
+    'utf8'
+  );
   fs.writeFileSync(
     path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
     'GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123\nhadara.packageSmoke.v1 evidence recorded\n',

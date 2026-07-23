@@ -6,9 +6,9 @@ import {
   ReleaseEvidenceRecord,
   validateReleaseEvidenceArtifact
 } from './release-evidence';
-import { analyzeAcceptanceReadiness } from '../task/acceptance';
-import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
-import { readMarkdownSection } from './markdown-table';
+import { analyzeAcceptanceReadiness } from '../../src/task/acceptance';
+import { listTaskCapsules, TaskCapsule } from '../../src/task/task-capsule';
+import { readMarkdownSection } from '../../src/services/markdown-table';
 
 export interface OperationalDebtRecord {
   id: string;

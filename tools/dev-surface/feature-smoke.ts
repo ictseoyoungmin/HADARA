@@ -1,12 +1,12 @@
-import { HadaraPaths } from '../core/paths';
-import { assertSchema, validateSchema } from '../core/schema';
-import { createDoctorReport } from '../cli/doctor';
+import { HadaraPaths } from '../../src/core/paths';
+import { assertSchema, validateSchema } from '../../src/core/schema';
+import { createDoctorReport } from '../../src/cli/doctor';
 import { createReleaseGateReport } from './operational-debt';
-import { createAdaptiveTaskStatusV2Report } from './task-status-v2';
-import { createTaskListReport } from './task-read-model';
-import { createToolsListReport } from './tools-list';
-import { createTuiReadModel } from '../tui/read-model';
-import { renderTuiSnapshot } from '../tui/snapshot';
+import { createAdaptiveTaskStatusV2Report } from '../../src/services/task-status-v2';
+import { createTaskListReport } from '../../src/services/task-read-model';
+import { createToolsListReport } from '../../src/services/tools-list';
+import { createTuiReadModel } from '../../src/tui/read-model';
+import { renderTuiSnapshot } from '../../src/tui/snapshot';
 
 export type FeatureSmokeProfile = 'core' | 'release-readiness';
 export type FeatureSmokeStepStatus = 'passed' | 'failed' | 'skipped';

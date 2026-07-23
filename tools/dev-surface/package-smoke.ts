@@ -2,19 +2,19 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { HadaraPaths } from '../core/paths';
-import { assertSchema } from '../core/schema';
-import { startMonotonicTimer } from '../core/timing';
+import { HadaraPaths } from '../../src/core/paths';
+import { assertSchema } from '../../src/core/schema';
+import { startMonotonicTimer } from '../../src/core/timing';
 import { attachReducedSmokeEvidence } from './smoke-evidence';
 import { readPythonProjectPreview } from './release-targets';
-import { listCommandRegistryEntries } from './capability-registry';
+import { listCommandRegistryEntries } from '../../src/services/capability-registry';
 import {
   diffCommandIds,
   diffRoutingParity,
   extractDispatcherCaseTokens,
   extractRegistryTopLevelVerbs,
   findInstalledPackageRoot
-} from './command-surface-drift';
+} from '../../src/services/command-surface-drift';
 
 export interface PackageSmokeIssue {
   severity: 'warning' | 'error';

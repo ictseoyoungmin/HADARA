@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
 import { handleSmokeCommand } from '../../tools/dev-surface-handlers';
-import { createFeatureSmokeReport } from '../../src/services/feature-smoke';
+import { createFeatureSmokeReport } from '../../tools/dev-surface/feature-smoke';
 
 const roots: string[] = [];
 

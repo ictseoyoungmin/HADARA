@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleReleaseArtifactCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
-import { attachReleaseArtifactEvidence, readReleaseArtifactJournal, writeReleaseArtifactJournal } from '../../src/services/release-artifact-evidence';
-import { createReleaseArtifactReport, ReleaseArtifactCommandRunner } from '../../src/services/release-artifact';
+import { attachReleaseArtifactEvidence, readReleaseArtifactJournal, writeReleaseArtifactJournal } from '../../tools/dev-surface/release-artifact-evidence';
+import { createReleaseArtifactReport, ReleaseArtifactCommandRunner } from '../../tools/dev-surface/release-artifact';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];

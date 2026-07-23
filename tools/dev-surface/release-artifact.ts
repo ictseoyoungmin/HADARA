@@ -3,10 +3,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { ensureDir } from '../core/fs';
-import { HadaraPaths } from '../core/paths';
-import { assertSchema } from '../core/schema';
-import { startMonotonicTimer } from '../core/timing';
+import { ensureDir } from '../../src/core/fs';
+import { HadaraPaths } from '../../src/core/paths';
+import { assertSchema } from '../../src/core/schema';
+import { startMonotonicTimer } from '../../src/core/timing';
 
 export interface ReleaseArtifactIssue {
   severity: 'warning' | 'error';

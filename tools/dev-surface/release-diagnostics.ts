@@ -1,5 +1,5 @@
 import type { ReleaseDryRunReport } from './release-dry-run';
-import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
+import { startMonotonicTimer, type MonotonicTimer } from '../../src/core/timing';
 
 export function timeStage<T>(timings: ReleaseDryRunReport['diagnostics']['stageTimings'], stage: string, fn: () => T): T {
   const timer = startMonotonicTimer();

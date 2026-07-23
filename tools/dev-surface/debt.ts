@@ -1,4 +1,4 @@
-import { createOperationalDebtReport, createOperationalDebtShowReport } from '../services/operational-debt';
+import { createOperationalDebtReport, createOperationalDebtShowReport } from './operational-debt';
 
 export interface DebtCommandInput {
   args: string[];

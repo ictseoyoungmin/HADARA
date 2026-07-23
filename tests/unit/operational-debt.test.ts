@@ -2,14 +2,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleDebtCommand } from '../../src/cli/debt';
+import { handleDebtCommand } from '../../tools/dev-surface/debt';
 import { handleReleaseGateCommand } from '../../tools/dev-surface-handlers';
 import {
   createOperationalDebtReport,
   createOperationalDebtShowReport,
   createReleaseGateReport,
   OPERATIONAL_DEBT_RECORDS
-} from '../../src/services/operational-debt';
+} from '../../tools/dev-surface/operational-debt';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];

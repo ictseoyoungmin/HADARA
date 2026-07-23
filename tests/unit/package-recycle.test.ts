@@ -9,7 +9,7 @@ import {
   createPackageRecycleDryRunReport,
   createPackageRecycleExecuteReport,
   PackageRecycleCommandRunner
-} from '../../src/services/package-recycle';
+} from '../../tools/dev-surface/package-recycle';
 
 const roots: string[] = [];
 

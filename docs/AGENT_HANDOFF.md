@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0693 RC2 Release Readiness Surface Cleanup | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0694 RC2 Release Services TUI Cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0693 extracts the remaining developer-only release/smoke/package/dev wrapper entrypoints out of the shipped `src/cli`/`src/dev` tree and into repo-local `tools/`, so installed CLI sources no longer carry those handlers. The next RC2 boundary is deeper: remove or demote the remaining release/readiness services and TUI debt/release consumers that still live in shipped `src/services`/`src/tui`.
+T-0694 completes the remaining developer-surface code relocation: the debt handler plus debt/release/smoke implementations now live under repo-local `tools/dev-surface/`, the shipped `src` copies are removed, and shipped TUI/status debt and release-gate projections are placeholder-only. The next RC2 boundary is narrower and metadata-focused: clean up release-readiness context extraction and schema ownership references that still point at the removed developer surface.
 
 ## Previous Handoff
 
-T-0692 fixed the stale post-close continuation path where a closed capsule's HANDOFF could leave a self-close reminder behind in project-level continuation state.
+T-0693 extracted the remaining developer-only release/smoke/package/dev wrapper entrypoints out of the shipped `src/cli`/`src/dev` tree and into repo-local `tools/`.
 
 ## Historical Index
 

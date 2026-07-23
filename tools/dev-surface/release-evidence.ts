@@ -1,10 +1,10 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateSchema } from '../core/schema';
-import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord, persistedEvidencePath } from '../evidence/evidence';
-import { normalizeEvidenceRecord, NormalizedEvidenceRecord } from '../evidence/normalizer';
-import { isReleaseProofEvidence } from '../evidence/semantics';
+import { validateSchema } from '../../src/core/schema';
+import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord, persistedEvidencePath } from '../../src/evidence/evidence';
+import { normalizeEvidenceRecord, NormalizedEvidenceRecord } from '../../src/evidence/normalizer';
+import { isReleaseProofEvidence } from '../../src/evidence/semantics';
 
 export interface ReleaseEvidenceRecord {
   taskId: string;

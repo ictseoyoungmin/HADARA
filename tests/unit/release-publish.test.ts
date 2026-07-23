@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { handleReleasePublishCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
-import { createReleasePublishReport } from '../../src/services/release-publish';
+import { createReleasePublishReport } from '../../tools/dev-surface/release-publish';
 
 const roots: string[] = [];
 

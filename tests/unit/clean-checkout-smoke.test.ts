@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleSmokeCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
-import { CleanCheckoutCommandRunner, createCleanCheckoutSmokeReport } from '../../src/services/clean-checkout-smoke';
+import { CleanCheckoutCommandRunner, createCleanCheckoutSmokeReport } from '../../tools/dev-surface/clean-checkout-smoke';
 
 const roots: string[] = [];
 

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidenceTextArtifact, EvidenceRecord, PersistedEvidenceRecord, persistedEvidencePath } from '../evidence/evidence';
+import { appendEvidenceTextArtifact, EvidenceRecord, PersistedEvidenceRecord, persistedEvidencePath } from '../../src/evidence/evidence';
 
 export interface SmokeEvidenceIssue {
   severity: 'warning' | 'error';

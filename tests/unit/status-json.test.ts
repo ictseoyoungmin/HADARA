@@ -316,11 +316,11 @@ describe('Operations Status JSON', () => {
         latestDoneLevelValidation: 'T-0052 ok'
       },
       debt: {
-        total: 8,
-        open: 4,
-        tracked: 2,
-        mitigated: 4,
-        candidate: 2,
+        total: 0,
+        open: 0,
+        tracked: 0,
+        mitigated: 0,
+        candidate: 0,
         highOpen: 0
       },
       mcp: {

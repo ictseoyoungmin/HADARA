@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assertSchema } from '../core/schema';
-import { appendEvidenceTextArtifact, PersistedEvidenceRecord, persistedEvidencePath } from '../evidence/evidence';
+import { assertSchema } from '../../src/core/schema';
+import { appendEvidenceTextArtifact, PersistedEvidenceRecord, persistedEvidencePath } from '../../src/evidence/evidence';
 import { ReleaseArtifactReport } from './release-artifact';
 import { readCurrentGitCommit } from './release-dry-run';
 

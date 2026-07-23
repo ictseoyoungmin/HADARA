@@ -694,3 +694,4 @@
 | T-0691 | RC2 Dashboard Debt Projection Cleanup | Done | tasks/T-0691-rc2-dashboard-debt-projection-cleanup | |
 | T-0692 | Post-close continuation stale state cleanup | Done | tasks/T-0692-post-close-continuation-stale-state-cleanup | Clear the stale T-0691 close reminder from current-state continuation and harden self-close suppression. |
 | T-0693 | RC2 Release Readiness Surface Cleanup | Done | tasks/T-0693-rc2-release-readiness-surface-cleanup | Extracted repo-local release/smoke/package/dev wrappers into `tools/`; deeper service and TUI cleanup remains. |
+| T-0694 | RC2 Release Services TUI Cleanup | Done | tasks/T-0694-rc2-release-services-tui-cleanup | Moved the remaining debt/release/smoke services into `tools/dev-surface/`; shipped TUI/status debt and release-gate views are now placeholder-only, with release-doc/context/schema cleanup left as follow-up. |

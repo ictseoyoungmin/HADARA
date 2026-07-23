@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleReleaseCloseoutCommand } from '../../tools/dev-surface-handlers';
 import { validateSchema } from '../../src/core/schema';
-import { createReleaseCloseoutReport } from '../../src/services/release-closeout';
+import { createReleaseCloseoutReport } from '../../tools/dev-surface/release-closeout';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];

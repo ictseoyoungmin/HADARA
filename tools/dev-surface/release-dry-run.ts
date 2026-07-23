@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assertSchema } from '../core/schema';
-import { startMonotonicTimer } from '../core/timing';
+import { assertSchema } from '../../src/core/schema';
+import { startMonotonicTimer } from '../../src/core/timing';
 import { createReleaseGateReport } from './operational-debt';
 import { createDiagnostics, applyStageStatuses, timeStage } from './release-diagnostics';
 import {

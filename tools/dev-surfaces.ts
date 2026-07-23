@@ -39,7 +39,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
   switch (command) {
     case 'debt': {
-      const { handleDebtCommand } = await import('../src/cli/debt');
+      const { handleDebtCommand } = await import('./dev-surface/debt');
       if (handleDebtCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }

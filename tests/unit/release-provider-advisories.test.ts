@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createProviderAdvisories } from '../../src/services/release-provider-advisories';
-import type { ReleaseEvidenceRecord } from '../../src/services/release-evidence';
+import { createProviderAdvisories } from '../../tools/dev-surface/release-provider-advisories';
+import type { ReleaseEvidenceRecord } from '../../tools/dev-surface/release-evidence';
 
 const roots: string[] = [];
 

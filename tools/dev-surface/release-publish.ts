@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assertSchema } from '../core/schema';
-import { writeAuditEvent } from '../core/audit';
+import { assertSchema } from '../../src/core/schema';
+import { writeAuditEvent } from '../../src/core/audit';
 import { createReleaseDryRunReport } from './release-dry-run';
 
 export type ReleasePublishMode = 'dry-run' | 'execute';

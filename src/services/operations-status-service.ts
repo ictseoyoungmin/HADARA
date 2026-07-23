@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ActiveRunProjection, safeCreateActiveRunProjection } from './active-run-state';
+import { createEmptyOperationalDebtAggregate, OperationalDebtAggregate } from './developer-surface-placeholders';
 import { extractHandoffSectionValues, extractValidationBaselineSummary } from './handoff-summary-parser';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading } from './markdown-table';
-import { createOperationalDebtReport, OperationalDebtAggregate } from './operational-debt';
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
@@ -95,15 +95,7 @@ export interface OpsStatusOptions {
   maxTextLength?: number;
 }
 
-const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
-  total: 0,
-  open: 0,
-  tracked: 0,
-  mitigated: 0,
-  candidate: 0,
-  highOpen: 0,
-  bySeverity: { high: 0, medium: 0, low: 0 }
-};
+const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = createEmptyOperationalDebtAggregate();
 
 export function createOpsStatusReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusReport {
   const includeDebt = options.includeDebt !== false;
@@ -142,7 +134,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
   } : extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
   const expectedSources = determineExpectedStatusSources(projectRoot, sources);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
-  const debtAggregate = includeDebt ? createOperationalDebtReport(projectRoot).aggregate : EMPTY_DEBT_AGGREGATE;
+  const debtAggregate = includeDebt ? createEmptyOperationalDebtAggregate() : EMPTY_DEBT_AGGREGATE;
   const stateConsistency = options.includeStateConsistency
     ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
     : undefined;

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createReleaseTargetConfigurationCheck, readReleaseTargetConfiguration } from '../../src/services/release-target-configuration';
+import { createReleaseTargetConfigurationCheck, readReleaseTargetConfiguration } from '../../tools/dev-surface/release-target-configuration';
 
 const roots: string[] = [];
 
