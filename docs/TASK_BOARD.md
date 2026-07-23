@@ -692,3 +692,4 @@
 | T-0689 | RC2 Developer Test Surface Split | Done | tasks/T-0689-rc2-developer-test-surface-split | Default/public `npm test` now excludes HADARA-dev-only developer-surface tests; explicit `test:hadara-dev` and `test:all` scripts preserve repo maintenance coverage pending close. |
 | T-0690 | RC2 Debt Consumer Cleanup | Done | tasks/T-0690-rc2-debt-consumer-cleanup | Default MCP bridge exposure for `hadara.debt.list/show` is removed; focused bridge/discovery validation passed pending close. |
 | T-0691 | RC2 Dashboard Debt Projection Cleanup | Done | tasks/T-0691-rc2-dashboard-debt-projection-cleanup | |
+| T-0692 | Post-close continuation stale state cleanup | Done | tasks/T-0692-post-close-continuation-stale-state-cleanup | Clear the stale T-0691 close reminder from current-state continuation and harden self-close suppression. |

@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0691 RC2 Dashboard Debt Projection Cleanup | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0692 Post-close continuation stale state cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0691 is the active RC2 UI-reduction capsule. The dashboard surface code has been removed, including its CLI route, frontend assets, projection/read-model services, schemas, scripts, and dedicated tests. The remaining UI boundary is the read-only terminal TUI over shared status/task/evidence services. The capsule's remaining work is close-source doc review and proof-last close.
+T-0692 is the active current-state cleanup capsule. The regression is not in dashboard removal itself; it is the stale project-level continuation left behind when a closed capsule's HANDOFF only told that same capsule to run `hadara task close`. The current work clears the persisted T-0691 close reminder from shared state, keeps unrelated continuation preservation intact, and hardens the close path so self-close reminders do not survive as project continuation again.
 
 ## Previous Handoff
 

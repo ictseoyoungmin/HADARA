@@ -32,6 +32,16 @@ describe('continuationFromTaskHandoffStep (docx section 1.1/9 promotion helper)'
     expect(continuationFromTaskHandoffStep({ step: '', reason: '', requiredReading: '', sourceTaskId: 'T-0001', sourceCapsulePath: 'tasks/T-0001-x' })).toBeNull();
   });
 
+  it('returns null for a self-close step so task-close reminders do not become project continuation', () => {
+    expect(continuationFromTaskHandoffStep({
+      step: 'Finalize shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.',
+      reason: 'The implementation and focused validation are complete; the remaining work is proof-last capsule close.',
+      requiredReading: 'docs/TASK_WORKFLOW_COMMANDS.md',
+      sourceTaskId: 'T-0691',
+      sourceCapsulePath: 'tasks/T-0691-x'
+    })).toBeNull();
+  });
+
   it('promotes a real step into an actionable continuation with parsed references and source provenance', () => {
     const continuation = continuationFromTaskHandoffStep({
       step: 'Publish 0.5.0 stable',
@@ -204,6 +214,44 @@ describe('continuation write path never clears based on absence', () => {
       expect(JSON.parse(write.after).continuation).toEqual(continuation);
     }
   });
+
+  it('clears an existing continuation when it came from the same task being completed', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Self-owned continuation fixture');
+    const continuation = continuationFromTaskHandoffStep({
+      step: 'Follow-up work',
+      reason: '',
+      requiredReading: '',
+      sourceTaskId: created.taskId!,
+      sourceCapsulePath: created.task!.capsule
+    })!;
+    completeProjectCurrentTask(root, { id: created.taskId!, title: 'Self-owned continuation fixture' }, continuation);
+
+    expect(completeProjectCurrentTask(root, { id: created.taskId!, title: 'Self-owned continuation fixture' })).toEqual([]);
+    expect(readProjectCurrentState(root).state?.continuation).toBeNull();
+  });
+
+  it('planCompletedProjectCurrentStateWrites clears a stale continuation when it came from the same task being completed', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Stale continuation cleanup fixture');
+    const continuation = continuationFromTaskHandoffStep({
+      step: 'Follow-up work',
+      reason: '',
+      requiredReading: '',
+      sourceTaskId: created.taskId!,
+      sourceCapsulePath: created.task!.capsule
+    })!;
+    completeProjectCurrentTask(root, { id: created.taskId!, title: 'Stale continuation cleanup fixture' }, continuation);
+
+    const plan = planCompletedProjectCurrentStateWrites(root, { id: created.taskId!, title: 'Stale continuation cleanup fixture' });
+    expect(plan.writes.length).toBeGreaterThan(0);
+    for (const write of plan.writes) {
+      if (write.path !== '.hadara/state/current.json') continue;
+      expect(JSON.parse(write.after).continuation).toBeNull();
+    }
+  });
 });
 
 describe('task close promotes HANDOFF Next Recommended Step into continuation (T-0658-class fix)', () => {
@@ -228,6 +276,34 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
       reason: 'rc.0 validation is complete.',
       references: [{ path: 'docs/ROADMAP.md', required: true }]
     });
+  });
+
+  it('does not persist a continuation when the HANDOFF step only tells the same task to close', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Self-close handoff fixture');
+    const statePath = path.join(root, '.hadara', 'state', 'current.json');
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    state.continuation = {
+      disposition: 'waiting-for-operator',
+      kind: 'task-handoff',
+      title: 'Finalize shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.',
+      reason: 'Fixture stale continuation.',
+      createCommandAllowed: false,
+      source: { type: 'work-handoff', workId: created.taskId!, path: `${created.task!.capsule}/HANDOFF.md` }
+    };
+    fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+
+    const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
+    const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
+      '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
+      `| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Finalize shared-state prose and run \`hadara task close --task ${created.taskId!} --json\` once the close-source docs are reviewed. | waiting-for-operator | no | The implementation and focused validation are complete; the remaining work is proof-last capsule close. | docs/TASK_WORKFLOW_COMMANDS.md |`
+    );
+    fs.writeFileSync(handoffPath, handoff, 'utf8');
+
+    const executed = createTaskFinishReport(root, created.taskId!, 'execute');
+    expect(executed.ok).toBe(true);
+    expect(readProjectCurrentState(root).state?.continuation).toBeNull();
   });
 
   it('blocks task finish when structured handoff disposition is malformed', () => {

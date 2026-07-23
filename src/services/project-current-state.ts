@@ -407,7 +407,7 @@ export function completeProjectCurrentTask(projectRoot: string, task: ProjectCur
     rev: current.rev + 1,
     latestCompletedTask: highestTaskRef(current.latestCompletedTask, task),
     activeTask: current.activeTask?.id === task.id ? null : current.activeTask,
-    ...(continuation !== undefined ? { continuation } : {})
+    ...resolveCompletedTaskContinuationWrite(current, task, continuation)
   }, task));
 }
 
@@ -423,7 +423,10 @@ export function planCompletedProjectCurrentStateWrites(
   if (!read.present) return { writes: [], issues: [] };
   if (!read.state) return { writes: [], issues: read.issues };
   const latestCompletedTask = highestTaskRef(read.state.latestCompletedTask, task);
-  const continuationChanged = continuation !== undefined && JSON.stringify(continuation) !== JSON.stringify(read.state.continuation);
+  const continuationWrite = resolveCompletedTaskContinuationWrite(read.state, task, continuation);
+  const continuationChanged =
+    Object.prototype.hasOwnProperty.call(continuationWrite, 'continuation') &&
+    JSON.stringify(continuationWrite.continuation) !== JSON.stringify(read.state.continuation);
   if (
     read.state.latestCompletedTask?.id === latestCompletedTask.id &&
     read.state.activeTask?.id !== task.id &&
@@ -437,7 +440,7 @@ export function planCompletedProjectCurrentStateWrites(
     rev: read.state.rev + 1,
     latestCompletedTask,
     activeTask: read.state.activeTask?.id === task.id ? null : read.state.activeTask,
-    ...(continuation !== undefined ? { continuation } : {})
+    ...continuationWrite
   }, task);
   return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [] };
 }
@@ -729,6 +732,11 @@ function isTerminalStep(step: string): boolean {
   return TERMINAL_STEP_ALL_COMPLETE_PATTERN.test(step);
 }
 
+function isSameTaskCloseStep(step: string, taskId: string): boolean {
+  const escapedTaskId = taskId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(String.raw`\bhadara\s+task\s+(?:close|finalize)\s+--task\s+${escapedTaskId}\b`, 'i').test(step);
+}
+
 /**
  * Promotes a Task Capsule's own HANDOFF "Next Recommended Step" into a project-level
  * continuation. Returns null for placeholder/empty steps so callers never overwrite an
@@ -745,6 +753,7 @@ export function continuationFromTaskHandoffStep(input: {
 }): ProjectContinuation | null {
   const step = input.step.trim();
   if (PLACEHOLDER_STEP_PATTERN.test(step)) return null;
+  if (isSameTaskCloseStep(step, input.sourceTaskId)) return null;
   const reason = input.reason.trim();
   const references = input.requiredReading
     .split(/[;,]/)
@@ -764,6 +773,16 @@ export function continuationFromTaskHandoffStep(input: {
     createCommandAllowed: createTaskAllowed ?? defaultCreateTaskAllowed,
     source: { type: 'work-handoff', workId: input.sourceTaskId, path: `${input.sourceCapsulePath}/HANDOFF.md` }
   };
+}
+
+function resolveCompletedTaskContinuationWrite(
+  current: Pick<ProjectCurrentState, 'continuation'>,
+  task: ProjectCurrentTaskRef,
+  continuation?: ProjectContinuation | null
+): Partial<Pick<ProjectCurrentState, 'continuation'>> {
+  if (continuation !== undefined) return { continuation };
+  if (current.continuation?.source?.workId === task.id) return { continuation: null };
+  return {};
 }
 
 function normalizeContinuationDisposition(value: string | undefined): ProjectContinuationDisposition | null {

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 304,
+  "rev": 307,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0691",
-    "title": "RC2 Dashboard Debt Projection Cleanup"
+    "id": "T-0692",
+    "title": "Post-close continuation stale state cleanup"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,15 +14,11 @@
   "continuation": {
     "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Finalize shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.",
-    "reason": "The implementation and focused validation are complete; the remaining work is proof-last capsule close.",
+    "title": "Run `hadara task close --task T-0692 --json` after a final close-readiness check.",
+    "reason": "Implementation, shared-state cleanup, and focused validation are complete; only proof-last capsule close remains.",
     "references": [
       {
-        "path": "`tasks/T-0691-rc2-dashboard-debt-projection-cleanup/TASK.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/AGENT_HANDOFF.md`",
+        "path": "`tasks/T-0692-post-close-continuation-stale-state-cleanup/TASK.md`",
         "required": true
       },
       {
@@ -33,8 +29,8 @@
     "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0691",
-      "path": "tasks/T-0691-rc2-dashboard-debt-projection-cleanup/HANDOFF.md"
+      "workId": "T-0692",
+      "path": "tasks/T-0692-post-close-continuation-stale-state-cleanup/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
