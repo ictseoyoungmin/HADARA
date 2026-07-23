@@ -1,9 +1,5 @@
 import { createActiveRunResumeReport, ActiveRunResumeReport } from '../services/active-run-state';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
-import { createDashboardCoreReport, DashboardCoreReport } from '../services/dashboard-core';
-import { createDashboardProjectionStatusReport, DashboardProjectionStatusReport } from '../services/dashboard-refresh';
-import { createDashboardTaskDetailReport, DashboardTaskDetailProof, DashboardTaskDetailReport } from '../services/dashboard-task-detail';
-import { readDashboardTaskProjectionIndex } from '../services/dashboard-task-projection';
 import { createEvidenceListReport, EvidenceListRecord, EvidenceListReport, parseEvidenceIndexFile } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
@@ -41,6 +37,57 @@ export interface TuiReadModelIssue {
   message: string;
 }
 
+export interface TuiOperatorIssue {
+  severity: 'warning' | 'error';
+  code: string;
+  message: string;
+}
+
+export interface TuiOperatorCoreReport {
+  schemaVersion: 'hadara.tui.operator_core.v1';
+  command: 'tui.operator.core';
+  ok: boolean;
+  generatedAt: string;
+  source: {
+    kind: 'shared-read-model';
+    label: string;
+  };
+  projection: {
+    freshness: 'current' | 'unknown';
+    completeness: 'ready' | 'partial';
+    refreshState: 'idle' | 'checking';
+    generatedAt: string | null;
+    pendingSections: string[];
+    staleSections: string[];
+  };
+  issues: TuiOperatorIssue[];
+}
+
+export interface TuiOperatorProjectionStatusReport {
+  schemaVersion: 'hadara.tui.operator_status.v1';
+  command: 'tui.operator.status';
+  ok: boolean;
+  generatedAt: string;
+  refresh: {
+    state: 'idle' | 'checking';
+    currentStage: string | null;
+    processed: number | null;
+    total: number | null;
+  };
+  pendingSections: string[];
+  staleSections: string[];
+  issues: TuiOperatorIssue[];
+}
+
+export interface TuiTaskProof {
+  status: 'passed' | 'unknown';
+  blocking: boolean;
+  auditabilityWarning: boolean;
+  note: string;
+  substantivePositive: number;
+  semanticIssueCodes: string[];
+}
+
 export interface TuiReadModel {
   schemaVersion: 'hadara.tui.read_model.internal.v1';
   command: 'tui.read-model';
@@ -57,9 +104,9 @@ export interface TuiReadModel {
     branch: string;
   };
   operator: {
-    source: 'shared-dashboard-services';
-    core: DashboardCoreReport;
-    projectionStatus: DashboardProjectionStatusReport;
+    source: 'shared-read-models';
+    core: TuiOperatorCoreReport;
+    projectionStatus: TuiOperatorProjectionStatusReport;
   };
   status: OpsStatusReport;
   tasks: TaskListReport;
@@ -67,8 +114,7 @@ export interface TuiReadModel {
     summary: TaskJsonSummary;
     detail: TaskReadReport;
     evidence: EvidenceListReport;
-    dashboardDetail: DashboardTaskDetailReport | null;
-    proof: DashboardTaskDetailReport['proof'];
+    proof: TuiTaskProof;
   } | null;
   activeRun: {
     projection: OpsStatusReport['activeRun'];
@@ -115,49 +161,26 @@ export function createTuiLoadingReadModel(): TuiReadModel {
       branch: '...'
     },
     operator: {
-      source: 'shared-dashboard-services',
+      source: 'shared-read-models',
       core: ({
-        schemaVersion: 'hadara.dashboard.core.v1',
-        command: 'dashboard.core',
+        schemaVersion: 'hadara.tui.operator_core.v1',
+        command: 'tui.operator.core',
         ok: true,
         generatedAt,
         source: {
-          kind: 'live-api',
-          label: 'Loading dashboard core',
-          projectRootRedacted: true,
-          project: { kind: 'project-root', pathRedacted: true, fingerprint: 'loading' }
+          kind: 'shared-read-model',
+          label: 'Loading operator read models'
         },
         projection: {
           freshness: 'unknown',
-          completeness: 'unknown',
+          completeness: 'partial',
           refreshState: 'checking',
-          generatedAt: null,
+          generatedAt,
           pendingSections: ['core'],
-          staleSections: [],
-          sourceSignals: {
-            taskBoard: 'unknown',
-            handoff: 'unknown',
-            projectState: 'unknown',
-            capsules: 'unknown',
-            debt: 'unknown'
-          }
-        },
-        core: {
-          health: 'unknown',
-          taskSummary: {
-            total: 0,
-            counts: { done: 0, draft: 0, partial: 0, superseded: 0, inProgress: 0, unknown: 0 },
-            lastCompleted: [],
-            nextRecommended: null,
-            recent: []
-          },
-          handoffSummary: { currentState: [], knownProblems: [], nextRecommendedStep: [] },
-          activeRunSummary: { ok: true, present: false, taskId: null, status: null, staleReason: null, issues: 0 },
-          validationSummary: { latestFullCheck: null, latestDoneLevelValidation: null },
-          debtSummary: { pending: true }
+          staleSections: []
         },
         issues: []
-      } as unknown) as DashboardCoreReport,
+      } as unknown) as TuiOperatorCoreReport,
       projectionStatus: createLoadingProjectionStatusReport(generatedAt)
     },
     status: ({
@@ -371,17 +394,53 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
 }
 
 function createTuiOperatorReadModel(projectRoot: string): TuiReadModel['operator'] {
-  const projectionStatus = createDashboardProjectionStatusReport(projectRoot);
+  const generatedAt = new Date().toISOString();
+  const status = createOpsStatusReport(projectRoot, {
+    includeDebt: false,
+    includeKnownProblems: false,
+    taskStatusSource: 'task-board',
+    maxTextLength: 240
+  });
+  const pendingSections: string[] = [];
+  if (status.project.phase === 'unknown') pendingSections.push('project-state');
+  if (status.tasks.nextRecommended === null) pendingSections.push('task-selection');
+  const projectionStatus: TuiOperatorProjectionStatusReport = {
+    schemaVersion: 'hadara.tui.operator_status.v1',
+    command: 'tui.operator.status',
+    ok: true,
+    generatedAt,
+    refresh: {
+      state: 'idle',
+      currentStage: null,
+      processed: null,
+      total: null
+    },
+    pendingSections,
+    staleSections: [],
+    issues: []
+  };
   return {
-    source: 'shared-dashboard-services',
+    source: 'shared-read-models',
     projectionStatus,
-    core: createDashboardCoreReport(projectRoot, {
-      projectionFreshness: projectionStatus.projections.core.freshness,
-      refreshState: projectionStatus.refresh.state,
-      pendingSections: projectionStatus.pendingSections,
-      staleSections: projectionStatus.staleSections,
-      writeProjection: false
-    })
+    core: {
+      schemaVersion: 'hadara.tui.operator_core.v1',
+      command: 'tui.operator.core',
+      ok: true,
+      generatedAt,
+      source: {
+        kind: 'shared-read-model',
+        label: 'Shared status/task read models'
+      },
+      projection: {
+        freshness: 'current',
+        completeness: pendingSections.length === 0 ? 'ready' : 'partial',
+        refreshState: projectionStatus.refresh.state,
+        generatedAt,
+        pendingSections,
+        staleSections: []
+      },
+      issues: []
+    }
   };
 }
 
@@ -393,26 +452,21 @@ export function createSelectedTaskReadModel(
   if (options.profile === 'fast' && options.includePrivateEvidence !== true) {
     return createFastSelectedTaskReadModel(projectRoot, summary, options);
   }
-  const dashboardDetail = createDashboardTaskDetailReport(projectRoot, summary.id);
-  const evidence =
-    options.includePrivateEvidence === true
-      ? createEvidenceListReport(projectRoot, {
-          taskId: summary.id,
-          limit: options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT,
-          includePrivate: true
-        })
-      : limitEvidenceListReport(dashboardDetail.evidenceList, options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT);
   const detail = createTaskDocumentReadReportFromSummary(projectRoot, summary, { includePrivate: options.includePrivateEvidence });
+  const evidence = createEvidenceListReport(projectRoot, {
+    taskId: summary.id,
+    limit: options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT,
+    ...(options.includePrivateEvidence === true ? { includePrivate: true } : {})
+  });
   return {
     summary,
     detail: {
       ...detail,
       evidenceIndex: evidence.records,
-      issues: mergeTaskReadIssues(detail.issues, dashboardDetail.issues)
+      issues: detail.issues
     },
     evidence,
-    dashboardDetail,
-    proof: dashboardDetail.proof
+    proof: createSelectedTaskProof(detail, evidence)
   };
 }
 
@@ -437,7 +491,7 @@ function createFastSelectedTaskReadModel(
     },
     options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT
   );
-  const proof: DashboardTaskDetailProof = {
+  const proof: TuiTaskProof = {
     status: 'unknown',
     blocking: false,
     auditabilityWarning: false,
@@ -453,50 +507,12 @@ function createFastSelectedTaskReadModel(
       issues: detail.issues
     },
     evidence,
-    dashboardDetail: null,
     proof
   };
 }
 
 export function createTuiTaskListReport(projectRoot: string): TaskListReport {
-  const projection = readDashboardTaskProjectionIndex(projectRoot);
-  const projectedTasks = projection?.tasks.map((entry) => entry.summary) ?? [];
-  const projectedById = new Map(projectedTasks.map((task) => [task.id, task]));
-  const boardTasks = readTaskBoardTaskSummaries(projectRoot).filter((task) => !projectedById.has(task.id));
-  const tasks = [...projectedTasks, ...boardTasks].sort((left, right) => left.id.localeCompare(right.id));
-
-  if (tasks.length > 0) {
-    return {
-      schemaVersion: 'hadara.task.list.v1',
-      command: 'task.list',
-      ok: true,
-      count: tasks.length,
-      tasks
-    };
-  }
-
   return createTaskListReport(projectRoot);
-}
-
-function readTaskBoardTaskSummaries(projectRoot: string): TaskJsonSummary[] {
-  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-  if (!fs.existsSync(taskBoardPath)) return [];
-  return parseMarkdownRows(fs.readFileSync(taskBoardPath, 'utf8'))
-    .filter((row) => /^T-\d{4}$/.test(row[0] ?? ''))
-    .map((row) => {
-      const id = row[0] ?? '';
-      const title = row[1] ?? id;
-      const status = row[2] ?? 'Unknown';
-      const capsule = row[3] ?? '';
-      return {
-        id,
-        title,
-        status,
-        slug: path.basename(capsule).replace(/^T-\d{4}-/, ''),
-        capsule
-      };
-    })
-    .filter((task) => task.id && task.capsule);
 }
 
 function createTaskDocumentReadReportFromSummary(projectRoot: string, summary: TaskJsonSummary, options: TaskReadOptions = {}): TaskReadReport {
@@ -554,52 +570,54 @@ function limitEvidenceListReport(report: EvidenceListReport, limit: number): Evi
   };
 }
 
-function mergeTaskReadIssues(
-  taskReadIssues: TaskReadReport['issues'],
-  dashboardIssues: DashboardTaskDetailReport['issues']
-): TaskReadReport['issues'] {
-  return [
-    ...taskReadIssues,
-    ...dashboardIssues.map((issue) => ({
-      severity: issue.severity,
-      code: `DASHBOARD_TASK_DETAIL_${issue.code}`,
-      message: issue.message
-    }))
-  ];
-}
-
-function createLoadingProjectionStatusReport(generatedAt: string): DashboardProjectionStatusReport {
+function createLoadingProjectionStatusReport(generatedAt: string): TuiOperatorProjectionStatusReport {
   return {
-    schemaVersion: 'hadara.dashboard.projection_status.v1',
-    command: 'dashboard.projection.status',
+    schemaVersion: 'hadara.tui.operator_status.v1',
+    command: 'tui.operator.status',
     ok: true,
     generatedAt,
-    project: { kind: 'project-root', pathRedacted: true, fingerprint: 'loading' },
     refresh: {
       state: 'checking',
-      reason: null,
-      startedAt: null,
-      finishedAt: null,
-      lastError: null,
-      runs: 0,
       currentStage: null,
-      stageStartedAt: null,
-      stageFinishedAt: null,
-      stageDurationMs: null,
       processed: null,
-      total: null,
-      lastYieldAt: null,
-      stageDurations: [],
-      slowStageWarnings: []
-    },
-    projections: {
-      core: { present: false, generatedAt: null, freshness: 'unknown', completeness: 'unknown' },
-      timeline: { present: false, generatedAt: null, freshness: 'unknown' },
-      debt: { present: false, generatedAt: null, freshness: 'unknown' }
+      total: null
     },
     pendingSections: ['core'],
     staleSections: [],
     issues: []
+  };
+}
+
+function createSelectedTaskProof(detail: TaskReadReport, evidence: EvidenceListReport): TuiTaskProof {
+  const semanticIssueCodes = detail.issues.map((issue) => issue.code);
+  const blocking = detail.issues.some((issue) => issue.severity === 'error');
+  if (blocking) {
+    return {
+      status: 'unknown',
+      blocking: true,
+      auditabilityWarning: false,
+      note: detail.issues.find((issue) => issue.severity === 'error')?.message ?? 'Selected task detail has blocking read errors.',
+      substantivePositive: evidence.records.length,
+      semanticIssueCodes
+    };
+  }
+  if (evidence.records.length === 0) {
+    return {
+      status: 'unknown',
+      blocking: false,
+      auditabilityWarning: true,
+      note: 'No evidence records are indexed for the selected task.',
+      substantivePositive: 0,
+      semanticIssueCodes: [...semanticIssueCodes, 'NO_EVIDENCE_INDEXED']
+    };
+  }
+  return {
+    status: 'passed',
+    blocking: false,
+    auditabilityWarning: false,
+    note: `${evidence.records.length} evidence record(s) are indexed for the selected task.`,
+    substantivePositive: evidence.records.length,
+    semanticIssueCodes
   };
 }
 

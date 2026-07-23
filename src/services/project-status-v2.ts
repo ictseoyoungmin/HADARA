@@ -143,7 +143,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
     compatibility: {
       legacySchemaVersion: 'hadara.ops.status.v1',
       legacyCommand: 'hadara status --compat v1 --json',
-      migration: 'Use this v2 report for project/session ingress. Use the explicit v1 compatibility command only for legacy dashboard/read-model consumers during 0.5.x.'
+      migration: 'Use this v2 report for project/session ingress. Use the explicit v1 compatibility command only for legacy status/read-model consumers during 0.5.x.'
     },
     sources: {
       currentState: {

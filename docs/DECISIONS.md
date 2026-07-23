@@ -3,7 +3,7 @@
 ## D-0001: TypeScript + Node.js for bootstrap
 
 Reason:
-- Cross-platform CLI and dashboard sharing.
+- Cross-platform CLI and local tool sharing.
 - Easy packaging with portable Node runtime.
 - Strong ecosystem for provider SDKs and test runners.
 
@@ -32,12 +32,12 @@ Reason:
 - When enabled, each write requires per-call approval metadata and records success or failure in the private portable audit log.
 - MCP initialize metadata must reflect whether the current server process is default read-only or evidence attach-enabled.
 
-## D-0006: Dashboard visual baseline uses comfort dark mockup
+## D-0006: Historical dashboard visual baseline used the comfort dark mockup
 
 Reason:
-- The comfort dark mockup is the strongest current expression of HADARA dashboard layout, visual hierarchy, palette, card grouping, and navigation feel.
+- Before T-0691 removed the browser dashboard on July 23, 2026, the comfort dark mockup was the strongest expression of the dashboard layout, visual hierarchy, palette, card grouping, and navigation feel.
 - The mockup is a visual shell baseline only; it does not define data schema, live integration, write behavior, MCP behavior, or state persistence.
-- The authoritative dashboard data contract remains `hadara.ops.status.v1`.
+- This is historical context only; the current shipped UI boundary is the terminal TUI.
 
 ## D-0007: Separate v1.0 planning from capsule implementation details
 
@@ -54,7 +54,7 @@ Reason:
 - `hadara init` should generate profile-aware HADARA protocol structure for new projects, not copy HADARA-dev's current optional integration roadmap.
 - Generated docs use stable headings and table frames where records will grow over time so future agents can update them deterministically.
 - `basic`, `standard`, and `governed` profiles must not reference docs they do not generate.
-- Optional surfaces such as Hermes, MCP, dashboard, provider, release, installer, and deployment work require project-specific registration before agents rely on them.
+- Optional surfaces such as Hermes, MCP, provider, release, installer, and deployment work require project-specific registration before agents rely on them.
 - Generated `.gitignore` must ignore HADARA local/private state without hiding project-owned top-level paths such as `data/`.
 - T-0149 locked this decision with init template changes, README entry-surface cleanup, focused init tests, built CLI profile smokes, full Docker validation, and done-level harness validation.
 
@@ -80,7 +80,7 @@ Reason:
 - New Task Capsules should move to table-first v2 frames, while existing capsules remain valid until an explicit non-destructive upgrade/remediation command inserts missing frames.
 - Any remediation must be dry-run by default, `--execute` gated, low-risk, bounded to exact table/row/file operations, and must not delete user-authored content.
 
-## D-0011: Dashboard UI/UX reset (Phase 5.6) builds a Preact single-asset bundle on the Phase 5.5 read models
+## D-0011: Historical dashboard UI/UX reset (Phase 5.6) built a Preact single-asset bundle on the Phase 5.5 read models
 
 Reason:
 - Phase 5.5 (`T-0197`–`T-0206`) made the dashboard fast, cached, observable, and governed, but optimized backend latency/provenance rather than perceived product quality; the served surface still read as a read-model inspector. See `docs/archive/specs/dashboard/HADARA_Dashboard_Phase5_6_UIUX_Reset_Proposal.md`.
@@ -91,6 +91,7 @@ Reason:
 - Validation: full Docker `npm ci && npm run build && vitest` passed (84 files / 562 tests) with the rewritten `dashboard-static.test.ts`; `scripts/dashboard-visual-check.sh` (Playwright + axe-core) passed home/detail/empty/degraded with no critical/serious a11y violations.
 - Not yet locked: this is uncommitted reviewer work; capsules `T-0207`–`T-0214` are not closed and may be revised or rolled back after review.
 - 2026-06-02 fix pass (post hands-on UX review, `docs/archive/specs/dashboard/HADARA_Dashboard_Phase5_6_UX_Diagnosis.md`): sidebar tabs now render distinct per-view content (no dead tabs); the data layer separates **live** reads (`loadLiveRuntime`: bootstrap→status) from **non-live fallback** (`loadFallbackRuntime`: fixture→inline) so a refresh that loses live retains the last good live view and raises the degraded banner instead of silently showing stale sample data; loading is optimized (per-source timeout 6s→2.5s, instant inline preview at 350 ms, `syncing` indicator); proof gains an evidence drill link; offline empty states are labelled "Unavailable offline"; mobile uses a compact horizontal nav strip. Re-validated: Docker 84 files / 562 tests, dashboard visual+a11y gate all pass.
+- T-0691 removed this surface entirely on July 23, 2026. Keep this decision only as implementation history.
 
 ## D-0012: 0.3.0 surface refactor uses Phase 7.x internal implementation labels
 

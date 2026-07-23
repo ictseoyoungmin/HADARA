@@ -10,7 +10,7 @@ These files are mockups and reference implementations only. They do not define p
 
 ## Intent
 
-The HADARA TUI is a local terminal work console for an operator who wants to keep current project state visible while an agent works. It complements the browser dashboard, but it should be faster to open, usable over SSH/WSL/Docker terminals, and focused on the current Task Capsule.
+The HADARA TUI is a local terminal work console for an operator who wants to keep current project state visible while an agent works. It should be fast to open, usable over SSH/WSL/Docker terminals, and focused on the current Task Capsule without any separate browser surface.
 
 Initial product shape:
 

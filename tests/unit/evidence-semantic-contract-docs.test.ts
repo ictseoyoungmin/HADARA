@@ -9,12 +9,10 @@ function read(relativePath: string): string {
 }
 
 describe('evidence semantic consumer contract docs', () => {
-  it('documents selected-task Dashboard and TUI evidence semantics without raw evidence parsing', () => {
-    const dashboard = read('docs/DASHBOARD_READ_MODEL_CONTRACT.md');
+  it('documents selected-task evidence semantics without raw evidence parsing', () => {
     const workbench = read('docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md');
 
     for (const status of ['sufficient', 'weak', 'failed', 'blocked', 'private-only', 'unknown']) {
-      expect(dashboard).toContain(`| \`${status}\` |`);
       expect(workbench).toContain(`| \`${status}\` |`);
     }
 
@@ -25,15 +23,11 @@ describe('evidence semantic consumer contract docs', () => {
       'TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE',
       'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE'
     ]) {
-      expect(dashboard).toContain(code);
       expect(workbench).toContain(code);
     }
 
-    expect(dashboard).toContain('must not parse `evidence.jsonl`, `EVIDENCE.md`, command summaries, or artifact paths');
     expect(workbench).toContain('should not infer proof strength by parsing `evidence.jsonl` directly');
     expect(workbench).toContain('Do not infer resolution or proof tone from human summary wording; use exact semantic markers and normalized analyzer output only.');
-    expect(dashboard).toContain('Show auditability warning, not a Done blocker');
     expect(workbench).toContain('auditability warning, not a Done blocker');
-    expect(dashboard).toContain('This contract does not require a Dashboard UI implementation');
   });
 });

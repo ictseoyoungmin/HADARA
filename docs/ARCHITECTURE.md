@@ -11,7 +11,7 @@ It is not positioned as a full agent controller, provider runtime, cloud queue, 
 ```text
 [Human Operators / Coding Agents]
               ↓
-[CLI / Dashboard / TUI / read-only MCP]
+[CLI / TUI / read-only MCP]
               ↓
 [Task / Current State / Evidence / Docs / Policy Services]
               ↓
@@ -48,7 +48,6 @@ Implemented:
 - Read-only MCP stdio server and read tools
 - Opt-in MCP evidence attach with approval metadata and private audit records
 - Adaptive task-status read model; top-level `status` is a deprecated alias, not a second evaluator
-- Live read-only dashboard APIs, projection cache, Preact single-asset operator console, and local server
 - Integrated read-only terminal TUI with snapshot, interactive, cache, and shared read-model paths
 - Release artifact, package smoke, clean-checkout smoke, release gate, dry-run, and approval-gated publish planning surfaces
 - Context graph, code index, context pack/slice, session-start routing, and local cache read models

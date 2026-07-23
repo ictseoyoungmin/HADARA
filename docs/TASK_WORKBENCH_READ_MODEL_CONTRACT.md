@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`hadara.task.workbench.v1` is the Phase 3 task-facing read model for future dashboard, TUI, MCP, and external-agent task detail views.
+`hadara.task.workbench.v1` is the Phase 3 task-facing read model for TUI, MCP, and external-agent task detail views.
 
 Consumers should prefer this report when they need task readiness, evidence health, close/audit state, protocol summaries, and next actions for one task.
 
@@ -17,7 +17,6 @@ Consumers should prefer this report when they need task readiness, evidence heal
 
 | Consumer | Guidance |
 |---|---|
-| Dashboard | Use workbench JSON for a selected task detail panel instead of parsing Task Capsule Markdown directly; dashboard controls should remain read-again or copy-command only. |
 | TUI | Use the service report for selected-task detail, close readiness, and next actions; keep full raw document viewing as a separate detail tab. |
 | MCP | If a future read-only MCP task-workbench tool is added, wrap this report as JSON text and preserve `schemaVersion`, `command`, `ok`, `issues`, and `nextActions`. |
 | External agents | Prefer `task status --json` before stitching together task show, evidence list, evidence lint, protocol doctor, ready, close, and harness reports manually. |
@@ -28,7 +27,7 @@ Consumers should prefer this report when they need task readiness, evidence heal
 |---|---|
 | `task` | Identity, capsule path, `TASK.md` status, true Task Board row status/path/presence from `docs/TASK_BOARD.md`. |
 | `state` | Quick readiness, close evidence presence, valid closure, and auditability flags. |
-| `summary` | Dashboard cards, badges, and compact TUI rows. |
+| `summary` | Compact operator UI rows, cards, and badges. |
 | `sources` | Source-level health; useful for drill-down links to existing commands. |
 | `issues` | Blocking/warning details; consumers should not infer blockers from text. |
 | `nextActions` | Copyable commands and review/edit/remediation/audit guidance. |
@@ -41,9 +40,7 @@ Close-state consumers should prefer `state.closedValid` over the legacy `state.c
 
 Phase 4 evidence semantics appear through shared evidence semantic services. Workbench consumers should not infer proof strength by parsing `evidence.jsonl` directly. Current selected-task consumers should combine `hadara.task.workbench.v1` for task state/readiness with `hadara.evidence.lint.v1` for `summary.semantics` and semantic `issues[]`. A future additive workbench field may inline the same semantic summary, issue list, and compact proof status, but it must reuse the same analyzer rather than inventing a workbench-only taxonomy.
 
-Dashboard Phase 5 selected-task work should treat this report as a read model, not a command surface. A dashboard refresh for selected-task state may re-read the workbench and evidence semantic reports, but it must not run readiness checks, append evidence, call `task finish`, call `task close`, update handoff, or synchronize Task Board state. Any suggested remediation should be presented as copyable command guidance.
-
-Dashboard Phase 5.5 may wrap this report inside `hadara.dashboard.task_detail.v1` so the browser can fetch one selected-task aggregate instead of fanning out to workbench, evidence lint, evidence list, and timeline routes. That aggregate must still reuse the workbench and shared evidence semantic analyzers; it must not become a new task parser, evidence interpreter, command executor, or source of truth. Missing or invalid task ids should degrade through structured dashboard API issues/errors instead of triggering mutation or fallback parsing.
+Selected-task operator surfaces should treat this report as a read model, not a command surface. A refresh may re-read the workbench and evidence semantic reports, but it must not run readiness checks, append evidence, call `task finish`, call `task close`, update handoff, or synchronize Task Board state. Any suggested remediation should be presented as copyable command guidance.
 
 ## Evidence Semantic Consumer Contract
 
@@ -65,7 +62,7 @@ Proof status derivation should use this priority order:
 | 5 | `sufficient` | At least one `substantive-positive` record and no semantic error. |
 | 6 | `unknown` | No semantic summary, no records, or unavailable evidence source. |
 
-The workbench contract remains read-only. It must not append evidence, rewrite `EVIDENCE.md`, migrate `evidence.jsonl`, expose private raw artifact paths, trigger Dashboard/TUI writes, execute release/package commands, or expand MCP write behavior.
+The workbench contract remains read-only. It must not append evidence, rewrite `EVIDENCE.md`, migrate `evidence.jsonl`, expose private raw artifact paths, trigger UI writes, execute release/package commands, or expand MCP write behavior.
 
 ## Boundaries
 
@@ -80,7 +77,6 @@ The workbench contract remains read-only. It must not append evidence, rewrite `
 
 | Surface | Current Status | Rule |
 |---|---|---|
-| Dashboard live selected-task panel | Deferred | Must remain read-only and use the workbench report or service. |
 | TUI selected-task summary | Deferred | Must remain read-only and avoid shell/provider/MCP calls. |
 | MCP `hadara.task.workbench` | Deferred | Read-only only; no evidence attach or remediation execution. |
 | Evidence semantic proof status | Contracted for future additive workbench exposure | Must be produced by shared evidence semantics, remain additive, and avoid evidence writer or migration behavior. |

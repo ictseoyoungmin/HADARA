@@ -164,12 +164,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'dashboard': {
-      const { handleDashboardCommand } = await import('./dashboard');
-      if (handleDashboardCommand({ args, projectRoot: paths.projectRoot })) return;
-      break;
-    }
-
     case 'tui': {
       const { handleTuiCommand } = await import('./tui');
       if (handleTuiCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;

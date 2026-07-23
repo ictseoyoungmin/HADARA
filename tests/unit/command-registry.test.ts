@@ -58,7 +58,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'mcp.serve',
   'status',
   'install.plan',
-  'dashboard.serve',
   'tui'
 ];
 
@@ -116,7 +115,6 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('state.verify')).toBeUndefined();
     expect(findCommandRegistryEntry('dev.docker-check')).toMatchObject({ requiredness: 'dev-only', appearsInDefaultHelp: false, exposure: 'repo-local' });
     expect(findCommandRegistryEntry('release.publish')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false, exposure: 'repo-local' });
-    expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('validation.run')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('evidence.add-command')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('task.next')).toBeUndefined();

@@ -36,7 +36,6 @@ export interface TuiDirectorySignal {
 
 export interface TuiCacheSourceSignals {
   taskBoard?: TuiFileSignal;
-  taskProjection?: TuiFileSignal;
   tasksDir?: TuiDirectorySignal;
   handoff?: TuiFileSignal;
   activeRun?: TuiFileSignal;
@@ -119,7 +118,6 @@ export function refreshTaskIndex(projectRoot: string, previous: TuiTaskIndexEntr
 export function collectTuiCacheSourceSignals(projectRoot: string, selectedTask?: TaskJsonSummary | null, previous?: TuiCacheSourceSignals): TuiCacheSourceSignals {
   return {
     taskBoard: fileSignal(projectRoot, 'docs/TASK_BOARD.md', true, previous?.taskBoard),
-    taskProjection: fileSignal(projectRoot, '.hadara/local/cache/dashboard/source-signals/tasks.json', false, previous?.taskProjection),
     tasksDir: undefined,
     handoff: fileSignal(projectRoot, 'docs/AGENT_HANDOFF.md', true, previous?.handoff),
     activeRun: fileSignal(projectRoot, '.hadara/local/state/active-run.json', true, previous?.activeRun),
@@ -132,7 +130,6 @@ export function areTuiCacheSourceSignalsEqual(left: TuiCacheSourceSignals | unde
   if (!left) return false;
   return (
     fileSignalsEqual(left.taskBoard, right.taskBoard) &&
-    fileSignalsEqual(left.taskProjection, right.taskProjection) &&
     fileSignalsEqual(left.handoff, right.handoff) &&
     fileSignalsEqual(left.activeRun, right.activeRun) &&
     fileSignalsEqual(left.selectedTask, right.selectedTask) &&

@@ -27,7 +27,7 @@ Use these surfaces for command discovery:
 | `release-package` | Release, artifact, and package-smoke surfaces. |
 | `dev-validation` | Development-only validation and replay surfaces. |
 | `integrations` | Hermes, MCP, and capability-discovery integration surfaces. |
-| `ui` | Dashboard and terminal UI surfaces. |
+| `ui` | Terminal UI surfaces. |
 | `agent-loop` | Deterministic local harness and active-run state surfaces. |
 | `install` | Installer planning surfaces. |
 | `advanced` | Compatibility or low-level operator surfaces hidden from default help. |
@@ -112,7 +112,7 @@ Public `session start` routing was removed in 0.5.0. Use `hadara task status --j
 
 ## Advanced Surfaces
 
-Release/package, dev validation, integrations, dashboard/TUI, and installer planning commands remain available through `hadara commands --json` and `hadara help family <family>`. Package smoke validation is canonical as `hadara smoke package ...`; the old `hadara package smoke` route is no longer public routing. Deterministic agent-loop harness commands are no longer public worker CLI surfaces. Advanced surfaces are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.
+Release/package, dev validation, integrations, TUI, and installer planning commands remain available through `hadara commands --json` and `hadara help family <family>`. Package smoke validation is canonical as `hadara smoke package ...`; the old `hadara package smoke` route is no longer public routing. Deterministic agent-loop harness commands are no longer public worker CLI surfaces. Advanced surfaces are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.
 
 ## Adding Commands
 

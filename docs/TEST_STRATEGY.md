@@ -71,32 +71,18 @@ Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AG
 
 Done-level harness validation is the minimum completion gate for Task Capsules. It requires Done status, completed acceptance, indexed evidence, updated handoff sections, Task Board alignment, non-placeholder standard capsule docs, and concrete `TASK.md` Created/Updated metadata formatted as `YYYY-MM-DD`.
 
-## Dashboard Production Readiness Checks
+## Read-Only UI Checks
 
-Phase 5.5 Dashboard work should validate responsiveness and read-only boundaries without brittle wall-clock assertions.
-
-Required focused coverage for relevant capsules:
+The remaining UI surface is the integrated TUI. Focused validation for UI-adjacent capsules should cover:
 
 | Area | Expected Coverage |
 |---|---|
-| Bootstrap aggregate | `hadara.dashboard.bootstrap.v1` schema fixture/registration, `/api/dashboard/bootstrap`, selected-task degradation, no deep evidence payload, GET/HEAD-only behavior. |
-| Task detail aggregate | `hadara.dashboard.task_detail.v1` schema fixture/registration, taskId-required behavior, workbench/evidence/timeline composition, semantic proof derivation, private-only auditability warning, no private raw paths. |
-| Phase 5.5 route cache | Process-memory TTL hit/miss/expiry/bypass behavior, cache metadata, no committed or `.hadara/local` cache writes. |
-| Phase 5.7 projection store | Local `.hadara/local/cache/dashboard` writes are ignored, redacted, atomic temp-file/rename replacements, context-export excluded, and never browser-written. |
-| Phase 5.7 core route | `/api/dashboard/core` returns `hadara.dashboard.core.v1`, uses local projection warm reads, supports bypass recompute, and does not scan every Task Capsule directory on the request path. |
-| Phase 5.7 background refresh | Serve-start warmup and `/api/dashboard/refresh` trigger background projection refresh, coalesce concurrent refreshes, expose metadata through `/api/dashboard/projection/status`, and do not expose cached bodies. |
-| Phase 5.7 incremental task projection | Task projection refresh tracks `TASK.md` and `evidence.jsonl` signals, reuses unchanged summaries without rereading task bodies, records changed/reused task ids, and keeps projection files redacted/rebuildable. |
-| Phase 5.7 timeline/debt projection | Background refresh writes redacted timeline/debt projections; `/api/dashboard/timeline` and `/api/dashboard/debt` read projection bodies or missing metadata without request-time task scans. |
-| Phase 5.7 frontend core/heavy merge | Authored dashboard source loads `/api/dashboard/core` first, independently backfills debt/timeline projections, preserves fallback/degraded labels, avoids browser storage, and rebuilds the static bundle when dependencies/Docker are available. |
-| Phase 5.7 projection visual/a11y states | Playwright/axe gate stubs projection routes from redacted fixtures and captures projection-ready, detail, offline, stale, refreshing, missing-heavy, and degraded states. Static tests should keep fixture schemas, redaction, and route coverage from regressing. |
-| Frontend progressive UX | Immediate shell render, bootstrap-first loading, selected-task lazy detail, previous in-memory view retained on failed refresh, source/cache/load status display. |
-| Browser storage boundary | Static/source tests for no project-state use of `localStorage`, `sessionStorage`, IndexedDB, or cookies. |
-| Debug/action boundary | Debug helpers remain read-only; UI labels avoid command execution, task mutation, evidence append, remediation, publish, or release/package action wording. |
-| Timeline identity | Evidence events prefer semantic id/fingerprint/sourceLine/idStability where available and keep fallback ids display-only. |
+| TUI read-model aggregation | Shared status/task/evidence/active-run aggregation, selected-task fallback, fast/full profile behavior, and no dashboard-only service dependencies. |
+| TUI snapshot rendering | Deterministic narrow/wide snapshots, no-color mode, search/selection/document rendering, and stable operator summary rows. |
+| TUI cache boundary | Machine-local `.hadara/local/tui` cache only, no committed source writes, and no dependency on deleted dashboard projection files. |
+| Read-only boundary | No shell execution, provider calls, MCP calls, evidence writes, task mutation, handoff mutation, or release/package execution from TUI refresh/navigation paths. |
 
-Performance budgets should be recorded as observed evidence per capsule rather than enforced as timing-sensitive unit tests. Suggested targets are uncached bootstrap under 500 ms, cached bootstrap under 50 ms, uncached selected-task detail under 800 ms, cached selected-task detail under 80 ms, immediate/static shell paint, and no blank screen on refresh failure.
-
-`docs/DASHBOARD_PERFORMANCE_BUDGET.md` is the operator-facing performance budget reference. Dashboard tests should assert deterministic behavior such as cache metadata, previous-view retention hooks, load phase display, read-only debug helpers, and absence of browser project-state persistence rather than absolute wall-clock timings.
+UI performance budgets should be recorded as observed evidence per capsule rather than enforced as timing-sensitive unit tests.
 
 ## Remote CI Observation
 

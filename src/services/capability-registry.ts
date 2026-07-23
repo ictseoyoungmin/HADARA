@@ -1574,7 +1574,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Use the compatibility alias', 'hadara status --json', 'Only while migrating a 0.5.x caller to hadara task status.'),
       example('Read compact status', 'hadara status --summary-json', 'When automation needs the smallest status payload.'),
       example('Read state advisory', 'hadara status --state-only --json', 'When checking state consistency after state.verify removal.'),
-      example('Read v1 compatibility status', 'hadara status --compat v1 --detail full --json', 'When legacy dashboard-style debt, known-problem, and full state diagnostics are needed.')
+      example('Read v1 compatibility status', 'hadara status --compat v1 --detail full --json', 'When legacy full-detail debt, known-problem, and state diagnostics are needed.')
     ],
     related: ['doctor', 'status'],
     conflictsWith: []
@@ -1916,26 +1916,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
-    id: 'dashboard.serve',
-    command: 'hadara dashboard serve [--host <host>] [--port <port>]',
-    summary: 'Serve read-only dashboard assets and routes.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'ui',
-    scope: 'ui',
-    lifecycleStage: 'none',
-    requiredness: 'advanced',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'operator',
-    status: 'stable',
-    docs: ['docs/DASHBOARD_READ_MODEL_CONTRACT.md'],
-    examples: [example('Serve dashboard', 'hadara dashboard serve --host 127.0.0.1 --port 8787', 'When using the operator console.')],
-    related: ['tui', 'status'],
-    conflictsWith: []
-  }),
-  commandEntry({
     id: 'tui',
     command: 'hadara tui [--snapshot] [--compact] [--json]',
     summary: 'Start or snapshot the read-only terminal work console.',
@@ -1952,7 +1932,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     docs: ['docs/design/TUI_DESIGN_NOTES.md'],
     examples: [example('Snapshot TUI', 'hadara tui --snapshot --json', 'When testing terminal console rendering.')],
-    related: ['dashboard.serve', 'task.status'],
+    related: ['task.status'],
     conflictsWith: []
   })
 ];

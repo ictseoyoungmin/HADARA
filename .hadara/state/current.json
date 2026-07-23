@@ -1,36 +1,40 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 302,
+  "rev": 304,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0690",
-    "title": "RC2 Debt Consumer Cleanup"
+    "id": "T-0691",
+    "title": "RC2 Dashboard Debt Projection Cleanup"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Remove the remaining dashboard/TUI debt projections or retarget them out of the public user surfaces now that both CLI/MCP command exposure and default tests are split away from developer-only debt code.",
-    "reason": "RC2 still leaks developer-only debt state through read-only UI consumers even after the MCP bridge cleanup.",
+    "title": "Finalize shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.",
+    "reason": "The implementation and focused validation are complete; the remaining work is proof-last capsule close.",
     "references": [
       {
-        "path": "`tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md`",
+        "path": "`tasks/T-0691-rc2-dashboard-debt-projection-cleanup/TASK.md`",
         "required": true
       },
       {
-        "path": "`tasks/T-0690-rc2-debt-consumer-cleanup/TASK.md`",
+        "path": "`docs/AGENT_HANDOFF.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0690",
-      "path": "tasks/T-0690-rc2-debt-consumer-cleanup/HANDOFF.md"
+      "workId": "T-0691",
+      "path": "tasks/T-0691-rc2-dashboard-debt-projection-cleanup/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

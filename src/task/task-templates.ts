@@ -60,7 +60,7 @@ export const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
   },
   'operator-workflow': simpleTemplate('operator-workflow', 'Implement an operator workflow compression slice.', ['focused workflow tests', 'full Docker check', 'built CLI workflow smoke'], ['No hidden shared-doc writes', 'No scheduler behavior', 'No multi-agent runtime claims']),
   'protocol-remediation': simpleTemplate('protocol-remediation', 'Implement a dry-run-first protocol remediation slice.', ['focused protocol/remediation tests', 'full Docker check', 'before-hash execute smoke when applicable'], ['No destructive rewrites', 'No broad automatic cleanup', 'No missing before-hash execute path']),
-  'ui-polish': simpleTemplate('ui-polish', 'Implement a bounded UI polish slice.', ['focused UI/snapshot tests', 'full Docker check', 'visual/a11y check when UI changes'], ['No new mutation surfaces', 'No browser storage expansion', 'No dashboard/TUI scope creep'])
+  'ui-polish': simpleTemplate('ui-polish', 'Implement a bounded UI polish slice.', ['focused UI/snapshot tests', 'full Docker check', 'visual/a11y check when UI changes'], ['No new mutation surfaces', 'No browser storage expansion', 'No separate browser UI or TUI scope creep'])
 };
 
 export function supportedTaskTemplateIds(): TaskTemplateId[] {

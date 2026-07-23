@@ -13,10 +13,6 @@ import contextPackSchemaJson from '../schemas/context-pack.schema.json';
 import contextSliceSchemaJson from '../schemas/context-slice.schema.json';
 import contextGraphSchemaJson from '../schemas/context-graph.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
-import dashboardBootstrapSchemaJson from '../schemas/dashboard-bootstrap.schema.json';
-import dashboardCoreSchemaJson from '../schemas/dashboard-core.schema.json';
-import dashboardTaskDetailSchemaJson from '../schemas/dashboard-task-detail.schema.json';
-import dashboardTimelineSchemaJson from '../schemas/dashboard-timeline.schema.json';
 import devDockerCheckSchemaJson from '../schemas/dev-docker-check.schema.json';
 import docsCompleteSpecSchemaJson from '../schemas/docs-complete-spec.schema.json';
 import docsDoctorSchemaJson from '../schemas/docs-doctor.schema.json';
@@ -134,10 +130,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.contextSlice.v1': contextSliceSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.contextGraph.v1': contextGraphSchemaJson as JsonObject,
-  'hadara.dashboard.bootstrap.v1': dashboardBootstrapSchemaJson as JsonObject,
-  'hadara.dashboard.core.v1': dashboardCoreSchemaJson as JsonObject,
-  'hadara.dashboard.task_detail.v1': dashboardTaskDetailSchemaJson as JsonObject,
-  'hadara.dashboard.timeline.v1': dashboardTimelineSchemaJson as JsonObject,
   'hadara.dev.docker_check.v1': devDockerCheckSchemaJson as JsonObject,
   'hadara.docs.completeSpec.v1': docsCompleteSpecSchemaJson as JsonObject,
   'hadara.docs.doctor.v1': docsDoctorSchemaJson as JsonObject,

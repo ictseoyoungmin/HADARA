@@ -149,7 +149,7 @@ describe('CLI write boundary preflight', () => {
   it('returns a structured error for unsupported target commands', () => {
     const root = tempProject();
 
-    const report = createWritePreflightReport(root, ['dashboard', 'serve']);
+    const report = createWritePreflightReport(root, ['browser-ui', 'serve']);
 
     expect(report).toEqual({
       schemaVersion: 'hadara.write.preflight.v1',
@@ -163,7 +163,7 @@ describe('CLI write boundary preflight', () => {
         {
           severity: 'error',
           code: 'UNSUPPORTED_WRITE_COMMAND',
-          message: 'Unsupported write preflight target: dashboard serve'
+          message: 'Unsupported write preflight target: browser-ui serve'
         }
       ]
     });

@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0690 RC2 Debt Consumer Cleanup | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0691 RC2 Dashboard Debt Projection Cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0690 completes the next RC2 isolation step at the integration boundary. The default read-only MCP bridge no longer advertises or dispatches `hadara.debt.list/show`, so developer-only operational-debt state is no longer exposed through public MCP discovery. The next cleanup boundary is the remaining read-only UI coupling: dashboard/TUI debt projections and related release/readiness internals that still surface developer-only state.
+T-0691 is the active RC2 UI-reduction capsule. The dashboard surface code has been removed, including its CLI route, frontend assets, projection/read-model services, schemas, scripts, and dedicated tests. The remaining UI boundary is the read-only terminal TUI over shared status/task/evidence services. The capsule's remaining work is close-source doc review and proof-last close.
 
 ## Previous Handoff
 

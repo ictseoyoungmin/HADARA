@@ -4,7 +4,7 @@
 
 Published and consumer-recycled `hadara@0.4.3` consolidates the 0.4.2 baseline around structured current state, semantic currentness, measured workflow friction, and fast session resume.
 
-The immediate roadmap is consolidation rather than capability expansion. HADARA's product boundary is portable current state and evidence integrity across human and agent sessions; a full controller, default real-provider runtime, cloud queue, and broad write-capable MCP remain outside the current release line.
+The immediate roadmap is consolidation rather than capability expansion. HADARA's product boundary is portable current state and evidence integrity across human and agent sessions; a full controller, default real-provider runtime, cloud queue, broad write-capable MCP, and a separate browser dashboard surface remain outside the current release line.
 
 ## Current Release Sequence
 
@@ -34,7 +34,6 @@ External agents can read HADARA project state, task capsules, handoff, evidence,
 - Policy evaluate / preflight.
 - Context export with MCP usage instructions.
 - Compatibility fixture for Hermes-like external agent flow.
-- Static Operations Dashboard backed by status JSON / fixture.
 - Terminal TUI design alignment as a read-only local work-console candidate.
 
 ### Out of Scope
@@ -49,11 +48,11 @@ External agents can read HADARA project state, task capsules, handoff, evidence,
 
 ### Current Status
 
-Most v0.3 foundations exist: Task Capsules, evidence indexing, done-level harness validation, CLI JSON read surfaces, read-only MCP tools, policy evaluation/preflight, Operations Status JSON, and the static sample-backed dashboard server.
+Most v0.3 foundations exist: Task Capsules, evidence indexing, done-level harness validation, CLI JSON read surfaces, read-only MCP tools, policy evaluation/preflight, and Operations Status JSON. The historical browser dashboard work is retained only as history; the current product boundary keeps TUI as the remaining UI surface.
 
 T-0066 through T-0070 moved several v0.3/v0.4/v0.5 ideas from design into implementation: the Hermes-like compatibility fixture exists, project/handoff read-model parity has started, single active run state exists, operational debt tracking exists, and operations state robustness now degrades local-state failures into warnings.
 
-Remaining work is now v1.0 hardening rather than v0.3 proof of concept: redaction hardening, evidence list/read models, broader service parity, active-run CLI/MCP surfaces, operational debt release gates, schema validation, dashboard read APIs, provider adapter contracts, and release/packaging.
+Remaining work is now v1.0 hardening rather than v0.3 proof of concept: redaction hardening, evidence list/read models, broader service parity, active-run CLI/MCP surfaces, operational debt release gates, schema validation, provider adapter contracts, and release/packaging.
 
 T-0099 adds TUI design alignment before production TUI work. The TUI is planned as a read-only terminal work console over existing read models, not a write surface or dashboard replacement.
 
@@ -65,9 +64,9 @@ Project Protocol Consistency Phase 2 reached its product baseline in T-0160 and 
 
 Phase 3 Task Operator Console work is complete through T-0177. The phase built and hardened a read-oriented `hadara task status --task <id> --json` workbench projection over existing task, evidence, protocol, ready, close, and audit sources, while preserving the current no-broad-write posture. The source plan is `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 
-Before Phase 4 read-surface/operator UI work, Phase 3.5 focuses on operator workflow hardening: runtime CLI origin diagnostics, Docker sync-build scripting, bounded task finish/status sync, task next recommendations, schema stability classification, and focused test command UX. These capsules reduce execution-environment confusion and repetitive completion bookkeeping before Dashboard/TUI/MCP selected-task surfaces consume the workbench projection more heavily.
+Before Phase 4 read-surface/operator UI work, Phase 3.5 focuses on operator workflow hardening: runtime CLI origin diagnostics, Docker sync-build scripting, bounded task finish/status sync, task next recommendations, schema stability classification, and focused test command UX. These capsules reduce execution-environment confusion and repetitive completion bookkeeping before TUI/MCP selected-task surfaces consume the workbench projection more heavily.
 
-Phase 4 should begin with evidence proof semantics, not Dashboard rendering or an evidence writer migration. The first Phase 4 evidence slice should keep `hadara.evidence.v1` persisted records valid, add a normalized semantic read model, classify evidence strength, summarize proof meaning, and reuse one analyzer across evidence lint, task protocol doctor, done-level harness validation, and future Dashboard/TUI selected-task views. Evidence v2 writer work, `EVIDENCE.md` frame migration, init scaffold changes, mass evidence migration, MCP write expansion, and strict release-gate enforcement are separate follow-up slices. A workspace-local ignored supporting spec may exist at `docs/archive/specs/evidence/EVIDENCE_PHASE4_REFACTOR_PLAN.md`; this committed roadmap records the GitHub-visible boundary.
+Phase 4 should begin with evidence proof semantics, not separate browser rendering or an evidence writer migration. The first Phase 4 evidence slice should keep `hadara.evidence.v1` persisted records valid, add a normalized semantic read model, classify evidence strength, summarize proof meaning, and reuse one analyzer across evidence lint, task protocol doctor, done-level harness validation, and future TUI selected-task views. Evidence v2 writer work, `EVIDENCE.md` frame migration, init scaffold changes, mass evidence migration, MCP write expansion, and strict release-gate enforcement are separate follow-up slices. A workspace-local ignored supporting spec may exist at `docs/archive/specs/evidence/EVIDENCE_PHASE4_REFACTOR_PLAN.md`; this committed roadmap records the GitHub-visible boundary.
 
 Phase 5 should turn the existing served static dashboard into a live read-only HADARA Operator Console. The public boundary is tracked in `docs/DASHBOARD_READ_MODEL_CONTRACT.md`; a workspace-local ignored supporting spec may exist at `docs/archive/specs/dashboard/HADARA_Dashboard_Phase5_Development_Plan.md`. The intended sequence is live `/api/status` binding with fixture/inline fallback and visible provenance, then operator-console layout, selected-task evidence lens, and deterministic timeline read model. Dashboard actions must remain "read again" or "copy command" only: `Refresh Status` may re-read `/api/status` and update source provenance, but it must not run checks, synchronize tasks, append evidence, remediate project state, call providers, invoke MCP writes, or execute package/release commands.
 
@@ -153,7 +152,7 @@ Candidate scope:
 
 ## v0.9 Terminal Work Console
 
-Provide a local terminal UI for operators who want current HADARA state visible without opening the browser dashboard.
+Provide a local terminal UI for operators who want current HADARA state visible without leaving the terminal.
 
 Candidate scope:
 
@@ -174,7 +173,6 @@ Candidate scope:
 
 - Stable Task Capsule lifecycle.
 - Stable CLI JSON and read-only MCP operations surfaces.
-- Static or product-served operations dashboard with clear read/write boundaries.
 - Read-only terminal TUI with clear read/write boundaries.
 - Documented provider adapter path.
 - Operational debt gates connected to product risk.

@@ -53,15 +53,10 @@
     "measure:primary-workflow": "node scripts/primary-workflow-measurement.mjs",
     "dev:surface": "node --import tsx tools/dev-surfaces.ts",
     "dev:docker-check": "bash scripts/dev-docker-sync-build.sh --check-only --no-smoke",
-    "dev:docker-sync-build": "bash scripts/dev-docker-sync-build.sh",
-    "dashboard:build": "node dashboard/build.mjs",
-    "dashboard:build:docker": "bash scripts/dashboard-build.sh",
-    "dashboard:visual:docker": "bash scripts/dashboard-visual-check.sh"
+    "dev:docker-sync-build": "bash scripts/dev-docker-sync-build.sh"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "esbuild": "^0.25.0",
-    "preact": "^10.29.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^4.1.8"

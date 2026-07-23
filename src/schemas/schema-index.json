@@ -51,34 +51,6 @@
       "notes": "Documents normalized 0.4 close-source payloads and source units for task close/audit proof boundaries."
     },
     {
-      "id": "hadara.dashboard.bootstrap.v1",
-      "path": "src/schemas/dashboard-bootstrap.schema.json",
-      "status": "fixture",
-      "owner": "services/dashboard-bootstrap",
-      "notes": "Documents read-only dashboard bootstrap aggregate reports for first-paint operator-console rendering."
-    },
-    {
-      "id": "hadara.dashboard.core.v1",
-      "path": "src/schemas/dashboard-core.schema.json",
-      "status": "fixture",
-      "owner": "services/dashboard-core",
-      "notes": "Documents the Phase 5.7 first-actionable dashboard core projection contract with freshness and completeness metadata."
-    },
-    {
-      "id": "hadara.dashboard.task_detail.v1",
-      "path": "src/schemas/dashboard-task-detail.schema.json",
-      "status": "fixture",
-      "owner": "services/dashboard-task-detail",
-      "notes": "Documents read-only selected-task dashboard detail aggregate reports over workbench, evidence, and timeline read models."
-    },
-    {
-      "id": "hadara.dashboard.timeline.v1",
-      "path": "src/schemas/dashboard-timeline.schema.json",
-      "status": "fixture",
-      "owner": "services/dashboard-timeline",
-      "notes": "Documents read-only dashboard timeline reports for deterministic operator-console workstream rendering."
-    },
-    {
       "id": "hadara.evidence.list.v1",
       "path": "src/schemas/evidence-list.schema.json",
       "status": "fixture",

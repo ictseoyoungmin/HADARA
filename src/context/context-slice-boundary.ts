@@ -10,8 +10,7 @@ export const CONTEXT_SLICE_DENIED_PATHS = [
   '.git',
   'node_modules',
   '.hadara/tmp',
-  '.hadara/run',
-  '.dashboard-visual'
+  '.hadara/run'
 ];
 
 export function normalizeContextSliceInputPath(inputPath: string | undefined): string {

@@ -1,6 +1,6 @@
 # OPERATIONS_STATUS_CONTRACT
 
-This document defines the HADARA operations status JSON contract for dashboards and external agents.
+This document defines the HADARA operations status JSON contract for TUI, automation, and external agents.
 
 ## Command
 
@@ -24,7 +24,7 @@ hadara status --state-only --json
 
 The old `hadara ops status --json` alias is fully removed from public routing; use `hadara status --json`.
 
-Text output is intentionally minimal. External agents and dashboards should use JSON mode.
+Text output is intentionally minimal. External agents and other read-model consumers should use JSON mode.
 
 ## Schema
 
@@ -39,7 +39,7 @@ Example:
   "fixtureMeta": {
     "kind": "sample",
     "notLiveData": true,
-    "note": "Static sample data for dashboard design; it may not match the repository's current state."
+    "note": "Static sample data for contract/examples; it may not match the repository's current state."
   },
   "ok": true,
   "health": "ok",
@@ -108,10 +108,10 @@ Example:
 
 - `schemaVersion`, `command`, and `ok` are stable fields.
 - `ok` means the status report was generated. It does not mean the project state is complete.
-- `health` is the dashboard-facing operational state: `ok`, `degraded`, or `error`.
+- `health` is the operator-facing operational state: `ok`, `degraded`, or `error`.
 - `project.branch` is read from the local Git metadata when available; otherwise it is `unknown`.
 - `project.phase` is derived from `docs/PROJECT_STATE.md`; explicit `Phase: ...` markers or a simple `## Current Phase` value are preferred.
-- `tasks.counts` keeps stable dashboard-facing keys: `done`, `draft`, `partial`, `superseded`, `inProgress`, and `unknown`.
+- `tasks.counts` keeps stable operator-facing keys: `done`, `draft`, `partial`, `superseded`, `inProgress`, and `unknown`.
 - Default fast status counts tasks from `docs/TASK_BOARD.md`. Full-detail status counts from Task Capsule metadata.
 - `tasks.rawStatusCounts` preserves original source status labels for diagnostics.
 - `tasks.normalizedStatusCounts` preserves normalized source status values for programmatic diagnostics.
@@ -123,11 +123,11 @@ Example:
 - `activeRun.handoff.fresh` is false when an active run exists but `docs/AGENT_HANDOFF.md` does not mention the active task id.
 - `mcp.evidenceAttach` documents configured operational guard state. It is not live MCP server process inspection.
 - `issues` may include warnings when expected source documents are missing or validation baseline details are unavailable. Expected documents are profile/registry-aware: `docs/AGENT_HANDOFF.md` is required for governed and HADARA-dev projects, or when the docs registry explicitly lists it; `docs/DEVELOPMENT_SLICES.md` is required only when the project registry/profile expects it. Warning-only reports keep `ok: true` and set `health: "degraded"` so dashboards can render degraded snapshots.
-- Future evidence/debt/dashboard read models should follow the T-0070 robustness rule: local mutable state or malformed optional indexes should degrade with structured warnings instead of crashing the whole read report.
+- Future evidence/debt/read-model consumers should follow the T-0070 robustness rule: local mutable state or malformed optional indexes should degrade with structured warnings instead of crashing the whole read report.
 
 ## Summary and State-Only Variants
 
-`hadara.ops.statusSummary.v1` keeps only health, project, task counts, last completed, next recommendation, validation, optional state consistency, and issues. It is intended for shell automation that does not need dashboard panels.
+`hadara.ops.statusSummary.v1` keeps only health, project, task counts, last completed, next recommendation, validation, optional state consistency, and issues. It is intended for shell automation that does not need richer UI panels.
 
 `hadara.ops.statusState.v1` contains only:
 
@@ -171,7 +171,7 @@ The `mcp` object is a configured capability snapshot. T-0054 does not inspect:
 
 ## Non-Goals
 
-- Dashboard rendering.
+- Separate browser rendering.
 - Live streaming status.
 - Provider calls.
 - Shell execution.

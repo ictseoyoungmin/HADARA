@@ -85,8 +85,8 @@ export interface OpsStatusStateReport {
 
 export interface OpsStatusOptions {
   // When false, skip the operational-debt computation (the dominant cost on
-  // large/slow filesystems) and return a zeroed debt aggregate. Used by the
-  // dashboard "core" tier, which loads debt separately in the background.
+  // large/slow filesystems) and return a zeroed debt aggregate. Used by fast
+  // status/TUI read paths that load debt through explicit surfaces instead.
   includeDebt?: boolean;
   includeKnownProblems?: boolean;
   includeStateConsistency?: boolean;

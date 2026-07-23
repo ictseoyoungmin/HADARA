@@ -42,11 +42,6 @@ describe('tools list read model', () => {
           readOnly: true
         }),
         expect.objectContaining({
-          name: 'hadara dashboard serve [--host <host>] [--port <port>]',
-          category: 'read',
-          readOnly: true
-        }),
-        expect.objectContaining({
           name: 'hadara tui [--snapshot] [--compact] [--json]',
           category: 'read',
           readOnly: true

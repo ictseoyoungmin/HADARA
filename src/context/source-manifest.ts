@@ -19,8 +19,7 @@ export const CONTEXT_SOURCE_MANIFEST_IGNORED_PATHS = Array.from(new Set([
   ...CODE_INDEX_IGNORED_PATHS,
   '.hadara/local',
   '.hadara/tmp',
-  '.hadara/run',
-  '.dashboard-visual'
+  '.hadara/run'
 ])).sort();
 
 const CONTEXT_SOURCE_MANIFEST_GIT_TIMEOUT_MS = 15000;

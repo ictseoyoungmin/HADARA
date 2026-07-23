@@ -24,7 +24,7 @@ Operational debt records track weaknesses discovered while dogfooding HADARA its
 | OD-0004 | Long-running capsule work can concentrate too many features in one file | `known_issue.log#4` | complexity | tracked | medium | LOC and complexity risk indicators |
 | OD-0005 | LOC calculation utility is needed for complexity management | `known_issue.log#5` | complexity | candidate | low | Changed LOC utility |
 | OD-0006 | Capsule size should scale with task complexity | `known_issue.log#6` | scope-control | tracked | medium | Capsule size indicator |
-| OD-0007 | Task change size should be visible in dashboard or TUI surfaces | `known_issue.log#7` | visibility | candidate | low | Changed-size dashboard signal |
+| OD-0007 | Task change size should be visible in operator surfaces | `known_issue.log#7` | visibility | candidate | low | Changed-size TUI signal |
 | OD-0008 | `ACCEPTANCE.md` checkboxes can be marked before implementation evidence exists | `known_issue.log#8` | validation | mitigated | high | Premature acceptance guard and done-level harness validation |
 
 ## Mitigation Notes
@@ -45,8 +45,6 @@ Read-only surfaces:
 
 - `node --import tsx tools/dev-surfaces.ts debt list --json`
 - `node --import tsx tools/dev-surfaces.ts debt show <id> --json`
-- MCP `hadara.debt.list`
-- MCP `hadara.debt.show`
 - `hadara status --json` includes debt aggregate counts.
 - `node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json` is the default current release gate. Open high-severity debt would emit a warning check and `ok: true`.
 - `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt would emit an error check and `ok: false`; with OD-0003 and OD-0008 mitigated, strict mode can pass when all other documented readiness checks pass.

@@ -281,7 +281,7 @@ describe('context slice report', () => {
       '.hadara/tmp/generated.txt',
       '.hadara/run/current.json',
       '.hadara/private-state.txt',
-      '.dashboard-visual/state.json'
+      '.hadara/local/tui/state.json'
     ];
     for (const deniedPath of deniedPaths) {
       fs.mkdirSync(path.dirname(path.join(root, deniedPath)), { recursive: true });

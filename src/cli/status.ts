@@ -100,7 +100,7 @@ function withStatusV1CompatibilityMetadata<T extends { schemaVersion: string }>(
     compatibility: {
       defaultSchemaVersion: 'hadara.taskSelection.status.v2',
       recommendedCommand: 'hadara task status --json',
-      migration: 'This v1 status report is an explicit 0.5.x compatibility route for legacy dashboard/read-model consumers. New agents should use hadara task status --json.'
+      migration: 'This v1 status report is an explicit 0.5.x compatibility route for legacy status/read-model consumers. New agents should use hadara task status --json.'
     }
   };
 }

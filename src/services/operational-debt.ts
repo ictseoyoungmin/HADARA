@@ -151,12 +151,12 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
   },
   {
     id: 'OD-0007',
-    title: 'Task change size should be visible in dashboard or TUI surfaces',
+    title: 'Task change size should be visible in operator surfaces',
     source: 'known_issue.log#7',
     category: 'visibility',
     status: 'candidate',
     severity: 'low',
-    targetCapability: 'Changed-size dashboard signal'
+    targetCapability: 'Changed-size TUI signal'
   },
   {
     id: 'OD-0008',
@@ -242,7 +242,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const v1Schemas = readOptionalText(path.join(projectRoot, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'));
   const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
   const architecture = readOptionalText(path.join(projectRoot, 'docs', 'ARCHITECTURE.md'));
-  const dashboardDesign = readOptionalText(path.join(projectRoot, 'docs', 'design', 'DASHBOARD_DESIGN_NOTES.md'));
+  const tuiDesign = readOptionalText(path.join(projectRoot, 'docs', 'design', 'TUI_DESIGN_NOTES.md'));
   const testStrategy = readOptionalText(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'));
   const releaseReadiness = readOptionalText(path.join(projectRoot, 'docs', 'RELEASE_READINESS.md'));
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
@@ -265,7 +265,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkCleanCheckoutSmokeEvidence(evidence, mode),
     checkReleaseArtifactEvidence(evidence, mode),
     checkInstallMatrixSmokeEvidence(),
-    checkGeneratedArtifactPolicy(architecture, developmentSlices, dashboardDesign, mode),
+    checkGeneratedArtifactPolicy(architecture, developmentSlices, tuiDesign, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
   const issues = checks
@@ -701,20 +701,20 @@ function createEvidenceCheck(
 function checkGeneratedArtifactPolicy(
   architecture: string | null,
   developmentSlices: string | null,
-  dashboardDesign: string | null,
+  tuiDesign: string | null,
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
   const ok =
     includesAll(developmentSlices, ['contextPath: null', 'without writing generated context files']) &&
     includesAll(architecture, ['.hadara/local/tui/']) &&
-    includesAll(dashboardDesign, ['read-only local API routes']);
+    includesAll(tuiDesign, ['machine-local and ignored']);
   return {
     code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
     name: 'Generated artifact policy',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok
-      ? 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
-      : 'Generated context/dashboard/cache artifact boundaries must be documented before release.'
+      ? 'Context export and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
+      : 'Generated context/TUI cache artifact boundaries must be documented before release.'
   };
 }
 

@@ -590,7 +590,7 @@ describe('operational debt track', () => {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
-        summary: 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
+        summary: 'Context export and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
       },
       {
         code: 'REMOTE_CI_OBSERVATION',

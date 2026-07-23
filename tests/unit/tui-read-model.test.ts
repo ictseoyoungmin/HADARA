@@ -61,13 +61,9 @@ describe('TUI read-model aggregator', () => {
           id: first.id,
           capsule: `tasks/${first.id}-active-tui-task`
         },
-        dashboardDetail: {
-          schemaVersion: 'hadara.dashboard.task_detail.v1',
-          command: 'dashboard.task-detail',
-          taskId: first.id
-        },
         proof: {
-          note: expect.any(String)
+          status: 'passed',
+          note: '1 evidence record(s) are indexed for the selected task.'
         },
         evidence: {
           schemaVersion: 'hadara.evidence.list.v1',
@@ -75,20 +71,20 @@ describe('TUI read-model aggregator', () => {
         }
       },
       operator: {
-        source: 'shared-dashboard-services',
+        source: 'shared-read-models',
         core: {
-          schemaVersion: 'hadara.dashboard.core.v1',
-          command: 'dashboard.core',
+          schemaVersion: 'hadara.tui.operator_core.v1',
+          command: 'tui.operator.core',
           source: {
-            kind: 'live-api'
+            kind: 'shared-read-model'
           },
           projection: {
             refreshState: 'idle'
           }
         },
         projectionStatus: {
-          schemaVersion: 'hadara.dashboard.projection_status.v1',
-          command: 'dashboard.projection.status'
+          schemaVersion: 'hadara.tui.operator_status.v1',
+          command: 'tui.operator.status'
         }
       },
       activeRun: {
@@ -111,10 +107,8 @@ describe('TUI read-model aggregator', () => {
       }
     });
     expect(model.tasks.count).toBe(2);
-    expect(model.operator.core.projection.pendingSections).toContain('timeline');
-    expect(model.operator.projectionStatus.pendingSections).toContain('core');
-    expect(model.selectedTask?.evidence.records).toEqual(model.selectedTask?.dashboardDetail.evidenceList.records.slice(0, 20));
-    expect(model.selectedTask?.proof).toBe(model.selectedTask?.dashboardDetail.proof);
+    expect(model.operator.core.projection.pendingSections).toEqual([]);
+    expect(model.operator.projectionStatus.pendingSections).toEqual([]);
     expect(model.tasks.tasks.map((task) => task.id)).toEqual([first.id, second.id]);
     expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
     expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
@@ -147,11 +141,10 @@ describe('TUI read-model aggregator', () => {
     const model = createTuiReadModel(root, { profile: 'fast' });
 
     expect(model.ok).toBe(true);
-    expect(model.operator.source).toBe('shared-dashboard-services');
+    expect(model.operator.source).toBe('shared-read-models');
     expect(model.operator.projectionStatus.refresh.state).toBe('idle');
     expect(model.selectedTaskId).toBe(task.id);
     expect(model.overview.currentWork?.id).toBe(task.id);
-    expect(model.selectedTask?.dashboardDetail).toBeNull();
     expect(model.selectedTask?.proof).toMatchObject({
       status: 'unknown',
       semanticIssueCodes: ['TUI_FAST_PROOF_DEFERRED']

@@ -368,7 +368,7 @@ describe('context pack', () => {
     const graph = sampleGraphReport({ includeCode: false });
     graph.nodes.push(
       documentNode('.hadara/local/cache/context/source-manifest.json', { requiredReading: true, status: 'canonical', kind: 'local-cache' }),
-      documentNode('.dashboard-visual/state.json', { requiredReading: true, status: 'canonical', kind: 'generated' }),
+      documentNode('.hadara/local/tui/state.json', { requiredReading: true, status: 'canonical', kind: 'local-cache' }),
       documentNode('.hadara/docs-registry.json', { requiredReading: true, status: 'canonical', kind: 'docs-registry' })
     );
 
@@ -381,7 +381,7 @@ describe('context pack', () => {
     });
 
     expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/cache/context/source-manifest.json');
-    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.dashboard-visual/state.json');
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/tui/state.json');
     expect(report.sliceCandidates.map((candidate) => candidate.path)).toContain('.hadara/docs-registry.json');
     assertSchema('hadara.contextPack.v1', report);
   });
@@ -390,7 +390,7 @@ describe('context pack', () => {
     const graph = sampleGraphReport({ includeCode: false });
     graph.nodes.push(
       documentNode('.hadara/local/cache/context/source-manifest.json', { requiredReading: true, status: 'canonical', kind: 'local-cache' }),
-      documentNode('.dashboard-visual/state.json', { requiredReading: true, status: 'canonical', kind: 'generated' }),
+      documentNode('.hadara/local/tui/state.json', { requiredReading: true, status: 'canonical', kind: 'local-cache' }),
       documentNode('.hadara/docs-registry.json', { requiredReading: true, status: 'canonical', kind: 'docs-registry' }),
       {
         id: 'doc:no-path',
@@ -422,7 +422,7 @@ describe('context pack', () => {
         rawSlice: 'not-sliceable'
       })
     }));
-    expect(items.find((item) => item.path === '.dashboard-visual/state.json')).toEqual(expect.objectContaining({
+    expect(items.find((item) => item.path === '.hadara/local/tui/state.json')).toEqual(expect.objectContaining({
       sourceAccess: expect.objectContaining({
         rawSlice: 'not-sliceable'
       })
@@ -439,7 +439,7 @@ describe('context pack', () => {
       }
     }));
     expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/cache/context/source-manifest.json');
-    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.dashboard-visual/state.json');
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/tui/state.json');
     assertSchema('hadara.contextPack.v1', report);
   });
 
