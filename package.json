@@ -49,6 +49,7 @@
     "check": "npm run build && npm test",
     "smoke:context-routing": "node scripts/context-routing-e2e-smoke.mjs",
     "measure:primary-workflow": "node scripts/primary-workflow-measurement.mjs",
+    "dev:surface": "node --import tsx tools/dev-surfaces.ts",
     "dev:docker-check": "bash scripts/dev-docker-sync-build.sh --check-only --no-smoke",
     "dev:docker-sync-build": "bash scripts/dev-docker-sync-build.sh",
     "dashboard:build": "node dashboard/build.mjs",

@@ -29,7 +29,7 @@ docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && t
 The preferred HADARA-dev JSON wrapper for focused/full Docker validation is:
 
 ```bash
-hadara dev docker-check --focused tests/unit/<file>.test.ts --sync-dist --json
+node --import tsx tools/dev-surfaces.ts dev docker-check --focused tests/unit/<file>.test.ts --sync-dist --json
 ```
 
 It reports `hadara.dev.docker_check.v1`, redacts raw paths/logs/secrets from JSON, creates a run-scoped temp copy, runs `npm ci`, and only refreshes `/workspace/dist` when `--sync-dist` is explicit.
@@ -127,7 +127,7 @@ npm run check
 node dist/cli/main.js doctor --json
 node dist/cli/main.js status --json
 node dist/cli/main.js status --state-only --json
-node dist/cli/main.js release gate --mode strict --json
+node --import tsx tools/dev-surfaces.ts release gate --mode strict --json
 ```
 
 The current smoke plan performs no packaging or release execution. It does not run `npm pack`, publish packages, create archives, compute release checksums, call GitHub, deploy, execute MCP release/package tools, or mutate Task Capsules. If a future capsule adds executable package smoke behavior, it must define the allowed workspace, expected artifacts, redaction/audit handling, and evidence format before implementation.
@@ -183,21 +183,21 @@ Evidence/report shape:
 }
 ```
 
-The future executable package-smoke command must define approval, cleanup, and failure semantics in its own Task Capsule before implementation. Until then, `hadara release gate --mode strict --json` remains a read-only checklist and performs no package-smoke execution.
+The future executable package-smoke command must define approval, cleanup, and failure semantics in its own Task Capsule before implementation. Until then, `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` remains a read-only checklist and performs no package-smoke execution.
 
 ## Package Smoke Command Surface
 
 The future executable package-smoke surface is:
 
 ```bash
-hadara smoke package --dry-run --json
-hadara smoke package --task <task-id> --json
-hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json
-hadara smoke package --from ./dist-release/hadara-0.1.0-rc.0.tgz --json
-hadara smoke package --keep-temp --json
+node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json
+node --import tsx tools/dev-surfaces.ts smoke package --task <task-id> --json
+node --import tsx tools/dev-surfaces.ts smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json
+node --import tsx tools/dev-surfaces.ts smoke package --from ./dist-release/hadara-0.1.0-rc.0.tgz --json
+node --import tsx tools/dev-surfaces.ts smoke package --keep-temp --json
 ```
 
-Use `hadara smoke package` as the primary command name. `hadara package smoke` is no longer public routing. Do not use `hadara release smoke` as the primary command surface because release wording implies publish/deploy behavior.
+Use `tools/dev-surfaces.ts smoke package` as the primary developer command path. `hadara package smoke` is no longer public routing. Do not use `release smoke` as the primary command surface because release wording implies publish/deploy behavior.
 
 Required flags and semantics:
 
@@ -217,7 +217,7 @@ Approval and boundary rules:
 - Dry-run planning may run in normal assisted/dev mode.
 - Real package-smoke execution must require an explicit user command in a later implementation capsule.
 - Package smoke must not be callable from MCP by default; any future MCP package-smoke surface must be opt-in, approval-gated, and privately audited.
-- The release gate must not call `hadara smoke package`; it may only read documented markers and later evidence records.
+- The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`; it may only read documented markers and later evidence records.
 - On success, disposable workspace cleanup should be the default. On failure, raw package/install artifacts should be removed unless `--keep-temp` is set, and public output should remain reduced and redacted.
 
 ## Release Install Package Smoke Plan
@@ -234,11 +234,11 @@ T-0138 evidence freeze:
 
 T-0140 dry-run evidence hardening:
 
-- `hadara release dry-run --json` emits `hadara.releaseDryRun.v1` without publishing, creating GitHub Releases, building Docker images, loading token values, or mutating release state.
+- `node --import tsx tools/dev-surfaces.ts release dry-run --json` emits `hadara.releaseDryRun.v1` without publishing, creating GitHub Releases, building Docker images, loading token values, or mutating release state.
 - The dry-run cross-checks passed public package-smoke, clean-checkout smoke, and release-artifact evidence records.
 - Evidence artifact cross-checks require: `evidence.jsonl` record exists, `evidencePath` artifact exists, artifact schema is valid, source/report `ok` is true, and category/mode/result match the expected release check.
 - Release artifact freshness requires the attached release artifact report or manifest to expose the current package version and a manifest hash; git commit freshness is checked when the artifact includes git commit metadata.
-- Release artifact evidence has an explicit user path: build with `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>`, which attaches the reduced `hadara.releaseArtifact.v1` public report under `tasks/<task-id>/artifacts/release-artifact/`.
+- Release artifact evidence has an explicit user path: build with `node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task <task-id>`, which attaches the reduced `hadara.releaseArtifact.v1` public report under `tasks/<task-id>/artifacts/release-artifact/`.
 
 The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 
@@ -303,9 +303,9 @@ Recommended `core` profile:
 - `hadara task list --json`
 - `hadara tools list --json`
 - `hadara tui --snapshot --json`
-- `hadara release gate --mode advisory --json`
+- `node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json`
 
-`hadara smoke run --profile core --json` emits a reduced schema-valid `hadara.featureSmoke.v1` report. For registered sub-report schemas, the runner validates the reduced report before marking the step passed; unregistered sub-report schemas are marked as not registered rather than treated as installed CLI proof. T-0131 is the Core Feature Smoke Runner; future capsules own Installed CLI Smoke and Package Smoke Execution. The reserved `release-readiness` profile currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`; later it may add strict release gate checks, package smoke evidence, install matrix evidence, release artifact evidence, and explicit installed-binary smoke once those surfaces exist.
+`node --import tsx tools/dev-surfaces.ts smoke run --profile core --json` emits a reduced schema-valid `hadara.featureSmoke.v1` report. For registered sub-report schemas, the runner validates the reduced report before marking the step passed; unregistered sub-report schemas are marked as not registered rather than treated as installed CLI proof. T-0131 is the Core Feature Smoke Runner; future capsules own Installed CLI Smoke and Package Smoke Execution. The reserved `release-readiness` profile currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`; later it may add strict release gate checks, package smoke evidence, install matrix evidence, release artifact evidence, and explicit installed-binary smoke once those surfaces exist.
 
 ## Package Metadata Release Readiness
 

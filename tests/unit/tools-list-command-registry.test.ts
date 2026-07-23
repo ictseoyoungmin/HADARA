@@ -2,30 +2,31 @@ import { describe, expect, it } from 'vitest';
 import {
   HADARA_CLI_CAPABILITIES,
   HADARA_COMMAND_REGISTRY,
+  listCommandRegistryEntries,
   projectCommandEntryToCapabilities
 } from '../../src/services/capability-registry';
 import { createToolsListReport } from '../../src/services/tools-list';
 
 describe('tools list command registry projection', () => {
   it('derives CLI capabilities from the authoritative command registry', () => {
-    const projected = HADARA_COMMAND_REGISTRY.flatMap(projectCommandEntryToCapabilities);
+    const projected = listCommandRegistryEntries().flatMap(projectCommandEntryToCapabilities);
 
     expect(HADARA_CLI_CAPABILITIES).toEqual(projected);
     expect(createToolsListReport().surfaces.cli).toEqual(projected);
   });
 
-  it('preserves compatibility capability variants for mode-sensitive surfaces', () => {
+  it('omits repo-local developer surfaces from the public CLI capability projection', () => {
     const names = createToolsListReport().surfaces.cli.map((surface) => surface.name);
 
-    expect(names).toContain('hadara smoke package --dry-run --json');
-    expect(names).toContain('hadara smoke package --execute --json');
-    expect(names).toContain('hadara package recycle --json');
-    expect(names).toContain('hadara package recycle --execute --json');
-    expect(names).toContain('hadara release publish --mode dry-run --json');
-    expect(names).toContain('hadara release publish --mode execute --json');
+    expect(names).not.toContain('hadara smoke package --dry-run --json');
+    expect(names).not.toContain('hadara smoke package --execute --json');
+    expect(names).not.toContain('hadara package recycle --json');
+    expect(names).not.toContain('hadara package recycle --execute --json');
+    expect(names).not.toContain('hadara release publish --mode dry-run --json');
+    expect(names).not.toContain('hadara release publish --mode execute --json');
   });
 
-  it('keeps command registry ids separate from compatibility capability variants', () => {
+  it('retains repo-local command registry ids even when public capability projection hides them', () => {
     const commandIds = HADARA_COMMAND_REGISTRY.map((entry) => entry.id);
 
     expect(commandIds).toContain('smoke.package');

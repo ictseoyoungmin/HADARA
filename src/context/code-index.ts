@@ -1384,7 +1384,6 @@ function createRegistryLineMap(content: string): Map<string, number> {
 function inferCommandImplementationFiles(entry: CommandRegistryEntry): string[] {
   const exact: Record<string, string[]> = {
     'context.graph': ['src/cli/context.ts'],
-    'dev.docker-check': ['src/cli/dev.ts'],
     'docs.managed.list': ['src/cli/docs.ts'],
     'docs.managed.explain': ['src/cli/docs.ts'],
     'docs.required-reading': ['src/cli/docs.ts'],
@@ -1392,13 +1391,6 @@ function inferCommandImplementationFiles(entry: CommandRegistryEntry): string[] 
     'install.plan': ['src/cli/install.ts'],
     'mcp.serve': ['src/cli/mcp.ts'],
     'policy.preflight-shell': ['src/cli/policy.ts'],
-    'release.artifact': ['src/cli/release-artifact.ts'],
-    'release.dry-run': ['src/cli/release-dry-run.ts'],
-    'release.gate': ['src/cli/release-gate.ts'],
-    'release.publish': ['src/cli/release-publish.ts'],
-    'smoke.clean-checkout': ['src/cli/smoke.ts'],
-    'smoke.package': ['src/cli/smoke.ts'],
-    'smoke.run': ['src/cli/smoke.ts'],
     'status': ['src/cli/status.ts']
   };
   if (exact[entry.id]) return exact[entry.id];

@@ -128,7 +128,7 @@ describe('release dry-run', () => {
     expect(report.readiness.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'review-publish-dry-run',
-        command: 'hadara release publish --mode dry-run --json'
+        command: 'node --import tsx tools/dev-surfaces.ts release publish --mode dry-run --json'
       })
     );
     expect(report.diagnostics.stageTimings.map((timing) => timing.stage)).toEqual([
@@ -212,7 +212,7 @@ describe('release dry-run', () => {
     expect(report.readiness.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'refresh-package-smoke-evidence',
-        command: 'hadara smoke package --execute --attach-evidence --task <task-id> --json'
+        command: 'node --import tsx tools/dev-surfaces.ts smoke package --execute --attach-evidence --task <task-id> --json'
       })
     );
   });
@@ -277,7 +277,7 @@ describe('release dry-run', () => {
     expect(report.readiness.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'refresh-package-smoke-evidence',
-        command: 'hadara smoke package --execute --attach-evidence --task <task-id> --json'
+        command: 'node --import tsx tools/dev-surfaces.ts smoke package --execute --attach-evidence --task <task-id> --json'
       })
     );
   });
@@ -301,7 +301,7 @@ describe('release dry-run', () => {
       expect.objectContaining({
         id: 'refresh-release-artifact-evidence',
         reason: 'RELEASE_ARTIFACT_EVIDENCE_NOT_READY',
-        command: 'hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>'
+        command: 'node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task <task-id>'
       })
     );
   });

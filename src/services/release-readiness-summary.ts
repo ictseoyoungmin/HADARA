@@ -31,7 +31,7 @@ function createNextActions(
     actions.push({
       id: 'resolve-strict-release-gate',
       required: true,
-      command: 'hadara release gate --mode strict --json',
+      command: 'node --import tsx tools/dev-surfaces.ts release gate --mode strict --json',
       reason: 'STRICT_RELEASE_GATE_NOT_READY',
       summary: 'Run the strict release gate and resolve its blocking checks before release planning.'
     });
@@ -42,7 +42,7 @@ function createNextActions(
     actions.push({
       id: 'refresh-package-smoke-evidence',
       required: true,
-      command: 'hadara smoke package --execute --attach-evidence --task <task-id> --json',
+      command: 'node --import tsx tools/dev-surfaces.ts smoke package --execute --attach-evidence --task <task-id> --json',
       reason: 'PACKAGE_SMOKE_EVIDENCE_NOT_READY',
       summary: 'Refresh package smoke evidence with a schema-valid public reduced artifact.'
     });
@@ -53,7 +53,7 @@ function createNextActions(
     actions.push({
       id: 'refresh-clean-checkout-smoke-evidence',
       required: true,
-      command: 'hadara smoke clean-checkout --execute --attach-evidence --task <task-id> --json',
+      command: 'node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --attach-evidence --task <task-id> --json',
       reason: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE_NOT_READY',
       summary: 'Refresh clean-checkout smoke evidence with a schema-valid public reduced artifact.'
     });
@@ -64,7 +64,7 @@ function createNextActions(
     actions.push({
       id: 'refresh-release-artifact-evidence',
       required: true,
-      command: 'hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>',
+      command: 'node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task <task-id>',
       reason: 'RELEASE_ARTIFACT_EVIDENCE_NOT_READY',
       summary: 'Refresh release artifact evidence for the current package version and git commit before publish/deploy planning.'
     });
@@ -74,7 +74,7 @@ function createNextActions(
     actions.push({
       id: 'review-publish-dry-run',
       required: false,
-      command: 'hadara release publish --mode dry-run --json',
+      command: 'node --import tsx tools/dev-surfaces.ts release publish --mode dry-run --json',
       reason: 'RELEASE_DRY_RUN_READY',
       summary: 'Release dry-run is ready; review publish/deploy dry-run gates without executing release mutation.'
     });

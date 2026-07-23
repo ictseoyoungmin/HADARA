@@ -534,7 +534,7 @@ describe('operational debt track', () => {
         code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
         name: 'Package smoke command surface',
         status: 'passed',
-        summary: '`hadara smoke package` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
+        summary: 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
       },
       {
         code: 'PACKAGE_METADATA_RELEASE_READINESS',

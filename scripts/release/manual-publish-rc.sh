@@ -154,20 +154,18 @@ exit 1
 }
 }
 
-detect_hadara_cmd() {
-if [[ -f "dist/cli/main.js" ]]; then
-HADARA_CMD=(node dist/cli/main.js)
-elif command -v hadara >/dev/null 2>&1; then
-HADARA_CMD=(hadara)
+detect_dev_surface_cmd() {
+if [[ -f "tools/dev-surfaces.ts" ]]; then
+DEV_SURFACE_CMD=(node --import tsx tools/dev-surfaces.ts)
 else
-echo "hadara command not found and dist/cli/main.js does not exist."
-echo "Run npm run build, install/link hadara, or run this script from the HADARA repo root."
+echo "tools/dev-surfaces.ts does not exist."
+echo "Run this script from the HADARA repo root after npm ci."
 exit 1
 fi
 }
 
-run_hadara() {
-"${HADARA_CMD[@]}" "$@"
+run_dev_surface() {
+"${DEV_SURFACE_CMD[@]}" "$@"
 }
 
 verify_checksum() {
@@ -369,7 +367,7 @@ echo "== 0. Preflight =="
 require_cmd npm
 require_cmd node
 require_cmd git
-detect_hadara_cmd
+detect_dev_surface_cmd
 VERSION="$(node -p "require('./package.json').version")"
 if [[ -z "${NPM_TAG}" ]]; then
 NPM_TAG="$(default_npm_tag_for_version "${VERSION}")"
@@ -388,7 +386,7 @@ exit 1
 fi
 fi
 
-echo "HADARA command: ${HADARA_CMD[*]}"
+echo "Developer surface command: ${DEV_SURFACE_CMD[*]}"
 echo "Task capsule: ${TASK_CAPSULE_DIR}"
 
 GIT_STATUS="$(git status --porcelain)"
@@ -425,8 +423,8 @@ mkdir -p "${DIST_DIR}"
 mkdir -p "${RELEASE_RESULTS_DIR}"
 
 ARTIFACT_JOURNAL="${RELEASE_RESULTS_DIR}/release-artifact-${TASK_ID}-${VERSION}.json"
-run_hadara release artifact --execute --json --output "${DIST_DIR}" --journal "${ARTIFACT_JOURNAL}"
-run_hadara release artifact --from-journal "${ARTIFACT_JOURNAL}" --attach-evidence --task "${TASK_ID}" --json
+run_dev_surface release artifact --execute --json --output "${DIST_DIR}" --journal "${ARTIFACT_JOURNAL}"
+run_dev_surface release artifact --from-journal "${ARTIFACT_JOURNAL}" --attach-evidence --task "${TASK_ID}" --json
 
 TARBALL="$(ls -1t "${DIST_DIR}"/*.tgz 2>/dev/null | head -n 1 || true)"
 if [[ -z "${TARBALL}" ]]; then
@@ -458,14 +456,14 @@ verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
 
 echo
 echo "== 3. Fresh release evidence =="
-run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json
-run_hadara smoke clean-checkout --execute --attach-evidence --task "${TASK_ID}" --json
+run_dev_surface smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json
+run_dev_surface smoke clean-checkout --execute --attach-evidence --task "${TASK_ID}" --json
 
 echo
 echo "== 4. Final HADARA gates =="
-run_hadara release gate --mode strict --json
-run_hadara release dry-run --json
-run_hadara release publish --mode dry-run \
+run_dev_surface release gate --mode strict --json
+run_dev_surface release dry-run --json
+run_dev_surface release publish --mode dry-run \
   --approval-actor "${APPROVAL_ACTOR}" \
   --approval-reason "${APPROVAL_REASON}" \
   --json

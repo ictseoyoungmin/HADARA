@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0687 RC2 Developer Surface Alignment | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0688 RC2 Developer Surface Extraction | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0687 completes the RC2 developer-surface alignment. Shared docs now treat `operational debt`, release/readiness, and HADARA-dev verification roots as the first active RC2 reduction targets, and the compact Capsule contract is aligned again with the repo-level guidance. Use `tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md` as the file inventory for the next implementation capsule; do not reopen DAG/status redesign in that follow-up.
+T-0688 completes the first RC2 developer-surface extraction step. The installed/public CLI no longer routes or advertises `debt`, `dev`, `release`, `smoke`, or `package recycle`; those HADARA-dev workflows now run through `tools/dev-surfaces.ts` and the retargeted release helper scripts. Package smoke no longer depends on an installed hidden `smoke run` surface. The next cleanup boundary is deeper developer-surface coupling: dashboard/TUI debt reads, MCP debt tooling, and release/readiness schemas or services that may now be deletable.
 
 ## Previous Handoff
 
-T-0686 completed the analysis-only RC2 reduction boundary review after restoring `5b62e35`. The original product already has a compact TASK.md plus HANDOFF.md Capsule, while evidence integrity, close-source freshness, task-create locking, non-overwrite init, release confirmation, and package trust signals must be preserved or deliberately replaced. T-0687 resolved the shared-doc and continuation drift that remained after that review.
+T-0687 completes the RC2 developer-surface alignment. Shared docs now treat `operational debt`, release/readiness, and HADARA-dev verification roots as the first active RC2 reduction targets, and the compact Capsule contract is aligned again with the repo-level guidance. Use `tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md` as the file inventory for the next implementation capsule; do not reopen DAG/status redesign in that follow-up.
 
 ## Historical Index
 

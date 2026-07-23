@@ -78,7 +78,7 @@ export function renderDefaultHelp(): string {
     '  hadara commands --json      Machine-readable command registry.',
     '',
     'Advanced surfaces:',
-    '  release/package, dev validation, integrations, dashboard/TUI, run harness.'
+    '  install planning, integrations, dashboard/TUI, run harness.'
   ].join('\n');
 }
 
@@ -108,7 +108,7 @@ export function renderLifecycleHelp(): string {
   );
   for (const entry of diagnostics) lines.push(`  ${entry.id}  ${entry.command}`);
 
-  lines.push('', 'Advanced:', '  release/package, dev docker-check, dashboard/tui, integrations, run harness');
+  lines.push('', 'Advanced:', '  install planning, dashboard/tui, integrations, run harness');
 
   return lines.join('\n');
 }

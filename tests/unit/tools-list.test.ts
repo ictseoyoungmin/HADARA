@@ -56,66 +56,18 @@ describe('tools list read model', () => {
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.install.plan.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara smoke run [--profile core|release-readiness] [--json]',
-          category: 'read',
-          readOnly: true,
-          schemaVersion: 'hadara.featureSmoke.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara smoke package --dry-run --json',
-          category: 'read',
-          readOnly: true,
-          schemaVersion: 'hadara.packageSmoke.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara package recycle --json',
-          category: 'read',
-          readOnly: true,
-          schemaVersion: 'hadara.packageRecycle.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara debt list [--json]',
-          category: 'read',
-          readOnly: true,
-          schemaVersion: 'hadara.operational_debt.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara release gate [--mode advisory|strict] [--json]',
-          category: 'release',
-          readOnly: true,
-          schemaVersion: 'hadara.releaseGate.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara release dry-run [--json]',
-          category: 'release',
-          readOnly: true,
-          schemaVersion: 'hadara.releaseDryRun.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara release publish --mode dry-run --json',
-          category: 'release',
-          readOnly: true,
-          risk: 'medium',
-          schemaVersion: 'hadara.releasePublish.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara release publish --mode execute --json',
-          category: 'release',
-          readOnly: false,
-          requiresApproval: true,
-          risk: 'high',
-          schemaVersion: 'hadara.releasePublish.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara release artifact --execute [--source-root <dir>] [--evidence-root <dir>] [--output <dir>] [--journal <file>|--from-journal <file>] [--task <task-id>] [--json]',
-          category: 'release',
-          readOnly: false,
-          schemaVersion: 'hadara.releaseArtifact.v1'
         })
       ])
     );
+    const publicCliNames = report.surfaces.cli.map((surface) => surface.name);
+    expect(publicCliNames).not.toContain('hadara smoke run [--profile core|release-readiness] [--json]');
+    expect(publicCliNames).not.toContain('hadara smoke package --dry-run --json');
+    expect(publicCliNames).not.toContain('hadara package recycle --json');
+    expect(publicCliNames).not.toContain('hadara debt list [--json]');
+    expect(publicCliNames).not.toContain('hadara release gate [--mode advisory|strict] [--json]');
+    expect(publicCliNames).not.toContain('hadara release dry-run [--json]');
+    expect(publicCliNames).not.toContain('hadara release publish --mode dry-run --json');
+    expect(publicCliNames).not.toContain('hadara release artifact --execute [--source-root <dir>] [--evidence-root <dir>] [--output <dir>] [--journal <file>|--from-journal <file>] [--task <task-id>] [--json]');
     expect(report.surfaces.mcp).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

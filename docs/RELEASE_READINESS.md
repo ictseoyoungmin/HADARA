@@ -2,7 +2,7 @@
 
 This document is the dedicated tracked source for release, install, installer, package-smoke, package metadata, install-matrix, release-artifact, and publish/deploy readiness details.
 
-`hadara release gate --mode strict --json` may read this document and other tracked evidence, but it must remain read-only. It must not run installer scripts, package smoke, `npm pack`, install packages, publish packages, create GitHub releases, build Docker images, mutate PATH, write shell profiles, call GitHub, execute remote CI, or perform registry mutation.
+`node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` may read this document and other tracked evidence, but it must remain read-only. It must not run installer scripts, package smoke, `npm pack`, install packages, publish packages, create GitHub releases, build Docker images, mutate PATH, write shell profiles, call GitHub, execute remote CI, or perform registry mutation.
 
 ## Release Readiness Recycle Runbook
 
@@ -23,11 +23,11 @@ Deterministic recycle sequence:
 3. Inside the container, clone `/workspace` to a container-native ext4 `sourceRoot`; use `/workspace` only as `evidenceRoot` and human review surface.
 4. Build and validate the development CLI from `sourceRoot`, then confirm `package.json` version equals `node dist/cli/main.js version`.
 5. Generate the release artifact from `sourceRoot` to an output directory and write a journal JSON outside the source tree. Do not attach evidence during this artifact build.
-6. Attach the release artifact journal from `evidenceRoot` with `hadara release artifact --from-journal <journal.json> --evidence-root <evidenceRoot> --attach-evidence --task <task> --json`.
+6. Attach the release artifact journal from `evidenceRoot` with `node --import tsx tools/dev-surfaces.ts release artifact --from-journal <journal.json> --evidence-root <evidenceRoot> --attach-evidence --task <task> --json`.
 7. Run package smoke and clean-checkout smoke with explicit root roles: `--source-root <sourceRoot> --evidence-root <evidenceRoot>` and, for installed-package paths, a disposable `--smoke-project-root <tmp-ext4-dir>`.
-8. Run `hadara release gate --mode strict --json`, `hadara release dry-run --json`, and `hadara release publish --mode dry-run ... --json` from `sourceRoot`; these checks remain read-only and must observe the evidence attached to `evidenceRoot`.
+8. Run `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json`, `node --import tsx tools/dev-surfaces.ts release dry-run --json`, and `node --import tsx tools/dev-surfaces.ts release publish --mode dry-run ... --json` from `sourceRoot`; these checks remain read-only and must observe the evidence attached to `evidenceRoot`.
 9. Only after the gates pass, run the operator-controlled npm publish helper. For release candidates use npm dist-tag `next`; for stable use `latest`.
-10. In the same publish capsule, prepare the public GitHub Release note or draft before handoff. After npm/GitHub publication, run post-publish installed-package recycle from the published package in a dedicated capsule, using `hadara package recycle --execute --package hadara@next|latest --expected-version <version> --source-root <sourceRoot> --evidence-root <evidenceRoot> --smoke-project-root <tmp-ext4-dir> --attach-evidence --task <task> --json`.
+10. In the same publish capsule, prepare the public GitHub Release note or draft before handoff. After npm/GitHub publication, run post-publish installed-package recycle from the published package in a dedicated capsule, using `node --import tsx tools/dev-surfaces.ts package recycle --execute --package hadara@next|latest --expected-version <version> --source-root <sourceRoot> --evidence-root <evidenceRoot> --smoke-project-root <tmp-ext4-dir> --attach-evidence --task <task> --json`.
 
 Forbidden ordering:
 
@@ -145,7 +145,7 @@ Current package metadata preparation mode:
 - MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist.
 - Publish target decision: npm package first, GitHub Release second, Docker image deferred.
 - Installed CLI verification must use `hadara doctor --json`.
-- Post-publish installed-package recycle should use `hadara package recycle --execute --package hadara@latest --expected-version <version> --source-root . --evidence-root . --task <task-id> --attach-evidence --json` for stable or `--package hadara@next --expected-version <version>` for release candidates from a dedicated release follow-up capsule. The command is dry-run-first by default, reports source/evidence/smoke project root roles, uses an isolated temporary prefix and disposable smoke project in execute mode, does not propagate source `HADARA_PROJECT_ROOT` into installed subprocesses, verifies registry metadata, installed version, init/task status/session/finalize/context pack/context slice surfaces, and cleanup, and must not publish packages or create release artifacts. Package smoke/recycle reports include per-step timeout policy with a 300-second npm/recycle default and timeoutStepIds for slow-step attribution. Broad installed `context graph --json` diagnostics require explicit `--include-graph`.
+- Post-publish installed-package recycle should use `node --import tsx tools/dev-surfaces.ts package recycle --execute --package hadara@latest --expected-version <version> --source-root . --evidence-root . --task <task-id> --attach-evidence --json` for stable or `--package hadara@next --expected-version <version>` for release candidates from a dedicated release follow-up capsule. The command is dry-run-first by default, reports source/evidence/smoke project root roles, uses an isolated temporary prefix and disposable smoke project in execute mode, does not propagate source `HADARA_PROJECT_ROOT` into installed subprocesses, verifies registry metadata, installed version, init/task status/session/finalize/context pack/context slice surfaces, and cleanup, and must not publish packages or create release artifacts. Package smoke/recycle reports include per-step timeout policy with a 300-second npm/recycle default and timeoutStepIds for slow-step attribution. Broad installed `context graph --json` diagnostics require explicit `--include-graph`.
 - T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only.
 - Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`.
 
@@ -188,26 +188,26 @@ Release target provider model:
 
 T-0141 publish/deploy command boundary:
 
-- `hadara release publish --mode dry-run|execute --json` emits `hadara.releasePublish.v1`.
+- `node --import tsx tools/dev-surfaces.ts release publish --mode dry-run|execute --json` emits `hadara.releasePublish.v1`.
 - The command checks release dry-run readiness, package publishability metadata, approval metadata, and token presence without including token values.
 - Execute mode requires `--approval-actor`, `--approval-reason`, and `--confirm publish-deploy`, and execute requests are privately audited before returning a blocked report.
 - The current implementation never runs `npm publish`, creates a GitHub Release, builds a Docker image, mutates registries, uploads artifacts, calls GitHub APIs, or exposes an MCP release execution surface.
 
 Evidence freshness and cross-check implementation for T-0140:
 
-- `hadara release dry-run --json` is read-only and emits `hadara.releaseDryRun.v1`.
+- `node --import tsx tools/dev-surfaces.ts release dry-run --json` is read-only and emits `hadara.releaseDryRun.v1`.
 - The dry-run verifies the strict release gate, then cross-checks package-smoke, clean-checkout smoke, and release-artifact public evidence records.
 - Release gate strictness means evidence existence, artifact schema validity, source/report `ok`, and expected category/mode/result.
 - Release dry-run strictness is release gate strictness plus freshness checks for current package version, release artifact manifest hash, and git commit when public evidence artifacts include git commit metadata.
 - T-0260 decomposes release dry-run internals into target configuration, provider advisory, evidence validation, readiness, and diagnostics services without changing the `hadara.releaseDryRun.v1` report shape or adding release mutation.
-- Release artifact evidence flow is explicit and must avoid self-invalidating clean-tree loops. Build from a clean source clone with a separate evidence sink: `hadara release artifact --execute --source-root /tmp/hadara-release-src --output /tmp/hadara-release-out --journal /tmp/hadara-release-results/artifact.json --json`, then attach from the workspace with `hadara release artifact --from-journal /tmp/hadara-release-results/artifact.json --evidence-root . --attach-evidence --task <task-id> --json`. Same-root `--attach-evidence` with a clean git preflight fail-closes with `RELEASE_ARTIFACT_SELF_INVALIDATION_RISK` unless explicitly overridden after review.
+- Release artifact evidence flow is explicit and must avoid self-invalidating clean-tree loops. Build from a clean source clone with a separate evidence sink: `node --import tsx tools/dev-surfaces.ts release artifact --execute --source-root /tmp/hadara-release-src --output /tmp/hadara-release-out --journal /tmp/hadara-release-results/artifact.json --json`, then attach from the workspace with `node --import tsx tools/dev-surfaces.ts release artifact --from-journal /tmp/hadara-release-results/artifact.json --evidence-root . --attach-evidence --task <task-id> --json`. Same-root `--attach-evidence` with a clean git preflight fail-closes with `RELEASE_ARTIFACT_SELF_INVALIDATION_RISK` unless explicitly overridden after review.
 - T-0140 still performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
 
 Compatibility markers retained for the read-only strict release gate:
 
 - Evidence freshness must compare evidence to the release candidate window.
 - Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check.
-- Release artifact evidence flow must be explicit: run `hadara release artifact --execute --source-root <clean-source> --output <artifact-output> --journal <result.json> --json`, then attach the journal from `evidenceRoot`.
+- Release artifact evidence flow must be explicit: run `node --import tsx tools/dev-surfaces.ts release artifact --execute --source-root <clean-source> --output <artifact-output> --journal <result.json> --json`, then attach the journal from `evidenceRoot`.
 
 ## Installer Script Surface and Schema
 
@@ -296,7 +296,7 @@ T-0128 release-gate boundary:
 
 ## Release Artifact Output Boundary
 
-T-0137 introduces explicit local release artifact building through `hadara release artifact --execute --json`.
+T-0137 introduces explicit local release artifact building through `node --import tsx tools/dev-surfaces.ts release artifact --execute --json`.
 
 - Default artifact output is disposable and removed after the reduced report is created.
 - Retained output requires an explicit `--output <dir>`.
@@ -388,19 +388,19 @@ Recommended `core` profile command set:
 - `hadara task list --json`
 - `hadara tools list --json`
 - `hadara tui --snapshot --json`
-- `hadara release gate --mode advisory --json`
+- `node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json`
 
 Profile boundaries:
 
 - The `core` profile must avoid package-smoke execution and strict release-gate evidence requirements.
-- `hadara smoke run --profile core --json` emits a reduced `hadara.featureSmoke.v1` report over service/read-model surfaces.
+- `node --import tsx tools/dev-surfaces.ts smoke run --profile core --json` emits a reduced `hadara.featureSmoke.v1` report over service/read-model surfaces.
 - The `release-readiness` profile is reserved but currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`.
 - A later `release-readiness` profile may include strict release gate checks, package smoke evidence, install matrix evidence, and release artifact evidence after those surfaces exist.
 - Smoke runner output must stay reduced and redacted, with raw logs temporary or private/local only.
 
 ## Release Gate Evidence Freeze
 
-T-0138 keeps `hadara release gate --mode advisory|strict --json` read-only while allowing it to read existing Task Capsule evidence records.
+T-0138 keeps `node --import tsx tools/dev-surfaces.ts release gate --mode advisory|strict --json` read-only while allowing it to read existing Task Capsule evidence records.
 
 Evidence-backed checks:
 

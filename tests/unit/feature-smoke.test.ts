@@ -49,7 +49,7 @@ describe('major feature smoke runner', () => {
     expect(report.steps.filter((step) => step.schemaStatus === 'validated').map((step) => step.command)).toEqual([
       'hadara task status --json',
       'hadara tools list --json',
-      'hadara release gate --mode advisory --json'
+      'node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json'
     ]);
     expect(report.steps.map((step) => step.command)).toEqual([
       'hadara doctor --json',
@@ -57,7 +57,7 @@ describe('major feature smoke runner', () => {
       'hadara task list --json',
       'hadara tools list --json',
       'hadara tui --snapshot --json',
-      'hadara release gate --mode advisory --json'
+      'node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json'
     ]);
     expect(report.steps.every((step) => step.status === 'passed')).toBe(true);
     expect(JSON.stringify(report)).not.toContain(root);

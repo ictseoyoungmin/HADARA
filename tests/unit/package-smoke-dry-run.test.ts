@@ -172,7 +172,6 @@ describe('package smoke dry-run', () => {
       'install-cli',
       'command-surface-drift',
       'generated-init-docs',
-      'feature-smoke-core',
       'evidence'
     ]);
     expect(report.steps.every((step) => step.status === 'planned' || step.status === 'skipped')).toBe(true);
@@ -454,7 +453,7 @@ describe('package smoke local execution', () => {
       execution: {
         npmPackExecuted: true,
         packageInstallExecuted: true,
-        featureSmokeExecuted: true,
+        featureSmokeExecuted: false,
         releaseMutationExecuted: false,
         publishExecuted: false
       },
@@ -474,7 +473,6 @@ describe('package smoke local execution', () => {
       'doctor',
       'command-surface-drift',
       'generated-init-docs',
-      'feature-smoke-core',
       'cleanup'
     ]);
     expect(report.steps.every((step) => step.status === 'passed')).toBe(true);
@@ -491,10 +489,9 @@ describe('package smoke local execution', () => {
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain(workspace);
     expect(encoded).not.toContain('npm notice');
-    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'commands', 'init', 'smoke']);
+    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'commands', 'init']);
     expect(calls.find((call) => call.args[0] === 'doctor')?.args).toEqual(['doctor', '--json']);
     expect(calls.find((call) => call.args[0] === 'init')?.args).toEqual(['init', '--profile', 'standard', '--json']);
-    expect(calls.find((call) => call.args[0] === 'smoke')?.args).toEqual(['smoke', 'run', '--profile', 'core', '--json']);
     const initCall = calls.find((call) => call.args[0] === 'init');
     expect(initCall?.cwd).not.toBe(workspace);
     expect(initCall?.cwd).toContain('init-docs-project');
@@ -502,7 +499,6 @@ describe('package smoke local execution', () => {
     expect(calls.find((call) => call.args[0] === 'install')?.env?.NPM_CONFIG_CACHE).toContain('npm-cache');
     expect(calls.find((call) => call.args[0] === 'doctor')?.env?.HADARA_PROJECT_ROOT).toBeUndefined();
     expect(calls.find((call) => call.args[0] === 'init')?.env?.HADARA_PROJECT_ROOT).toBeUndefined();
-    expect(calls.find((call) => call.args[0] === 'smoke')?.env?.HADARA_PROJECT_ROOT).toBeUndefined();
     expect(report.rootRoles).toMatchObject({
       sourceRoot: { role: 'sourceRoot', fromOption: '--project' },
       evidenceRoot: { role: 'evidenceRoot', fromOption: '--project' },
@@ -553,12 +549,6 @@ describe('package smoke local execution', () => {
     expect(report.steps).toContainEqual(
       expect.objectContaining({
         id: 'doctor',
-        status: 'skipped'
-      })
-    );
-    expect(report.steps).toContainEqual(
-      expect.objectContaining({
-        id: 'feature-smoke-core',
         status: 'skipped'
       })
     );
@@ -652,8 +642,7 @@ describe('package smoke local execution', () => {
     expect(report.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'doctor' }),
       expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'command-surface-drift' }),
-      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'generated-init-docs' }),
-      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'feature-smoke-core' })
+      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'generated-init-docs' })
     ]));
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });

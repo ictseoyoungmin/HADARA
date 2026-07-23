@@ -96,7 +96,7 @@ describe('clean checkout smoke', () => {
       'run check',
       'dist/cli/main.js doctor --json --project .',
       'dist/cli/main.js status --json --project .',
-      'dist/cli/main.js release gate --mode strict --json --project .'
+      '--import tsx tools/dev-surfaces.ts release gate --mode strict --json --project .'
     ]);
     expect(fs.existsSync(checkout)).toBe(false);
     expect(fs.readFileSync(path.join(root, 'src-marker.txt'), 'utf8')).toBe('stable source marker');

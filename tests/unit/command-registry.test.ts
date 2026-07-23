@@ -35,8 +35,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'context.slice',
   'context.cache.status',
   'context.cache.warm',
-  'debt.list',
-  'debt.show',
   'protocol.doctor',
   'protocol.remediate',
   'protocol.migrate',
@@ -55,30 +53,32 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'tools.list',
   'policy.preflight-shell',
   'harness.validate',
-  'dev.docker-check',
   'hermes.detect',
   'hermes.export-context',
   'mcp.serve',
   'status',
   'install.plan',
-  'smoke.run',
-  'smoke.clean-checkout',
-  'smoke.package',
-  'package.recycle',
-  'release.dry-run',
-  'release.publish',
-  'release.artifact',
-  'release.gate',
   'dashboard.serve',
   'tui'
 ];
 
+const REPO_LOCAL_COMMAND_IDS = ['debt.list', 'debt.show', 'dev.docker-check', 'smoke.run', 'smoke.clean-checkout', 'smoke.package', 'package.recycle', 'release.dry-run', 'release.publish', 'release.artifact', 'release.gate'];
+
 describe('Phase 7.1 command registry', () => {
   it('covers every public command surface required by Phase 7.1', () => {
-    const ids = new Set(HADARA_COMMAND_REGISTRY.map((entry) => entry.id));
+    const ids = new Set(listCommandRegistryEntries().map((entry) => entry.id));
 
     for (const id of REQUIRED_PUBLIC_COMMAND_IDS) {
       expect(ids.has(id), `${id} should have a registry entry`).toBe(true);
+    }
+  });
+
+  it('keeps repo-local developer surfaces out of the public commands projection', () => {
+    const publicIds = new Set(listCommandRegistryEntries().map((entry) => entry.id));
+
+    for (const id of REPO_LOCAL_COMMAND_IDS) {
+      expect(publicIds.has(id), `${id} should be hidden from public commands`).toBe(false);
+      expect(findCommandRegistryEntry(id)).toMatchObject({ exposure: 'repo-local' });
     }
   });
 
@@ -114,8 +114,8 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('evidence.summary')).toBeUndefined();
     expect(findCommandRegistryEntry('ci.gate')).toBeUndefined();
     expect(findCommandRegistryEntry('state.verify')).toBeUndefined();
-    expect(findCommandRegistryEntry('dev.docker-check')).toMatchObject({ requiredness: 'dev-only', appearsInDefaultHelp: false });
-    expect(findCommandRegistryEntry('release.publish')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('dev.docker-check')).toMatchObject({ requiredness: 'dev-only', appearsInDefaultHelp: false, exposure: 'repo-local' });
+    expect(findCommandRegistryEntry('release.publish')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false, exposure: 'repo-local' });
     expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('validation.run')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('evidence.add-command')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
@@ -140,7 +140,7 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('run.scaffold')).toBeUndefined();
     expect(findCommandRegistryEntry('run')).toBeUndefined();
     expect(findCommandRegistryEntry('package.smoke')).toBeUndefined();
-    expect(findCommandRegistryEntry('smoke.package')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('smoke.package')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false, exposure: 'repo-local' });
   });
 
   it('classifies 0.4 current and planned command surfaces explicitly', () => {

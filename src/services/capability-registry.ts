@@ -97,6 +97,7 @@ export interface CommandRegistryEntry {
   id: string;
   command: string;
   summary: string;
+  exposure?: 'public' | 'repo-local';
   canonical: boolean;
   aliasFor?: string;
   deprecatedCandidate?: boolean;
@@ -908,6 +909,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'debt.list',
     command: 'hadara debt list [--json]',
     summary: 'List operational debt records.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -929,6 +931,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'debt.show',
     command: 'hadara debt show <id> [--json]',
     summary: 'Read one operational debt record.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -1469,6 +1472,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'dev.docker-check',
     command: 'hadara dev docker-check [--focused <test...>] [--full] [--sync-dist] [--json]',
     summary: 'Run Docker-backed development validation wrapper.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'dev-validation',
@@ -1628,6 +1632,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'smoke.run',
     command: 'hadara smoke run [--profile core|release-readiness] [--json]',
     summary: 'Run reduced core feature smoke checks over service/read-model surfaces.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'dev-validation',
@@ -1649,6 +1654,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'smoke.clean-checkout',
     command: 'hadara smoke clean-checkout --execute [--workspace <dir>] [--task <task-id>] [--json]',
     summary: 'Run explicit source-checkout smoke validation in a disposable copy.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'dev-validation',
@@ -1670,6 +1676,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'smoke.package',
     command: 'hadara smoke package [--dry-run|--execute] [--from <tarball|dir>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--json]',
     summary: 'Preview or execute reduced npm package smoke validation.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1719,6 +1726,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'package.recycle',
     command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--include-graph] [--json]',
     summary: 'Preview or execute installed-package recycle validation from the package registry.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1771,6 +1779,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'release.dry-run',
     command: 'hadara release dry-run [--json]',
     summary: 'Run final read-only release readiness dry-run.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1794,6 +1803,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'release.closeout',
     command: 'hadara release closeout --version <version> --task <task-id> [--json]',
     summary: 'Plan release closeout document updates without writing files.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1815,6 +1825,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'release.publish',
     command: 'hadara release publish [--mode dry-run|execute] [--json]',
     summary: 'Check or request approval-gated publish/deploy readiness.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1861,6 +1872,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'release.artifact',
     command: 'hadara release artifact --execute [--source-root <dir>] [--evidence-root <dir>] [--output <dir>] [--journal <file>|--from-journal <file>] [--task <task-id>] [--json]',
     summary: 'Build whitelisted release artifact tarball, checksum, and manifest.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1885,6 +1897,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     id: 'release.gate',
     command: 'hadara release gate [--mode advisory|strict] [--json]',
     summary: 'Evaluate release readiness gates.',
+    exposure: 'repo-local',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'release-package',
@@ -1947,10 +1960,12 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
 export interface CommandRegistryFilters {
   family?: CommandFamily;
   requiredness?: CommandRequiredness;
+  includeRepoLocal?: boolean;
 }
 
 export function listCommandRegistryEntries(filters: CommandRegistryFilters = {}): CommandRegistryEntry[] {
   return HADARA_COMMAND_REGISTRY.filter((entry) => {
+    if (filters.includeRepoLocal !== true && entry.exposure === 'repo-local') return false;
     if (filters.family && entry.family !== filters.family) return false;
     if (filters.requiredness && entry.requiredness !== filters.requiredness) return false;
     return true;
@@ -1979,7 +1994,7 @@ export function projectCommandEntryToCapabilities(entry: CommandRegistryEntry): 
   return [surface];
 }
 
-export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = HADARA_COMMAND_REGISTRY.flatMap(projectCommandEntryToCapabilities);
+export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = listCommandRegistryEntries().flatMap(projectCommandEntryToCapabilities);
 
 function cloneCommandRegistryEntry(entry: CommandRegistryEntry): CommandRegistryEntry {
   return {

@@ -203,12 +203,12 @@ fi
 
 echo
 echo "== 4. Strict release-gate sanity (no npm auth needed) =="
-GATE_OK="$(node dist/cli/main.js release gate --mode strict --json 2>/dev/null \
+GATE_OK="$(node --import tsx tools/dev-surfaces.ts release gate --mode strict --json 2>/dev/null \
   | node -e "let d=\"\";process.stdin.on(\"data\",c=>d+=c).on(\"end\",()=>{try{const r=JSON.parse(d);console.log(r.ok)}catch(e){console.log(\"parse-error\")}})")"
 echo "release gate --mode strict ok: $GATE_OK"
 if [ "$GATE_OK" != "true" ]; then
   echo "ERROR: strict release gate is not green. Inspect:"
-  echo "  docker exec -it $HOSTNAME bash -lc \"cd $CLONE && node dist/cli/main.js release gate --mode strict --json\""
+  echo "  docker exec -it $HOSTNAME bash -lc \"cd $CLONE && node --import tsx tools/dev-surfaces.ts release gate --mode strict --json\""
   exit 1
 fi
 

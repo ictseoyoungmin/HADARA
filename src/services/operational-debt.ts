@@ -351,6 +351,10 @@ function checkCleanCheckoutPolicy(
   testStrategy: string | null,
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
+  const strictGateCommandDocumented = includesAny(testStrategy, [
+    'node --import tsx tools/dev-surfaces.ts release gate --mode strict --json',
+    'node dist/cli/main.js release gate --mode strict --json'
+  ]);
   const ok =
     includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'status --json']) &&
     includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']) &&
@@ -360,9 +364,9 @@ function checkCleanCheckoutPolicy(
       'npm run build',
       'node dist/cli/main.js doctor --json',
       'node dist/cli/main.js status --json',
-      'node dist/cli/main.js release gate --mode strict --json',
       'no packaging or release execution'
-    ]);
+    ]) &&
+    strictGateCommandDocumented;
   return {
     code: 'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
     name: 'Clean checkout smoke policy',
@@ -396,26 +400,51 @@ function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: Re
 }
 
 function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const dryRunCommandDocumented = includesAny(testStrategy, [
+    'node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json',
+    'hadara smoke package --dry-run --json'
+  ]);
+  const taskCommandDocumented = includesAny(testStrategy, [
+    'node --import tsx tools/dev-surfaces.ts smoke package --task <task-id> --json',
+    'hadara smoke package --task <task-id> --json'
+  ]);
+  const workspaceCommandDocumented = includesAny(testStrategy, [
+    'node --import tsx tools/dev-surfaces.ts smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json',
+    'hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json'
+  ]);
+  const keepTempCommandDocumented = includesAny(testStrategy, [
+    'node --import tsx tools/dev-surfaces.ts smoke package --keep-temp --json',
+    'hadara smoke package --keep-temp --json'
+  ]);
+  const releaseSmokeWarningDocumented = includesAny(testStrategy, [
+    'Do not use `release smoke` as the primary command surface',
+    'Do not use `hadara release smoke` as the primary command surface'
+  ]);
+  const noReleaseGateExecutionDocumented = includesAny(testStrategy, [
+    'The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`',
+    'The release gate must not call `hadara smoke package`'
+  ]);
   const ok =
     includesAll(testStrategy, [
       'Package Smoke Command Surface',
-      'hadara smoke package --dry-run --json',
-      'hadara smoke package --task <task-id> --json',
-      'hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json',
-      'hadara smoke package --keep-temp --json',
-      'Do not use `hadara release smoke` as the primary command surface',
       '`--timeout <seconds>`',
       '`--attach-evidence`',
       '`--private-logs`',
-      'Package smoke must not be callable from MCP by default',
-      'The release gate must not call `hadara smoke package`'
-    ]) && hasVersionedHadaraTarballExample(testStrategy);
+      'Package smoke must not be callable from MCP by default'
+    ]) &&
+    dryRunCommandDocumented &&
+    taskCommandDocumented &&
+    workspaceCommandDocumented &&
+    keepTempCommandDocumented &&
+    releaseSmokeWarningDocumented &&
+    noReleaseGateExecutionDocumented &&
+    hasVersionedHadaraTarballExample(testStrategy);
   return {
     code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
     name: 'Package smoke command surface',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok
-      ? '`hadara smoke package` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
+      ? 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
       : 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries must be documented before implementation.'
   };
 }
@@ -479,7 +508,10 @@ function checkPackageMetadataReadiness(
 }
 
 function hasVersionedHadaraTarballExample(text: string | null): boolean {
-  return text !== null && /hadara smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text);
+  return text !== null && (
+    /node --import tsx tools\/dev-surfaces\.ts smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text) ||
+    /hadara smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text)
+  );
 }
 
 function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
@@ -552,6 +584,7 @@ function checkReleaseWorkflowTargetDecision(releaseReadiness: string | null, mod
     'Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check'
     ]) &&
     includesAny(releaseReadiness, [
+      'Release artifact evidence flow must be explicit: run `node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release`',
       'Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`',
       'Release artifact evidence flow is explicit and must avoid self-invalidating clean-tree loops.'
     ]);

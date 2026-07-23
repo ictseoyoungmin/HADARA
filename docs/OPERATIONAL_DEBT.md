@@ -43,13 +43,13 @@ Operational debt records track weaknesses discovered while dogfooding HADARA its
 
 Read-only surfaces:
 
-- `hadara debt list --json`
-- `hadara debt show <id> --json`
+- `node --import tsx tools/dev-surfaces.ts debt list --json`
+- `node --import tsx tools/dev-surfaces.ts debt show <id> --json`
 - MCP `hadara.debt.list`
 - MCP `hadara.debt.show`
 - `hadara status --json` includes debt aggregate counts.
-- `hadara release gate --mode advisory --json` is the default current release gate. Open high-severity debt would emit a warning check and `ok: true`.
-- `hadara release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt would emit an error check and `ok: false`; with OD-0003 and OD-0008 mitigated, strict mode can pass when all other documented readiness checks pass.
+- `node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json` is the default current release gate. Open high-severity debt would emit a warning check and `ok: true`.
+- `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt would emit an error check and `ok: false`; with OD-0003 and OD-0008 mitigated, strict mode can pass when all other documented readiness checks pass.
 
 Both release-gate modes are read-only reports. They do not execute release, packaging, deployment, shell, provider, or remote CI actions. Remote CI readiness is represented by documented observation evidence in `docs/VALIDATION_HISTORY.md`; the release gate checks for that record without calling GitHub.
 

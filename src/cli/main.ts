@@ -92,12 +92,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'dev': {
-      const { handleDevCommand } = await import('./dev');
-      if (handleDevCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'task': {
       const { handleTaskCommand } = await import('./task');
       if (handleTaskCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
@@ -125,12 +119,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     case 'protocol': {
       const { handleProtocolCommand } = await import('./protocol');
       if (handleProtocolCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
-    case 'debt': {
-      const { handleDebtCommand } = await import('./debt');
-      if (handleDebtCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
@@ -188,35 +176,9 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'release': {
-      const { handleReleaseCloseoutCommand } = await import('./release-closeout');
-      if (handleReleaseCloseoutCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      const { handleReleaseDryRunCommand } = await import('./release-dry-run');
-      if (handleReleaseDryRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      const { handleReleasePublishCommand } = await import('./release-publish');
-      if (handleReleasePublishCommand({ args, paths, jsonOutput })) return;
-      const { handleReleaseArtifactCommand } = await import('./release-artifact');
-      if (handleReleaseArtifactCommand({ args, paths, jsonOutput })) return;
-      const { handleReleaseGateCommand } = await import('./release-gate');
-      if (handleReleaseGateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'install': {
       const { handleInstallCommand } = await import('./install');
       if (handleInstallCommand({ args, jsonOutput })) return;
-      break;
-    }
-
-    case 'smoke': {
-      const { handleSmokeCommand } = await import('./smoke');
-      if (handleSmokeCommand({ args, paths, jsonOutput })) return;
-      break;
-    }
-
-    case 'package': {
-      const { handlePackageCommand } = await import('./package-smoke');
-      if (handlePackageCommand({ args, paths, jsonOutput })) return;
       break;
     }
   }

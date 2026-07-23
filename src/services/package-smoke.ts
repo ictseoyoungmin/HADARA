@@ -437,31 +437,6 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           for (const issue of initDocsEvaluation.issues) issues.push(issue);
           steps.push(initDocsStep);
 
-          execution.featureSmokeExecuted = true;
-          const smoke = runner(installedBin, ['smoke', 'run', '--profile', 'core', '--json'], {
-            cwd: smokeProjectPath,
-            timeoutMs,
-            env: commandEnv
-          });
-          const smokeStep = commandStep('feature-smoke-core', 'Core feature smoke via installed command', 'hadara smoke run --profile core --json', smoke);
-          if (!isOkOrEmptyCapturedJsonReport(smoke)) {
-            smokeStep.status = 'failed';
-            smokeStep.summary = smoke.timedOut ? 'Installed core feature smoke timed out.' : 'Installed core feature smoke did not return an ok JSON report.';
-            issues.push({
-              severity: 'error',
-              code: smoke.timedOut ? 'PACKAGE_SMOKE_FEATURE_SMOKE_TIMEOUT' : 'PACKAGE_SMOKE_FEATURE_SMOKE_FAILED',
-              message: smoke.timedOut ? 'Installed core feature smoke timed out.' : 'Installed core feature smoke failed or returned non-ok JSON.',
-              stepId: 'feature-smoke-core'
-            });
-          } else {
-            smokeStep.summary = smoke.stdout.trim() === ''
-              ? 'Installed command-form core feature smoke exited successfully; stdout capture was empty in this environment.'
-              : 'Installed command-form core feature smoke returned an ok reduced JSON report.';
-            if (smoke.stdout.trim() === '') {
-              markEmptyStdoutFallback(smokeStep, issues, 'feature-smoke-core', 'Installed core feature smoke exited successfully but stdout capture was empty.');
-            }
-          }
-          steps.push(smokeStep);
         } else {
           steps.push(
             {
@@ -482,13 +457,6 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
               id: 'generated-init-docs',
               label: 'Generated init docs current UX check',
               command: 'hadara init --profile standard --json + generated docs sanity checks',
-              status: 'skipped',
-              summary: 'Skipped because isolated package install failed.'
-            },
-            {
-              id: 'feature-smoke-core',
-              label: 'Core feature smoke via installed command',
-              command: 'hadara smoke run --profile core --json',
               status: 'skipped',
               summary: 'Skipped because isolated package install failed.'
             }
@@ -521,13 +489,6 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             id: 'generated-init-docs',
             label: 'Generated init docs current UX check',
             command: 'hadara init --profile standard --json + generated docs sanity checks',
-            status: 'skipped',
-            summary: 'Skipped because no package tarball was available.'
-          },
-          {
-            id: 'feature-smoke-core',
-            label: 'Core feature smoke via installed command',
-            command: 'hadara smoke run --profile core --json',
             status: 'skipped',
             summary: 'Skipped because no package tarball was available.'
           }
@@ -976,7 +937,7 @@ function createTimeoutPolicy(timeoutSeconds: number | undefined, defaultTimeoutS
     timeoutStepIds: issues.filter((issue) => issue.code.endsWith('_TIMEOUT') && issue.stepId).map((issue) => String(issue.stepId)),
     notes: [
       'Timeouts are applied per subprocess step, not as one opaque package-smoke timeout.',
-      'When a timeout occurs, timeoutStepIds identifies the slow step such as npm-pack, install-cli, doctor, command-surface-drift, generated-init-docs, or feature-smoke-core.'
+      'When a timeout occurs, timeoutStepIds identifies the slow step such as npm-pack, install-cli, doctor, command-surface-drift, or generated-init-docs.'
     ]
   };
 }
@@ -1076,14 +1037,6 @@ function createDryRunSteps(sourceKind: PackageSmokeReport['source']['kind'], opt
       command: 'hadara init --profile standard --json + generated docs sanity checks',
       status: 'planned',
       summary: 'Would initialize a disposable project and verify generated workflow docs expose current lifecycle and slice commands.'
-    },
-    {
-      id: 'feature-smoke-core',
-      label: 'Core feature smoke via installed command',
-      command: 'hadara smoke run --profile core --json',
-      status: 'planned',
-      summary:
-        'Would run core smoke through the package-installed command form; current dry-run does not execute an installed binary or subprocess.'
     },
     {
       id: 'evidence',
@@ -1331,13 +1284,6 @@ function pushSkippedExecutionSteps(steps: PackageSmokeReport['steps']): void {
       id: 'generated-init-docs',
       label: 'Generated init docs current UX check',
       command: 'hadara init --profile standard --json + generated docs sanity checks',
-      status: 'skipped',
-      summary: 'Skipped because package-smoke setup failed.'
-    },
-    {
-      id: 'feature-smoke-core',
-      label: 'Core feature smoke via installed command',
-      command: 'hadara smoke run --profile core --json',
       status: 'skipped',
       summary: 'Skipped because package-smoke setup failed.'
     }

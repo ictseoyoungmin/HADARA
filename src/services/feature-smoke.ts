@@ -130,7 +130,7 @@ function createCoreSteps(paths: HadaraPaths, issues: FeatureSmokeIssue[]): Featu
     }),
     runStep(issues, {
       id: 'release-gate-advisory',
-      command: 'hadara release gate --mode advisory --json',
+      command: 'node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json',
       schemaVersion: 'hadara.releaseGate.v1',
       run: () => createReleaseGateReport(paths.projectRoot, 'advisory'),
       summarize: (report) => `Advisory release gate completed with ${report.checks.length} checks.`

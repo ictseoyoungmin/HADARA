@@ -350,13 +350,6 @@ describe('MCP read tools', () => {
           readOnly: true,
           stable: true,
           schemaVersion: 'hadara.evidence.list.v1'
-        }),
-        expect.objectContaining({
-          name: 'hadara debt list [--json]',
-          category: 'read',
-          readOnly: true,
-          stable: true,
-          schemaVersion: 'hadara.operational_debt.v1'
         })
       ])
     );
