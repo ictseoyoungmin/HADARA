@@ -687,3 +687,4 @@
 | T-0684 | Remove Redundant Task Lifecycle Note | Done | tasks/T-0684-remove-redundant-task-lifecycle-note | |
 | T-0685 | Stable Readiness Review | Done | tasks/T-0685-stable-readiness-review | |
 | T-0686 | RC2 Reduction Boundary Review | Done | tasks/T-0686-rc2-reduction-boundary-review | Restored baseline audit and staged reduction decision record; implementation is gated on S1 characterization. |
+| T-0687 | RC2 Developer Surface Alignment | Done | tasks/T-0687-rc2-developer-surface-alignment | Fix reviewer-found continuity and docs drift; align rc.2 to developer-only surfaces and record the first operational-debt/release code inventory. |

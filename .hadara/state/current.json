@@ -1,48 +1,44 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 294,
+  "rev": 296,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0686",
-    "title": "RC2 Reduction Boundary Review"
+    "id": "T-0687",
+    "title": "RC2 Developer Surface Alignment"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "terminal",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "This review is complete. Select a separate S1 characterization Capsule only after the P0 matrix is reviewed.",
-    "reason": "No runtime reduction should resume until each retained guarantee has an explicit focused test.",
+    "title": "Start a focused RC2 release and operational-debt remediation capsule from the report's priority-1 file set.",
+    "reason": "The scope and continuation semantics are aligned here; the next useful change is a bounded code capsule that touches only the inventoried HADARA-dev developer surfaces.",
     "references": [
       {
-        "path": "TASK.md",
+        "path": "`TASK.md`",
         "required": true
       },
       {
-        "path": "`src/evidence/evidence.ts`",
+        "path": "`RC2_DEVELOPER_SURFACE_REPORT.md`",
         "required": true
       },
       {
-        "path": "`src/task/task-close.ts`",
+        "path": "`docs/RELEASE_READINESS.md`",
         "required": true
       },
       {
-        "path": "`src/task/task-capsule.ts`",
-        "required": true
-      },
-      {
-        "path": "docs/ARCHITECTURE.md",
+        "path": "`docs/PROJECT_STATE.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0686",
-      "path": "tasks/T-0686-rc2-reduction-boundary-review/HANDOFF.md"
+      "workId": "T-0687",
+      "path": "tasks/T-0687-rc2-developer-surface-alignment/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

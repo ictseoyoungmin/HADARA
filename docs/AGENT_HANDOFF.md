@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0686 RC2 Reduction Boundary Review | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0687 RC2 Developer Surface Alignment | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0686 completed the analysis-only RC2 reduction boundary review after restoring `5b62e35`. The original product already has a compact TASK.md plus HANDOFF.md Capsule, while evidence integrity, close-source freshness, task-create locking, non-overwrite init, release confirmation, and package trust signals must be preserved or deliberately replaced. Do not resume bulk removal from the discarded RC2 attempt. Review the P0 characterization matrix in `tasks/T-0686-rc2-reduction-boundary-review/TASK.md` and create a focused S1 Capsule before changing runtime code.
+T-0687 completes the RC2 developer-surface alignment. Shared docs now treat `operational debt`, release/readiness, and HADARA-dev verification roots as the first active RC2 reduction targets, and the compact Capsule contract is aligned again with the repo-level guidance. Use `tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md` as the file inventory for the next implementation capsule; do not reopen DAG/status redesign in that follow-up.
 
 ## Previous Handoff
 
-T-0685 fixes the reviewer-identified stale handoff precedence gap: In Progress Task Board rows, cross-checked current-state active tasks, and existing open Task Board rows now beat development slices, project handoff, structured nextWork, continuation, and first-task fallback. It also updates task-selection precedence metadata and strict release gate compatibility with the current clean-source/journal/attach release artifact evidence flow. Focused precedence/release-gate tests, TypeScript build, built task status, built strict release gate, and built docs doctor passed. Next work should be a post-remediation three-profile fresh-session dogfood on current HEAD before any rc.2 release-readiness/baseline promotion. Release dry-run still correctly blocks until release artifact evidence is refreshed for the current commit in a dedicated release-readiness capsule.
+T-0686 completed the analysis-only RC2 reduction boundary review after restoring `5b62e35`. The original product already has a compact TASK.md plus HANDOFF.md Capsule, while evidence integrity, close-source freshness, task-create locking, non-overwrite init, release confirmation, and package trust signals must be preserved or deliberately replaced. T-0687 resolved the shared-doc and continuation drift that remained after that review.
 
 ## Historical Index
 
