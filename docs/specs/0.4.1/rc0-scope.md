@@ -27,7 +27,7 @@
 
 **동기**: 0.4.0 배포본에 dev 저장소에 없는 `handoff.update` writer가 포함된 채 릴리스됐다 (사건 기록: 0.5 RFC §1.1). T-0496이 그 **사례**를 제거했지만, "배포물과 소스의 커맨드 표면이 다른 채 릴리스되는" **클래스**는 게이트가 없다.
 
-**제안 동작**: 기존 패키지 스모크(`src/services/package-smoke.ts`)에 검사 추가 —
+**제안 동작**: 기존 패키지 스모크(`tools/dev-surface/package-smoke.ts`)에 검사 추가 —
 
 1. 빌드된 dist의 실행 가능 커맨드 표면(라우팅 기준)을 열거
 2. `capability-registry.ts`의 레지스트리 엔트리와 diff

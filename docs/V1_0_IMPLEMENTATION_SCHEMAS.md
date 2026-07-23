@@ -146,7 +146,7 @@ Target aggregation inputs:
 - `src/services/task-read-model.ts`
 - `src/services/evidence-list.ts`
 - `src/services/active-run-state.ts`
-- `src/services/operational-debt.ts`
+- `tools/dev-surface/operational-debt.ts`
 - `src/services/tools-list.ts`
 - `src/services/write-preflight.ts`
 
@@ -356,7 +356,7 @@ export interface OperationalDebtReport {
 
 Future persisted record schema:
 
-Current T-0069 records are static in `src/services/operational-debt.ts` and documented in `docs/OPERATIONAL_DEBT.md`; no `.hadara/state/debt.jsonl` store exists. Choose the portable/project-store boundary before adding persistence.
+Current T-0069 records are static in `tools/dev-surface/operational-debt.ts` and documented in `docs/OPERATIONAL_DEBT.md`; no `.hadara/state/debt.jsonl` store exists. Choose the portable/project-store boundary before adding persistence.
 
 ```json
 {

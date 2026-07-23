@@ -47,7 +47,7 @@ export function extractReleaseReadiness(projectRoot: string): GraphExtractionRes
   }
 
   const sourceHash = hashContextGraphText(content);
-  const commandEntries = listCommandRegistryEntries();
+  const commandEntries = listCommandRegistryEntries({ includeRepoLocal: true });
   const sections = parseReleaseReadinessSections(content);
   for (const section of sections) {
     const source = createContextGraphSourceRef({

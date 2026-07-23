@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 311,
+  "rev": 313,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0694",
-    "title": "RC2 Release Services TUI Cleanup"
+    "id": "T-0695",
+    "title": "RC2 Release Metadata Cleanup"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,11 +14,11 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Start a narrow follow-up capsule that cleans up release-readiness context/schema ownership references still pointing at the removed developer surface, especially under `src/context/` and `src/schemas/`.",
-    "reason": "The code relocation is complete, but release-readiness context extraction and schema ownership notes can still carry stale references to removed `src/services` files.",
+    "title": "Run `hadara task status --json` and decide whether archive/history-only developer-surface path cleanup is worth a separate RC2 capsule.",
+    "reason": "Live metadata and current docs are aligned; any remaining path drift should now be archive/history-scoped or a newly discovered RC2 issue.",
     "references": [
       {
-        "path": "`tasks/T-0687-rc2-developer-surface-alignment/RC2_DEVELOPER_SURFACE_REPORT.md`",
+        "path": "`tasks/T-0695-rc2-release-metadata-cleanup/TASK.md`",
         "required": true
       },
       {
@@ -26,23 +26,15 @@
         "required": true
       },
       {
-        "path": "`docs/ARCHITECTURE.md`",
-        "required": true
-      },
-      {
-        "path": "`src/context/release-extractors.ts`",
-        "required": true
-      },
-      {
-        "path": "`src/schemas/schema-index.json`",
+        "path": "`docs/AGENT_HANDOFF.md`",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0694",
-      "path": "tasks/T-0694-rc2-release-services-tui-cleanup/HANDOFF.md"
+      "workId": "T-0695",
+      "path": "tasks/T-0695-rc2-release-metadata-cleanup/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

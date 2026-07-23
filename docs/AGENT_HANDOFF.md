@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0694 RC2 Release Services TUI Cleanup | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0695 RC2 Release Metadata Cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0694 completes the remaining developer-surface code relocation: the debt handler plus debt/release/smoke implementations now live under repo-local `tools/dev-surface/`, the shipped `src` copies are removed, and shipped TUI/status debt and release-gate projections are placeholder-only. The next RC2 boundary is narrower and metadata-focused: clean up release-readiness context extraction and schema ownership references that still point at the removed developer surface.
+T-0695 completes the live metadata cleanup that followed the developer-surface move: repo-local debt/dev/smoke/release command entries now declare their `tools/` implementation and focused-test ownership, release/package/smoke schemas point at the moved `tools/dev-surface/*` files, current docs no longer reference the removed `src/services` paths, and `src/context/release-extractors.ts` includes repo-local command entries again when mapping release-readiness code spans.
 
 ## Previous Handoff
 
-T-0693 extracted the remaining developer-only release/smoke/package/dev wrapper entrypoints out of the shipped `src/cli`/`src/dev` tree and into repo-local `tools/`.
+T-0694 completed the remaining developer-surface code relocation: the debt handler plus debt/release/smoke implementations now live under repo-local `tools/dev-surface/`, the shipped `src` copies are removed, and shipped TUI/status debt and release-gate projections are placeholder-only.
 
 ## Historical Index
 
