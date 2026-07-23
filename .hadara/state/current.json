@@ -1,44 +1,48 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 293,
+  "rev": 294,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0685",
-    "title": "Stable Readiness Review"
+    "id": "T-0686",
+    "title": "RC2 Reduction Boundary Review"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "terminal",
     "kind": "task-handoff",
-    "title": "Run post-remediation three-profile fresh-session dogfood on current HEAD.",
-    "reason": "Reviewer feedback accepted that T-0682 dogfood was strong, but T-0683/T-0684/T-0685 changed continuation and selection semantics afterward; prove the one-line fresh-session prompt still resumes and closes real capsules.",
+    "title": "This review is complete. Select a separate S1 characterization Capsule only after the P0 matrix is reviewed.",
+    "reason": "No runtime reduction should resume until each retained guarantee has an explicit focused test.",
     "references": [
       {
-        "path": "`docs/PROJECT_STATE.md`",
+        "path": "TASK.md",
         "required": true
       },
       {
-        "path": "`docs/AGENT_HANDOFF.md`",
+        "path": "`src/evidence/evidence.ts`",
         "required": true
       },
       {
-        "path": "`docs/DEVELOPMENT_SLICES.md`",
+        "path": "`src/task/task-close.ts`",
         "required": true
       },
       {
-        "path": "reviewer feedback attachment",
+        "path": "`src/task/task-capsule.ts`",
+        "required": true
+      },
+      {
+        "path": "docs/ARCHITECTURE.md",
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0685",
-      "path": "tasks/T-0685-stable-readiness-review/HANDOFF.md"
+      "workId": "T-0686",
+      "path": "tasks/T-0686-rc2-reduction-boundary-review/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

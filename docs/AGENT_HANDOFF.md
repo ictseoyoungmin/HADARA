@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0685 Stable Readiness Review | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0686 RC2 Reduction Boundary Review | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -32,6 +32,10 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 This optional document owns explicit cross-session handoff prose and live warnings for governed projects. Task identity and lifecycle state remain inspectable in the Task Board and Task Capsules; completed history belongs to the Historical Index.
 
 ## Current Handoff
+
+T-0686 completed the analysis-only RC2 reduction boundary review after restoring `5b62e35`. The original product already has a compact TASK.md plus HANDOFF.md Capsule, while evidence integrity, close-source freshness, task-create locking, non-overwrite init, release confirmation, and package trust signals must be preserved or deliberately replaced. Do not resume bulk removal from the discarded RC2 attempt. Review the P0 characterization matrix in `tasks/T-0686-rc2-reduction-boundary-review/TASK.md` and create a focused S1 Capsule before changing runtime code.
+
+## Previous Handoff
 
 T-0685 fixes the reviewer-identified stale handoff precedence gap: In Progress Task Board rows, cross-checked current-state active tasks, and existing open Task Board rows now beat development slices, project handoff, structured nextWork, continuation, and first-task fallback. It also updates task-selection precedence metadata and strict release gate compatibility with the current clean-source/journal/attach release artifact evidence flow. Focused precedence/release-gate tests, TypeScript build, built task status, built strict release gate, and built docs doctor passed. Next work should be a post-remediation three-profile fresh-session dogfood on current HEAD before any rc.2 release-readiness/baseline promotion. Release dry-run still correctly blocks until release artifact evidence is refreshed for the current commit in a dedicated release-readiness capsule.
 

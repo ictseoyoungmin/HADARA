@@ -686,3 +686,4 @@
 | T-0683 | Pre-stable dogfood findings remediation | Done | tasks/T-0683-pre-stable-dogfood-findings-remediation | |
 | T-0684 | Remove Redundant Task Lifecycle Note | Done | tasks/T-0684-remove-redundant-task-lifecycle-note | |
 | T-0685 | Stable Readiness Review | Done | tasks/T-0685-stable-readiness-review | |
+| T-0686 | RC2 Reduction Boundary Review | Done | tasks/T-0686-rc2-reduction-boundary-review | Restored baseline audit and staged reduction decision record; implementation is gated on S1 characterization. |
