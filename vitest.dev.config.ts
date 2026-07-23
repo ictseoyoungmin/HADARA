@@ -3,8 +3,7 @@ import { hadaraDevOnlyTestGlobs, sharedVitestNodeConfig } from './vitest.shared'
 
 export default defineConfig({
   test: {
-    include: ['tests/**/*.test.ts'],
-    exclude: hadaraDevOnlyTestGlobs,
+    include: hadaraDevOnlyTestGlobs,
     ...sharedVitestNodeConfig
   }
 });

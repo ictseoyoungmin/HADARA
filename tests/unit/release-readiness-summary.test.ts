@@ -14,7 +14,7 @@ describe('release readiness summary service', () => {
         {
           id: 'review-publish-dry-run',
           required: false,
-          command: 'hadara release publish --mode dry-run --json',
+          command: 'node --import tsx tools/dev-surfaces.ts release publish --mode dry-run --json',
           reason: 'RELEASE_DRY_RUN_READY',
           summary: 'Release dry-run is ready; review publish/deploy dry-run gates without executing release mutation.'
         }

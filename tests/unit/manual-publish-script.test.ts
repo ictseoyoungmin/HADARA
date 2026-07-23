@@ -27,13 +27,11 @@ describe('manual publish release script', () => {
 
   it('prefers the current repository built CLI over a global hadara command', () => {
     const script = fs.readFileSync(scriptPath, 'utf8');
-    const localBuiltCliIndex = script.indexOf('if [[ -f "dist/cli/main.js" ]]; then');
-    const globalCliIndex = script.indexOf('elif command -v hadara >/dev/null 2>&1; then');
+    const localDevSurfaceIndex = script.indexOf('if [[ -f "tools/dev-surfaces.ts" ]]; then');
 
-    expect(localBuiltCliIndex).toBeGreaterThan(-1);
-    expect(globalCliIndex).toBeGreaterThan(-1);
-    expect(localBuiltCliIndex).toBeLessThan(globalCliIndex);
-    expect(script).toContain('HADARA_CMD=(node dist/cli/main.js)');
+    expect(localDevSurfaceIndex).toBeGreaterThan(-1);
+    expect(script).toContain('DEV_SURFACE_CMD=(node --import tsx tools/dev-surfaces.ts)');
+    expect(script).not.toContain('command -v hadara >/dev/null 2>&1');
   });
 
   it('blocks publish when the generated tarball package metadata is incomplete', () => {
@@ -52,7 +50,7 @@ describe('manual publish release script', () => {
     expect(script).toContain('PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"');
     expect(script).toContain('Package smoke timeout: ${PACKAGE_SMOKE_TIMEOUT}s');
     expect(script).toContain('Timeout in seconds for `hadara smoke package --execute`.');
-    expect(script).toContain('run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json');
+    expect(script).toContain('run_dev_surface smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json');
     expect(script).not.toContain('run_hadara package smoke --execute');
   });
 

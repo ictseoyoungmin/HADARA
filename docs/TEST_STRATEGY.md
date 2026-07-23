@@ -56,14 +56,16 @@ docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && n
 
 | Suite | Command | Purpose |
 |---|---|---|
-| Unit | `npm run test:unit` | Core functions and schemas. |
+| Unit | `npm run test:unit` | General-user unit coverage that excludes HADARA-dev-only developer surfaces. |
+| HADARA-dev | `npm run test:hadara-dev` | Developer-only coverage for `debt`, `dev docker-check`, release/readiness, package smoke/recycle, and clean-checkout surfaces. |
 | Focused | `npm run test:focused -- tests/unit/<file>.test.ts` | One Vitest file or explicit small set of files. |
 | Contract | `npm run test:contract` | Provider/tool interface compatibility. |
 | Harness | `npm run test:harness` | Task Capsule validation, replay, and fake workflow checks. |
-| Full | `npm test` | All Vitest suites. |
-| Check | `npm run check` | TypeScript build plus all tests. |
+| Full default | `npm test` | Public/default Vitest path: unit, contract, and harness suites except HADARA-dev-only developer-surface tests. |
+| Full repository | `npm run test:all` | Default/public Vitest path plus the explicit HADARA-dev-only suite. |
+| Check | `npm run check` | TypeScript build plus the full repository test split. |
 
-Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed. For focused checks, prefer `npm run test:focused -- <path>` so the file path is passed directly to Vitest.
+Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed. For focused general-user checks, prefer `npm run test:focused -- <path>` so the file path is passed directly to Vitest. For developer-only files excluded from the default config, use `npm run test:hadara-dev -- <path>`.
 
 ## Task Capsule Completion Checks
 
