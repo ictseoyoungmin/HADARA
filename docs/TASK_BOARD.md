@@ -700,3 +700,4 @@
 | T-0697 | RC2 Build Freshness and Clean Install Guard | Done | tasks/T-0697-rc2-build-freshness-and-clean-install-guard | |
 | T-0698 | Init v1 Contract and Characterization | Done | tasks/T-0698-init-v1-contract-and-characterization | |
 | T-0699 | Init v1 Core Model and Planner | Done | tasks/T-0699-init-v1-core-model-and-planner | |
+| T-0700 | Init v1 Safe Apply Transaction | Done | tasks/T-0700-init-v1-safe-apply-transaction | |

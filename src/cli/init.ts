@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { assertKnownOptions, getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createInitDoctorReport } from '../init/doctor';
@@ -6,6 +7,7 @@ import { parseInitProfile } from '../init/profile';
 import { printInitFollowUpReport } from '../init/report';
 import { INIT_PRESET_SPECS, resolveInitPreset } from '../init/model';
 import { createInitPlanningResult, printInitV1Report } from '../init/planner';
+import { applyInitPlanningResult } from '../init/transaction';
 import { shouldUseAdoptionPlan } from '../init/adoption';
 import type { InitCommandInput, InitFollowUpMode } from '../init/types';
 import { createInitUpgradeReport, createIntegrationEnableReport } from '../init/upgrade';
@@ -14,6 +16,7 @@ export { initProject } from '../init/project';
 export { parseInitProfile } from '../init/profile';
 export { resolveInitPreset } from '../init/model';
 export { createInitPlanningResult } from '../init/planner';
+export { applyInitPlanningResult } from '../init/transaction';
 export type { InitCommandInput, InitProfile } from '../init/types';
 
 export function handleInitCommand(input: InitCommandInput): boolean {
@@ -64,10 +67,27 @@ export function handleInitCommand(input: InitCommandInput): boolean {
   if (useV1Planner) {
     const selection = resolveInitPreset({ preset: presetValue, profile: profileValue });
     const result = createInitPlanningResult(input.projectRoot, selection.preset, {
-      execute: getFlag(input.args, '--execute'),
       warnings: selection.warnings
     });
+    if (getFlag(input.args, '--execute')) {
+      printInitV1Report(applyInitPlanningResult(input.projectRoot, result, {
+        planHash: getStringOption(input.args, '--plan-hash'),
+        adopt: getFlag(input.args, '--adopt')
+      }), input.jsonOutput);
+      return true;
+    }
     printInitV1Report(result.report, input.jsonOutput);
+    if (!input.jsonOutput && process.stdin.isTTY && process.stdout.isTTY) {
+      process.stdout.write('Apply this reviewed plan? [y/N] ');
+      if (readInitConfirmation()) {
+        printInitV1Report(applyInitPlanningResult(input.projectRoot, result, {
+          planHash: result.plan.planHash,
+          adopt: getFlag(input.args, '--adopt')
+        }), false);
+      } else {
+        console.log('no-op | init\ncreated=0 updated=0 existing=0 applied=0\nreason=user-declined');
+      }
+    }
     return true;
   }
   const report = initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard', {
@@ -138,4 +158,18 @@ function assertInitOptions(args: string[], subcommand: string | undefined): void
     flags: [...commonFlags, '--adopt', '--execute'],
     options: [...commonOptions, '--preset', '--profile', '--plan-hash']
   });
+}
+
+export function isAffirmativeInitConfirmation(value: string): boolean {
+  return value.trim().toLowerCase() === 'y' || value.trim().toLowerCase() === 'yes';
+}
+
+function readInitConfirmation(): boolean {
+  const bytes: number[] = [];
+  const buffer = Buffer.alloc(1);
+  while (bytes.length < 16 && fs.readSync(process.stdin.fd, buffer, 0, 1, null) === 1) {
+    if (buffer[0] === 10 || buffer[0] === 13) break;
+    bytes.push(buffer[0]);
+  }
+  return isAffirmativeInitConfirmation(Buffer.from(bytes).toString('utf8'));
 }

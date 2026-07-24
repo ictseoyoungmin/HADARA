@@ -12,6 +12,7 @@ import {
   createInitV1ScaffoldFiles,
   initArtifactManifest
 } from './model';
+import { validateInitPaths } from './safety';
 import type {
   GeneratedScaffoldFile,
   InitArtifactV1,
@@ -49,6 +50,7 @@ export function createInitPlanningResult(
   try {
     projectMode = classifyProject(projectRoot);
     actions = planActions(projectRoot, preset, projectMode);
+    issues.push(...validateInitPaths(projectRoot, actions.map((action) => action.path)));
   } catch (error) {
     projectMode = classifyFailedProject(projectRoot);
     issues.push(modelIssue(error));
@@ -113,6 +115,11 @@ export function createInitPlanningResult(
 export function printInitV1Report(report: InitReportV1, jsonOutput = false): void {
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
+  } else if (report.mode === 'applied') {
+    console.log([
+      `applied | init | preset=${report.preset}`,
+      `created=${report.summary.created} updated-managed=${report.summary.updated} appended=${report.summary.appended} failed=${report.results?.failed.length ?? 0}`
+    ].join('\n'));
   } else if (report.mode === 'no-op') {
     console.log([
       'no-op | init',
@@ -239,6 +246,16 @@ function planArtifact(
     };
   }
   if (artifact.path === 'AGENTS.md') {
+    const content = fs.readFileSync(target, 'utf8');
+    if (/hadara:managed:(?:start|end)\s+bootstrap/.test(content)) {
+      return {
+        path: artifact.path,
+        kind: 'conflict',
+        management: artifact.management,
+        reason: 'Existing HADARA bootstrap markers require explicit upgrade or malformed-marker repair.',
+        beforeHash
+      };
+    }
     return {
       path: artifact.path,
       kind: 'insert-managed-block',
@@ -282,10 +299,19 @@ function meaningfulRootEntries(projectRoot: string): string[] {
     return fs.readdirSync(projectRoot)
       .filter((entry) => !IGNORED_ROOT_ENTRIES.has(entry))
       .filter((entry) => !entry.startsWith('.npm'))
+      .filter((entry) => entry !== '.hadara' || !containsOnlyRuntimeState(path.join(projectRoot, entry)))
       .filter((entry) => !isEmptyReportPlaceholder(projectRoot, entry))
       .sort();
   } catch {
     return [];
+  }
+}
+
+function containsOnlyRuntimeState(hadaraRoot: string): boolean {
+  try {
+    return fs.readdirSync(hadaraRoot).every((entry) => entry === 'local');
+  } catch {
+    return false;
   }
 }
 

@@ -53,6 +53,7 @@ Implemented:
 - Context graph, code index, context pack/slice, session-start routing, and local cache read models
 - Document registry, read maps, managed section patch plans, and protocol consistency diagnostics
 - Markdown-first task routing with a command-owned 0.5.x compatibility checkpoint
+- Init v1 canonical model, deterministic plan/report contract, and reviewed safe-apply transaction
 
 Partially implemented:
 
@@ -87,3 +88,9 @@ Not implemented:
 The TUI is a read-only terminal work console over existing HADARA read models. Its integrated implementation lives under `src/tui/` and shares services rather than inventing a separate data source.
 
 The TUI must not execute shell commands, call providers, call MCP tools, mutate Task Capsules, write evidence, update handoff, run releases, or treat terminal cache/state as committed evidence. Any TUI cache must stay in ignored machine-local state such as `.hadara/local/tui/`.
+
+### Init v1 Transaction Boundary
+
+Init planning is a zero-write operation. Apply consumes the same generated artifacts and a reviewed plan hash, then recomputes the plan under a project-local lock before mutation. Greenfield and explicitly adopted, conflict-free brownfield projects are supported; a conflict rejects the whole plan.
+
+The apply transaction journals each exact planned path before mutation, writes files through same-directory atomic rename, validates the resulting project config and document registry, and rolls committed entries back in reverse order on failure. Lock and journal state is runtime-only under `.hadara/local/` and is removed after success or complete rollback.

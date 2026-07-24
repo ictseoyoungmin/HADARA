@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 321,
+  "rev": 323,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0699",
-    "title": "Init v1 Core Model and Planner"
+    "id": "T-0700",
+    "title": "Init v1 Safe Apply Transaction"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,8 +14,8 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Implement Init v1 Safe Apply Transaction.",
-    "reason": "The stable plan now supplies exact artifacts, content hashes, source hashes, summary, and plan hash needed for guarded apply without replanning or hidden writes.",
+    "title": "Implement Init v1 Re-init and Upgrade Ownership.",
+    "reason": "Safe apply is now stable; the next mapped boundary owns persisted authority, preset-change no-op behavior, managed updates, legacy/partial migration, and `--prune` rules.",
     "references": [
       {
         "path": "Both Init v1 specs",
@@ -26,7 +26,11 @@
         "required": true
       },
       {
-        "path": "this capsule model/planner",
+        "path": "T-0699 model/planner",
+        "required": true
+      },
+      {
+        "path": "this capsule transaction",
         "required": true
       },
       {
@@ -37,8 +41,8 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0699",
-      "path": "tasks/T-0699-init-v1-core-model-and-planner/HANDOFF.md"
+      "workId": "T-0700",
+      "path": "tasks/T-0700-init-v1-safe-apply-transaction/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

@@ -262,6 +262,17 @@ export interface InitReportV1 {
   summary: InitReportSummaryV1;
   planHash: string;
   plan: InitPlanV1;
-  reason?: 'already-initialized';
+  reason?: 'already-initialized' | 'user-declined';
+  results?: {
+    created: string[];
+    updated: string[];
+    appended: string[];
+    preserved: string[];
+    failed: string[];
+  };
+  recovery?: {
+    required: boolean;
+    instruction: string;
+  };
   issues: InitIssue[];
 }
