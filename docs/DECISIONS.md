@@ -139,3 +139,12 @@ Reason:
 - `.hadara/state/current.json` remains readable and command-owned during the 0.5.x migration window, but it is not Required Reading, a human authoring surface, or a place for public mutation commands under the deprecated `status` alias.
 - Managed state blocks are labelled compatibility projections so old readers remain operable without implying that humans should edit or start sessions from the raw JSON file.
 - This decision supersedes D-0014 where it calls structured current state the portable canon. Evidence: T-0680.
+
+## D-0017: Init v1 uses one lifecycle, init-time presets, and minimal explicit state
+
+Reason:
+- The frozen Init v1 design and acceptance contracts under `docs/specs/0.5/redesign/` replace runtime-facing project profiles with `minimal`, `standard`, and `governed` init-time presets; `basic` remains only a deprecated alias for `minimal`.
+- New projects store static configuration in `.hadara/project.json` and registered local-document routing in `.hadara/documents.json`; current task, release, validation, evidence, runtime locks, and stale verdicts do not belong in those files.
+- JSON, non-interactive, agent, and CI init flows are plan/apply transactions. They must be non-destructive, hash-guarded, root-contained, serialized, recoverable, and explicit about dry-run/applied/no-op results.
+- Optional preset documents are scaffold-once and user-owned; `AGENTS.md` is mixed managed-block content, `HADARA_WORKFLOW.md` is HADARA-managed, `TASK_BOARD.md` is command-managed, and `READ_MAP.md` is a generated projection.
+- T-0698 characterizes the old profile/scaffold behavior and assigns all frozen acceptance areas to eight total capsules before production changes begin.

@@ -6,6 +6,10 @@ Published and consumer-recycled `hadara@0.4.3` consolidates the 0.4.2 baseline a
 
 The immediate roadmap is consolidation rather than capability expansion. HADARA's product boundary is portable current state and evidence integrity across human and agent sessions; a full controller, default real-provider runtime, cloud queue, broad write-capable MCP, and a separate browser dashboard surface remain outside the current release line.
 
+## Active Program: Init v1 Redesign
+
+Current human direction prioritizes the frozen Init v1 design and acceptance contracts under `docs/specs/0.5/redesign/` before RC2 release promotion. The program uses eight appropriately sized capsules: contract/characterization; core model/planner; safe apply transaction; re-init/upgrade ownership; Task Board/close projection; document routing; legacy compatibility isolation; and full installed-package acceptance. Exact field-by-field legacy migration remains gated on its separately frozen migration specification; new Init v1 projects must not create legacy core artifacts.
+
 ## Current Release Sequence
 
 | Release | Product Question | Planned Evidence | Boundary |

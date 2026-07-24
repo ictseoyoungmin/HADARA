@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 317,
+  "rev": 319,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0697",
-    "title": "RC2 Build Freshness and Clean Install Guard"
+    "id": "T-0698",
+    "title": "Init v1 Contract and Characterization"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,35 +14,39 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Fresh-session RC2 dogfood and validation-baseline promotion.",
-    "reason": "T-0697 fixed the release build boundary blocker that should precede fresh dogfood.",
+    "title": "Implement Init v1 Core Model and Planner.",
+    "reason": "Canonical preset expansion, the two persistence schemas, artifact manifest, deterministic plan/report contracts, and strict CLI errors are prerequisites for every write/routing capsule.",
     "references": [
       {
-        "path": "`.hadara/context/HADARA_CONTEXT.md`",
+        "path": "Both Init v1 specs",
         "required": true
       },
       {
-        "path": "`docs/PROJECT_STATE.md`",
+        "path": "`INIT_V1_IMPLEMENTATION_MAP.md`",
         "required": true
       },
       {
-        "path": "`docs/AGENT_HANDOFF.md`",
+        "path": "`docs/ARCHITECTURE.md`",
         "required": true
       },
       {
-        "path": "`docs/TASK_BOARD.md`",
+        "path": "`docs/SECURITY_MODEL.md`",
         "required": true
       },
       {
-        "path": "selected new Task Capsule",
+        "path": "`docs/TEST_STRATEGY.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/SCHEMAS.md`.",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0697",
-      "path": "tasks/T-0697-rc2-build-freshness-and-clean-install-guard/HANDOFF.md"
+      "workId": "T-0698",
+      "path": "tasks/T-0698-init-v1-contract-and-characterization/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
