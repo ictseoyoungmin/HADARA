@@ -44,7 +44,7 @@ describe('TUI snapshot renderer', () => {
       expect(snapshot.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
       expect(snapshot.text).not.toMatch(/\x1b\[/);
       expect(snapshot.text).toContain('HADARA Work Console');
-      expect(snapshot.text).toContain('source live-api refresh idle pending');
+      expect(snapshot.text).toContain('source shared-read-model refresh idle pending');
       expect(snapshot.text).not.toContain(model.generatedAt);
     }
 
@@ -356,7 +356,7 @@ describe('TUI snapshot renderer', () => {
 
     expect(snapshot.text).toContain('Goal Render table data rows in Overview.');
     expect(snapshot.text).toContain('Continue with roadmap value work. · Timing target is met. · T-0231 evidence');
-    expect(snapshot.text).toContain('Proof unknown: No semantic proof summary is available.');
+    expect(snapshot.text).toContain('Proof unknown: No evidence records are indexed for the sel');
     expect(snapshot.text).not.toContain('| Goal | Notes |');
     expect(snapshot.text).not.toContain('| Step | Reason |');
     expect(snapshot.text).not.toContain('| Time | Kind | Summary |');

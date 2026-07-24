@@ -66,7 +66,7 @@ Current package metadata preparation mode:
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
 - Current version is `0.5.0-rc.1`.
 - Current source version is `0.5.0-rc.1`.
-- Current release target is prerelease `0.5.0-rc.1`; next planned candidate is `0.5.0-rc.2` after reviewer fixes and Phase D-through-end implementation.
+- Current release target is prerelease `0.5.0-rc.1`; next planned candidate is `0.5.0-rc.2` after reviewer fixes, developer-surface trust hardening, fresh dogfood, and deliberate validation-baseline promotion.
 - Current release-candidate npm publish status: `hadara@0.5.0-rc.1` is published on dist-tag `next`, superseding the already-published `0.5.0-rc.0` (npm does not allow republishing the same version).
 - Current release-candidate GitHub Release status: `v0.5.0-rc.1` is published publicly at `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.5.0-rc.1`.
 - Current stable npm publish target is `0.4.6` on dist-tag `latest`.
@@ -384,7 +384,7 @@ Current T-0131 boundary:
 Recommended `core` profile command set:
 
 - `hadara doctor --json`
-- `hadara status --json`
+- `hadara task status --json`
 - `hadara task list --json`
 - `hadara tools list --json`
 - `hadara tui --snapshot --json`

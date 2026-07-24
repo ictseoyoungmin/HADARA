@@ -60,7 +60,7 @@ New behavior should first fit an existing command, a conditional diagnostic, or 
 | Metric | Healthy signal |
 |---|---|
 | Installation to first capsule | Installed-package run records the real install duration and reaches the first capsule without intervention. |
-| First correct file | Generated instructions route first to `.hadara/state/current.json`; method and elapsed time are explicit. |
+| First correct file | Generated instructions route first to `hadara task status --json`, `docs/TASK_BOARD.md`, and the selected Task Capsule instead of raw `.hadara/state/current.json`; method and elapsed time are explicit. |
 | Calls to clean close | Six or fewer primary post-init invocations; setup/probes are reported separately. |
 | Manual document edits | Ordinary clean work edits only task-owned `TASK.md` and `HANDOFF.md`; shared current facts remain CLI-projected. |
 | Stale references | `currentnessIssues:0`, `semanticDriftIssues:0`, and `currentnessVerdict:clean`. |

@@ -195,6 +195,8 @@ describe('Operations Status JSON', () => {
     expect(full.sources.opsStatusV1.detail).toBe('full');
     expect(full.sources.opsStatusV1).toMatchObject({
       debt: {
+        evaluation: 'repo-local-only',
+        summary: expect.any(String),
         open: expect.any(Number),
         highOpen: expect.any(Number)
       },
@@ -653,6 +655,9 @@ describe('Operations Status JSON', () => {
     });
     expect(compat.stateConsistency).toBeUndefined();
     expect(compat.handoff.knownProblems).toEqual([]);
+    expect(compat.debtEvaluation).toMatchObject({
+      state: 'not-evaluated'
+    });
     expect(compat.debt).toMatchObject({
       total: 0,
       open: 0,

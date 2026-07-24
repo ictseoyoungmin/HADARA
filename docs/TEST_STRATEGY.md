@@ -63,7 +63,9 @@ docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && n
 | Harness | `npm run test:harness` | Task Capsule validation, replay, and fake workflow checks. |
 | Full default | `npm test` | Public/default Vitest path: unit, contract, and harness suites except HADARA-dev-only developer-surface tests. |
 | Full repository | `npm run test:all` | Default/public Vitest path plus the explicit HADARA-dev-only suite. |
-| Check | `npm run check` | TypeScript build plus the full repository test split. |
+| Src type-check | `npm run typecheck:src` | Shipped `src/` TypeScript surface without emitting `dist/`. |
+| Tools type-check | `npm run typecheck:tools` | Repo-local HADARA-dev `tools/` TypeScript surface without emitting output. |
+| Check | `npm run check` | Full source and repo-local tools type-check plus the full repository test split. |
 
 Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed. For focused general-user checks, prefer `npm run test:focused -- <path>` so the file path is passed directly to Vitest. For developer-only files excluded from the default config, use `npm run test:hadara-dev -- <path>`.
 
@@ -287,7 +289,7 @@ T-0131 does not validate:
 Recommended `core` profile:
 
 - `hadara doctor --json`
-- `hadara status --json`
+- `hadara task status --json`
 - `hadara task list --json`
 - `hadara tools list --json`
 - `hadara tui --snapshot --json`

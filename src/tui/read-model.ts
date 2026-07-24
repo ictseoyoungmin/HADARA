@@ -215,6 +215,10 @@ export function createTuiLoadingReadModel(): TuiReadModel {
         issues: []
       },
       debt: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: {} },
+      debtEvaluation: {
+        state: 'not-evaluated',
+        summary: 'Operational debt is still loading.'
+      },
       mcp: {
         defaultMode: 'read-only',
         evidenceAttach: { enabledByDefault: false, requiresFlag: '--enable-evidence-attach', requiresApproval: true, audited: true }
@@ -659,6 +663,10 @@ function createFastOpsStatusReport(
     validation,
     activeRun,
     debt: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: { high: 0, medium: 0, low: 0 } },
+    debtEvaluation: {
+      state: 'not-evaluated',
+      summary: 'Operational debt was skipped on the fast TUI status path.'
+    },
     mcp: {
       defaultMode: 'read-only',
       evidenceAttach: {

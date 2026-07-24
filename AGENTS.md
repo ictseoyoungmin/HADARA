@@ -60,6 +60,6 @@ Use semantic tiers to keep session startup compact:
 - Update `docs/AGENT_HANDOFF.md` before stopping.
 - Current human or reviewer instructions override persisted `Next Recommended Step` prose when they conflict. Treat handoff next steps as review input, read the routed project/development sources, and choose a concise task title yourself only after deciding that a new capsule is still appropriate.
 - A successful `task close` result with `closed-valid` is terminal for that capsule. Report it and stop; do not run `task status` merely to confirm close or discover another capsule unless the current human/reviewer instruction explicitly requires continued work.
-- Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`; do not jump to deferred dashboard, real provider, MCP, or full agent-controller work before the required harness, policy, and evidence gates are ready.
+- Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`; do not reopen removed dashboard work or jump to real provider, broad MCP, or full agent-controller work before the required harness, policy, and evidence gates are ready.
 - For MCP/Hermes work, follow `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` before adding or changing tool surfaces.
 - Project-specific specifics or roadmap documents may exist in subfolders added as optional in `docs/`.

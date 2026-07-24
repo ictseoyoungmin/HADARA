@@ -35,12 +35,12 @@ Use `basic` for small projects and `governed` for long-lived projects with roadm
 
 ## Resume Without Reconstructing History
 
-HADARA stores the small set of live continuation facts in `.hadara/state/current.json`: the current release, latest and active task, next operator intent, current known problems, and validation baseline. Generated instructions route a new worker or agent there before longer prose.
+HADARA keeps portable continuation guidance in the Task Board, Task Capsules, and their tracked Markdown projections. `.hadara/state/current.json` remains a command-owned compatibility checkpoint for older readers, not the normal human or agent starting point.
 
 At the start of a later session, run:
 
 ```bash
-hadara status --json
+hadara task status --json
 ```
 
 If the report identifies an active capsule, continue with its bounded status packet:

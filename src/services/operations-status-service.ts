@@ -43,6 +43,10 @@ export interface OpsStatusReport {
   };
   activeRun: ActiveRunProjection;
   debt: OperationalDebtAggregate;
+  debtEvaluation: {
+    state: 'evaluated' | 'not-evaluated' | 'repo-local-only';
+    summary: string;
+  };
   stateConsistency?: StateProjectionAdvisory;
   mcp: {
     defaultMode: 'read-only';
@@ -84,9 +88,9 @@ export interface OpsStatusStateReport {
 }
 
 export interface OpsStatusOptions {
-  // When false, skip the operational-debt computation (the dominant cost on
-  // large/slow filesystems) and return a zeroed debt aggregate. Used by fast
-  // status/TUI read paths that load debt through explicit surfaces instead.
+  // When false, skip the repo-local operational-debt surface entirely on fast
+  // read paths. The aggregate remains shape-compatible, but debtEvaluation
+  // makes the skipped state explicit.
   includeDebt?: boolean;
   includeKnownProblems?: boolean;
   includeStateConsistency?: boolean;
@@ -135,6 +139,15 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
   const expectedSources = determineExpectedStatusSources(projectRoot, sources);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtAggregate = includeDebt ? createEmptyOperationalDebtAggregate() : EMPTY_DEBT_AGGREGATE;
+  const debtEvaluation: OpsStatusReport['debtEvaluation'] = includeDebt
+    ? {
+        state: 'repo-local-only',
+        summary: 'Operational debt remains a repo-local HADARA-dev developer surface and is not evaluated by shipped status.'
+      }
+    : {
+        state: 'not-evaluated',
+        summary: 'Operational debt was skipped on this bounded status path.'
+      };
   const stateConsistency = options.includeStateConsistency
     ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
     : undefined;
@@ -161,6 +174,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     validation,
     activeRun,
     debt: debtAggregate,
+    debtEvaluation,
     ...(stateConsistency ? { stateConsistency } : {}),
     mcp: {
       defaultMode: 'read-only',
@@ -218,7 +232,9 @@ export function formatOpsStatusReport(report: OpsStatusReport): string {
     `phase: ${report.project.phase}`,
     `branch: ${report.project.branch}`,
     `tasks: ${counts}`,
-    `debt: open ${report.debt.open}, highOpen ${report.debt.highOpen}`,
+    report.debtEvaluation.state === 'evaluated'
+      ? `debt: open ${report.debt.open}, highOpen ${report.debt.highOpen}`
+      : `debt: ${report.debtEvaluation.summary}`,
     ...(report.stateConsistency
       ? [
           `stateConsistency: ${report.stateConsistency.consistent ? 'consistent' : 'drift'} ` +

@@ -95,7 +95,22 @@ describe('markdown-table adapter', () => {
 });
 
 describe('git-metadata adapter', () => {
-  it('reports workspace changes from a real git repository, read-only', () => {
+  const canSpawnGit = (() => {
+    try {
+      execFileSync('git', ['--version'], { stdio: 'pipe' });
+      return true;
+    } catch (error) {
+      return !(
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as NodeJS.ErrnoException).code === 'EPERM'
+      );
+    }
+  })();
+  const gitIt = canSpawnGit ? it : it.skip;
+
+  gitIt('reports workspace changes from a real git repository, read-only', () => {
     const root = tempRoot('hadara-git-meta-');
     execFileSync('git', ['init', '--quiet'], { cwd: root });
     execFileSync('git', ['config', 'user.email', 'fixture@example.com'], { cwd: root });
@@ -113,7 +128,7 @@ describe('git-metadata adapter', () => {
     expect(untracked).toContain('new-file.txt');
   });
 
-  it('is unavailable (not invalid data) when the directory is not a git repository', () => {
+  gitIt('is unavailable (not invalid data) when the directory is not a git repository', () => {
     const root = tempRoot('hadara-git-meta-non-repo-');
     const fact = readGitWorkspaceChangesFact(root);
     expect(fact.state).toBe('invalid');

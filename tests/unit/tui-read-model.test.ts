@@ -98,7 +98,10 @@ describe('TUI read-model aggregator', () => {
       releaseGate: {
         schemaVersion: 'hadara.releaseGate.v1',
         mode: 'advisory',
-        ok: true
+        ok: true,
+        availability: {
+          state: 'repo-local-only'
+        }
       },
       writePreview: {
         schemaVersion: 'hadara.write.preflight.v1',
@@ -112,11 +115,21 @@ describe('TUI read-model aggregator', () => {
     expect(model.tasks.tasks.map((task) => task.id)).toEqual([first.id, second.id]);
     expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
     expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
+    expect(model.status.debtEvaluation).toMatchObject({
+      state: 'repo-local-only'
+    });
+    expect(model.debt.availability).toMatchObject({
+      state: 'repo-local-only',
+      owner: 'hadara-dev'
+    });
     expect(model.debt.aggregate.total).toBe(0);
     expect(model.debt.aggregate.highOpen).toBe(0);
     expect(model.tools.surfaces.cli.length).toBeGreaterThan(0);
     expect(model.writePreview.writes).toContain(`tasks/T-0003-tui-follow-up/TASK.md`);
-    expect(model.releaseGate.checks).toEqual([]);
+    expect(model.releaseGate.checks[0]).toMatchObject({
+      code: 'RELEASE_GATE_REPO_LOCAL_ONLY',
+      status: 'warning'
+    });
   });
 
   it('falls back to the latest task when no active task is selectable', () => {
@@ -150,6 +163,12 @@ describe('TUI read-model aggregator', () => {
       semanticIssueCodes: ['TUI_FAST_PROOF_DEFERRED']
     });
     expect(model.selectedTask?.detail.files?.['TASK.md']).toContain('Fast aggregate task');
+    expect(model.status.debtEvaluation).toMatchObject({
+      state: 'not-evaluated'
+    });
+    expect(model.debt.availability).toMatchObject({
+      state: 'repo-local-only'
+    });
     expect(model.debt.aggregate.total).toBe(0);
     expect(model.releaseGate.checks[0]?.name).toBe('Deferred release-gate check');
     expect(model.writePreview.command).toBe('unknown');

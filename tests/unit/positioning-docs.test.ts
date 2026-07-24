@@ -21,7 +21,7 @@ describe('0.4.3 product positioning and continuation docs', () => {
   it('makes fast session resume an onboarding benefit', () => {
     for (const doc of [read('README.md'), read('docs/GETTING_STARTED.md')]) {
       expect(doc).toContain('.hadara/state/current.json');
-      expect(doc).toContain('hadara status --json');
+      expect(doc).toContain('hadara task status --json');
       expect(doc).toContain('histor');
     }
   });

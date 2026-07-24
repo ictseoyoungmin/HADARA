@@ -1,24 +1,24 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 313,
+  "rev": 315,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0695",
-    "title": "RC2 Release Metadata Cleanup"
+    "id": "T-0696",
+    "title": "RC2 Developer Surface Trust Hardening"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Run `hadara task status --json` and decide whether archive/history-only developer-surface path cleanup is worth a separate RC2 capsule.",
-    "reason": "Live metadata and current docs are aligned; any remaining path drift should now be archive/history-scoped or a newly discovered RC2 issue.",
+    "title": "Re-run fresh-session dogfood on current HEAD and decide whether to promote the RC2 validation baseline beyond the T-0678 rollup before any rc.2 release-readiness work.",
+    "reason": "T-0696 restored current-head trust for repo-local developer surfaces, but `docs/RELEASE_READINESS.md` still blocks rc.2 readiness on fresh dogfood and deliberate baseline promotion.",
     "references": [
       {
-        "path": "`tasks/T-0695-rc2-release-metadata-cleanup/TASK.md`",
+        "path": "`docs/RELEASE_READINESS.md`",
         "required": true
       },
       {
@@ -28,13 +28,17 @@
       {
         "path": "`docs/AGENT_HANDOFF.md`",
         "required": true
+      },
+      {
+        "path": "`tasks/T-0696-rc2-developer-surface-trust-hardening/TASK.md`",
+        "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0695",
-      "path": "tasks/T-0695-rc2-release-metadata-cleanup/HANDOFF.md"
+      "workId": "T-0696",
+      "path": "tasks/T-0696-rc2-developer-surface-trust-hardening/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

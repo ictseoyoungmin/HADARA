@@ -89,14 +89,8 @@ describe('TUI local cache', () => {
     expect(full.cache.issues).toEqual([]);
     expect(full.cache.hit).toBe(false);
     expect(fast.cache.hit).toBe(true);
-    expect(fast.model.tasks.tasks.find((row) => row.id === task.id)?.status).toBe('Draft');
-    expect(readTuiCache({ projectRoot: root })?.taskIndex).toContainEqual(
-      expect.objectContaining({
-        id: task.id,
-        mtimeMs: 0,
-        size: 0
-      })
-    );
+    expect(fast.model.tasks.tasks.find((row) => row.id === task.id)).toBeUndefined();
+    expect(readTuiCache({ projectRoot: root })?.taskIndex).toEqual([]);
   });
 
   it('invalidates fast cache when a task capsule is created', () => {
@@ -123,8 +117,8 @@ describe('TUI local cache', () => {
     const result = createTuiReadModelWithCache(root, { cache: { refresh: 'fast' } });
 
     expect(result.cache.hit).toBe(false);
-    expect(result.model.tasks.tasks.map((task) => task.id)).toContain(deleted.id);
     expect(result.model.tasks.tasks.map((task) => task.id)).toContain(first.id);
+    expect(result.model.tasks.tasks.map((task) => task.id)).not.toContain(deleted.id);
   });
 
   it('invalidates fast cache when only TASK_BOARD changes', () => {

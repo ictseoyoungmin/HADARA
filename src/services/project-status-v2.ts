@@ -82,6 +82,8 @@ export interface ProjectStatusV2Report {
       health: OpsStatusReport['health'];
       issues: number;
       debt?: {
+        evaluation: OpsStatusReport['debtEvaluation']['state'];
+        summary: string;
         open: number;
         highOpen: number;
       };
@@ -164,6 +166,8 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
         issues: opsStatus.issues.length + opsStatusIssues.length,
         ...(detail === 'full' ? {
           debt: {
+            evaluation: opsStatus.debtEvaluation.state,
+            summary: opsStatus.debtEvaluation.summary,
             open: opsStatus.debt.open,
             highOpen: opsStatus.debt.highOpen
           },

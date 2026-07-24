@@ -12,10 +12,18 @@ export interface OperationalDebtAggregate {
   };
 }
 
+export interface DeveloperSurfaceAvailability {
+  state: 'repo-local-only' | 'deferred';
+  evaluated: false;
+  owner: 'hadara-dev' | 'tui-fast-profile';
+  summary: string;
+}
+
 export interface OperationalDebtReport {
   schemaVersion: 'hadara.operational_debt.v1';
   command: 'operational-debt.report';
-  ok: true;
+  ok: boolean;
+  availability: DeveloperSurfaceAvailability;
   records: Array<{
     id: string;
     title: string;
@@ -47,6 +55,7 @@ export interface ReleaseGateReport {
   command: 'release.gate';
   mode: 'advisory' | 'strict';
   ok: boolean;
+  availability: DeveloperSurfaceAvailability;
   checks: Array<{
     code: string;
     name: string;
@@ -72,15 +81,42 @@ export function createEmptyOperationalDebtAggregate(): OperationalDebtAggregate 
   };
 }
 
+function createRepoLocalAvailability(summary: string): DeveloperSurfaceAvailability {
+  return {
+    state: 'repo-local-only',
+    evaluated: false,
+    owner: 'hadara-dev',
+    summary
+  };
+}
+
+function createDeferredAvailability(summary: string): DeveloperSurfaceAvailability {
+  return {
+    state: 'deferred',
+    evaluated: false,
+    owner: 'tui-fast-profile',
+    summary
+  };
+}
+
 export function createPlaceholderOperationalDebtReport(): OperationalDebtReport {
   return {
     schemaVersion: 'hadara.operational_debt.v1',
     command: 'operational-debt.report',
     ok: true,
+    availability: createRepoLocalAvailability(
+      'Operational debt is maintained through repo-local HADARA-dev tooling and is not evaluated by shipped status or TUI surfaces.'
+    ),
     records: [],
     aggregate: createEmptyOperationalDebtAggregate(),
     capsuleSizeIndicators: [],
-    issues: []
+    issues: [
+      {
+        severity: 'warning',
+        code: 'OPERATIONAL_DEBT_REPO_LOCAL_ONLY',
+        message: 'Operational debt remains a repo-local HADARA-dev developer surface and is not evaluated here.'
+      }
+    ]
   };
 }
 
@@ -90,8 +126,24 @@ export function createPlaceholderReleaseGateReport(): ReleaseGateReport {
     command: 'release.gate',
     mode: 'advisory',
     ok: true,
-    checks: [],
-    issues: []
+    availability: createRepoLocalAvailability(
+      'Release gate evaluation remains a repo-local HADARA-dev surface and is not evaluated by shipped TUI/status placeholders.'
+    ),
+    checks: [
+      {
+        code: 'RELEASE_GATE_REPO_LOCAL_ONLY',
+        name: 'Repo-local release gate',
+        status: 'warning',
+        summary: 'Release-gate evaluation now lives behind repo-local HADARA-dev tooling and is unavailable on this shipped surface.'
+      }
+    ],
+    issues: [
+      {
+        severity: 'warning',
+        code: 'RELEASE_GATE_REPO_LOCAL_ONLY',
+        message: 'Release gate evaluation remains repo-local and was not run here.'
+      }
+    ]
   };
 }
 
@@ -101,6 +153,9 @@ export function createDeferredReleaseGateReport(): ReleaseGateReport {
     command: 'release.gate',
     mode: 'advisory',
     ok: true,
+    availability: createDeferredAvailability(
+      'The fast TUI profile defers repo-local release-gate evaluation to avoid expensive advisory reads during navigation.'
+    ),
     checks: [
       {
         code: 'TUI_FAST_RELEASE_GATE_DEFERRED',
@@ -109,6 +164,12 @@ export function createDeferredReleaseGateReport(): ReleaseGateReport {
         summary: 'Release-gate debt scan is deferred in the TUI fast read model.'
       }
     ],
-    issues: []
+    issues: [
+      {
+        severity: 'warning',
+        code: 'TUI_FAST_RELEASE_GATE_DEFERRED',
+        message: 'Fast TUI mode deferred the repo-local release-gate surface.'
+      }
+    ]
   };
 }

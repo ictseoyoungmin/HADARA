@@ -40,7 +40,7 @@ Options:
 
 Environment:
 PACKAGE_SMOKE_TIMEOUT
-                   Timeout in seconds for `hadara smoke package --execute`.
+                   Timeout in seconds for `node --import tsx tools/dev-surfaces.ts smoke package --execute`.
                    Default: 300.
 
 Examples:

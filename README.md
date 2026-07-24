@@ -17,7 +17,7 @@
 
 It turns non-deterministic agent work into inspectable Task Capsules, append-only evidence, explicit current state, and guarded handoffs—without requiring a cloud service or a full agent runtime.
 
-The live release, task, intent, problem, and validation facts stay in `.hadara/state/current.json`. A new human/agent session should start with `hadara status --json` instead of reconstructing the whole project from historical prose.
+Portable current-state guidance lives in the Task Board, Task Capsules, and their tracked Markdown projections. `.hadara/state/current.json` remains a command-owned compatibility checkpoint, not the normal human/agent starting point. A new session should start with `hadara task status --json`.
 
 This repository is both the HADARA source checkout and the HADARA protocol workspace used to build it.
 
@@ -38,11 +38,11 @@ hadara doctor --json
 Start from the lifecycle-aware status ingress rather than rereading the repository:
 
 ```bash
-hadara status --json
+hadara task status --json
 hadara task status --task T-XXXX --json
 ```
 
-`status` reads the structured current-state canon first and returns one primary next action. Use `task status --task T-XXXX --json` for the selected capsule and `context pack --task T-XXXX --json` when you need routed file context. Historical docs remain available through the indexes when a task actually needs them.
+`task status --json` is the current primary ingress. Use `task status --task T-XXXX --json` for an explicit capsule and `context pack --task T-XXXX --json` when you need routed file context. Historical docs remain available through the indexes when a task actually needs them.
 
 Run the stable release without a global install:
 
@@ -131,9 +131,8 @@ Release mutation remains operator-approved. The ordinary user path is install, i
 | Structured Help | Separate primary lifecycle commands from diagnostics, advanced, release, UI, and integration surfaces. |
 | Document Governance | Classify canonical, active, reference, historical, superseded, and archived docs. |
 | Managed Markdown Safety | Patch declared generated sections with dry-run and hash guards. |
-| Release Gates | Check package and release readiness through evidence-backed dry-run reports. |
 | Read-only MCP Bridge | Expose project/task/evidence state without default write tools. |
-| Dashboard and TUI | Provide local operator observation surfaces over existing read models. |
+| Read-only TUI | Provide a local terminal observation surface over existing read models. |
 
 HADARA is deliberately conservative. Read surfaces are broad; write and release surfaces are narrow, explicit, and evidence-oriented.
 
@@ -216,7 +215,7 @@ hadara evidence lint --task T-0001 --json
 hadara evidence list --task T-0001 --json
 hadara task status --task T-0001 --detail full --json
 hadara task close --task T-0001 --json
-hadara status --json
+hadara status --compat v1 --json
 hadara status --state-only --json
 hadara status --detail full --json
 hadara protocol doctor --json
@@ -262,25 +261,23 @@ hadara docs patch --path docs/TASK_BOARD.md --section task-board --content-file 
 
 Managed patch reports describe target hashes, section hashes, planned operations, and issues before any write is applied.
 
-## Release and Advanced Surfaces
+## Source Checkout Developer Surfaces
 
-Release/package commands are release-only surfaces, not ordinary lifecycle steps:
+Repo-local HADARA-dev release/package tooling lives under `tools/` and is not part of the ordinary published lifecycle surface:
 
 ```bash
-hadara smoke package --dry-run --json
-hadara smoke package --execute --attach-evidence --task T-0001 --json
-hadara smoke clean-checkout --execute --attach-evidence --task T-0001 --json
-hadara release artifact --execute --json --output dist-release --attach-evidence --task T-0001
-hadara release gate --mode strict --json
-hadara release dry-run --json
-hadara release publish --mode dry-run --json
+node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json
+node --import tsx tools/dev-surfaces.ts smoke package --execute --attach-evidence --task T-0001 --json
+node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --attach-evidence --task T-0001 --json
+node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task T-0001
+node --import tsx tools/dev-surfaces.ts release gate --mode strict --json
+node --import tsx tools/dev-surfaces.ts release dry-run --json
+node --import tsx tools/dev-surfaces.ts release publish --mode dry-run --json
 ```
 
-`smoke package --execute`, `smoke clean-checkout --execute`, and `release artifact --execute` create local validation artifacts and reduced public evidence only. They must not publish packages, create GitHub Releases, build Docker images, push images, or load publish token values.
+These commands create local validation artifacts and reduced public evidence only. They must not publish packages, create GitHub Releases, build Docker images, push images, or load publish token values unless a separate approval-gated release capsule explicitly proceeds to the operator helper flow.
 
-`release publish --mode dry-run` reports readiness, token presence by name, approval requirements, and mutation privacy flags without running `npm publish`. Any publish execution must happen only in a separate approval-gated release capsule with explicit operator confirmation.
-
-Dashboard, TUI, Hermes, MCP, installer, package, release, and run commands stay out of the primary lifecycle unless a task explicitly needs them.
+TUI, Hermes, MCP, installer, and repo-local developer surfaces stay out of the primary lifecycle unless a task explicitly needs them.
 
 ## Safety Boundaries
 

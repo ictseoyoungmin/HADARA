@@ -2,9 +2,9 @@
 
 ## 0.5.0-rc.2 planned scope
 
-Planned next release candidate. The scope is the current `0.5.0-rc.1` line plus the reviewer-fix
-capsules and Phase D through the end of the 0.5 DAG/status redesign before release readiness is
-recycled.
+Planned next release candidate. The scope is the current `0.5.0-rc.1` line plus reviewer-fix
+capsules that harden RC2 trust after the developer-surface reduction. Broader DAG/status redesign
+work is out of scope unless a later capsule explicitly restores it across shared docs.
 
 Required before rc.2 release readiness:
 
@@ -13,8 +13,11 @@ Required before rc.2 release readiness:
 - The current validation baseline must preserve rollup evidence for source validation, release
   readiness, npm/GitHub publication records, installed recycle/dogfood, and latest remediation
   validation instead of narrowing to only the most recent promotion command.
-- Phase D starts from the deferred context-route resolver / registry stable-id work identified in
-  the T-0660/T-0661 handoff, and rc.2 includes that Phase D-through-end implementation line.
+- The reduced RC2 developer-surface boundary must stay explicit: repo-local release/package/debt
+  tooling may remain under `tools/`, while shipped status/TUI/reporting surfaces must not imply
+  evaluated release/debt results when those developer-only checks are unavailable.
+- Fresh validation evidence and dogfood must be rerun on current HEAD before rc.2 release
+  readiness is promoted beyond the current T-0678 rollup.
 
 ## 0.5.0-rc.1
 

@@ -3,7 +3,7 @@
   "version": "0.5.0-rc.1",
   "private": false,
   "license": "MIT",
-  "description": "Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and release gates.",
+  "description": "Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and guarded handoffs.",
   "keywords": [
     "ai",
     "agent",
@@ -16,7 +16,6 @@
     "task-management",
     "evidence",
     "handoff",
-    "release-management",
     "mcp",
     "hadara"
   ],
@@ -40,6 +39,8 @@
   "scripts": {
     "dev": "tsx src/cli/main.ts",
     "build": "tsc -p tsconfig.json",
+    "typecheck:src": "tsc -p tsconfig.json --noEmit",
+    "typecheck:tools": "tsc -p tsconfig.tools.json",
     "start": "node dist/cli/main.js",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
@@ -48,7 +49,7 @@
     "test:contract": "vitest run tests/contract",
     "test:harness": "vitest run tests/harness",
     "test:all": "npm test && npm run test:hadara-dev",
-    "check": "npm run build && npm run test:all",
+    "check": "npm run typecheck:src && npm run typecheck:tools && npm run test:all",
     "smoke:context-routing": "node scripts/context-routing-e2e-smoke.mjs",
     "measure:primary-workflow": "node scripts/primary-workflow-measurement.mjs",
     "dev:surface": "node --import tsx tools/dev-surfaces.ts",
