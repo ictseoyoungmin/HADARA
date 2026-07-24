@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 323,
+  "rev": 325,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0700",
-    "title": "Init v1 Safe Apply Transaction"
+    "id": "T-0701",
+    "title": "Init v1 Safe Apply Rollback Hardening"
   },
   "activeTask": null,
   "nextWork": null,
@@ -15,7 +15,7 @@
     "disposition": "actionable",
     "kind": "task-handoff",
     "title": "Implement Init v1 Re-init and Upgrade Ownership.",
-    "reason": "Safe apply is now stable; the next mapped boundary owns persisted authority, preset-change no-op behavior, managed updates, legacy/partial migration, and `--prune` rules.",
+    "reason": "This was T-0700's deferred next step and remains the next mapped Init v1 boundary now that rollback safety is hardened; it must consume the hardened rollback/recovery primitives from this capsule.",
     "references": [
       {
         "path": "Both Init v1 specs",
@@ -30,7 +30,7 @@
         "required": true
       },
       {
-        "path": "this capsule transaction",
+        "path": "T-0700 and T-0701 transaction/rollback",
         "required": true
       },
       {
@@ -41,8 +41,8 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0700",
-      "path": "tasks/T-0700-init-v1-safe-apply-transaction/HANDOFF.md"
+      "workId": "T-0701",
+      "path": "tasks/T-0701-init-v1-safe-apply-rollback-hardening/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

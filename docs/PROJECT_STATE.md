@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0700 Init v1 Safe Apply Transaction |
+| Latest Completed Task | T-0701 Init v1 Safe Apply Rollback Hardening |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

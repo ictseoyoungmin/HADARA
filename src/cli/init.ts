@@ -118,7 +118,12 @@ ${renderPresetHelp()}
 Notes:
   --help is read-only and does not create scaffold files.
   --profile basic is a deprecated compatibility alias for --preset minimal.
-  JSON and non-interactive init return a zero-write plan before reviewed execute.
+  Interactive TTY: plain "hadara init" prints the reviewed plan, then prompts
+    "Apply this reviewed plan? [y/N]" and applies immediately on y/yes, in the
+    same process.
+  JSON / non-interactive / CI: always two-step. A dry-run prints the plan and
+    a hash; nothing is written until a separate --execute --plan-hash <hash>
+    call.
 `;
 }
 

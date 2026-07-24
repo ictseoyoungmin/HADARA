@@ -60,6 +60,13 @@ hadara init --profile governed --json
 hadara init doctor --json
 ```
 
+Plain `hadara init` in an interactive terminal is not read-only: it prints the
+reviewed dry-run plan, then in the same process prompts `Apply this reviewed
+plan? [y/N]` and applies immediately on `y`/`yes`. JSON output and any
+non-interactive invocation (CI, a piped/redirected shell, an agent) always stay
+two-step: a zero-write dry-run first, then a separate `--execute --plan-hash
+<hash>` call to apply.
+
 If you need to save init JSON before the scaffold exists, prefer writing it outside
 the target directory, for example `hadara init --json > /tmp/hadara-init.json`.
 HADARA tolerates a zero-byte `init.json` that a shell creates before the command

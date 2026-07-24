@@ -193,6 +193,48 @@ describe('Init v1 safe apply transaction', () => {
     expect(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')).toBe(agents);
   });
 
+  it('retains a pre-existing file another actor changed after a failed transaction instead of overwriting it', () => {
+    const donor = tempProject();
+    const originalAgents = '# Original AGENTS\n\nKeep this exactly.\n';
+    fs.writeFileSync(path.join(donor, 'AGENTS.md'), originalAgents, 'utf8');
+    const donorPlanning = createInitPlanningResult(donor, 'minimal');
+    applyInitPlanningResult(donor, donorPlanning, { planHash: donorPlanning.plan.planHash, adopt: true });
+    const mergedAgents = fs.readFileSync(path.join(donor, 'AGENTS.md'), 'utf8');
+
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), originalAgents, 'utf8');
+    fs.mkdirSync(path.join(root, '.hadara', 'local', 'journals'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'local', 'journals', 'init.json'), JSON.stringify({
+      schemaVersion: 'hadara.init.journal.v1',
+      planHash: 'irrelevant-for-crash-recovery',
+      preset: 'minimal',
+      entries: [{
+        path: 'AGENTS.md',
+        type: 'file',
+        beforeExists: true,
+        beforeContent: originalAgents,
+        expectedAfterHash: hash(mergedAgents),
+        status: 'committed'
+      }]
+    }), 'utf8');
+    // Simulate another actor editing the file after the crashed transaction committed this mutation.
+    const externallyModified = `${mergedAgents}\n<!-- another actor appended this -->\n`;
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), externallyModified, 'utf8');
+
+    const current = createInitPlanningResult(root, 'minimal');
+    const report = applyInitPlanningResult(root, current, { planHash: current.plan.planHash, adopt: true });
+
+    expect(report.ok).toBe(false);
+    expect(report.recovery).toMatchObject({ required: true });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'INIT_ROLLBACK_EXTERNAL_MODIFICATION',
+      path: 'AGENTS.md'
+    }));
+    expect(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')).toBe(externallyModified);
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'journals', 'init.json'))).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'project.json'))).toBe(false);
+  });
+
   it('rejects traversal, symlink, nested roots, and case collisions while allowing standalone roots', () => {
     const root = tempProject();
     expect(validateInitPaths(root, ['../outside.md'])).toContainEqual(expect.objectContaining({ code: 'INIT_PATH_OUTSIDE_ROOT' }));

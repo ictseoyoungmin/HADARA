@@ -66,7 +66,7 @@ export function applyInitPlanningResult(
   try {
     lock = acquireInitLock(projectRoot);
     const recoveryIssues = recoverIncompleteTransaction(projectRoot);
-    if (recoveryIssues.length > 0) return failedReport(reviewed, ...recoveryIssues);
+    if (recoveryIssues.length > 0) return failedReport(reviewed, ...recoveryIssues, true);
 
     const current = createInitPlanningResult(projectRoot, reviewed.plan.preset);
     if (requestedHash !== current.plan.planHash) {
@@ -338,6 +338,12 @@ function recoverIncompleteTransaction(projectRoot: string): InitIssue[] {
   }
 }
 
+class InitRollbackIssueError extends Error {
+  constructor(message: string, readonly code: string) {
+    super(message);
+  }
+}
+
 function rollbackJournal(projectRoot: string, journal: InitJournal): InitIssue[] {
   const issues: InitIssue[] = [];
   for (const entry of [...journal.entries].reverse()) {
@@ -345,18 +351,34 @@ function rollbackJournal(projectRoot: string, journal: InitJournal): InitIssue[]
     try {
       if (entry.beforeExists) {
         if (entry.type !== 'file' || entry.beforeContent === undefined) throw new Error('missing rollback content');
-        atomicWrite(target, entry.beforeContent);
+        if (!fs.existsSync(target)) throw new Error('target removed after transaction failure');
+        const currentHash = hashBuffer(fs.readFileSync(target));
+        if (currentHash === hashText(entry.beforeContent)) {
+          // Already restored (e.g. a retried rollback); nothing to do.
+        } else if (currentHash === entry.expectedAfterHash) {
+          atomicWrite(target, entry.beforeContent);
+        } else {
+          throw new InitRollbackIssueError(
+            'target changed by another actor after transaction failure; retaining current content instead of overwriting it',
+            'INIT_ROLLBACK_EXTERNAL_MODIFICATION'
+          );
+        }
       } else if (entry.type === 'directory') {
         if (fs.existsSync(target)) fs.rmdirSync(target);
       } else if (fs.existsSync(target)) {
         const currentHash = hashBuffer(fs.readFileSync(target));
-        if (currentHash !== entry.expectedAfterHash) throw new Error('target changed after transaction failure');
+        if (currentHash !== entry.expectedAfterHash) {
+          throw new InitRollbackIssueError(
+            'target changed by another actor after transaction failure; retaining current content instead of deleting it',
+            'INIT_ROLLBACK_EXTERNAL_MODIFICATION'
+          );
+        }
         fs.rmSync(target, { force: true });
       }
     } catch (error) {
       issues.push({
         severity: 'error',
-        code: 'INIT_PARTIAL_APPLY',
+        code: error instanceof InitRollbackIssueError ? error.code : 'INIT_PARTIAL_APPLY',
         path: entry.path,
         message: `Could not roll back ${entry.path}: ${error instanceof Error ? error.message : String(error)}`
       });
