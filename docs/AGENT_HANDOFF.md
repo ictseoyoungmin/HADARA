@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0696 RC2 Developer Surface Trust Hardening | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0697 RC2 Build Freshness and Clean Install Guard | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,11 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0696 completes the current-head RC2 trust-hardening pass for reduced developer surfaces: `tools/` now has an explicit TypeScript type-check path, shipped status/TUI debt and release-gate placeholders no longer imply evaluated healthy zero-state, README/Getting Started/release docs and package metadata now point at `task status` plus repo-local `tools/dev-surfaces.ts` helper surfaces where appropriate, and `npm run check` passes with both public and HADARA-dev suites.
+T-0697 fixes the RC2 release build boundary before fresh dogfood: `npm run check` emits current `dist`, the manual RC publish helper rebuilds and verifies `node dist/cli/main.js version` before artifact creation, `package-lock.json` root metadata matches `package.json` with Dashboard-only direct dependencies removed, and public `context pack` routing/registry/docs/recycle-smoke exposure is gone while internal context-pack helpers remain only for internal candidate/historical use. Clean install/check proof came from a Docker ext4 clean copy including `.hadara`; host `npm ci` on the mounted WSL workspace hit npm bin symlink EPERM.
 
 ## Previous Handoff
 
-T-0695 completes the live metadata cleanup that followed the developer-surface move: repo-local debt/dev/smoke/release command entries now declare their `tools/` implementation and focused-test ownership, release/package/smoke schemas point at the moved `tools/dev-surface/*` files, current docs no longer reference the removed `src/services` paths, and `src/context/release-extractors.ts` includes repo-local command entries again when mapping release-readiness code spans.
+T-0696 completes the current-head RC2 trust-hardening pass for reduced developer surfaces: `tools/` now has an explicit TypeScript type-check path, shipped status/TUI debt and release-gate placeholders no longer imply evaluated healthy zero-state, README/Getting Started/release docs and package metadata now point at `task status` plus repo-local `tools/dev-surfaces.ts` helper surfaces where appropriate, and `npm run check` passed with both public and HADARA-dev suites before T-0697 restored build freshness.
 
 ## Historical Index
 

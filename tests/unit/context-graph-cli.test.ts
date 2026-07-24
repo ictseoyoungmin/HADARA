@@ -207,50 +207,9 @@ describe('context graph CLI', () => {
     expect(validateSchema('hadara.taskContext.v1', payload.taskContext).ok).toBe(true);
   });
 
-  it('prints a schema-valid context pack report for a task without writing files', () => {
+  it('does not expose context pack as a CLI subcommand', () => {
     const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI context pack');
-    const before = snapshotProject(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    const handled = handleContextCommand({
-      args: ['context', 'pack', '--task', task.id, '--json'],
-      projectRoot: root,
-      jsonOutput: true
-    });
-
-    expect(handled).toBe(true);
-    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
-    expect(payload).toMatchObject({
-      schemaVersion: 'hadara.contextPack.v1',
-      command: 'context.pack',
-      ok: true,
-      taskId: task.id,
-      projectRoot: root,
-      cache: {
-        used: true,
-        hit: false,
-        mode: 'extractor-shards+code-index-missing'
-      },
-      sourceSummary: expect.objectContaining({
-        graphAvailable: true,
-        codeIndexAvailable: false,
-        stateProjectionAvailable: true
-      })
-    });
-    expect(payload.readFirst).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: `task:${task.id}`, type: 'Task', required: true })
-    ]));
-    expect(payload.validateWith.some((item: { command: string }) => item.command.includes(`task status --task ${task.id} --detail full`))).toBe(true);
-    expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
-    expect(snapshotProject(root)).toEqual(before);
-  });
-
-  it('prints a fast task-required context pack report without live graph discovery when no task is supplied', () => {
-    const root = tempProject();
-    const before = snapshotProject(root);
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    const previousExitCode = process.exitCode;
 
     const handled = handleContextCommand({
       args: ['context', 'pack', '--json'],
@@ -258,33 +217,8 @@ describe('context graph CLI', () => {
       jsonOutput: true
     });
 
-    expect(handled).toBe(true);
-    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
-    expect(payload).toMatchObject({
-      schemaVersion: 'hadara.contextPack.v1',
-      command: 'context.pack',
-      ok: false,
-      projectRoot: root,
-      cache: {
-        used: false,
-        hit: false,
-        mode: 'task-required-fast-path',
-        sourceManifestFastPath: 'skipped'
-      },
-      sourceSummary: expect.objectContaining({
-        graphAvailable: false,
-        sourcesRead: 0
-      })
-    });
-    expect(payload.issues).toContainEqual(expect.objectContaining({
-      severity: 'error',
-      code: 'CONTEXT_PACK_TASK_NOT_FOUND',
-      fixHint: expect.stringContaining('task status --json')
-    }));
-    expect(payload.readFirst).toEqual([]);
-    expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
-    expect(snapshotProject(root)).toEqual(before);
-    process.exitCode = previousExitCode;
+    expect(handled).toBe(false);
+    expect(log).not.toHaveBeenCalled();
   });
 
   it('prints a schema-valid session start report for a task without writing files', () => {
@@ -332,51 +266,6 @@ describe('context graph CLI', () => {
     ]));
     expect(validateSchema('hadara.sessionStart.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
-  });
-
-  it('prints code-aware context pack output when --include-code is supplied', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI code-aware context pack');
-    fs.mkdirSync(path.join(root, 'src', 'cli'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'src', 'cli', 'context.ts'), 'export function handleContextCommand() {}\n', 'utf8');
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    const handled = handleContextCommand({
-      args: ['context', 'pack', '--task', task.id, '--include-code', '--json'],
-      projectRoot: root,
-      jsonOutput: true
-    });
-
-    expect(handled).toBe(true);
-    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
-    expect(payload.sourceSummary.codeIndexAvailable).toBe(true);
-    expect(payload.issues).not.toContainEqual(expect.objectContaining({
-      code: 'CONTEXT_PACK_CODE_INDEX_UNAVAILABLE'
-    }));
-    expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
-  });
-
-  it('passes context pack budget options through to the report', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI budgeted context pack');
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    const handled = handleContextCommand({
-      args: ['context', 'pack', '--task', task.id, '--budget', '8000', '--max-items', '5', '--max-read-first', '2', '--json'],
-      projectRoot: root,
-      jsonOutput: true
-    });
-
-    expect(handled).toBe(true);
-    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
-    expect(payload.budget).toMatchObject({
-      targetTokens: 8000,
-      maxItems: 5,
-      maxReadFirstItems: 2,
-      mode: 'bounded'
-    });
-    expect(payload.readFirst.length).toBeLessThanOrEqual(2);
-    expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
   });
 
   it('prints a schema-valid context slice report without writing files', () => {

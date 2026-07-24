@@ -31,7 +31,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'evidence.lint',
   'evidence.migrate',
   'context.graph',
-  'context.pack',
   'context.slice',
   'context.cache.status',
   'context.cache.warm',
@@ -161,10 +160,7 @@ describe('Phase 7.1 command registry', () => {
       implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts', 'src/context/code-graph-extractor.ts'],
       testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-graph-builder.test.ts']
     });
-    expect(findCommandRegistryEntry('context.pack')).toMatchObject({
-      implementationFiles: ['src/cli/context.ts', 'src/context/context-pack.ts', 'src/context/context-graph-builder.ts'],
-      testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-pack.test.ts']
-    });
+    expect(findCommandRegistryEntry('context.pack')).toBeUndefined();
     expect(findCommandRegistryEntry('context.slice')).toMatchObject({
       implementationFiles: ['src/cli/context.ts', 'src/context/context-slice.ts'],
       testFiles: ['tests/unit/context-slice.test.ts', 'tests/unit/context-graph-cli.test.ts']

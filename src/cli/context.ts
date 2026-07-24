@@ -1,7 +1,6 @@
 import { getFlag, getIntegerOption, getStringOption } from './args';
 import { createContextCacheStatusReport, createContextCacheWarmReport } from '../context/context-cache-store';
 import { buildContextGraphReport } from '../context/context-graph-builder';
-import { buildContextPackReport, buildTaskRequiredContextPackReport, type ContextBudget } from '../context/context-pack';
 import { buildContextSliceReport } from '../context/context-slice';
 
 export interface ContextCommandInput {
@@ -13,7 +12,6 @@ export interface ContextCommandInput {
 export function handleContextCommand(input: ContextCommandInput): boolean {
   const sub = input.args[1];
   if (sub === 'graph') return handleContextGraphCommand(input);
-  if (sub === 'pack') return handleContextPackCommand(input);
   if (sub === 'slice') return handleContextSliceCommand(input);
   if (sub === 'cache') return handleContextCacheCommand(input);
   return false;
@@ -27,32 +25,6 @@ function handleContextGraphCommand(input: ContextCommandInput): boolean {
     includeCode,
     ...(taskId ? { taskId, mode: 'task' } : { mode: 'full' })
   });
-
-  if (input.jsonOutput) {
-    console.log(JSON.stringify(report, null, 2));
-  } else {
-    console.log(JSON.stringify(report, null, 2));
-  }
-  if (!report.ok) process.exitCode = 6;
-  return true;
-}
-
-function handleContextPackCommand(input: ContextCommandInput): boolean {
-  const taskId = getStringOption(input.args, '--task');
-  const includeCode = input.args.includes('--include-code') ? true : undefined;
-  const live = getFlag(input.args, '--live');
-  const budget = contextPackBudgetFromArgs(input.args);
-  const report = !taskId && !live
-    ? buildTaskRequiredContextPackReport({
-      projectRoot: input.projectRoot,
-      ...(Object.keys(budget).length > 0 ? { budget } : {})
-    })
-    : buildContextPackReport({
-      projectRoot: input.projectRoot,
-      ...(includeCode !== undefined ? { includeCode } : {}),
-      ...(taskId ? { taskId } : {}),
-      ...(Object.keys(budget).length > 0 ? { budget } : {})
-    });
 
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
@@ -101,15 +73,4 @@ function handleContextCacheCommand(input: ContextCommandInput): boolean {
   }
   if (!report.ok) process.exitCode = 6;
   return true;
-}
-
-function contextPackBudgetFromArgs(args: string[]): Partial<ContextBudget> {
-  const targetTokens = getIntegerOption(args, '--budget', { min: 1 });
-  const maxItems = getIntegerOption(args, '--max-items', { min: 1, max: 500 });
-  const maxReadFirstItems = getIntegerOption(args, '--max-read-first', { min: 1, max: 100 });
-  return {
-    ...(targetTokens !== undefined ? { targetTokens } : {}),
-    ...(maxItems !== undefined ? { maxItems } : {}),
-    ...(maxReadFirstItems !== undefined ? { maxReadFirstItems } : {})
-  };
 }

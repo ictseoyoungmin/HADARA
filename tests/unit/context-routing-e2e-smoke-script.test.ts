@@ -88,15 +88,14 @@ describe('context routing e2e smoke script', () => {
         ok: true,
         profile: 'full',
         summary: {
-          workloads: 9,
-          passed: 9,
+          workloads: 8,
+          passed: 8,
           failed: 0
         }
       });
       expect(report.selectedWorkloads).toEqual([
         'cache_status',
         'cache_warm_dry_run',
-        'context_pack',
         'context_slice_range',
         'context_slice_symbol',
         'graph_task',
@@ -144,16 +143,6 @@ if (command === 'context cache status') {
     taskId,
     nodes: [{ id: 'task:' + taskId, type: 'Task' }, ...(hasIncludeCode ? [{ id: 'file:src/services/project-status-v2.ts', type: 'SourceFile' }] : [])],
     edges: [],
-    issues: []
-  };
-} else if (args[0] === 'context' && args[1] === 'pack') {
-  payload = {
-    schemaVersion: 'hadara.contextPack.v1',
-    command: 'context.pack',
-    ok: true,
-    taskId,
-    readFirst: [{ id: 'task:' + taskId }],
-    cache: { used: false, hit: false },
     issues: []
   };
 } else if (args[0] === 'status') {

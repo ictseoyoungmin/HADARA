@@ -1,24 +1,24 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 315,
+  "rev": 317,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0696",
-    "title": "RC2 Developer Surface Trust Hardening"
+    "id": "T-0697",
+    "title": "RC2 Build Freshness and Clean Install Guard"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Re-run fresh-session dogfood on current HEAD and decide whether to promote the RC2 validation baseline beyond the T-0678 rollup before any rc.2 release-readiness work.",
-    "reason": "T-0696 restored current-head trust for repo-local developer surfaces, but `docs/RELEASE_READINESS.md` still blocks rc.2 readiness on fresh dogfood and deliberate baseline promotion.",
+    "title": "Fresh-session RC2 dogfood and validation-baseline promotion.",
+    "reason": "T-0697 fixed the release build boundary blocker that should precede fresh dogfood.",
     "references": [
       {
-        "path": "`docs/RELEASE_READINESS.md`",
+        "path": "`.hadara/context/HADARA_CONTEXT.md`",
         "required": true
       },
       {
@@ -30,15 +30,19 @@
         "required": true
       },
       {
-        "path": "`tasks/T-0696-rc2-developer-surface-trust-hardening/TASK.md`",
+        "path": "`docs/TASK_BOARD.md`",
+        "required": true
+      },
+      {
+        "path": "selected new Task Capsule",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0696",
-      "path": "tasks/T-0696-rc2-developer-surface-trust-hardening/HANDOFF.md"
+      "workId": "T-0697",
+      "path": "tasks/T-0697-rc2-build-freshness-and-clean-install-guard/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

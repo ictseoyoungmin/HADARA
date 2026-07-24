@@ -790,39 +790,9 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     notes: 'Read-only projection; persistent cache support is not implemented yet.'
   }),
   commandEntry({
-    id: 'context.pack',
-    command: 'hadara context pack --task <task-id> [--include-code] [--budget <tokens>] [--max-items <count>] [--max-read-first <count>] --json',
-    summary: 'Emit the bounded task-scoped context pack read plan from the current context graph; without --task, the default path fails fast and points to task status instead of scanning the project.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'project-health',
-    scope: 'task',
-    lifecycleStage: 'inspect',
-    requiredness: 'diagnostic',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'experimental',
-    schemaVersion: 'hadara.contextPack.v1',
-    since: '0.3.3',
-    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
-    implementationFiles: ['src/cli/context.ts', 'src/context/context-pack.ts', 'src/context/context-graph-builder.ts'],
-    testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-pack.test.ts'],
-    examples: [
-      example('Read task context pack', 'hadara context pack --task T-0001 --json', 'When a worker needs the bounded first-read plan for a task.'),
-      example('Read code-aware context pack', 'hadara context pack --task T-0001 --include-code --json', 'When source, test, and symbol candidates should be included.'),
-      example('Read smaller context pack', 'hadara context pack --task T-0001 --max-read-first 3 --max-items 12 --json', 'When a worker needs a tighter bounded read plan.'),
-      example('Opt into live no-task discovery', 'hadara context pack --live --json', 'Only when slower project-wide graph discovery is explicitly acceptable.')
-    ],
-    related: ['context.graph', 'status', 'docs.required-reading', 'task.status'],
-    conflictsWith: [],
-    notes: 'Read-only C3 projection; C4 slicing and persistent C6 cache writes are not implemented by this command.'
-  }),
-  commandEntry({
     id: 'context.slice',
     command: 'hadara context slice (--path <path> (--from <line> --to <line>|--symbol <name>|--keyword <text> [--window <lines>]|--tail <lines>|--managed-section <section-id>)|--task <task-id> --candidate <candidate-id> [--include-code]) --json',
-    summary: 'Emit deterministic read-only raw context slices from one explicit project file or context-pack candidate.',
+    summary: 'Emit deterministic read-only raw context slices from one explicit project file or internal context candidate.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -844,11 +814,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Read a symbol neighborhood', 'hadara context slice --path src/cli/context.ts --symbol handleContextCommand --json', 'When a worker needs bounded source around one exported symbol.'),
       example('Read keyword windows', 'hadara context slice --path docs/TASK_BOARD.md --keyword T-0001 --window 20 --json', 'When a worker needs bounded context around known text.'),
       example('Read a managed section', 'hadara context slice --path docs/TASK_BOARD.md --managed-section task-board --json', 'When a worker needs marker-bounded managed content.'),
-      example('Read a context-pack candidate', 'hadara context slice --task T-0001 --candidate slice-candidate:1:doc:docs/HADARA_WORKFLOW.md --json', 'When a worker wants exact text for a C3 slice candidate.')
+      example('Read an internal context candidate', 'hadara context slice --task T-0001 --candidate slice-candidate:1:doc:docs/HADARA_WORKFLOW.md --json', 'When a worker wants exact text for an internally ranked slice candidate.')
     ],
-    related: ['context.pack', 'context.graph', 'docs.managed.list'],
+    related: ['context.graph', 'docs.managed.list'],
     conflictsWith: [],
-    notes: 'C4 implementation reads exact source text through bounded strategies. Candidate slicing resolves against the current C3 context pack and remains read-only.'
+    notes: 'C4 implementation reads exact source text through bounded strategies. Candidate slicing resolves through the internal C3 context pack builder and remains read-only.'
   }),
   commandEntry({
     id: 'context.cache.status',
@@ -873,7 +843,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [
       example('Read context cache status', 'hadara context cache status --json', 'Before relying on C6 cache-backed context routing performance.')
     ],
-    related: ['context.graph', 'context.pack', 'status'],
+    related: ['context.graph', 'status'],
     conflictsWith: [],
     notes: 'Read-only status command; it does not create or update cache files. Use context.cache.warm for explicit source-manifest cache writes.'
   }),
@@ -901,7 +871,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Preview context cache warm', 'hadara context cache warm --json', 'Before writing the local source-manifest cache.'),
       example('Execute context cache warm', 'hadara context cache warm --execute --json', 'After reviewing the warm plan and accepting the ignored local cache write.')
     ],
-    related: ['context.cache.status', 'context.graph', 'context.pack'],
+    related: ['context.cache.status', 'context.graph'],
     conflictsWith: [],
     notes: 'Phase 1 warm command writes only source-manifest cache. It does not warm graph, code-index, context-pack, or slice caches.'
   }),
@@ -1101,7 +1071,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.docs.readMap.v1',
     docs: ['docs/HADARA_WORKFLOW.md', 'docs/SCHEMAS.md'],
     examples: [example('Read task docs map', 'hadara docs read-map --task T-0001 --json', 'Before reading broad design/spec documents for a task.')],
-    related: ['docs.inbox', 'docs.list', 'docs.explain', 'context.pack', 'status'],
+    related: ['docs.inbox', 'docs.list', 'docs.explain', 'task.status', 'status'],
     conflictsWith: []
   }),
   commandEntry({

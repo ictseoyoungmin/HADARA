@@ -54,6 +54,21 @@ describe('manual publish release script', () => {
     expect(script).not.toContain('run_hadara package smoke --execute');
   });
 
+  it('refreshes and verifies dist immediately before building release artifacts', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    const checkIndex = script.indexOf('npm run check');
+    const buildIndex = script.indexOf('npm run build', checkIndex);
+    const versionIndex = script.indexOf('DIST_VERSION="$(node dist/cli/main.js version', buildIndex);
+    const artifactIndex = script.indexOf('run_dev_surface release artifact --execute', versionIndex);
+
+    expect(checkIndex).toBeGreaterThan(-1);
+    expect(buildIndex).toBeGreaterThan(checkIndex);
+    expect(versionIndex).toBeGreaterThan(buildIndex);
+    expect(artifactIndex).toBeGreaterThan(versionIndex);
+    expect(script).toContain('built dist version (${DIST_VERSION}) does not match package.json version (${VERSION}).');
+  });
+
   it('marks both mounted workspace paths as git safe directories before cloning', () => {
     const script = fs.readFileSync(prepareScriptPath, 'utf8');
 

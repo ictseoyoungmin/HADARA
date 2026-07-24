@@ -83,7 +83,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
 | Need project-specific docs | Use \`hadara docs add <type> --json\`, or create a Markdown file directly and register it with \`hadara docs register\`. |
-| Need files to inspect | Run \`hadara context pack --task T-XXXX --json\`, then read only routed files. |
+| Need files to inspect | Use \`hadara task status --task T-XXXX --json\`, docs read-map, and explicit file reads. |
 | Ready to close | Run \`hadara task close --task T-XXXX --json\` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Use \`--dry-run\` only when a separate reviewer needs the plan. |
 
 ## Minimal Loop
@@ -107,7 +107,7 @@ Agents must follow this read order:
 
 | Order | Authority | Allowed Reads |
 |---:|---|---|
-| 1 | HADARA CLI read models | \`status\`, \`task status\`, \`context pack\`, docs registry/read-map reports. |
+| 1 | HADARA CLI read models | \`status\`, \`task status\`, docs registry/read-map reports, and explicit context graph diagnostics. |
 | 2 | Command-returned paths | Files, ranges, candidates, or docs explicitly returned by those read models. |
 | 3 | Active Task Capsule | \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, and task-local evidence summaries for the selected task. |
 | 4 | Shared state docs | Only when Required Reading says every session, or when a read model/task explicitly references them. |
@@ -180,10 +180,9 @@ Use task status at the beginning of a human/agent work session, after switching 
 \`\`\`bash
 hadara task status --json
 hadara task status --task T-XXXX --json
-hadara context pack --task T-XXXX --json
 \`\`\`
 
-\`task status\` reads the Task Board, Task Capsules, and human-readable routing docs. It does not create tasks, append evidence, warm caches, validate completion, or close work. The deprecated top-level \`status\` alias calls the same evaluator. Use \`context pack\` only after a task is selected and file context is actually needed.
+\`task status\` reads the Task Board, Task Capsules, and human-readable routing docs. It does not create tasks, append evidence, warm caches, validate completion, or close work. The deprecated top-level \`status\` alias calls the same evaluator. Use docs read-map and explicit file reads when task-specific source context is needed.
 
 ## Selecting or Creating Work
 
@@ -199,15 +198,7 @@ Task selection is a review decision, not title generation. Current human or revi
 
 ## Task Context
 
-\`\`\`bash
-hadara context pack --task T-XXXX --json
-\`\`\`
-
-Use context pack when starting implementation, resuming after a gap, deciding which files to inspect, or avoiding broad manual repo reads. Context pack is reading guidance, not validation.
-
-\`context pack\` is task-scoped by default. If no task id is supplied, it returns task-selection guidance without running live project-wide graph discovery. Use \`hadara task status --json\` first, then rerun \`hadara context pack --task T-XXXX --json\`. Use \`hadara context pack --live --json\` only when the slower project-wide graph path is explicitly acceptable.
-
-After context pack:
+Use \`hadara task status --task T-XXXX --json\`, docs read-map, and the selected Task Capsule to decide which files to inspect. Use \`hadara context graph --task T-XXXX --json\` only for explicit graph diagnostics; public \`context pack\` routing has been removed.
 
 1. Select only relevant files or candidates from the report.
 2. Use \`context slice\` for exact source reads when a range/candidate is available.
@@ -350,7 +341,7 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 | Find next work | \`hadara task status --json\` | Read-only selection cockpit. |
 | Inspect selected task | \`hadara task status --task T-XXXX --json\` | Fast loop phase and next-action projection. |
 | Inspect close-grade diagnostics | \`hadara task status --task T-XXXX --detail full --json\` | Heavier readiness/protocol projection for explicit diagnostics. |
-| Find task-specific context | \`hadara context pack --task T-XXXX --json\` | Use before broad manual reads. |
+| Find task-specific context | \`hadara task status --task T-XXXX --json\` and docs read-map | Use before broad manual reads. |
 | Read exact source text | \`hadara context slice ... --json\` | Use after a context candidate points to a range. |
 | Update slice state | \`hadara slice add/set/render ... --json\` | Use when roadmap/development slice state applies. |
 | Run and record validation | \`hadara validation run --task T-XXXX --check "..." -- <command>\` | Executes the command and records evidence without editing \`TASK.md\` by default. |
@@ -371,9 +362,9 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 | Failure Mode | Correct Behavior |
 |---|---|
 | Skipping read models and scanning the repository. | Start with session/task/context read models and only open routed files. |
-| Opening unrelated specs or historical docs. | Use read tiers, registry metadata, and context pack candidates. |
+| Opening unrelated specs or historical docs. | Use read tiers, registry metadata, and task/docs read models. |
 | Running lifecycle before \`TASK.md\` is authored. | Satisfy the Lifecycle Entry Gate first. |
-| Treating context pack as validation. | Use it only for read guidance; run real checks separately. |
+| Treating read-routing as validation. | Use read models only for guidance; run real checks separately. |
 | Recording evidence for checks that were not run. | Record only real execution results, including failed or blocked checks. |
 | Running close from memory without current docs. | Use \`task close --json\` after close-source docs are current, or review fresh \`task close --dry-run\` output and copy its current plan hash for external review flows. |
 | Putting same-capsule chores in \`HANDOFF.md\` Next Recommended Step. | Use that section for next capsule or global-state recommendations. |
@@ -765,12 +756,10 @@ hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
-hadara context pack --task T-XXXX --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
 hadara task status --task T-XXXX --json
-hadara context pack --task T-XXXX --json
 
 # Do the scoped work.
 

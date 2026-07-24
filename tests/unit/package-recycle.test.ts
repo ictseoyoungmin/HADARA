@@ -89,7 +89,6 @@ describe('installed package recycle', () => {
       'task-status',
       'status-ingress',
       'task-close',
-      'context-pack',
       'context-slice',
       'cleanup'
     ]);
@@ -124,7 +123,6 @@ describe('installed package recycle', () => {
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v2', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
-      if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();
     };
@@ -202,7 +200,6 @@ describe('installed package recycle', () => {
       if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v2', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context graph --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();
     };
@@ -236,7 +233,6 @@ describe('installed package recycle', () => {
       if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v2', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
-      if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();
     };

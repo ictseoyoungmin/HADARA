@@ -505,8 +505,8 @@ function runInstalledSmokes(input: {
     });
   }
 
-  input.execution.contextSmokeExecuted = true;
   if (input.includeGraph) {
+    input.execution.contextSmokeExecuted = true;
     pushJsonSmokeStep(input, {
       id: 'context-graph',
       label: 'Verify context graph read model',
@@ -515,13 +515,7 @@ function runInstalledSmokes(input: {
       cwd: disposableProject
     });
   }
-  pushJsonSmokeStep(input, {
-    id: 'context-pack',
-    label: 'Verify context pack read model',
-    command: 'hadara context pack --task <task-id> --json',
-    args: ['context', 'pack', ...(taskId ? ['--task', taskId] : []), '--json'],
-    cwd: disposableProject
-  });
+  input.execution.contextSmokeExecuted = true;
   pushJsonSmokeStep(input, {
     id: 'context-slice',
     label: 'Verify context slice raw adapter',
@@ -638,7 +632,7 @@ function createTimeoutPolicy(
     timeoutStepIds: issues.filter((issue) => issue.code.endsWith('_TIMEOUT') && issue.stepId).map((issue) => String(issue.stepId)),
     notes: [
       'Timeouts are applied per subprocess step, not as one opaque installed-package recycle timeout.',
-      'When a timeout occurs, timeoutStepIds identifies the slow step such as npm-view-version, npm-dist-tags, install-package, installed-version, command-surface, init-project, status-ingress, task-close, context-pack, or context-slice.'
+      'When a timeout occurs, timeoutStepIds identifies the slow step such as npm-view-version, npm-dist-tags, install-package, installed-version, command-surface, init-project, status-ingress, task-close, context-graph, or context-slice.'
     ]
   };
 }
@@ -870,13 +864,6 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
         ]
       : []),
     {
-      id: 'context-pack',
-      label: 'Verify context pack read model',
-      command: 'hadara context pack --task <task-id> --json',
-      status: 'planned',
-      summary: 'Would verify task-scoped context pack on the initialized project.'
-    },
-    {
       id: 'context-slice',
       label: 'Verify context slice raw adapter',
       command: 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json',
@@ -911,7 +898,6 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('status-ingress', 'Verify project status ingress read model', 'hadara status --json', 'Skipped because package install failed.'),
     skippedStep('task-close', 'Verify task close dry-run report', 'hadara task close --task <task-id> --dry-run --json', 'Skipped because package install failed.'),
-    skippedStep('context-pack', 'Verify context pack read model', 'hadara context pack --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json', 'Skipped because package install failed.')
   ];
 }

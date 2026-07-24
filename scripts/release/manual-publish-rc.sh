@@ -417,7 +417,16 @@ echo "== 1. Final local validation =="
 npm run check
 
 echo
-echo "== 2. Build release artifact =="
+echo "== 2. Refresh built CLI =="
+npm run build
+DIST_VERSION="$(node dist/cli/main.js version 2>/dev/null | head -1)"
+if [[ "${DIST_VERSION}" != "${VERSION}" ]]; then
+echo "built dist version (${DIST_VERSION}) does not match package.json version (${VERSION})."
+exit 1
+fi
+
+echo
+echo "== 3. Build release artifact =="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
 mkdir -p "${RELEASE_RESULTS_DIR}"

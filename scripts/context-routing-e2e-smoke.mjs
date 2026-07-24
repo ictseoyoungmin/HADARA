@@ -25,7 +25,6 @@ const fullWorkloads = new Set([
   'cache_warm_dry_run',
   'graph_task',
   'graph_task_include_code',
-  'context_pack',
   'status_ingress',
   'task_status',
   'context_slice_range',
@@ -85,17 +84,6 @@ const workloads = [
       expectEqual(data.command, 'context.graph', 'command'),
       expectEqual(data.taskId, taskId, 'taskId'),
       expectArray(data.nodes, 'nodes')
-    ]
-  },
-  {
-    label: 'context_pack',
-    args: ['context', 'pack', '--task', taskId, '--max-read-first', '3', '--max-items', '12', '--project', projectRoot, '--json'],
-    expect: (data) => [
-      expectEqual(data.schemaVersion, 'hadara.contextPack.v1', 'schemaVersion'),
-      expectEqual(data.command, 'context.pack', 'command'),
-      expectEqual(data.taskId, taskId, 'taskId'),
-      expectArray(data.readFirst, 'readFirst'),
-      expectMaxLength(data.readFirst, 3, 'readFirst')
     ]
   },
   {
@@ -188,7 +176,7 @@ const report = {
   selectedWorkloads: [...selectedWorkloads].sort(),
   notes: [
     'The default fast profile covers status-first ingress, selected-task status, and raw slice surfaces.',
-    'Use --profile full to include cache status, cache warm dry-run, task graph, code-aware graph, and context pack workloads.',
+    'Use --profile full to include cache status, cache warm dry-run, task graph, and code-aware graph workloads.',
     'The smoke pack invokes read-only or dry-run commands only and verifies .hadara/local/cache/context is unchanged.'
   ],
   summary: {

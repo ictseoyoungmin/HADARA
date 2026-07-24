@@ -55,10 +55,6 @@ const workloads = [
   {
     label: 'graph_include_code',
     args: (projectRoot) => ['context', 'graph', '--include-code', '--project', projectRoot, '--json']
-  },
-  {
-    label: 'context_pack',
-    args: (projectRoot) => ['context', 'pack', '--task', taskId, '--project', projectRoot, '--json']
   }
 ].filter((workload) => !selectedWorkloads || selectedWorkloads.has(workload.label));
 

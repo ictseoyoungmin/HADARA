@@ -30,9 +30,7 @@ describe('context routing performance baseline script', () => {
 const command = process.argv.slice(2).join(' ');
 const schemaVersion = command.includes('session start')
   ? 'hadara.sessionStart.v1'
-  : command.includes('context pack')
-    ? 'hadara.contextPack.v1'
-    : command.includes('context graph')
+  : command.includes('context graph')
       ? 'hadara.contextGraph.v1'
       : 'hadara.context.cacheStatus.v1';
 console.log(JSON.stringify({

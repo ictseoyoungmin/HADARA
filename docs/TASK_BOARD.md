@@ -697,3 +697,4 @@
 | T-0694 | RC2 Release Services TUI Cleanup | Done | tasks/T-0694-rc2-release-services-tui-cleanup | Moved the remaining debt/release/smoke services into `tools/dev-surface/`; shipped TUI/status debt and release-gate views are now placeholder-only, with release-doc/context/schema cleanup left as follow-up. |
 | T-0695 | RC2 Release Metadata Cleanup | Done | tasks/T-0695-rc2-release-metadata-cleanup | |
 | T-0696 | RC2 Developer Surface Trust Hardening | Done | tasks/T-0696-rc2-developer-surface-trust-hardening | Repo-local developer-surface trust gaps are hardened: tools typecheck is explicit, shipped placeholders no longer report healthy zero-state, public docs/metadata align to `task status` plus repo-local helper surfaces, and current-head validation passed. |
+| T-0697 | RC2 Build Freshness and Clean Install Guard | Done | tasks/T-0697-rc2-build-freshness-and-clean-install-guard | |

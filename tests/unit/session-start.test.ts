@@ -117,14 +117,14 @@ describe('session start', () => {
     expect(report.contextPack.readFirst.length).toBeLessThanOrEqual(3);
     expect(report.lifecycle.primaryNextCommands).toEqual(expect.arrayContaining([
       `hadara task status --task ${task.id} --json`,
-      `hadara context pack --task ${task.id} --json`,
+      `hadara docs read-map --task ${task.id} --json`,
       `hadara task status --task ${task.id} --detail full --json`
     ]));
     expect(report.lifecycle.primaryNextCommands[0]).toBe(`hadara task status --task ${task.id} --json`);
     expect(report.lifecycle.diagnosticCommands).toEqual(expect.arrayContaining([
       'hadara context cache status --json',
       `hadara context graph --task ${task.id} --json`,
-      `hadara context pack --task ${task.id} --json`,
+      `hadara docs read-map --task ${task.id} --json`,
       'hadara status --json'
     ]));
     expect(report.guidance.commands).toEqual(expect.arrayContaining([
@@ -141,8 +141,8 @@ describe('session start', () => {
         args: ['docs', 'read-map', '--task', task.id, '--json']
       }),
       expect.objectContaining({
-        id: 'context-pack',
-        args: ['context', 'pack', '--task', task.id, '--json']
+        id: 'context-graph',
+        args: ['context', 'graph', '--task', task.id, '--json']
       })
     ]));
     expect(report.guidance.commands.some((command) => command.command.includes('session start'))).toBe(false);

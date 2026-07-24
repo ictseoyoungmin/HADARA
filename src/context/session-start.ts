@@ -364,7 +364,7 @@ function lifecycleForSessionStart(taskId: string | undefined, contextPack: Conte
   const primaryNextCommands = taskId
     ? [
         hadaraCommand(`task status --task ${taskId} --json`),
-        hadaraCommand(`context pack --task ${taskId} --json`)
+        hadaraCommand(`docs read-map --task ${taskId} --json`)
       ]
     : [hadaraCommand('task status --json')];
 
@@ -381,7 +381,7 @@ function lifecycleForSessionStart(taskId: string | undefined, contextPack: Conte
       ? hadaraCommand(`context graph --task ${taskId} --json`)
       : hadaraCommand('context graph --json'),
     taskId
-      ? hadaraCommand(`context pack --task ${taskId} --json`)
+      ? hadaraCommand(`docs read-map --task ${taskId} --json`)
       : hadaraCommand('task status --json'),
     hadaraCommand('status --json')
   ];
@@ -449,12 +449,6 @@ function guidanceForSessionStart(input: {
       reason: 'Inspect task readiness, evidence, loop phase, and the primary next action.'
     });
     commands.push({
-      id: 'context-pack',
-      command: hadaraCommand(`context pack --task ${taskId} --json`),
-      args: ['context', 'pack', '--task', taskId, '--json'],
-      reason: 'Inspect the bounded task read plan without slicing raw source text.'
-    });
-    commands.push({
       id: 'docs-read-map',
       command: hadaraCommand(`docs read-map --task ${taskId} --json`),
       args: ['docs', 'read-map', '--task', taskId, '--json'],
@@ -471,10 +465,10 @@ function guidanceForSessionStart(input: {
 
   commands.push(taskId
     ? {
-        id: 'context-pack',
-        command: hadaraCommand(`context pack --task ${taskId} --json`),
-        args: ['context', 'pack', '--task', taskId, '--json'],
-        reason: 'Opt into explicit context-pack discovery only when task-scoped file routing is needed.'
+        id: 'context-graph',
+        command: hadaraCommand(`context graph --task ${taskId} --json`),
+        args: ['context', 'graph', '--task', taskId, '--json'],
+        reason: 'Opt into explicit graph diagnostics only when task status and docs read-map are insufficient.'
       }
     : {
         id: 'task-status',
@@ -500,7 +494,7 @@ function guidanceForSessionStart(input: {
     nextCommandArgs: primaryAction.args,
     reason,
     taskRequired,
-    liveContextPackAvailable: true,
+    liveContextPackAvailable: false,
     commands
   };
 }
@@ -521,14 +515,14 @@ function buildBoundedContextPackReport(input: {
     ? [{
         severity: 'warning',
         code: 'CONTEXT_PACK_DEGRADED',
-        message: 'The historical bounded session-start adapter used the bounded no-live context pack envelope. Run context pack explicitly when a full graph read is acceptable.',
+        message: 'The historical bounded session-start adapter used the bounded no-live context pack envelope. Use task status and docs read-map for public task ingress.',
         fixHint: 'Run hadara context cache warm --execute --json before relying on broad graph-backed session context.'
       }]
     : [{
         severity: 'warning',
         code: 'CONTEXT_PACK_TASK_NOT_FOUND',
         message: 'No task id was supplied. The historical bounded session-start adapter returned task-selection guidance without running live project discovery.',
-        fixHint: 'Run hadara task status --json, then run hadara context pack --task <task-id> --json when file-routing context is needed.'
+        fixHint: 'Run hadara task status --json, then use hadara task status --task <task-id> --json and docs read-map when file-routing context is needed.'
       }];
   const readFirst: ContextPackItem[] = input.taskId
     ? [{
