@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.init.report.v1",
+  "x-hadara-schema-id": "hadara.init.report.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "ok", "operation", "mode", "projectMode", "preset", "summary", "planHash", "plan", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.init.report.v1" },
+    "ok": { "type": "boolean" },
+    "operation": { "const": "init" },
+    "mode": { "enum": ["dry-run", "applied", "no-op", "error"] },
+    "projectMode": { "enum": ["greenfield", "brownfield", "initialized", "partial", "legacy", "unsafe"] },
+    "preset": { "enum": ["minimal", "standard", "governed"] },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planned", "created", "updated", "appended", "preserved", "conflicts", "applied"],
+      "properties": {
+        "planned": { "type": "integer", "minimum": 0 },
+        "created": { "type": "integer", "minimum": 0 },
+        "updated": { "type": "integer", "minimum": 0 },
+        "appended": { "type": "integer", "minimum": 0 },
+        "preserved": { "type": "integer", "minimum": 0 },
+        "conflicts": { "type": "integer", "minimum": 0 },
+        "applied": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "planHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "plan": {
+      "type": "object",
+      "required": ["schemaVersion", "operation", "projectMode", "preset", "actions", "summary", "planHash"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.init.plan.v1" },
+        "operation": { "const": "init" },
+        "projectMode": { "enum": ["greenfield", "brownfield", "initialized", "partial", "legacy", "unsafe"] },
+        "preset": { "enum": ["minimal", "standard", "governed"] },
+        "actions": { "type": "array" },
+        "summary": { "type": "object" },
+        "planHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "reason": { "enum": ["already-initialized"] },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

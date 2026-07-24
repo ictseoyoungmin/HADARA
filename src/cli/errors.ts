@@ -48,6 +48,7 @@ export function cliErrorCode(error: unknown): string {
   const maybeCode = typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: unknown }).code : undefined;
   const message = error instanceof Error ? error.message : String(error);
   if (typeof maybeCode === 'string' && maybeCode.startsWith('WORKSPACE_')) return maybeCode;
+  if (typeof maybeCode === 'string' && maybeCode.startsWith('INIT_')) return maybeCode;
   if (/unsupported permission mode/.test(message)) return 'PERMISSION_MODE_UNSUPPORTED';
   if (/unsupported evidence result/.test(message)) return 'EVIDENCE_RESULT_UNSUPPORTED';
   if (/unsupported evidence visibility/.test(message)) return 'EVIDENCE_VISIBILITY_UNSUPPORTED';

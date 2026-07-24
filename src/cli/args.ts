@@ -5,7 +5,8 @@ export class CliArgsError extends Error {
       | 'CLI_OPTION_VALUE_LOOKS_LIKE_FLAG'
       | 'CLI_OPTION_REQUIRED'
       | 'CLI_OPTION_INTEGER_INVALID'
-      | 'CLI_OPTION_INVALID_VALUE',
+      | 'CLI_OPTION_INVALID_VALUE'
+      | 'CLI_UNKNOWN_OPTION',
     message: string
   ) {
     super(message);
@@ -54,6 +55,27 @@ export function getFlag(args: string[], name: string): boolean {
   return args.includes(name);
 }
 
+export function assertKnownOptions(
+  args: string[],
+  input: { flags: readonly string[]; options: readonly string[] }
+): void {
+  const known = new Set([...input.flags, ...input.options]);
+  const valueOptions = new Set(input.options);
+  for (let index = 1; index < args.length; index += 1) {
+    const value = args[index];
+    if (valueOptions.has(value)) {
+      index += 1;
+      continue;
+    }
+    if (!value.startsWith('-') || known.has(value)) continue;
+    const suggestion = closestOption(value, [...known]);
+    throw new CliArgsError(
+      'CLI_UNKNOWN_OPTION',
+      `unknown option: ${value}${suggestion ? `; did you mean ${suggestion}?` : ''}`
+    );
+  }
+}
+
 export function rejectMissingValue(name: string, value: string | undefined): void {
   if (value === undefined) {
     throw new CliArgsError('CLI_OPTION_MISSING_VALUE', `${name} requires a value`);
@@ -71,4 +93,29 @@ function integerMessage(name: string, bounds: IntegerOptionBounds): string {
   if (bounds.min !== undefined) return `${name} must be an integer greater than or equal to ${bounds.min}`;
   if (bounds.max !== undefined) return `${name} must be an integer less than or equal to ${bounds.max}`;
   return `${name} must be an integer`;
+}
+
+function closestOption(value: string, candidates: string[]): string | undefined {
+  return candidates
+    .map((candidate) => ({ candidate, distance: editDistance(value, candidate) }))
+    .filter(({ distance }) => distance <= 2)
+    .sort((left, right) => left.distance - right.distance || left.candidate.localeCompare(right.candidate))[0]?.candidate;
+}
+
+function editDistance(left: string, right: string): number {
+  const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    let previous = row[0];
+    row[0] = leftIndex;
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const current = row[rightIndex];
+      row[rightIndex] = Math.min(
+        row[rightIndex] + 1,
+        row[rightIndex - 1] + 1,
+        previous + (left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1)
+      );
+      previous = current;
+    }
+  }
+  return row[right.length];
 }

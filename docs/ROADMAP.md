@@ -10,6 +10,8 @@ The immediate roadmap is consolidation rather than capability expansion. HADARA'
 
 Current human direction prioritizes the frozen Init v1 design and acceptance contracts under `docs/specs/0.5/redesign/` before RC2 release promotion. The program uses eight appropriately sized capsules: contract/characterization; core model/planner; safe apply transaction; re-init/upgrade ownership; Task Board/close projection; document routing; legacy compatibility isolation; and full installed-package acceptance. Exact field-by-field legacy migration remains gated on its separately frozen migration specification; new Init v1 projects must not create legacy core artifacts.
 
+T-0699 completes the second capsule: canonical preset expansion, the core artifact manifest, the only two Init v1 persistence schemas, exact TargetRef validation, separate plan/report schemas, deterministic zero-write planning, and strict base-init option/preset errors are implemented and compiled into `dist`. The next gate is the reviewed safe apply transaction; release promotion remains deferred.
+
 ## Current Release Sequence
 
 | Release | Product Question | Planned Evidence | Boundary |

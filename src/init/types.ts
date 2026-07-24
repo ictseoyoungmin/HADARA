@@ -134,3 +134,134 @@ export interface InitCommandInput {
   projectRoot: string;
   jsonOutput?: boolean;
 }
+
+export type InitPreset = 'minimal' | 'standard' | 'governed';
+export type InitFeature = 'task-lifecycle' | 'evidence' | 'document-routing' | 'project-documentation' | 'governance-documentation';
+export type InitDocumentPack = 'core' | 'project' | 'governance';
+export type InitArtifactManagement =
+  | 'hadara-managed'
+  | 'mixed-managed-block'
+  | 'command-managed'
+  | 'scaffold-once'
+  | 'generated-projection'
+  | 'mixed-append';
+export type InitDocumentManagement =
+  | 'hadara-managed'
+  | 'user-authored'
+  | 'mixed-managed-block'
+  | 'generated-projection'
+  | 'external-reference';
+export type InitDocumentStatus = 'draft' | 'active' | 'superseded' | 'archived';
+export type InitReadPolicy = 'session-start' | 'on-target' | 'on-task-explicit' | 'explicit-only';
+
+export type TargetRef =
+  | { namespace: 'project' }
+  | { namespace: 'release'; id: string }
+  | { namespace: 'milestone'; id: string }
+  | { namespace: 'component'; id: string }
+  | { namespace: 'task'; id: string };
+
+export interface InitPresetSpecV1 {
+  preset: InitPreset;
+  features: InitFeature[];
+  documentPacks: InitDocumentPack[];
+  optionalDocuments: string[];
+}
+
+export interface InitArtifactV1 {
+  path: string;
+  type: 'file' | 'directory';
+  management: InitArtifactManagement;
+  presets: InitPreset[];
+}
+
+export interface InitProjectConfigV1 {
+  schemaVersion: 'hadara.project.v1';
+  projectId: string;
+  lifecycleVersion: '1';
+  presetOrigin: InitPreset;
+  features: InitFeature[];
+  documentPacks: InitDocumentPack[];
+}
+
+export interface InitDocumentV1 {
+  id: string;
+  path: string;
+  management: InitDocumentManagement;
+  status: InitDocumentStatus;
+  readPolicy: InitReadPolicy;
+  appliesTo?: TargetRef[];
+  supersedes?: string[];
+}
+
+export interface InitDocumentsV1 {
+  schemaVersion: 'hadara.documents.v1';
+  documents: InitDocumentV1[];
+}
+
+export type InitPlanActionKind =
+  | 'create'
+  | 'insert-managed-block'
+  | 'update-managed-block'
+  | 'replace-hadara-managed'
+  | 'append-line'
+  | 'register'
+  | 'migrate'
+  | 'regenerate'
+  | 'preserve'
+  | 'skip'
+  | 'conflict';
+
+export interface InitPlanActionV1 {
+  path: string;
+  kind: InitPlanActionKind;
+  management: InitArtifactManagement;
+  reason: string;
+  beforeHash?: string;
+}
+
+export interface InitPlanSummaryV1 {
+  create: number;
+  updateManaged: number;
+  append: number;
+  register: number;
+  migrate: number;
+  preserve: number;
+  skip: number;
+  conflict: number;
+  delete: 0;
+}
+
+export interface InitPlanV1 {
+  schemaVersion: 'hadara.init.plan.v1';
+  operation: 'init';
+  projectMode: 'greenfield' | 'brownfield' | 'initialized' | 'partial' | 'legacy' | 'unsafe';
+  preset: InitPreset;
+  actions: InitPlanActionV1[];
+  summary: InitPlanSummaryV1;
+  planHash: string;
+}
+
+export interface InitReportSummaryV1 {
+  planned: number;
+  created: number;
+  updated: number;
+  appended: number;
+  preserved: number;
+  conflicts: number;
+  applied: number;
+}
+
+export interface InitReportV1 {
+  schemaVersion: 'hadara.init.report.v1';
+  ok: boolean;
+  operation: 'init';
+  mode: 'dry-run' | 'applied' | 'no-op' | 'error';
+  projectMode: InitPlanV1['projectMode'];
+  preset: InitPreset;
+  summary: InitReportSummaryV1;
+  planHash: string;
+  plan: InitPlanV1;
+  reason?: 'already-initialized';
+  issues: InitIssue[];
+}

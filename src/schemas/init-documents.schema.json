@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.documents.v1",
+  "x-hadara-schema-id": "hadara.documents.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "documents"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.documents.v1" },
+    "documents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/document" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "management", "status", "readPolicy"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "management": {
+          "enum": [
+            "hadara-managed",
+            "user-authored",
+            "mixed-managed-block",
+            "generated-projection",
+            "external-reference"
+          ]
+        },
+        "status": { "enum": ["draft", "active", "superseded", "archived"] },
+        "readPolicy": { "enum": ["session-start", "on-target", "on-task-explicit", "explicit-only"] },
+        "appliesTo": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/targetRef" }
+        },
+        "supersedes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "targetRef": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["namespace"],
+          "properties": { "namespace": { "const": "project" } }
+        },
+        { "$ref": "#/$defs/idTargetRefRelease" },
+        { "$ref": "#/$defs/idTargetRefMilestone" },
+        { "$ref": "#/$defs/idTargetRefComponent" },
+        { "$ref": "#/$defs/idTargetRefTask" }
+      ]
+    },
+    "idTargetRefRelease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "id"],
+      "properties": {
+        "namespace": { "const": "release" },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "idTargetRefMilestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "id"],
+      "properties": {
+        "namespace": { "const": "milestone" },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "idTargetRefComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "id"],
+      "properties": {
+        "namespace": { "const": "component" },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "idTargetRefTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "id"],
+      "properties": {
+        "namespace": { "const": "task" },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

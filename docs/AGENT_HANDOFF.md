@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0698 Init v1 Contract and Characterization | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0699 Init v1 Core Model and Planner | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -35,7 +35,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 T-0697 fixes the RC2 release build boundary before fresh dogfood: `npm run check` emits current `dist`, the manual RC publish helper rebuilds and verifies `node dist/cli/main.js version` before artifact creation, `package-lock.json` root metadata matches `package.json` with Dashboard-only direct dependencies removed, and public `context pack` routing/registry/docs/recycle-smoke exposure is gone while internal context-pack helpers remain only for internal candidate/historical use. Clean install/check proof came from a Docker ext4 clean copy including `.hadara`; host `npm ci` on the mounted WSL workspace hit npm bin symlink EPERM.
 
-Current human direction supersedes the earlier fresh-dogfood recommendation. T-0698 adopts the Init v1 design and frozen acceptance contract, records the legacy immediate-write/unknown-option baseline, and maps the complete implementation into eight total capsules. After T-0698 closes, continue with the Init v1 core model and planner capsule; do not resume RC2 release promotion until the Init v1 installed-package acceptance capsule passes.
+Current human direction supersedes the earlier fresh-dogfood recommendation. T-0698 adopts and maps the complete eight-capsule Init v1 program. T-0699 implements its canonical presets, artifact manifest, two persistence contracts, exact TargetRef validation, separate deterministic plan/report contracts, zero-write public planning, and strict base-init errors; clean Docker passed 139 public files/1080 tests plus 16 HADARA-dev files/127 tests. After T-0699 closes, continue with Init v1 Safe Apply Transaction and do not resume RC2 release promotion until the final installed-package acceptance capsule passes.
 
 ## Previous Handoff
 

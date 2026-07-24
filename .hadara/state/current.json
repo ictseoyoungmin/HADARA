@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 319,
+  "rev": 321,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0698",
-    "title": "Init v1 Contract and Characterization"
+    "id": "T-0699",
+    "title": "Init v1 Core Model and Planner"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,39 +14,31 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Implement Init v1 Core Model and Planner.",
-    "reason": "Canonical preset expansion, the two persistence schemas, artifact manifest, deterministic plan/report contracts, and strict CLI errors are prerequisites for every write/routing capsule.",
+    "title": "Implement Init v1 Safe Apply Transaction.",
+    "reason": "The stable plan now supplies exact artifacts, content hashes, source hashes, summary, and plan hash needed for guarded apply without replanning or hidden writes.",
     "references": [
       {
         "path": "Both Init v1 specs",
         "required": true
       },
       {
-        "path": "`INIT_V1_IMPLEMENTATION_MAP.md`",
+        "path": "T-0698 implementation map",
         "required": true
       },
       {
-        "path": "`docs/ARCHITECTURE.md`",
+        "path": "this capsule model/planner",
         "required": true
       },
       {
-        "path": "`docs/SECURITY_MODEL.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/TEST_STRATEGY.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/SCHEMAS.md`.",
+        "path": "architecture/security/test strategy.",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0698",
-      "path": "tasks/T-0698-init-v1-contract-and-characterization/HANDOFF.md"
+      "workId": "T-0699",
+      "path": "tasks/T-0699-init-v1-core-model-and-planner/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assertKnownOptions,
   getFlag,
   getIntegerOption,
   getRequiredStringOption,
@@ -41,6 +42,13 @@ describe('CLI args helpers', () => {
   it('reads boolean flags', () => {
     expect(getFlag(['doctor', '--json'], '--json')).toBe(true);
     expect(getFlag(['doctor'], '--json')).toBe(false);
+  });
+
+  it('rejects unknown options with a nearby suggestion', () => {
+    expect(() => assertKnownOptions(
+      ['init', '--excute'],
+      { flags: ['--execute', '--json'], options: ['--preset'] }
+    )).toThrow(/unknown option: --excute; did you mean --execute/);
   });
 
   it('normalizes supported global options before the command token', () => {

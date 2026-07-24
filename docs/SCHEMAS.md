@@ -36,6 +36,32 @@ T-0378 registered `hadara.sessionStart.v1` for the bounded C5 Session Start MVP.
 
 T-0363 registers `hadara.context.sourceManifest.v1` for the 0.3.3 C6.1 source manifest foundation. This fixture documents metadata-first project-relative source discovery, source kind and extractor-key classifications, budget/degraded output, stable manifest hashes, optional carried content hashes, and comparison inputs for future cache invalidation. T-0364 registers `hadara.context.cacheRecord.v1` and `hadara.context.cacheStatus.v1` for the C6.2 cache store/status foundation. These fixtures document cache record envelopes and read-only `hadara context cache status --json` reports for source-manifest hit, miss, stale, and corrupt states. T-0366 registers `hadara.context.cacheWarm.v1` for the C6.3 warm phase 1 command. This fixture documents dry-run-first source-manifest cache writes through `hadara context cache warm [--execute] --json`; graph/code-index/context-pack/context-slice cache consumption remains deferred.
 
+## Init v1 Contracts
+
+T-0699 registers the two Init v1 persistence schemas and keeps the planner/report contracts separate:
+
+| Schema | Producer | Consumer | Persistence |
+|---|---|---|---|
+| `hadara.project.v1` | `init/model`, then explicit configuration migrations | lifecycle and document-routing services | Yes: `.hadara/project.json` |
+| `hadara.documents.v1` | `init/model`, then document registry commands | exact TargetRef document routing and registry diagnostics | Yes: `.hadara/documents.json` |
+| `hadara.init.plan.v1` | deterministic `init/planner` | reviewed init apply transaction and operators | No |
+| `hadara.init.report.v1` | init dry-run/apply/no-op/error operations | CLI operators and automation | No |
+
+`hadara.project.v1` fields have these long-lived responsibilities:
+
+| Field | Producer | Consumer |
+|---|---|---|
+| `schemaVersion` | init/config migration | schema dispatch |
+| `projectId` | first init or explicit user input | stable project identity |
+| `lifecycleVersion` | init/upgrade | task-lifecycle compatibility checks |
+| `presetOrigin` | first init | informational migration/display only; never runtime policy |
+| `features` | preset expansion or explicit configuration mutation | capability availability |
+| `documentPacks` | preset expansion or explicit configuration mutation | installed document consistency |
+
+`hadara.documents.v1` fields are produced by init/docs mutation commands and consumed by registry validation/routing: `id` is stable identity, `path` is the project-relative local source, `management` selects ownership behavior, `status` is stored lifecycle state, `readPolicy` selects routing, `appliesTo` supplies exact TargetRef matches, and `supersedes` preserves explicit document replacement relationships. Runtime parsers additionally enforce exact keys, duplicate ID/path rejection, path normalization, TargetRef discrimination, read-policy conditions, and supersedes existence/self/cycle integrity.
+
+No Init v1 persistence schema exists for preset history, plan/action history, current task/release state, runtime locks, display text, READ_MAP JSON, or stale verdicts.
+
 ## Registry
 
 Schema fixtures live under `src/schemas/`.

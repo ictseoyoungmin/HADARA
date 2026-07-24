@@ -763,24 +763,19 @@ describe('init profiles', () => {
     }
   });
 
-  it('prints JSON and keeps a fresh governed scaffold doctor-clean', () => {
+  it('routes a fresh governed compatibility profile to the Init v1 zero-write planner', () => {
     const root = tempProject();
 
     handleInitCommand({ args: ['init', '--profile', 'governed', '--json'], projectRoot: root, jsonOutput: true });
     expect(jsonLog()).toMatchObject({
-      schemaVersion: 'hadara.init.v1',
-      command: 'init',
+      schemaVersion: 'hadara.init.report.v1',
       ok: true,
-      profile: 'governed'
+      mode: 'dry-run',
+      preset: 'governed',
+      summary: { applied: 0 },
+      issues: [expect.objectContaining({ code: 'INIT_PROFILE_DEPRECATED' })]
     });
-
-    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
-    expect(jsonLog()).toMatchObject({
-      schemaVersion: 'hadara.init.followup.v1',
-      command: 'init.doctor',
-      ok: true,
-      issues: []
-    });
+    expect(fs.readdirSync(root)).toEqual([]);
   });
 
   it('prints init help without creating scaffold files', () => {

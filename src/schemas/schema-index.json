@@ -520,6 +520,34 @@
       "notes": "Documents zero-write brownfield init adoption plans, repository-state classification, path dispositions, plan hashes, and guarded execute blockers."
     },
     {
+      "id": "hadara.project.v1",
+      "path": "src/schemas/init-project.schema.json",
+      "status": "fixture",
+      "owner": "init/model",
+      "notes": "Canonical Init v1 static project configuration; produced by init/configuration commands and consumed by lifecycle and document-routing services."
+    },
+    {
+      "id": "hadara.documents.v1",
+      "path": "src/schemas/init-documents.schema.json",
+      "status": "fixture",
+      "owner": "init/model",
+      "notes": "Canonical Init v1 document registry and exact TargetRef contract; produced by init/docs commands and consumed by document routing."
+    },
+    {
+      "id": "hadara.init.plan.v1",
+      "path": "src/schemas/init-plan.schema.json",
+      "status": "fixture",
+      "owner": "init/planner",
+      "notes": "Deterministic, non-destructive Init v1 action plan; produced by the planner and consumed by reviewed apply."
+    },
+    {
+      "id": "hadara.init.report.v1",
+      "path": "src/schemas/init-report.schema.json",
+      "status": "fixture",
+      "owner": "init/planner",
+      "notes": "Stable Init v1 dry-run, apply, no-op, and error report; produced by init operations and consumed by operators and automation."
+    },
+    {
       "id": "hadara.cleanCheckoutSmoke.v1",
       "path": "src/schemas/clean-checkout-smoke.schema.json",
       "status": "fixture",

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.project.v1",
+  "x-hadara-schema-id": "hadara.project.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "projectId", "lifecycleVersion", "presetOrigin", "features", "documentPacks"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.project.v1" },
+    "projectId": { "type": "string", "minLength": 1 },
+    "lifecycleVersion": { "const": "1" },
+    "presetOrigin": { "enum": ["minimal", "standard", "governed"] },
+    "features": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "task-lifecycle",
+          "evidence",
+          "document-routing",
+          "project-documentation",
+          "governance-documentation"
+        ]
+      }
+    },
+    "documentPacks": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["core", "project", "governance"] }
+    }
+  }
+}

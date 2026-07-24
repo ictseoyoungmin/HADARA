@@ -699,3 +699,4 @@
 | T-0696 | RC2 Developer Surface Trust Hardening | Done | tasks/T-0696-rc2-developer-surface-trust-hardening | Repo-local developer-surface trust gaps are hardened: tools typecheck is explicit, shipped placeholders no longer report healthy zero-state, public docs/metadata align to `task status` plus repo-local helper surfaces, and current-head validation passed. |
 | T-0697 | RC2 Build Freshness and Clean Install Guard | Done | tasks/T-0697-rc2-build-freshness-and-clean-install-guard | |
 | T-0698 | Init v1 Contract and Characterization | Done | tasks/T-0698-init-v1-contract-and-characterization | |
+| T-0699 | Init v1 Core Model and Planner | Done | tasks/T-0699-init-v1-core-model-and-planner | |
