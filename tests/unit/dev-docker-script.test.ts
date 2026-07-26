@@ -25,6 +25,9 @@ describe('Docker dev sync-build script', () => {
 
     expect(content).toContain('--exclude=.git');
     expect(content).toContain('--exclude=.hadara');
+    expect(content).toContain('git -C "$HADARA_WORKSPACE" ls-files -z -- .hadara');
+    expect(content).toContain('":(exclude).hadara/local/**"');
+    expect(content).toContain('tar -C "$HADARA_WORKSPACE" --null --no-recursion -cf - -T -');
     expect(content).toContain('copy_build_workspace');
     expect(content).toContain('copy_full_workspace');
     expect(content).toContain('npm run check');

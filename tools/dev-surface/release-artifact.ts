@@ -21,6 +21,8 @@ export interface ReleaseArtifactReport {
   ok: boolean;
   mode: 'execute';
   execution: {
+    sourceBuildExecuted: boolean;
+    builtCliVersionVerified: boolean;
     stagingCreated: boolean;
     npmPackExecuted: boolean;
     checksumGenerated: boolean;
@@ -179,7 +181,7 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
     issues.push({
       severity: 'error',
       code: 'RELEASE_ARTIFACT_EXECUTION_REQUIRED',
-      message: 'Release artifact building requires explicit --execute because it runs npm pack and writes artifacts.'
+      message: 'Release artifact building requires explicit --execute because it compiles source, runs npm pack, and writes artifacts.'
     });
   }
 
@@ -203,10 +205,12 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
   }
   validateCleanGitWorktree(options.paths.projectRoot, issues);
   const output = prepareOutput(options.paths.projectRoot, options.output, options.keepTemp === true, issues);
-  const staging = prepareStaging(options.paths.projectRoot, issues);
+  const staging = prepareStaging();
   const runner = options.runner ?? runCommand;
   const timeoutMs = (options.timeoutSeconds ?? 120) * 1000;
   const execution = {
+    sourceBuildExecuted: false,
+    builtCliVersionVerified: false,
     stagingCreated: false,
     npmPackExecuted: false,
     checksumGenerated: false,
@@ -227,8 +231,47 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
 
   try {
     if (!issues.some((issue) => issue.severity === 'error')) {
-      copyWhitelistedPackage(options.paths.projectRoot, staging.path, packageMetadata, issues);
-      execution.stagingCreated = !issues.some((issue) => issue.stepId === 'stage-package');
+      execution.sourceBuildExecuted = true;
+      const build = runner(npmCommand(), ['run', 'build'], {
+        cwd: options.paths.projectRoot,
+        timeoutMs
+      });
+      if (build.status !== 0) {
+        issues.push({
+          severity: 'error',
+          code: build.timedOut ? 'RELEASE_ARTIFACT_SOURCE_BUILD_TIMEOUT' : 'RELEASE_ARTIFACT_SOURCE_BUILD_FAILED',
+          message: build.timedOut
+            ? 'Source build timed out before release artifact staging.'
+            : 'Source build failed before release artifact staging.',
+          stepId: 'source-build'
+        });
+      } else {
+        const version = runner(process.execPath, [path.join(options.paths.projectRoot, 'dist', 'cli', 'main.js'), 'version'], {
+          cwd: options.paths.projectRoot,
+          timeoutMs
+        });
+        const builtVersion = version.stdout.trim();
+        if (version.status !== 0 || builtVersion !== packageMetadata.version) {
+          issues.push({
+            severity: 'error',
+            code: version.timedOut ? 'RELEASE_ARTIFACT_VERSION_CHECK_TIMEOUT' : 'RELEASE_ARTIFACT_BUILT_VERSION_MISMATCH',
+            message: version.timedOut
+              ? 'Built CLI version verification timed out before release artifact staging.'
+              : `Built CLI version must match package.json version ${packageMetadata.version}.`,
+            stepId: 'verify-built-version'
+          });
+        } else {
+          execution.builtCliVersionVerified = true;
+        }
+      }
+
+      if (!issues.some((issue) => issue.severity === 'error')) {
+        validateRequiredSources(options.paths.projectRoot, issues);
+      }
+      if (!issues.some((issue) => issue.severity === 'error')) {
+        copyWhitelistedPackage(options.paths.projectRoot, staging.path, packageMetadata, issues);
+        execution.stagingCreated = !issues.some((issue) => issue.stepId === 'stage-package');
+      }
       if (execution.stagingCreated) {
         execution.npmPackExecuted = true;
         const npmCache = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-artifact-npm-cache-'));
@@ -486,8 +529,11 @@ function prepareOutput(
   };
 }
 
-function prepareStaging(projectRoot: string, issues: ReleaseArtifactIssue[]): { path: string } {
-  const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-artifact-stage-'));
+function prepareStaging(): { path: string } {
+  return { path: fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-artifact-stage-')) };
+}
+
+function validateRequiredSources(projectRoot: string, issues: ReleaseArtifactIssue[]): void {
   for (const required of ['dist/cli/main.js', 'README.md', 'LICENSE']) {
     if (!fs.existsSync(path.join(projectRoot, required))) {
       issues.push({
@@ -498,7 +544,6 @@ function prepareStaging(projectRoot: string, issues: ReleaseArtifactIssue[]): { 
       });
     }
   }
-  return { path: staging };
 }
 
 function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: PackageMetadata, issues: ReleaseArtifactIssue[]): void {

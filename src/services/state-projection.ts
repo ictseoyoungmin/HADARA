@@ -570,7 +570,7 @@ function checkCurrentStateProjectionDrift(
     'STATE_CURRENT_CANON_PROJECTION_DRIFT',
     source.path,
     `${source.path} managed section ${sectionId} does not match ${PROJECT_CURRENT_STATE_PATH}.`,
-    'Review hadara init upgrade --profile <profile> --json, then execute the reviewed upgrade to regenerate the managed projection.'
+    'Review hadara init upgrade --json, then execute the reviewed plan hash to regenerate the managed projection.'
   ));
 }
 

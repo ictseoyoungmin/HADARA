@@ -130,6 +130,12 @@ describe('TUI read-model aggregator', () => {
       code: 'RELEASE_GATE_REPO_LOCAL_ONLY',
       status: 'warning'
     });
+    expect(model.issues).toContainEqual({
+      source: 'debt',
+      severity: 'warning',
+      code: 'OPERATIONAL_DEBT_REPO_LOCAL_ONLY',
+      message: 'Operational debt remains a repo-local HADARA-dev developer surface and is not evaluated here.'
+    });
   });
 
   it('falls back to the latest task when no active task is selectable', () => {

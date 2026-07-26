@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 325,
+  "rev": 330,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0701",
-    "title": "Init v1 Safe Apply Rollback Hardening"
+    "id": "T-0703",
+    "title": "Init v1 Re-init and Upgrade Ownership"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,35 +14,27 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Implement Init v1 Re-init and Upgrade Ownership.",
-    "reason": "This was T-0700's deferred next step and remains the next mapped Init v1 boundary now that rollback safety is hardened; it must consume the hardened rollback/recovery primitives from this capsule.",
+    "title": "Create the Init v1 Task Board and Close Projection capsule from the frozen implementation map.",
+    "reason": "Re-init/upgrade ownership is complete; Task Board v1 migration and Close Summary projection are the next ordered boundary.",
     "references": [
       {
-        "path": "Both Init v1 specs",
+        "path": "`tasks/T-0698-init-v1-contract-and-characterization/INIT_V1_IMPLEMENTATION_MAP.md`",
         "required": true
       },
       {
-        "path": "T-0698 implementation map",
+        "path": "frozen Init v1 specs",
         "required": true
       },
       {
-        "path": "T-0699 model/planner",
-        "required": true
-      },
-      {
-        "path": "T-0700 and T-0701 transaction/rollback",
-        "required": true
-      },
-      {
-        "path": "architecture/security/test strategy.",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0701",
-      "path": "tasks/T-0701-init-v1-safe-apply-rollback-hardening/HANDOFF.md"
+      "workId": "T-0703",
+      "path": "tasks/T-0703-init-v1-re-init-and-upgrade-ownership/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
@@ -73,19 +65,13 @@
     }
   ],
   "validationBaseline": {
-    "summary": "0.5.0-rc.2 planning baseline preserves rollup evidence through T-0678: source validation and rc1 release-readiness recycle, npm publish record, GitHub Release publication, installed-package recycle/dogfood, reviewer remediation, structured continuation semantic fail-closed validation, and project status continuation-ready routing. This baseline carries T-0667 through T-0669 forward for session resume until a first-class validationBaseline.rollup schema is introduced.",
+    "summary": "T-0702 trust-boundary baseline: clean npm ci (0 vulnerabilities), source build, tools type-check, 140 public files/1094 tests, 16 HADARA-dev files/129 tests, built CLI 0.5.0-rc.1, verified 261-file release artifact, dependency metadata, and diff hygiene passed.",
     "evidence": [
-      "ev:T-0667:17932d8a4a684db18a62dbe8",
-      "ev:T-0667:af0b1df9f11c47a0a7e0691c",
-      "ev:T-0668:f04d19ba0b5f47e3bf51276e",
-      "ev:T-0668:a16978bfab134da9abadc752",
-      "ev:T-0669:9d08f787f7d64d85ad72c1b3",
-      "ev:T-0669:374d423870f14757ada477b2",
-      "ev:T-0669:39c8691d556943e68141f1fa",
-      "ev:T-0676:2f4ac932c93e48d5b9bd9a38",
-      "ev:T-0676:a0597da28fc847c2a390bd1c",
-      "ev:T-0677:befc562b23d64cbe82a74623",
-      "ev:T-0678:ec36c75ccc504537b635db44"
+      "ev:T-0702:a1508bd12c0340fdad9da779",
+      "ev:T-0702:90af75bb32cf424598a1ddab",
+      "ev:T-0702:62a86a87d37144d7a81dee6f",
+      "ev:T-0702:3cd630eb99e0451c9868ba3a",
+      "ev:T-0702:65150d5d65734fe7874e36eb"
     ]
   }
 }

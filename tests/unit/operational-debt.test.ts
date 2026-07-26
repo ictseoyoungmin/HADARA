@@ -343,6 +343,8 @@ function writeReleaseArtifactEvidence(taskDir: string, filePath: string): void {
     ok: true,
     mode: 'execute',
     execution: {
+      sourceBuildExecuted: true,
+      builtCliVersionVerified: true,
       stagingCreated: true,
       npmPackExecuted: true,
       checksumGenerated: true,

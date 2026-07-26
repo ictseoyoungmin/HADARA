@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { assertKnownOptions, getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createInitDoctorReport } from '../init/doctor';
@@ -6,7 +7,7 @@ import { initProject } from '../init/project';
 import { parseInitProfile } from '../init/profile';
 import { printInitFollowUpReport } from '../init/report';
 import { INIT_PRESET_SPECS, resolveInitPreset } from '../init/model';
-import { createInitPlanningResult, printInitV1Report } from '../init/planner';
+import { createInitPlanningResult, createInitUpgradePlanningResult, printInitV1Report } from '../init/planner';
 import { applyInitPlanningResult } from '../init/transaction';
 import { shouldUseAdoptionPlan } from '../init/adoption';
 import type { InitCommandInput, InitFollowUpMode } from '../init/types';
@@ -31,6 +32,22 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     return true;
   }
   if (subcommand === 'upgrade') {
+    const hasV1State = fs.existsSync(path.join(input.projectRoot, '.hadara', 'project.json'))
+      || fs.existsSync(path.join(input.projectRoot, '.hadara', 'documents.json'));
+    if (hasV1State) {
+      const result = createInitUpgradePlanningResult(input.projectRoot, {
+        configurationChangeRequested: getStringOption(input.args, '--profile') !== undefined
+          || getStringOption(input.args, '--preset') !== undefined
+      });
+      if (getFlag(input.args, '--execute')) {
+        printInitV1Report(applyInitPlanningResult(input.projectRoot, result, {
+          planHash: getStringOption(input.args, '--plan-hash')
+        }), input.jsonOutput);
+      } else {
+        printInitV1Report(result.report, input.jsonOutput);
+      }
+      return true;
+    }
     const legacyReport = createLegacyMutationBlockedReport(input.projectRoot, 'init.upgrade');
     if (legacyReport) {
       printLegacyMutationBlockedReport(legacyReport, input.jsonOutput === true);
@@ -67,6 +84,7 @@ export function handleInitCommand(input: InitCommandInput): boolean {
   if (useV1Planner) {
     const selection = resolveInitPreset({ preset: presetValue, profile: profileValue });
     const result = createInitPlanningResult(input.projectRoot, selection.preset, {
+      explicitConfiguration: presetValue !== undefined || profileValue !== undefined,
       warnings: selection.warnings
     });
     if (getFlag(input.args, '--execute')) {
@@ -124,6 +142,10 @@ Notes:
   JSON / non-interactive / CI: always two-step. A dry-run prints the plan and
     a hash; nothing is written until a separate --execute --plan-hash <hash>
     call.
+  Re-running base init without configuration options is a no-op. Base init
+    never repairs a partial installation; use "hadara init upgrade".
+  Init upgrade repairs only managed Init v1 core artifacts. It does not accept
+    preset/profile changes or rewrite project configuration and optional docs.
 `;
 }
 

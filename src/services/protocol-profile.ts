@@ -182,12 +182,12 @@ function buildProfileRemediations(
       createManualRemediation({
         id: 'profile-doc-set-complete',
         title: `Complete the ${targetProfile} profile document set`,
-        command: `hadara init upgrade --profile ${targetProfile} --json`,
+        command: 'hadara protocol doctor --scope profile --json',
         targetPaths: missingTargetDocs,
         summary: `The project contains partial ${targetProfile} profile evidence. Review the upgrade dry-run and create the missing profile docs before treating the profile as consistent.`,
         steps: [
-          `Run \`hadara init upgrade --profile ${targetProfile} --json\` to preview the profile expansion.`,
-          'Review the listed document additions and confirm they are appropriate for this repository.',
+          'Review the profile diagnostic and confirm the intended project configuration.',
+          'Use an explicit project configuration workflow; init upgrade does not change profiles or create optional document packs.',
           `Create or merge the missing documents: ${missingTargetDocs.join(', ') || 'none'}.`,
           'Re-run `hadara protocol doctor --scope profile --json` and confirm the doc-set issues are gone.'
         ]
@@ -201,11 +201,11 @@ function buildProfileRemediations(
       createManualRemediation({
         id: 'profile-metadata-align',
         title: `Align project metadata to the ${targetProfile} profile`,
-        command: `hadara init upgrade --profile ${targetProfile} --json`,
+        command: 'hadara protocol doctor --scope profile --json',
         targetPaths: targets,
         summary: `Project metadata or Required Reading does not match the ${targetProfile} profile implied by the protocol documents.`,
         steps: [
-          `Run \`hadara init upgrade --profile ${targetProfile} --json\` and review the dry-run merge plan.`,
+          'Review the profile diagnostic; init upgrade does not change project configuration.',
           `In \`docs/PROJECT_STATE.md\`, set the HADARA profile metadata to \`${targetProfile}\`.`,
           `In \`AGENTS.md\`, add Required Reading entries for the \`${targetProfile}\` profile documents.`,
           'Re-run `hadara protocol doctor --scope profile --json` before using an execute-mode remediation command.'

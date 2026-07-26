@@ -22,7 +22,7 @@ Deterministic recycle sequence:
 2. Commit the intended release-readiness source state before cloning. A clean clone only contains committed files.
 3. Inside the container, clone `/workspace` to a container-native ext4 `sourceRoot`; use `/workspace` only as `evidenceRoot` and human review surface.
 4. Build and validate the development CLI from `sourceRoot`, then confirm `package.json` version equals `node dist/cli/main.js version`.
-5. Generate the release artifact from `sourceRoot` to an output directory and write a journal JSON outside the source tree. Do not attach evidence during this artifact build.
+5. Generate the release artifact from `sourceRoot` to an output directory and write a journal JSON outside the source tree. The artifact command rebuilds source and verifies the built CLI version before staging `dist`; do not attach evidence during this artifact build.
 6. Attach the release artifact journal from `evidenceRoot` with `node --import tsx tools/dev-surfaces.ts release artifact --from-journal <journal.json> --evidence-root <evidenceRoot> --attach-evidence --task <task> --json`.
 7. Run package smoke and clean-checkout smoke with explicit root roles: `--source-root <sourceRoot> --evidence-root <evidenceRoot>` and, for installed-package paths, a disposable `--smoke-project-root <tmp-ext4-dir>`.
 8. Run `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json`, `node --import tsx tools/dev-surfaces.ts release dry-run --json`, and `node --import tsx tools/dev-surfaces.ts release publish --mode dry-run ... --json` from `sourceRoot`; these checks remain read-only and must observe the evidence attached to `evidenceRoot`.

@@ -55,7 +55,7 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara protocol doctor --json` defaults to the broad read-only all-scope protocol report. It returns `hadara.protocol.consistency.v1` with `scope: "all"`, aggregating docs, profile, and active-task detail without writing files.
 
-`hadara init [--profile basic|standard|governed] --json` returns `hadara.init.v1`. It creates missing scaffold files without overwriting existing files, reports relative scaffold file actions as `created` or `exists`, and keeps text initialization logs out of JSON output. `hadara init doctor --json`, `init upgrade`, and `init enable-integration` remain follow-up reports under `hadara.init.followup.v1`. `init register-doc` was removed; use `docs register`.
+`hadara init [--preset minimal|standard|governed] --json` returns `hadara.init.report.v1` with a deterministic zero-write plan. Apply requires `--execute --plan-hash <hash>`. Re-running base init without configuration arguments is a no-op on a complete Init v1 project; explicit `--preset` or `--profile` is rejected once initialized. `hadara init upgrade --json` uses the same report schema and only plans missing core artifacts, HADARA-managed template/block refreshes, read-map regeneration, and the runtime-local ignore rule. It never changes presets, features, document packs, configuration, the document registry, or optional user-authored documents. `hadara init doctor --json` and `init enable-integration` remain compatibility follow-up reports under `hadara.init.followup.v1`. `init register-doc` was removed; use `docs register`.
 
 `hadara task upgrade-scaffold --task <id> --json` has been fully removed from public routing; use `protocol doctor` and `protocol remediate`.
 

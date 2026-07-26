@@ -19,6 +19,7 @@ Assisted mode.
 - Init v1 apply requires a reviewed plan hash; brownfield apply additionally requires explicit adoption confirmation. Apply recomputes the plan under a project-local lock and rejects stale, conflicting, or partially safe plans before writes.
 - Init v1 paths must remain inside the resolved project root, must not traverse symbolic-link path segments, must not collide by case, and must not create nested HADARA projects. Transaction locks and recovery journals stay under ignored `.hadara/local/` runtime state.
 - Init v1 rollback restores only journaled transaction-owned mutations and verifies created-file hashes before removal; a path changed by another actor is retained and reported for manual recovery.
+- Init v1 upgrade cannot change presets, features, document packs, project configuration, existing document-registry bytes, Task Board content, or optional user-authored documents. Malformed AGENTS managed markers and invalid canonical authority files block the whole upgrade before writes.
 
 ## Blocked by Default
 

@@ -64,6 +64,9 @@ copy_full_workspace() {
     --exclude=node_modules \
     --exclude=dist \
     -cf - -C "$HADARA_WORKSPACE" . | tar -xf - -C "$HADARA_TMP_WORKDIR"
+  git -C "$HADARA_WORKSPACE" ls-files -z -- .hadara ":(exclude).hadara/local/**" |
+    tar -C "$HADARA_WORKSPACE" --null --no-recursion -cf - -T - |
+    tar -xf - -C "$HADARA_TMP_WORKDIR"
 }
 
 copy_build_workspace() {

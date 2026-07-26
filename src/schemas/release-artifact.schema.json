@@ -27,6 +27,8 @@
       "type": "object",
       "additionalProperties": true,
       "required": [
+        "sourceBuildExecuted",
+        "builtCliVersionVerified",
         "stagingCreated",
         "npmPackExecuted",
         "checksumGenerated",
@@ -37,6 +39,8 @@
         "dockerImageBuilt"
       ],
       "properties": {
+        "sourceBuildExecuted": { "type": "boolean" },
+        "builtCliVersionVerified": { "type": "boolean" },
         "stagingCreated": { "type": "boolean" },
         "npmPackExecuted": { "type": "boolean" },
         "checksumGenerated": { "type": "boolean" },

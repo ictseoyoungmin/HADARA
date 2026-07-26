@@ -303,6 +303,54 @@ describe('evidence lint', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_DONE_WITH_FAILED_EVIDENCE', evidenceId: failed.evidence.id }));
   });
 
+  it('rejects Met acceptance that directly cites unresolved failed evidence', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence lint acceptance failure');
+    const failed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Required Docker suite failed.',
+      result: 'failed',
+      visibility: 'public'
+    });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'An unrelated focused test passed.',
+      result: 'passed',
+      visibility: 'public'
+    });
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace(
+          '| AC-1 | Scope is implemented. | Pending | TBD | TBD |',
+          `| AC-1 | Required Docker suite passes. | Met | ${failed.evidence.id} | Test fixture |`
+        ),
+      'utf8'
+    );
+
+    const report = createEvidenceLintReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'ACCEPTANCE_EVIDENCE_OUTCOME_INVALID',
+        evidenceId: failed.evidence.id
+      })
+    );
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'ACCEPTANCE_EVIDENCE_UNRESOLVED_NEGATIVE',
+        evidenceId: failed.evidence.id
+      })
+    );
+  });
+
   it('reports semantic errors for Done tasks with unexplained blocked evidence', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence lint blocked done');

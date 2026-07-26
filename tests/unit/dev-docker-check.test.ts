@@ -90,7 +90,9 @@ describe('dev docker-check report', () => {
 
   it('runs full check without dist sync by default', () => {
     const root = tempProject();
-    const report = createDevDockerCheckReport(root, { workspace: '/workspace', tmpWorkdir: '/tmp/hadara-dev-check-test' }, fakeRunner(root));
+    const scripts: string[] = [];
+    const runner = fakeRunner(root, undefined, scripts);
+    const report = createDevDockerCheckReport(root, { workspace: '/workspace', tmpWorkdir: '/tmp/hadara-dev-check-test' }, runner);
 
     expect(report.ok).toBe(true);
     expect(report.mode).toBe('full');
@@ -98,6 +100,9 @@ describe('dev docker-check report', () => {
     expect(report.execution.focusedTestsExecuted).toBe(false);
     expect(report.execution.distSyncExecuted).toBe(false);
     expect(report.execution.outputMutation).toBe(false);
+    expect(scripts[0]).toContain('git -C "$HADARA_WORKSPACE" ls-files -z -- .hadara');
+    expect(scripts[0]).toContain('":(exclude).hadara/local/**"');
+    expect(report.steps[0]?.summary).toContain('tracked .hadara state');
     expect(report.distSync).toMatchObject({ requested: false, executed: false, conflictDetected: false, beforeHashAvailable: false, outputChanged: false, requiresBeforeHash: false, allowMissingBeforeHash: false });
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
@@ -203,10 +208,11 @@ describe('dev docker-check report', () => {
   });
 });
 
-function fakeRunner(root: string, failStep?: string): DevDockerCommandRunner {
+function fakeRunner(root: string, failStep?: string, scripts?: string[]): DevDockerCommandRunner {
   return {
     run(_command, args) {
       const script = args.at(-1) ?? '';
+      scripts?.push(script);
       const stepId = classifyScript(script);
       if (stepId === failStep) return { ok: false, exitCode: 1 };
       if (stepId === 'dist-sync') {

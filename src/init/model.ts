@@ -188,6 +188,28 @@ export function createInitV1ScaffoldFiles(projectId: string, preset: InitPreset)
   return files;
 }
 
+export function presetFromProjectConfig(project: InitProjectConfigV1): InitPreset {
+  if (project.documentPacks.includes('governance')) return 'governed';
+  if (project.documentPacks.includes('project')) return 'standard';
+  return 'minimal';
+}
+
+export function createInitV1UpgradeFiles(
+  project: InitProjectConfigV1,
+  registry: InitDocumentsV1
+): GeneratedScaffoldFile[] {
+  const generated = createInitV1ScaffoldFiles(project.projectId, presetFromProjectConfig(project));
+  const coreFiles = new Set(CORE_ARTIFACTS.filter((artifact) => artifact.type === 'file').map((artifact) => artifact.path));
+  return generated
+    .filter((file) => coreFiles.has(file.path))
+    .map((file) => {
+      if (file.path === '.hadara/project.json') return { ...file, content: jsonFile(project) };
+      if (file.path === '.hadara/documents.json') return { ...file, content: jsonFile(registry) };
+      if (file.path === '.hadara/context/READ_MAP.md') return { ...file, content: createReadMap(registry) };
+      return file;
+    });
+}
+
 export function assertInitProjectConfig(value: unknown): asserts value is InitProjectConfigV1 {
   const schemaResult = validateSchema('hadara.project.v1', value);
   if (!schemaResult.ok) fail('INIT_PROJECT_CONFIG_INVALID', schemaResult.issues[0]?.message ?? 'schema validation failed');

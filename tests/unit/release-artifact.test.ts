@@ -58,7 +58,7 @@ describe('release artifact builder', () => {
     expect(report.issues).toContainEqual({
       severity: 'error',
       code: 'RELEASE_ARTIFACT_EXECUTION_REQUIRED',
-      message: 'Release artifact building requires explicit --execute because it runs npm pack and writes artifacts.'
+      message: 'Release artifact building requires explicit --execute because it compiles source, runs npm pack, and writes artifacts.'
     });
     expect(runner).not.toHaveBeenCalled();
     expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
@@ -67,7 +67,7 @@ describe('release artifact builder', () => {
   it('creates tarball checksum and manifest metadata in an explicit output directory', () => {
     const root = tempProject();
     const output = path.join(root, 'dist-release');
-    const runner: ReleaseArtifactCommandRunner = (_command, args, options) => {
+    const runner = withSuccessfulBuild((_command, args, options) => {
       const stagedPackage = JSON.parse(fs.readFileSync(path.join(options.cwd, 'package.json'), 'utf8')) as {
         description?: string;
         keywords?: string[];
@@ -104,7 +104,7 @@ describe('release artifact builder', () => {
         stderr: '/private/path/raw npm notice',
         elapsedMs: 15
       };
-    };
+    });
 
     const report = createReleaseArtifactReport({
       paths: resolveHadaraPaths({ projectRoot: root }),
@@ -120,6 +120,8 @@ describe('release artifact builder', () => {
       ok: true,
       mode: 'execute',
       execution: {
+        sourceBuildExecuted: true,
+        builtCliVersionVerified: true,
         stagingCreated: true,
         npmPackExecuted: true,
         checksumGenerated: true,
@@ -162,7 +164,7 @@ describe('release artifact builder', () => {
 
   it('recovers release artifact metadata when npm pack succeeds with empty stdout', () => {
     const root = tempProject();
-    const runner: ReleaseArtifactCommandRunner = (_command, args) => {
+    const runner = withSuccessfulBuild((_command, args) => {
       const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
       fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
       return {
@@ -171,7 +173,7 @@ describe('release artifact builder', () => {
         stderr: '',
         elapsedMs: 15
       };
-    };
+    });
 
     const report = createReleaseArtifactReport({
       paths: resolveHadaraPaths({ projectRoot: root }),
@@ -188,6 +190,65 @@ describe('release artifact builder', () => {
     });
     expect(report.artifacts.map((artifact) => artifact.kind)).toEqual(['tarball', 'checksum', 'manifest']);
     expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('builds a missing dist from current source before staging the package', () => {
+    const root = tempProject();
+    fs.rmSync(path.join(root, 'dist'), { recursive: true, force: true });
+    const runner = vi.fn<ReleaseArtifactCommandRunner>(successfulPackRunner());
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.execution).toMatchObject({
+      sourceBuildExecuted: true,
+      builtCliVersionVerified: true,
+      stagingCreated: true
+    });
+    expect(runner.mock.calls[0]?.[1]).toEqual(['run', 'build']);
+    expect(runner.mock.calls[1]?.[0]).toBe(process.execPath);
+    expect(runner.mock.calls[1]?.[1].at(-1)).toBe('version');
+    expect(runner.mock.calls[2]?.[1]).toContain('pack');
+  });
+
+  it('fails closed when the built CLI version does not match package metadata', () => {
+    const root = tempProject();
+    const runner = vi.fn<ReleaseArtifactCommandRunner>((command, args) => {
+      if (args[0] === 'run' && args[1] === 'build') {
+        return { status: 0, stdout: '', stderr: '', elapsedMs: 5 };
+      }
+      if (command === process.execPath) {
+        return { status: 0, stdout: '0.0.0-stale\n', stderr: '', elapsedMs: 2 };
+      }
+      throw new Error('npm pack must not run after a version mismatch');
+    });
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.execution).toMatchObject({
+      sourceBuildExecuted: true,
+      builtCliVersionVerified: false,
+      stagingCreated: false,
+      npmPackExecuted: false
+    });
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_BUILT_VERSION_MISMATCH',
+      message: 'Built CLI version must match package.json version 0.0.0-bootstrap.',
+      stepId: 'verify-built-version'
+    });
+    expect(runner).toHaveBeenCalledTimes(2);
   });
 
   it('refuses to build release artifacts from a dirty git worktree', () => {
@@ -273,7 +334,7 @@ describe('release artifact builder', () => {
 
   it('fails package content verification when npm pack reports a file outside the whitelist', () => {
     const root = tempProject();
-    const runner: ReleaseArtifactCommandRunner = (_command, args) => {
+    const runner = withSuccessfulBuild((_command, args) => {
       const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
       fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
       return {
@@ -293,7 +354,7 @@ describe('release artifact builder', () => {
         stderr: '',
         elapsedMs: 15
       };
-    };
+    });
 
     const report = createReleaseArtifactReport({
       paths: resolveHadaraPaths({ projectRoot: root }),
@@ -342,7 +403,7 @@ describe('release artifact builder', () => {
       paths: resolveHadaraPaths({ projectRoot: root }),
       execute: true,
       output: 'dist-release',
-      runner: (_command, args) => {
+      runner: withSuccessfulBuild((_command, args) => {
         const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
         return {
@@ -361,7 +422,7 @@ describe('release artifact builder', () => {
           stderr: '',
           elapsedMs: 10
         };
-      }
+      })
     });
 
     const attached = attachReleaseArtifactEvidence({
@@ -393,7 +454,7 @@ describe('release artifact builder', () => {
 });
 
 function successfulPackRunner(): ReleaseArtifactCommandRunner {
-  return (_command, args) => {
+  return withSuccessfulBuild((_command, args) => {
     const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
     fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
     return {
@@ -412,6 +473,21 @@ function successfulPackRunner(): ReleaseArtifactCommandRunner {
       stderr: '',
       elapsedMs: 10
     };
+  });
+}
+
+function withSuccessfulBuild(packRunner: ReleaseArtifactCommandRunner): ReleaseArtifactCommandRunner {
+  return (command, args, options) => {
+    if (args[0] === 'run' && args[1] === 'build') {
+      fs.mkdirSync(path.join(options.cwd, 'dist', 'cli'), { recursive: true });
+      fs.writeFileSync(path.join(options.cwd, 'dist', 'cli', 'main.js'), '#!/usr/bin/env node\nconsole.log("hadara");\n', 'utf8');
+      fs.writeFileSync(path.join(options.cwd, 'dist', 'index.js'), 'module.exports = {};\n', 'utf8');
+      return { status: 0, stdout: '', stderr: '', elapsedMs: 5 };
+    }
+    if (command === process.execPath && args.at(-1) === 'version') {
+      return { status: 0, stdout: '0.0.0-bootstrap\n', stderr: '', elapsedMs: 2 };
+    }
+    return packRunner(command, args, options);
   };
 }
 

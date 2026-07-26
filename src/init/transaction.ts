@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertInitDocuments, assertInitProjectConfig } from './model';
-import { createInitPlanningResult, type InitPlanningResult } from './planner';
+import { createInitPlanningResult, createInitUpgradePlanningResult, type InitPlanningResult } from './planner';
 import { validateInitPaths } from './safety';
 import type { InitIssue, InitPlanActionV1, InitReportV1 } from './types';
 
@@ -68,7 +68,9 @@ export function applyInitPlanningResult(
     const recoveryIssues = recoverIncompleteTransaction(projectRoot);
     if (recoveryIssues.length > 0) return failedReport(reviewed, ...recoveryIssues, true);
 
-    const current = createInitPlanningResult(projectRoot, reviewed.plan.preset);
+    const current = reviewed.plan.operation === 'upgrade'
+      ? createInitUpgradePlanningResult(projectRoot)
+      : createInitPlanningResult(projectRoot, reviewed.plan.preset);
     if (requestedHash !== current.plan.planHash) {
       const code = reviewed.plan.planHash === requestedHash || current.plan.projectMode === 'brownfield'
         ? 'INIT_PLAN_STALE'
@@ -86,7 +88,7 @@ export function applyInitPlanningResult(
         message: 'The current plan contains a safety error or conflict and cannot be partially applied.'
       });
     }
-    if (current.plan.projectMode === 'brownfield' && !input.adopt) {
+    if (current.plan.operation === 'init' && current.plan.projectMode === 'brownfield' && !input.adopt) {
       return failedReport(current, {
         severity: 'error',
         code: 'INIT_ADOPTION_CONFIRMATION_REQUIRED',
@@ -238,6 +240,8 @@ function mutationForAction(
   let afterContent = fileContent.get(action.path);
   if (action.kind === 'insert-managed-block') {
     afterContent = insertManagedBlock(beforeContent ?? '', extractBootstrapBlock(fileContent.get('AGENTS.md') ?? ''));
+  } else if (action.kind === 'update-managed-block') {
+    afterContent = replaceManagedBlock(beforeContent ?? '', extractBootstrapBlock(fileContent.get('AGENTS.md') ?? ''));
   } else if (action.kind === 'append-line') {
     afterContent = appendIgnoreLine(beforeContent ?? '');
   }
@@ -453,6 +457,15 @@ function insertManagedBlock(existing: string, block: string): string {
   }
   if (!existing) return `# AGENTS.md\n\n${block}\n`;
   return `${existing.replace(/\s*$/, '')}\n\n${block}\n`;
+}
+
+function replaceManagedBlock(existing: string, block: string): string {
+  const pattern = /<!-- hadara:managed:start bootstrap -->[\s\S]*?<!-- hadara:managed:end bootstrap -->/g;
+  const matches = existing.match(pattern);
+  if (matches?.length !== 1) {
+    throw new Error('INIT_MANAGED_BLOCK_MALFORMED: expected exactly one HADARA bootstrap block.');
+  }
+  return existing.replace(pattern, block);
 }
 
 function appendIgnoreLine(existing: string): string {

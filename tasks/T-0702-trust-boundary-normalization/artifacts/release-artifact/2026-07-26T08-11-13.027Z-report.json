@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.v1",
+  "command": "release.artifact",
+  "ok": true,
+  "mode": "execute",
+  "execution": {
+    "sourceBuildExecuted": true,
+    "builtCliVersionVerified": true,
+    "stagingCreated": true,
+    "npmPackExecuted": true,
+    "checksumGenerated": true,
+    "manifestGenerated": true,
+    "packageContentsVerified": true,
+    "publishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false
+  },
+  "rootRoles": {
+    "sourceRoot": {
+      "role": "sourceRoot",
+      "displayPath": ".",
+      "pathRedacted": true,
+      "fromOption": "--source-root"
+    },
+    "evidenceRoot": {
+      "role": "evidenceRoot",
+      "displayPath": ".",
+      "pathRedacted": true,
+      "fromOption": "--project"
+    }
+  },
+  "selfInvalidationRisk": {
+    "cleanRequired": false,
+    "attachEvidenceRequested": false,
+    "sourceEqualsEvidence": true,
+    "failClosed": false,
+    "overrideAllowed": false
+  },
+  "source": {
+    "pathRedacted": true
+  },
+  "output": {
+    "kind": "explicit",
+    "displayPath": "<redacted-release-artifact-output>",
+    "pathRedacted": true,
+    "retention": "explicit-output"
+  },
+  "package": {
+    "name": "hadara",
+    "version": "0.5.0-rc.1",
+    "private": false,
+    "filesWhitelistApplied": true
+  },
+  "artifacts": [
+    {
+      "kind": "tarball",
+      "visibility": "local",
+      "fileName": "hadara-0.5.0-rc.1.tgz",
+      "pathRedacted": true,
+      "byteLength": 429878,
+      "hash": "sha256:10cc6770eb434adabe752561725fdd61dab5152749d75e44fc7a3cc998a3dfcd",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "checksum",
+      "visibility": "local",
+      "fileName": "hadara-0.5.0-rc.1.tgz.sha256",
+      "pathRedacted": true,
+      "byteLength": 88,
+      "hash": "sha256:06fea05e366b99041a61e5be87191b2d99019680afca2779adea520b63d1fd61",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "manifest",
+      "visibility": "local",
+      "fileName": "hadara-0.5.0-rc.1.tgz.manifest.json",
+      "pathRedacted": true,
+      "byteLength": 23699,
+      "hash": "sha256:fd3a45b61a012257969a10bfcf4d63aff6430f9359cc68f542cee47487afd543",
+      "rawContentIncluded": false
+    }
+  ],
+  "packageContents": {
+    "verified": true,
+    "fileCount": 261,
+    "allowedRoots": [
+      "dist/",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "requiredFiles": [
+      "package.json",
+      "README.md",
+      "LICENSE",
+      "dist/cli/main.js"
+    ],
+    "forbiddenMatches": []
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "packageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "evidence": {
+    "time": "2026-07-26T08:11:13.015Z",
+    "taskId": "T-0702",
+    "gitCommit": "174b12106cd5cb66626dd49047392228ffd26187"
+  }
+}

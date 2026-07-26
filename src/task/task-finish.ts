@@ -306,9 +306,12 @@ function planWrites(
   }
 
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
-  if (finishRequired && fs.existsSync(handoffPath)) {
+  if (fs.existsSync(handoffPath)) {
     const handoffContent = fs.readFileSync(handoffPath, 'utf8');
-    const nextHandoffContent = normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, taskStatus, finishTimestamp));
+    const shouldSyncHandoff = finishRequired || /^## Identity\s*$/m.test(handoffContent);
+    const nextHandoffContent = shouldSyncHandoff
+      ? normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, finishTimestamp))
+      : normalizeAtomicTextDocument(handoffContent);
     if (nextHandoffContent !== normalizeAtomicTextDocument(handoffContent)) {
       writes.push({
         path: toPortablePath(path.relative(projectRoot, handoffPath)),
@@ -675,7 +678,7 @@ function replaceTaskStatus(content: string, status: string, updatedAt = formatLo
   return appendStatusHistoryDone(withStatus);
 }
 
-function syncHandoffIdentity(content: string, task: TaskCapsule, taskStatus: string, updatedAt: string): string {
+function syncHandoffIdentity(content: string, task: TaskCapsule, updatedAt: string): string {
   const currentStatus = readIdentityField(content, 'Status');
   const nextStatus = 'Done';
   const created = readIdentityField(content, 'Created') ?? readTaskIdentityField(task, 'Created') ?? updatedAt;
@@ -710,6 +713,7 @@ function replaceMarkdownHeadingSection(content: string, heading: string, replace
     }
   }
   const replacementLines = replacement.trimEnd().split(/\r?\n/);
+  if (end < lines.length) replacementLines.push('');
   return `${[...lines.slice(0, start), ...replacementLines, ...lines.slice(end)].join('\n').trimEnd()}\n`;
 }
 

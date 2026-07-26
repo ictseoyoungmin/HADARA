@@ -9,8 +9,11 @@ import {
   InitModelError,
   assertInitDocuments,
   assertInitProjectConfig,
+  createInitDocuments,
   createInitV1ScaffoldFiles,
-  initArtifactManifest
+  createInitV1UpgradeFiles,
+  initArtifactManifest,
+  presetFromProjectConfig
 } from './model';
 import { validateInitPaths } from './safety';
 import type {
@@ -22,6 +25,8 @@ import type {
   InitPlanSummaryV1,
   InitPlanV1,
   InitPreset,
+  InitProjectConfigV1,
+  InitDocumentsV1,
   InitReportV1
 } from './types';
 
@@ -36,7 +41,11 @@ const IGNORED_ROOT_ENTRIES = new Set(['.git', '.DS_Store', 'node_modules']);
 export function createInitPlanningResult(
   projectRoot: string,
   preset: InitPreset,
-  input: { execute?: boolean; warnings?: Array<{ code: string; message: string }> } = {}
+  input: {
+    execute?: boolean;
+    explicitConfiguration?: boolean;
+    warnings?: Array<{ code: string; message: string }>;
+  } = {}
 ): InitPlanningResult {
   const files = createInitV1ScaffoldFiles(createStableProjectId(projectRoot), preset);
   const fileHashes = new Map(files.map((file) => [file.path, hashText(file.content)]));
@@ -50,6 +59,13 @@ export function createInitPlanningResult(
   try {
     projectMode = classifyProject(projectRoot);
     actions = planActions(projectRoot, preset, projectMode);
+    if (input.explicitConfiguration && (projectMode === 'initialized' || projectMode === 'partial')) {
+      issues.push({
+        severity: 'error',
+        code: 'INIT_PRESET_REQUIRES_NEW_PROJECT',
+        message: 'An initialized project cannot be reconfigured by base init; use a new project or a future configuration command.'
+      });
+    }
     issues.push(...validateInitPaths(projectRoot, actions.map((action) => action.path)));
   } catch (error) {
     projectMode = classifyFailedProject(projectRoot);
@@ -78,7 +94,6 @@ export function createInitPlanningResult(
     planHash
   };
   const conflicts = summary.conflict;
-  const errorCount = issues.filter((issue) => issue.severity === 'error').length;
   if (input.execute) {
     issues.push({
       severity: 'error',
@@ -86,6 +101,7 @@ export function createInitPlanningResult(
       message: 'Init v1 apply is not available until the reviewed transaction implementation is installed; no files were written.'
     });
   }
+  const errorCount = issues.filter((issue) => issue.severity === 'error').length;
   const initialized = projectMode === 'initialized' && errorCount === 0;
   const ok = errorCount === 0 && conflicts === 0 && !input.execute;
   const report: InitReportV1 = {
@@ -112,25 +128,89 @@ export function createInitPlanningResult(
   return { plan, report, files };
 }
 
+export function createInitUpgradePlanningResult(
+  projectRoot: string,
+  input: { configurationChangeRequested?: boolean } = {}
+): InitPlanningResult {
+  let preset: InitPreset = 'standard';
+  let projectMode: InitPlanV1['projectMode'] = 'partial';
+  let files: GeneratedScaffoldFile[] = [];
+  let actions: InitPlanActionV1[] = [];
+  const issues: InitIssue[] = [];
+  try {
+    const projectPath = path.join(projectRoot, '.hadara', 'project.json');
+    if (!fs.existsSync(projectPath)) {
+      throw new InitModelError(
+        'INIT_PROJECT_CONFIG_MISSING',
+        'Init v1 upgrade requires .hadara/project.json; base init does not guess or repair missing configuration.'
+      );
+    }
+    const project = readJson(projectPath, 'INIT_PROJECT_CONFIG_INVALID');
+    assertInitProjectConfig(project);
+    preset = presetFromProjectConfig(project);
+    const documentsPath = path.join(projectRoot, '.hadara', 'documents.json');
+    const registry = fs.existsSync(documentsPath)
+      ? readJson(documentsPath, 'INIT_DOCUMENT_REGISTRY_INVALID')
+      : createInitDocuments(preset);
+    if (fs.existsSync(documentsPath)) assertInitDocuments(registry);
+    files = createInitV1UpgradeFiles(
+      project as InitProjectConfigV1,
+      registry as InitDocumentsV1
+    );
+    projectMode = classifyProject(projectRoot);
+    const planned = planUpgradeActions(projectRoot, files);
+    actions = planned.actions;
+    issues.push(...planned.issues);
+    if (input.configurationChangeRequested) {
+      issues.push({
+        severity: 'error',
+        code: 'INIT_CONFIGURATION_CHANGE_UNSUPPORTED',
+        message: 'init upgrade repairs managed Init v1 artifacts; it does not change presets, profiles, features, or document packs.'
+      });
+    }
+    issues.push(...validateInitPaths(projectRoot, actions.map((action) => action.path)));
+  } catch (error) {
+    projectMode = classifyFailedProject(projectRoot);
+    issues.push(modelIssue(error));
+  }
+
+  return buildPlanningResult({
+    operation: 'upgrade',
+    projectMode,
+    preset,
+    actions,
+    files,
+    issues
+  });
+}
+
 export function printInitV1Report(report: InitReportV1, jsonOutput = false): void {
+  const operation = report.operation === 'upgrade' ? 'init upgrade' : 'init';
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else if (report.mode === 'applied') {
     console.log([
-      `applied | init | preset=${report.preset}`,
+      `applied | ${operation} | preset=${report.preset}`,
       `created=${report.summary.created} updated-managed=${report.summary.updated} appended=${report.summary.appended} failed=${report.results?.failed.length ?? 0}`
     ].join('\n'));
   } else if (report.mode === 'no-op') {
     console.log([
-      'no-op | init',
+      `no-op | ${operation}`,
       `created=0 updated=0 existing=${report.summary.preserved} applied=0`,
       `reason=${report.reason}`
     ].join('\n'));
   } else {
+    const details = [
+      ...report.issues.map((issue) => `[${issue.severity}] ${issue.code}: ${issue.message}`),
+      ...report.plan.actions
+        .filter((action) => action.kind === 'conflict')
+        .map((action) => `[conflict] ${action.path}: ${action.reason}`)
+    ];
     console.log([
-      `${report.mode} | init | preset=${report.preset} | project=${report.projectMode}`,
+      `${report.mode} | ${operation} | preset=${report.preset} | project=${report.projectMode}`,
       `create=${report.plan.summary.create} update-managed=${report.plan.summary.updateManaged} append=${report.plan.summary.append} preserve=${report.plan.summary.preserve} conflict=${report.plan.summary.conflict} applied=0`,
-      `plan-hash=${report.planHash}`
+      `plan-hash=${report.planHash}`,
+      ...details
     ].join('\n'));
   }
   if (!report.ok) process.exitCode = 6;
@@ -162,13 +242,190 @@ function classifyProject(projectRoot: string): InitPlanV1['projectMode'] {
   const hasDocuments = fs.existsSync(documentsPath);
   if (hasProject) assertInitProjectConfig(readJson(projectPath, 'INIT_PROJECT_CONFIG_INVALID'));
   if (hasDocuments) assertInitDocuments(readJson(documentsPath, 'INIT_DOCUMENT_REGISTRY_INVALID'));
-  if (hasProject && hasDocuments) return 'initialized';
+  if (hasProject && hasDocuments) {
+    const complete = initArtifactManifest('minimal').every((artifact) => fs.existsSync(path.join(projectRoot, artifact.path)));
+    return complete ? 'initialized' : 'partial';
+  }
   if (hasProject || hasDocuments) return 'partial';
   if (
     fs.existsSync(path.join(projectRoot, '.hadara', 'scaffold.json'))
     || fs.existsSync(path.join(projectRoot, '.hadara', 'docs-registry.json'))
   ) return 'legacy';
   return meaningfulRootEntries(projectRoot).length === 0 ? 'greenfield' : 'brownfield';
+}
+
+function buildPlanningResult(input: {
+  operation: InitPlanV1['operation'];
+  projectMode: InitPlanV1['projectMode'];
+  preset: InitPreset;
+  actions: InitPlanActionV1[];
+  files: GeneratedScaffoldFile[];
+  issues: InitIssue[];
+}): InitPlanningResult {
+  const fileHashes = new Map(input.files.map((file) => [file.path, hashText(file.content)]));
+  const summary = summarizeActions(input.actions);
+  const planHash = hashJson({
+    operation: input.operation,
+    projectMode: input.projectMode,
+    preset: input.preset,
+    actions: input.actions,
+    sourceHashes: input.actions.map((action) => [action.path, action.beforeHash ?? null]),
+    contentHashes: input.actions.map((action) => [action.path, fileHashes.get(action.path) ?? null]),
+    packageVersion: packageJson.version,
+    lifecycleVersion: INIT_LIFECYCLE_VERSION,
+    artifactManifestVersion: INIT_ARTIFACT_MANIFEST_VERSION
+  });
+  const plan: InitPlanV1 = {
+    schemaVersion: 'hadara.init.plan.v1',
+    operation: input.operation,
+    projectMode: input.projectMode,
+    preset: input.preset,
+    actions: input.actions,
+    summary,
+    planHash
+  };
+  const errors = input.issues.filter((issue) => issue.severity === 'error').length;
+  const changed = input.actions.some((action) => !['preserve', 'skip'].includes(action.kind));
+  const noOp = input.projectMode === 'initialized' && errors === 0 && summary.conflict === 0 && !changed;
+  const report: InitReportV1 = {
+    schemaVersion: 'hadara.init.report.v1',
+    ok: errors === 0 && summary.conflict === 0,
+    operation: input.operation,
+    mode: errors > 0 || summary.conflict > 0 ? 'error' : noOp ? 'no-op' : 'dry-run',
+    projectMode: input.projectMode,
+    preset: input.preset,
+    summary: {
+      planned: input.actions.length,
+      created: 0,
+      updated: 0,
+      appended: 0,
+      preserved: summary.preserve,
+      conflicts: summary.conflict,
+      applied: 0
+    },
+    planHash,
+    plan,
+    ...(noOp ? { reason: 'already-current' as const } : {}),
+    issues: input.issues
+  };
+  return { plan, report, files: input.files };
+}
+
+function planUpgradeActions(
+  projectRoot: string,
+  files: GeneratedScaffoldFile[]
+): { actions: InitPlanActionV1[]; issues: InitIssue[] } {
+  const generated = new Map(files.map((file) => [file.path, file.content]));
+  const issues: InitIssue[] = [];
+  const actions = initArtifactManifest('minimal').map((artifact): InitPlanActionV1 => {
+    const target = path.join(projectRoot, artifact.path);
+    if (!fs.existsSync(target)) {
+      return {
+        path: artifact.path,
+        kind: 'create',
+        management: artifact.management,
+        reason: 'Restore a missing Init v1 core artifact from current project configuration.'
+      };
+    }
+    const stat = fs.lstatSync(target);
+    const beforeHash = stat.isFile()
+      ? hashBuffer(fs.readFileSync(target))
+      : hashText(stat.isDirectory() ? 'directory' : 'other');
+    if (stat.isSymbolicLink() || (artifact.type === 'file' ? !stat.isFile() : !stat.isDirectory())) {
+      return {
+        path: artifact.path,
+        kind: 'conflict',
+        management: artifact.management,
+        reason: `Existing ${artifact.path} has an unsafe or incompatible path type.`,
+        beforeHash
+      };
+    }
+    if (artifact.path === 'AGENTS.md') {
+      const content = fs.readFileSync(target, 'utf8');
+      const expectedBlock = extractManagedBlock(generated.get(artifact.path) ?? '');
+      const markers = [...content.matchAll(/<!-- hadara:managed:(start|end) bootstrap -->/g)];
+      if (markers.length === 0) {
+        return {
+          path: artifact.path,
+          kind: 'insert-managed-block',
+          management: artifact.management,
+          reason: 'Insert the missing HADARA bootstrap block while preserving user-owned instructions.',
+          beforeHash
+        };
+      }
+      const existingBlock = content.match(/<!-- hadara:managed:start bootstrap -->[\s\S]*?<!-- hadara:managed:end bootstrap -->/)?.[0];
+      if (
+        markers.length !== 2
+        || markers[0][1] !== 'start'
+        || markers[1][1] !== 'end'
+        || !existingBlock
+      ) {
+        issues.push({
+          severity: 'error',
+          code: 'INIT_MANAGED_BLOCK_MALFORMED',
+          path: artifact.path,
+          message: 'AGENTS.md contains malformed or duplicate HADARA bootstrap markers; no upgrade writes are allowed.'
+        });
+        return {
+          path: artifact.path,
+          kind: 'conflict',
+          management: artifact.management,
+          reason: 'Malformed HADARA bootstrap markers require manual repair.',
+          beforeHash
+        };
+      }
+      return {
+        path: artifact.path,
+        kind: existingBlock === expectedBlock ? 'preserve' : 'update-managed-block',
+        management: artifact.management,
+        reason: existingBlock === expectedBlock
+          ? 'The HADARA bootstrap block is current.'
+          : 'Replace only the HADARA-managed bootstrap block.',
+        beforeHash
+      };
+    }
+    if (artifact.path === '.gitignore') {
+      const content = fs.readFileSync(target, 'utf8');
+      const present = content.split(/\r?\n/).includes('.hadara/local/');
+      return {
+        path: artifact.path,
+        kind: present ? 'preserve' : 'append-line',
+        management: artifact.management,
+        reason: present ? 'The runtime-local ignore rule already exists.' : 'Append only the runtime-local ignore rule.',
+        beforeHash
+      };
+    }
+    if (artifact.path === 'docs/HADARA_WORKFLOW.md' || artifact.path === '.hadara/context/READ_MAP.md') {
+      const expected = generated.get(artifact.path);
+      const current = fs.readFileSync(target, 'utf8');
+      const currentArtifact = current === expected;
+      return {
+        path: artifact.path,
+        kind: currentArtifact
+          ? 'preserve'
+          : artifact.path === 'docs/HADARA_WORKFLOW.md' ? 'replace-hadara-managed' : 'regenerate',
+        management: artifact.management,
+        reason: currentArtifact
+          ? `The managed ${artifact.path} artifact is current.`
+          : `Regenerate the HADARA-managed ${artifact.path} artifact.`,
+        beforeHash
+      };
+    }
+    return {
+      path: artifact.path,
+      kind: 'preserve',
+      management: artifact.management,
+      reason: `Preserve current ${artifact.management} state; this upgrade slice does not migrate its content.`,
+      beforeHash
+    };
+  });
+  return { actions, issues };
+}
+
+function extractManagedBlock(content: string): string {
+  const block = content.match(/<!-- hadara:managed:start bootstrap -->[\s\S]*?<!-- hadara:managed:end bootstrap -->/)?.[0];
+  if (!block) throw new InitModelError('INIT_MANAGED_BLOCK_MALFORMED', 'Generated AGENTS.md bootstrap block is missing.');
+  return block;
 }
 
 function classifyFailedProject(projectRoot: string): InitPlanV1['projectMode'] {

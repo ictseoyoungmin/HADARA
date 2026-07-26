@@ -301,7 +301,8 @@ describe('release dry-run', () => {
       expect.objectContaining({
         id: 'refresh-release-artifact-evidence',
         reason: 'RELEASE_ARTIFACT_EVIDENCE_NOT_READY',
-        command: 'node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task <task-id>'
+        command:
+          'node --import tsx tools/dev-surfaces.ts release artifact --execute --source-root <clean-source> --output <artifact-output> --journal <journal.json> --json'
       })
     );
   });
@@ -676,6 +677,8 @@ function releaseArtifactReport(gitCommit = commit): Record<string, unknown> {
     ok: true,
     mode: 'execute',
     execution: {
+      sourceBuildExecuted: true,
+      builtCliVersionVerified: true,
       stagingCreated: true,
       npmPackExecuted: true,
       checksumGenerated: true,

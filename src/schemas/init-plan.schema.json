@@ -7,7 +7,7 @@
   "required": ["schemaVersion", "operation", "projectMode", "preset", "actions", "summary", "planHash"],
   "properties": {
     "schemaVersion": { "const": "hadara.init.plan.v1" },
-    "operation": { "const": "init" },
+    "operation": { "enum": ["init", "upgrade"] },
     "projectMode": { "enum": ["greenfield", "brownfield", "initialized", "partial", "legacy", "unsafe"] },
     "preset": { "enum": ["minimal", "standard", "governed"] },
     "actions": {

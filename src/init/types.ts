@@ -136,6 +136,7 @@ export interface InitCommandInput {
 }
 
 export type InitPreset = 'minimal' | 'standard' | 'governed';
+export type InitOperation = 'init' | 'upgrade';
 export type InitFeature = 'task-lifecycle' | 'evidence' | 'document-routing' | 'project-documentation' | 'governance-documentation';
 export type InitDocumentPack = 'core' | 'project' | 'governance';
 export type InitArtifactManagement =
@@ -234,7 +235,7 @@ export interface InitPlanSummaryV1 {
 
 export interface InitPlanV1 {
   schemaVersion: 'hadara.init.plan.v1';
-  operation: 'init';
+  operation: InitOperation;
   projectMode: 'greenfield' | 'brownfield' | 'initialized' | 'partial' | 'legacy' | 'unsafe';
   preset: InitPreset;
   actions: InitPlanActionV1[];
@@ -255,14 +256,14 @@ export interface InitReportSummaryV1 {
 export interface InitReportV1 {
   schemaVersion: 'hadara.init.report.v1';
   ok: boolean;
-  operation: 'init';
+  operation: InitOperation;
   mode: 'dry-run' | 'applied' | 'no-op' | 'error';
   projectMode: InitPlanV1['projectMode'];
   preset: InitPreset;
   summary: InitReportSummaryV1;
   planHash: string;
   plan: InitPlanV1;
-  reason?: 'already-initialized' | 'user-declined';
+  reason?: 'already-initialized' | 'already-current' | 'user-declined';
   results?: {
     created: string[];
     updated: string[];

@@ -4,6 +4,7 @@ import { countEvidenceProjectionRows } from '../evidence/evidence';
 import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
+import { parseAcceptanceRows } from '../task/acceptance';
 import { findTaskCapsule } from '../task/task-capsule';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 
@@ -90,12 +91,14 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
   }
 
   const normalizedRecords = normalizeEvidenceRecordsWithSourceLines(parsedRecords, { taskDir: task.dir });
+  const taskDocs = readTaskDocs(task.dir);
   const semanticAnalysis = analyzeTaskEvidenceSemantics({
     taskId,
     taskDir: toPortablePath(path.relative(projectRoot, task.dir)),
     taskLooksDone: taskLooksDone(projectRoot, task),
     records: normalizedRecords,
-    taskDocs: readTaskDocs(task.dir)
+    acceptanceRows: parseAcceptanceRows(taskDocs.acceptance ?? ''),
+    taskDocs
   });
   for (const semanticIssue of semanticAnalysis.issues) {
     if (semanticIssue.code === 'LEGACY_EVIDENCE_SCHEMA_PRESENT') continue;

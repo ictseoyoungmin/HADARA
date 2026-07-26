@@ -538,7 +538,7 @@
       "path": "src/schemas/init-plan.schema.json",
       "status": "fixture",
       "owner": "init/planner",
-      "notes": "Deterministic, non-destructive Init v1 action plan; produced by the planner and consumed by reviewed apply."
+      "notes": "Deterministic, non-destructive Init v1 base-init or managed-upgrade action plan; produced by the planner and consumed by reviewed apply."
     },
     {
       "id": "hadara.init.report.v1",

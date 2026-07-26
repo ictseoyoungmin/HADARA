@@ -14,6 +14,8 @@ docker run --rm -v /mnt/f/NowWorking/HADARA-dev:/src:ro -w /tmp node:22-bullseye
 
 This pattern keeps the source mount read-only and runs dependency installation/build/test work in `/tmp/work` inside the container.
 
+Current trusted source baseline (T-0703): clean Docker `npm ci` reported 0 vulnerabilities; source build and tools type-check passed; the public suite passed 141 files/1098 tests; the HADARA-dev suite passed 16 files/129 tests; and the refreshed built CLI passed the Init v1 init/re-init/partial/upgrade/no-op lifecycle smoke. Evidence: `ev:T-0703:e4e6a408bb0648aa9cd9d559`, `ev:T-0703:2403b51722de4d178c934c7d`.
+
 For repeated local development, a reusable container can stay running:
 
 ```bash
@@ -228,7 +230,7 @@ T-0140 dry-run evidence hardening:
 - The dry-run cross-checks passed public package-smoke, clean-checkout smoke, and release-artifact evidence records.
 - Evidence artifact cross-checks require: `evidence.jsonl` record exists, `evidencePath` artifact exists, artifact schema is valid, source/report `ok` is true, and category/mode/result match the expected release check.
 - Release artifact freshness requires the attached release artifact report or manifest to expose the current package version and a manifest hash; git commit freshness is checked when the artifact includes git commit metadata.
-- Release artifact evidence has an explicit user path: build with `node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task <task-id>`, which attaches the reduced `hadara.releaseArtifact.v1` public report under `tasks/<task-id>/artifacts/release-artifact/`.
+- Release artifact evidence has an explicit two-root user path: build from clean source with `node --import tsx tools/dev-surfaces.ts release artifact --execute --source-root <clean-source> --output <artifact-output> --journal <journal.json> --json`, then attach that journal from the evidence root with `node --import tsx tools/dev-surfaces.ts release artifact --from-journal <journal.json> --evidence-root <evidence-root> --attach-evidence --task <task-id> --json`. This avoids self-invalidating the clean-tree preflight and stores the reduced `hadara.releaseArtifact.v1` public report under `tasks/<task-id>/artifacts/release-artifact/`.
 
 The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 

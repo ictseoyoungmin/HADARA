@@ -213,6 +213,36 @@ describe('task finish status sync', () => {
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
+  it('repairs stale HANDOFF status when TASK and Task Board are already Done', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish stale handoff');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| Status | Draft |', '| Status | Done |')
+        .replace('## Status\n\nDraft\n', '## Status\n\nDone\n'),
+      'utf8'
+    );
+    replaceBoardRow(root, task.id, `| ${task.id} | Finish stale handoff | Done | tasks/${task.id}-finish-stale-handoff | |`);
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toEqual([
+      expect.objectContaining({
+        field: 'task-handoff-identity',
+        before: 'Draft',
+        after: 'Done',
+        applied: true
+      })
+    ]);
+    expect(fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')).toContain('| Status | Done |');
+    expect(createTaskFinishReport(root, task.id, 'dry-run').writes).toEqual([]);
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
   it('inserts a missing Task Board row during execute', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish missing board row');

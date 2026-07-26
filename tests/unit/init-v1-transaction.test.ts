@@ -235,6 +235,73 @@ describe('Init v1 safe apply transaction', () => {
     expect(fs.existsSync(path.join(root, '.hadara', 'project.json'))).toBe(false);
   });
 
+  it('treats an already-restored pre-existing file as a rollback no-op and safely retries', () => {
+    const root = tempProject();
+    const originalAgents = '# Original AGENTS\n\nKeep this exactly.\n';
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), originalAgents, 'utf8');
+    const planning = createInitPlanningResult(root, 'minimal');
+    const expectedAfter = planning.files.find((file) => file.path === 'AGENTS.md')!.content;
+    fs.mkdirSync(path.join(root, '.hadara', 'local', 'journals'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'local', 'journals', 'init.json'), JSON.stringify({
+      schemaVersion: 'hadara.init.journal.v1',
+      planHash: 'crashed-transaction',
+      preset: 'minimal',
+      entries: [{
+        path: 'AGENTS.md',
+        type: 'file',
+        beforeExists: true,
+        beforeContent: originalAgents,
+        expectedAfterHash: hash(expectedAfter),
+        status: 'committed'
+      }]
+    }), 'utf8');
+
+    const report = applyInitPlanningResult(root, planning, {
+      planHash: planning.plan.planHash,
+      adopt: true
+    });
+
+    expect(report).toMatchObject({ ok: true, mode: 'applied', recovery: { required: false } });
+    expect(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')).toContain(originalAgents);
+    expect(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')).toContain('<!-- hadara:managed:start bootstrap -->');
+    expect(fs.existsSync(path.join(root, '.hadara', 'local'))).toBe(false);
+  });
+
+  it('retains an externally modified file created by a crashed transaction and requires recovery', () => {
+    const root = tempProject();
+    const transactionContent = '# Transaction-created AGENTS\n';
+    const externallyModified = `${transactionContent}\n<!-- another actor changed this file -->\n`;
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), externallyModified, 'utf8');
+    fs.mkdirSync(path.join(root, '.hadara', 'local', 'journals'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'local', 'journals', 'init.json'), JSON.stringify({
+      schemaVersion: 'hadara.init.journal.v1',
+      planHash: 'crashed-transaction',
+      preset: 'minimal',
+      entries: [{
+        path: 'AGENTS.md',
+        type: 'file',
+        beforeExists: false,
+        expectedAfterHash: hash(transactionContent),
+        status: 'committed'
+      }]
+    }), 'utf8');
+    const planning = createInitPlanningResult(root, 'minimal');
+
+    const report = applyInitPlanningResult(root, planning, {
+      planHash: planning.plan.planHash,
+      adopt: true
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.recovery).toMatchObject({ required: true });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'INIT_ROLLBACK_EXTERNAL_MODIFICATION',
+      path: 'AGENTS.md'
+    }));
+    expect(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')).toBe(externallyModified);
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'journals', 'init.json'))).toBe(true);
+  });
+
   it('rejects traversal, symlink, nested roots, and case collisions while allowing standalone roots', () => {
     const root = tempProject();
     expect(validateInitPaths(root, ['../outside.md'])).toContainEqual(expect.objectContaining({ code: 'INIT_PATH_OUTSIDE_ROOT' }));

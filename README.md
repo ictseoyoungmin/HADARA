@@ -269,7 +269,8 @@ Repo-local HADARA-dev release/package tooling lives under `tools/` and is not pa
 node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json
 node --import tsx tools/dev-surfaces.ts smoke package --execute --attach-evidence --task T-0001 --json
 node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --attach-evidence --task T-0001 --json
-node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task T-0001
+node --import tsx tools/dev-surfaces.ts release artifact --execute --source-root /tmp/hadara-release-src --output /tmp/hadara-release-out --journal /tmp/hadara-release-artifact.json --json
+node --import tsx tools/dev-surfaces.ts release artifact --from-journal /tmp/hadara-release-artifact.json --evidence-root . --attach-evidence --task T-0001 --json
 node --import tsx tools/dev-surfaces.ts release gate --mode strict --json
 node --import tsx tools/dev-surfaces.ts release dry-run --json
 node --import tsx tools/dev-surfaces.ts release publish --mode dry-run --json
@@ -325,13 +326,13 @@ Portable/local state is not committed. Project docs, Task Capsules, and reduced 
 
 ## Development / Contributing
 
-Every init profile generates the 0.4 project scaffold with compact agent entry docs, a docs registry, a workflow guide, and the finalize-first lifecycle loop.
+Every Init v1 preset generates a compact agent entry, canonical project configuration and document registry, a workflow guide, and the proof-last task lifecycle loop.
 
 Init maintenance commands dry-run by default unless `--execute` is supplied:
 
 ```bash
 hadara init doctor --json
-hadara init upgrade --profile governed --json
+hadara init upgrade --json
 hadara docs register --path docs/specs/LOCAL.md --title "Local spec" --kind spec --status active --read-when task-start --json
 hadara init enable-integration --integration mcp --json
 ```

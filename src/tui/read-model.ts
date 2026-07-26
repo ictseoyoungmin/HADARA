@@ -35,6 +35,7 @@ export interface TuiReadModelIssue {
     | 'active-run-resume'
     | 'task-detail'
     | 'evidence'
+    | 'debt'
     | 'release-gate'
     | 'write-preflight'
     | 'tui-read-model';
@@ -305,6 +306,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
     operator,
     activeRunResume,
     selectedTask,
+    debt,
     releaseGate,
     writePreview,
     selectedTaskId,
@@ -344,6 +346,8 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
   const selectedSummary = selectedTaskId ? tasks.tasks.find((task) => task.id === selectedTaskId) ?? null : null;
   const selectedTask = selectedSummary ? createSelectedTaskReadModel(projectRoot, selectedSummary, options) : null;
   const activeRunResume = createActiveRunResumeReport(projectRoot);
+  const debt = createPlaceholderOperationalDebtReport();
+  const releaseGate = createDeferredReleaseGateReport();
   const deferredIssue: TuiReadModelIssue = {
     source: 'tui-read-model',
     severity: 'warning',
@@ -356,7 +360,8 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
     operator,
     activeRunResume,
       selectedTask,
-      releaseGate: createDeferredReleaseGateReport(),
+      debt,
+      releaseGate,
       writePreview: createDeferredWritePreflightReport(),
       selectedTaskId,
       explicitSelectedTaskId: options.selectedTaskId ?? null
@@ -379,8 +384,8 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
       projection: status.activeRun,
       resume: activeRunResume
     },
-    debt: createPlaceholderOperationalDebtReport(),
-    releaseGate: createDeferredReleaseGateReport(),
+    debt,
+    releaseGate,
     tools: createDeferredToolsListReport(),
     writePreview: createDeferredWritePreflightReport(),
     issues
@@ -717,6 +722,7 @@ function collectIssues(input: {
   status: OpsStatusReport;
   activeRunResume: ActiveRunResumeReport;
   selectedTask: TuiReadModel['selectedTask'];
+  debt: OperationalDebtReport;
   releaseGate: ReleaseGateReport;
   writePreview: WritePreflightReport;
   operator: TuiReadModel['operator'];
@@ -728,6 +734,7 @@ function collectIssues(input: {
     ...input.operator.projectionStatus.issues.map((issue) => ({ source: 'operator-projection' as const, ...issue })),
     ...input.status.issues.map((issue) => ({ source: 'status' as const, ...issue })),
     ...input.activeRunResume.issues.map((issue) => ({ source: 'active-run-resume' as const, ...issue })),
+    ...input.debt.issues.map((issue) => ({ source: 'debt' as const, ...issue })),
     ...input.releaseGate.issues.map((issue) => ({ source: 'release-gate' as const, ...issue })),
     ...input.writePreview.issues.map((issue) => ({ source: 'write-preflight' as const, ...issue }))
   ];

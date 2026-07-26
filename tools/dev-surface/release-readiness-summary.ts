@@ -64,9 +64,9 @@ function createNextActions(
     actions.push({
       id: 'refresh-release-artifact-evidence',
       required: true,
-      command: 'node --import tsx tools/dev-surfaces.ts release artifact --execute --json --output dist-release --attach-evidence --task <task-id>',
+      command: 'node --import tsx tools/dev-surfaces.ts release artifact --execute --source-root <clean-source> --output <artifact-output> --journal <journal.json> --json',
       reason: 'RELEASE_ARTIFACT_EVIDENCE_NOT_READY',
-      summary: 'Refresh release artifact evidence for the current package version and git commit before publish/deploy planning.'
+      summary: 'Build a fresh artifact from clean source, then attach its journal from the evidence root before publish/deploy planning.'
     });
   }
 

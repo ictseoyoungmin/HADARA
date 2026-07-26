@@ -333,6 +333,8 @@ describe('runtime schema validation', () => {
         ok: true,
         mode: 'execute',
         execution: {
+          sourceBuildExecuted: true,
+          builtCliVersionVerified: true,
           stagingCreated: true,
           npmPackExecuted: true,
           checksumGenerated: true,

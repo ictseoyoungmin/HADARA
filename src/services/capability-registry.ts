@@ -431,8 +431,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'init.upgrade',
-    command: 'hadara init upgrade --profile basic|standard|governed [--execute] [--json]',
-    summary: 'Preview or apply generated scaffold upgrades for an initialized project.',
+    command: 'hadara init upgrade [--execute --plan-hash <hash>] [--json]',
+    summary: 'Preview or apply managed core artifact repairs for an initialized Init v1 project.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'start',
@@ -444,9 +444,9 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     risk: 'medium',
     actor: 'operator',
     status: 'stable',
-    schemaVersion: 'hadara.init.followup.v1',
+    schemaVersion: 'hadara.init.report.v1',
     docs: ['docs/HADARA_WORKFLOW.md'],
-    examples: [example('Preview scaffold upgrade', 'hadara init upgrade --profile governed --json', 'When scaffold files may be stale.')],
+    examples: [example('Preview managed upgrade', 'hadara init upgrade --json', 'When Init v1 core artifacts may be missing or stale.')],
     related: ['init.doctor', 'docs.register'],
     conflictsWith: []
   },

@@ -5,6 +5,7 @@ import {
   EvidenceVisibility,
   NormalizedEvidenceRecord
 } from './normalizer';
+import type { AcceptanceRow } from '../task/acceptance';
 
 export type EvidenceStrength =
   | 'substantive-positive'
@@ -20,6 +21,10 @@ export type EvidenceSemanticIssueCode =
   | 'TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE'
   | 'TASK_DONE_WITH_ONLY_WEAK_EVIDENCE'
   | 'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE'
+  | 'ACCEPTANCE_MET_WITHOUT_EVIDENCE'
+  | 'ACCEPTANCE_EVIDENCE_NOT_FOUND'
+  | 'ACCEPTANCE_EVIDENCE_OUTCOME_INVALID'
+  | 'ACCEPTANCE_EVIDENCE_UNRESOLVED_NEGATIVE'
   | 'PUBLIC_EVIDENCE_ARTIFACT_MISSING'
   | 'RELEASE_EVIDENCE_SEMANTICS_INVALID'
   | 'LEGACY_RELEASE_EVIDENCE_ACCEPTED'
@@ -51,6 +56,7 @@ export interface AnalyzeTaskEvidenceSemanticsInput {
   taskDir: string;
   taskLooksDone: boolean;
   records: NormalizedEvidenceRecord[];
+  acceptanceRows?: AcceptanceRow[];
   taskDocs?: {
     acceptance?: string;
     risks?: string;
@@ -156,7 +162,11 @@ export function analyzeTaskEvidenceSemantics(input: AnalyzeTaskEvidenceSemantics
   issues: EvidenceSemanticIssue[];
 } {
   const summary = summarizeEvidenceSemantics(input.records);
-  const issues: EvidenceSemanticIssue[] = [];
+  const issues = analyzeAcceptanceEvidenceSemantics(
+    input.acceptanceRows ?? [],
+    input.records,
+    input.taskDir
+  );
 
   if (!input.taskLooksDone) return { summary, issues };
 
@@ -229,6 +239,72 @@ export function analyzeTaskEvidenceSemantics(input: AnalyzeTaskEvidenceSemantics
   }
 
   return { summary, issues };
+}
+
+export function analyzeAcceptanceEvidenceSemantics(
+  rows: AcceptanceRow[],
+  records: NormalizedEvidenceRecord[],
+  taskDir: string
+): EvidenceSemanticIssue[] {
+  const issues: EvidenceSemanticIssue[] = [];
+  const recordsById = new Map(records.map((record, index) => [record.id, { record, index }]));
+
+  for (const row of rows.filter((candidate) => candidate.status === 'Met')) {
+    if (row.evidenceRefs.length === 0) {
+      issues.push({
+        severity: 'error',
+        code: 'ACCEPTANCE_MET_WITHOUT_EVIDENCE',
+        message: `${row.id} is marked Met but cites no durable evidence record.`,
+        path: `${taskDir}/TASK.md`,
+        expected: 'at least one ev:T-XXXX:<id> reference',
+        actual: 'no evidence reference'
+      });
+      continue;
+    }
+
+    const cited = row.evidenceRefs.map((ref) => ({ ref, match: recordsById.get(ref) }));
+    const missing = cited.filter((candidate) => !candidate.match).map((candidate) => candidate.ref);
+    if (missing.length > 0) {
+      issues.push({
+        severity: 'error',
+        code: 'ACCEPTANCE_EVIDENCE_NOT_FOUND',
+        message: `${row.id} cites evidence that is not present in evidence.jsonl.`,
+        evidenceId: missing[0],
+        path: `${taskDir}/TASK.md`,
+        expected: 'every cited evidence id to exist',
+        actual: missing.join(', ')
+      });
+    }
+
+    const present = cited.flatMap((candidate) => (candidate.match ? [candidate.match] : []));
+    if (!present.some(({ record }) => ['passed', 'recorded', 'not-applicable'].includes(record.outcome))) {
+      issues.push({
+        severity: 'error',
+        code: 'ACCEPTANCE_EVIDENCE_OUTCOME_INVALID',
+        message: `${row.id} is marked Met but none of its cited evidence has a successful outcome.`,
+        evidenceId: present[0]?.record.id,
+        path: `${taskDir}/TASK.md`,
+        expected: 'passed, recorded, or not-applicable cited evidence',
+        actual: present.length > 0 ? present.map(({ record }) => record.outcome).join(', ') : 'no cited evidence found'
+      });
+    }
+
+    for (const { record, index } of present) {
+      if (!['failed', 'blocked'].includes(record.outcome)) continue;
+      if (records.slice(index + 1).some((candidate) => hasExactResolutionMarker(candidate, record.id))) continue;
+      issues.push({
+        severity: 'error',
+        code: 'ACCEPTANCE_EVIDENCE_UNRESOLVED_NEGATIVE',
+        message: `${row.id} directly cites unresolved ${record.outcome} evidence while marked Met.`,
+        evidenceId: record.id,
+        path: `${taskDir}/TASK.md`,
+        expected: `a later passed or recorded evidence record tagged resolves:${record.id} or supersedes:${record.id}`,
+        actual: `${record.outcome} evidence has no exact resolution marker`
+      });
+    }
+  }
+
+  return issues;
 }
 
 export function isReleaseProofEvidence(record: NormalizedEvidenceRecord): boolean {

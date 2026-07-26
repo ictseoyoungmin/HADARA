@@ -8,7 +8,7 @@
   "properties": {
     "schemaVersion": { "const": "hadara.init.report.v1" },
     "ok": { "type": "boolean" },
-    "operation": { "const": "init" },
+    "operation": { "enum": ["init", "upgrade"] },
     "mode": { "enum": ["dry-run", "applied", "no-op", "error"] },
     "projectMode": { "enum": ["greenfield", "brownfield", "initialized", "partial", "legacy", "unsafe"] },
     "preset": { "enum": ["minimal", "standard", "governed"] },
@@ -32,7 +32,7 @@
       "required": ["schemaVersion", "operation", "projectMode", "preset", "actions", "summary", "planHash"],
       "properties": {
         "schemaVersion": { "const": "hadara.init.plan.v1" },
-        "operation": { "const": "init" },
+        "operation": { "enum": ["init", "upgrade"] },
         "projectMode": { "enum": ["greenfield", "brownfield", "initialized", "partial", "legacy", "unsafe"] },
         "preset": { "enum": ["minimal", "standard", "governed"] },
         "actions": { "type": "array" },
@@ -40,7 +40,7 @@
         "planHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
       }
     },
-    "reason": { "enum": ["already-initialized", "user-declined"] },
+    "reason": { "enum": ["already-initialized", "already-current", "user-declined"] },
     "results": {
       "type": "object",
       "additionalProperties": false,

@@ -102,11 +102,22 @@ describe('Init v1 planner', () => {
       fs.writeFileSync(target, file.content, 'utf8');
     }
     fs.mkdirSync(path.join(initializedRoot, 'tasks'), { recursive: true });
-    handleInitCommand({ args: ['init', '--preset', 'minimal'], projectRoot: initializedRoot, jsonOutput: false });
+    handleInitCommand({ args: ['init'], projectRoot: initializedRoot, jsonOutput: false });
     const noOp = String(logSpy.mock.calls.at(-1)?.[0]);
     expect(noOp).toContain('no-op | init');
     expect(noOp).toContain('applied=0');
     expect(noOp).toContain('reason=already-initialized');
+
+    handleInitCommand({ args: ['init', '--preset', 'minimal', '--json'], projectRoot: initializedRoot, jsonOutput: true });
+    const rejected = JSON.parse(String(logSpy.mock.calls.at(-1)?.[0]));
+    expect(rejected).toMatchObject({
+      ok: false,
+      mode: 'error',
+      summary: { applied: 0 },
+      issues: expect.arrayContaining([
+        expect.objectContaining({ code: 'INIT_PRESET_REQUIRES_NEW_PROJECT' })
+      ])
+    });
   });
 
   it('rejects unknown options and presets before writes', () => {

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { appendEvidence } from '../../src/evidence/evidence';
+import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskFinalizeReport } from '../../src/task/task-finalize';
 import { createTaskReadyReport } from '../../src/task/task-ready';
@@ -98,6 +98,13 @@ describe('FD-013 removed lifecycle surface', () => {
 });
 
 function completeRecoveryFixture(root: string, taskId: string, taskDir: string): void {
+  const validation = appendEvidenceWithResult(root, {
+    taskId,
+    kind: 'test-log',
+    summary: 'Recovery fixture validation passed.',
+    result: 'passed',
+    visibility: 'public'
+  });
   fs.writeFileSync(
     path.join(taskDir, 'TASK.md'),
     fs
@@ -118,11 +125,10 @@ function completeRecoveryFixture(root: string, taskId: string, taskDir: string):
   fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Complete fixture. | Done | Fixture. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/TASK_BOARD.md | Fixture. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture is complete. | Test | Low. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| Recovery uses finalize only. | Test | No standalone commands. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/task/task-finalize.ts | Add | Recovery fixture. | Done |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), '# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Fixture complete. | Met | Evidence. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), `# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Fixture complete. | Met | ${validation.evidence.id} |\n`, 'utf8');
   fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Fixture | Exercise recovery. | Yes | Passed | Evidence. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture. | Not Run | Not applicable. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use recovery fixture. | Accepted | Test recovery path. | Test. |\n', 'utf8');
   // HANDOFF.md is intentionally left as the scaffold placeholder: it is the
   // deliberate ready-step blocker that produces the partially executed state.
-  appendEvidence(root, { taskId, kind: 'test-log', summary: 'Recovery fixture validation passed.', result: 'passed', visibility: 'public' });
 }
