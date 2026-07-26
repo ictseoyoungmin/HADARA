@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
-import { initProject } from '../../src/cli/init';
+import { applyInitPlanningResult, createInitPlanningResult, initProject } from '../../src/cli/init';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskFinishReport, formatTaskFinishReport } from '../../src/task/task-finish';
@@ -33,7 +33,7 @@ describe('task finish status sync', () => {
       taskId: task.id,
       actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       status: { taskStatus: 'Draft', taskBoardStatus: 'Draft', taskBoardPresent: true },
-      summary: { plannedWrites: 3, appliedWrites: 0, advisoryOnly: 3, stateDocsPending: 3 }
+      summary: { plannedWrites: 3, appliedWrites: 0, advisoryOnly: 0, stateDocsPending: 0 }
     });
     expect(report.primaryNextAction).toMatchObject({
       id: 'execute-finish',
@@ -49,21 +49,13 @@ describe('task finish status sync', () => {
       expect(write.expectedBeforeHash).toMatch(/^sha256:/);
       expect(write.afterHash).toMatch(/^sha256:/);
     }
-    expect(report.advisories.map((advisory) => advisory.path)).toEqual([
-      'docs/DEVELOPMENT_SLICES.md',
-      'docs/PROJECT_STATE.md',
-      'docs/AGENT_HANDOFF.md'
-    ]);
-    expect(report.stateDocs).toEqual([
-      expect.objectContaining({ path: 'docs/DEVELOPMENT_SLICES.md', present: false, mentionsTask: false, state: 'missing' }),
-      expect.objectContaining({ path: 'docs/PROJECT_STATE.md', present: false, mentionsTask: false, state: 'missing' }),
-      expect.objectContaining({ path: 'docs/AGENT_HANDOFF.md', present: false, mentionsTask: false, state: 'missing' })
-    ]);
+    expect(report.advisories).toEqual([]);
+    expect(report.stateDocs).toEqual([]);
     expect(readTask(root, task.id)).toBe(beforeTask);
     expect(readBoard(root)).toBe(beforeBoard);
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
     expect(formatTaskFinishReport(report)).toContain('PLANNED\ttask-board-row\tdocs/TASK_BOARD.md');
-    expect(formatTaskFinishReport(report)).toContain('ADVISORY\tdocs/AGENT_HANDOFF.md\tmissing');
+    expect(formatTaskFinishReport(report)).not.toContain('ADVISORY');
   });
 
   it('looks up the requested task without reading unrelated task capsules', () => {
@@ -91,6 +83,7 @@ describe('task finish status sync', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary.stateDocsPending).toBe(1);
+    expect(report.primaryNextAction).toMatchObject({ id: 'update-state-docs', writeBoundary: 'shared-doc' });
     expect(report.primaryNextAction).toMatchObject({
       id: 'update-state-docs',
       writeBoundary: 'shared-doc',
@@ -120,6 +113,49 @@ describe('task finish status sync', () => {
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
+  it('keeps fresh Init v1 close free of optional shared-document advisories', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-finish-v1-'));
+    roots.push(root);
+    const planning = createInitPlanningResult(root, 'standard');
+    expect(applyInitPlanningResult(root, planning, { planHash: planning.plan.planHash }).ok).toBe(true);
+    const task = createTaskCapsule(root, 'Fresh v1 finish');
+
+    const report = createTaskFinishReport(root, task.id, 'dry-run');
+
+    expect(report.stateDocs).toEqual([]);
+    expect(report.summary).toMatchObject({ advisoryOnly: 0, stateDocsPending: 0 });
+  });
+
+  it('does not project an existing shared document omitted from the Init v1 registry', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-finish-v1-unregistered-'));
+    roots.push(root);
+    const planning = createInitPlanningResult(root, 'standard');
+    expect(applyInitPlanningResult(root, planning, { planHash: planning.plan.planHash }).ok).toBe(true);
+    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    fs.writeFileSync(projectStatePath, '# Unregistered project state\n', 'utf8');
+    const task = createTaskCapsule(root, 'Unregistered projection');
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.writes.map((write) => write.path)).not.toContain('docs/PROJECT_STATE.md');
+    expect(report.stateDocs).toEqual([]);
+    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe('# Unregistered project state\n');
+  });
+
+  it('counts registered Project State and Handoff managed writes as current projections', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+    const task = createTaskCapsule(root, 'Managed shared projections');
+
+    const report = createTaskFinishReport(root, task.id, 'dry-run');
+
+    expect(report.stateDocs).toEqual([
+      expect.objectContaining({ path: 'docs/PROJECT_STATE.md', state: 'current' }),
+      expect.objectContaining({ path: 'docs/AGENT_HANDOFF.md', state: 'current' })
+    ]);
+    expect(report.summary.stateDocsPending).toBe(0);
+  });
+
   it('executes TASK.md, HANDOFF.md, and Task Board row status/path sync', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish execute');
@@ -128,12 +164,7 @@ describe('task finish status sync', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary).toMatchObject({ plannedWrites: 3, appliedWrites: 3 });
-    expect(report.primaryNextAction).toMatchObject({
-      id: 'update-state-docs',
-      writeBoundary: 'shared-doc',
-      recommendedActorRole: 'coordinator',
-      requiresBeforeHash: true
-    });
+    expect(report.primaryNextAction).toMatchObject({ id: 'check-ready', writeBoundary: 'read-only' });
     expect(readTask(root, task.id)).toContain('| Status | Done |');
     expect(readTask(root, task.id)).not.toMatch(/\n\n$/);
     expect(fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')).toContain('| Status | Done |');

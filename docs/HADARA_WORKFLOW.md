@@ -287,7 +287,7 @@ HADARA Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `eviden
 | Before execution | Refine `TASK.md` Plan, Source Documents, and Acceptance. |
 | During execution | Update `TASK.md` Plan, Change Summary, Risks / Follow-ups; update `HANDOFF.md` warnings if continuity changes. |
 | After validation | Use `validation run` when possible; record evidence, then update `TASK.md` Validation and Acceptance deliberately with evidence ids or residual notes. |
-| Before task close | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert `HANDOFF.md` from any WIP checkpoint into close-time handoff with current next-step guidance; update shared state docs when the task changed them. |
+| Before task close | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert task-local `HANDOFF.md` into close-time guidance. Existing registered Project State/Handoff managed checkpoints are projected by close; optional prose remains human-owned. |
 | Close review | Inspect `task close --dry-run --json` output and fix reported blockers when a separate review needs the plan hash. |
 | Close execute | Do not edit close-source docs during execute. |
 | After close | Only clarify docs if the task contract did not change; rerun task close after close-source edits. |

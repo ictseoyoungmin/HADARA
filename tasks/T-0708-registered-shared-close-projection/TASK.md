@@ -6,10 +6,9 @@
 |---|---|
 | ID | T-0708 |
 | Title | Registered Shared Close Projection |
-| Status | Draft |
-| Targets | project |
+| Status | Done |
 | Created | 2026-07-26T21:16 |
-| Updated | 2026-07-26T21:16 |
+| Updated | 2026-07-26T21:31 |
 
 Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> --json` for controlled values before replacing scaffold tokens.
 
@@ -31,25 +30,25 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Step | Action | Status |
 |---|---|---|
 | 1 | Characterize current managed projection and duplicate advisory behavior. | Done |
-| 2 | Make applicability registry-aware and count planned managed projections as current. | In Progress |
-| 3 | Validate fresh Init and legacy registered cases, close, and commit. | Pending |
+| 2 | Make applicability registry-aware and count planned managed projections as current. | Done |
+| 3 | Validate fresh Init and legacy registered cases, close, and commit. | Done |
 
 ## Acceptance
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | Fresh Init v1 close does not create or request absent Project State, Agent Handoff, or Development Slices documents. | Pending | TBD | Init v1 compact boundary |
-| AC-2 | Existing registered Project State/Handoff managed sections are projected automatically and do not require duplicate prose mentions. | Pending | TBD | User instruction |
-| AC-3 | Development Slices is applicable only when the task is explicitly linked; focused/full/built validation passes. | Pending | TBD | Ownership boundary |
+| AC-1 | Fresh Init v1 close does not create or request absent Project State, Agent Handoff, or Development Slices documents. | Met | `ev:T-0708:9e610f42622e4bf3a3d9cd4e` | Init v1 compact boundary |
+| AC-2 | Existing registered Project State/Handoff managed sections are projected automatically and do not require duplicate prose mentions. | Met | `ev:T-0708:c53a8975802c466aaa165e40`, `ev:T-0708:9a59fb2db23e458b8c8e5721` | User instruction |
+| AC-3 | Development Slices is applicable only when the task is explicitly linked; focused/full/built validation passes. | Met | `ev:T-0708:c53a8975802c466aaa165e40`, `ev:T-0708:9a59fb2db23e458b8c8e5721` | Ownership boundary |
 
 ## Validation
 
 | Check | Gate | Status | Detail | Evidence |
 |---|---|---|---|---|
-| Focused shared-projection regressions | Yes | Not Run | Pending execution. | TBD |
-| Full repository validation | Yes | Not Run | Pending execution. | TBD |
-| Built CLI fresh Init close-plan smoke | Yes | Not Run | Pending execution. | TBD |
-| Diff and evidence hygiene | Yes | Not Run | Pending execution. | TBD |
+| Focused shared-projection regressions | Yes | Passed | Focused task finish, close, workflow-doc, and current-state suites passed 4 files/46 tests. | ev:T-0708:c53a8975802c466aaa165e40 |
+| Full repository validation | Yes | Passed | npm run check passed 142 public files/1106 tests and 16 HADARA-dev files/129 tests. | ev:T-0708:9a59fb2db23e458b8c8e5721 |
+| Built CLI fresh Init close-plan smoke | Yes | Passed | Fresh standard Init built-CLI close dry-run reported zero optional shared-document state entries or advisories. | ev:T-0708:9e610f42622e4bf3a3d9cd4e |
+| Diff and evidence hygiene | Yes | Passed | git diff --check and evidence lint passed with zero issues. | ev:T-0708:e8828b7000424068846fab77 |
 
 ## Inputs / Constraints
 
@@ -63,7 +62,10 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | Area | Summary |
 |---|---|
-| Task Capsule | Froze registered-existing-only projection semantics. |
+| Finish planning | Shared-document advisories are registry-aware, ignore absent optional documents, and treat planned managed writes as current. |
+| Slice applicability | Development Slices participates only when its existing content explicitly links the selected task. |
+| Init and docs | Generated and repository workflow guidance now describes bounded automatic projection and preserves human-owned prose. |
+| Tests | Added fresh Init, registered legacy projection, generated workflow, and close-routing regressions. |
 
 ## Risks / Follow-ups
 
@@ -73,9 +75,12 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 ## Close Summary
 
+Close now projects registered existing managed checkpoints without requesting absent optional docs or duplicate prose.
 
 ## History
 
 | Date | State | Note |
 |---|---|---|
 | 2026-07-26 | Draft | Initial task scaffold. |
+| 2026-07-26 | In Progress | Implemented registry-aware applicability and planned-projection freshness. |
+| 2026-07-26 | Done | Focused, full, built CLI, diff, and evidence validation passed. |

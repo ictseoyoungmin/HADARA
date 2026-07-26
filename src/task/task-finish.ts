@@ -142,7 +142,12 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
     message: issue.message,
     path: issue.path
   })));
-  for (const write of currentStatePlan.writes) {
+  const stateSpecs = stateDocSpecs(projectRoot);
+  const applicableStatePaths = new Set(stateSpecs.map((spec) => spec.path));
+  const currentStateWrites = currentStatePlan.writes.filter((write) =>
+    !write.path.startsWith('docs/') || applicableStatePaths.has(write.path as TaskFinishStateDoc['path'])
+  );
+  for (const write of currentStateWrites) {
     writes.push({
       path: write.path,
       action: write.before === null ? 'insert' : 'update',
@@ -160,7 +165,8 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
       contentAfter: write.after
     });
   }
-  const stateDocs = createStateDocAdvisories(projectRoot, task);
+  const projectedPaths = new Set(currentStateWrites.map((write) => write.path));
+  const stateDocs = createStateDocAdvisories(projectRoot, task, stateSpecs, projectedPaths);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
     applyWrites(projectRoot, writes, issues);
   }
@@ -480,8 +486,15 @@ function applyWrites(projectRoot: string, writes: TaskFinishWrite[], issues: Tas
   }
 }
 
-function createStateDocAdvisories(projectRoot: string, task: TaskCapsule): TaskFinishStateDoc[] {
-  return stateDocSpecs(projectRoot).map((spec) => stateDoc(projectRoot, task, spec.path, spec.reason, spec.recommendation));
+function createStateDocAdvisories(
+  projectRoot: string,
+  task: TaskCapsule,
+  specs: Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }>,
+  projectedPaths: Set<string>
+): TaskFinishStateDoc[] {
+  return specs
+    .map((spec) => stateDoc(projectRoot, task, spec.path, spec.reason, spec.recommendation, projectedPaths.has(spec.path)))
+    .filter((doc) => doc.path !== 'docs/DEVELOPMENT_SLICES.md' || doc.mentionsTask);
 }
 
 function stateDocSpecs(projectRoot: string): Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }> {
@@ -490,10 +503,14 @@ function stateDocSpecs(projectRoot: string): Array<{ path: TaskFinishStateDoc['p
     { path: 'docs/PROJECT_STATE.md', reason: 'Latest completed/current task prose remains operator-authored.', recommendation: 'Update Project State current phase/status text if this task changes project capability state.' },
     { path: 'docs/AGENT_HANDOFF.md', reason: 'Next-session handoff remains operator-authored.', recommendation: 'Update Agent Handoff latest completed task, validation baseline, known problems, and next recommended step.' }
   ];
-  const registryPath = path.join(projectRoot, '.hadara', 'docs-registry.json');
-  if (!fs.existsSync(registryPath)) return specs;
-  const registered = readRegisteredDocPaths(registryPath);
-  return specs.filter((spec) => registered.has(spec.path) || fs.existsSync(path.join(projectRoot, spec.path)));
+  const registryPath = ['documents.json', 'docs-registry.json']
+    .map((name) => path.join(projectRoot, '.hadara', name))
+    .find((candidate) => fs.existsSync(candidate));
+  const registered = registryPath ? readRegisteredDocPaths(registryPath) : null;
+  return specs.filter((spec) =>
+    fs.existsSync(path.join(projectRoot, spec.path))
+    && (registered === null || registered.has(spec.path))
+  );
 }
 
 function readRegisteredDocPaths(registryPath: string): Set<string> {
@@ -510,7 +527,8 @@ function stateDoc(
   task: TaskCapsule,
   relativePath: TaskFinishStateDoc['path'],
   baseReason: string,
-  recommendation: string
+  recommendation: string,
+  projected: boolean
 ): TaskFinishStateDoc {
   const absolutePath = path.join(projectRoot, relativePath);
   if (!fs.existsSync(absolutePath)) {
@@ -525,6 +543,16 @@ function stateDoc(
   }
   const content = fs.readFileSync(absolutePath, 'utf8');
   const mentionsTask = content.includes(task.id);
+  if (projected) {
+    return {
+      path: relativePath,
+      present: true,
+      mentionsTask,
+      state: 'current',
+      reason: `${baseReason} The registered managed checkpoint is projected by this finish transaction.`,
+      recommendation
+    };
+  }
   return {
     path: relativePath,
     present: true,

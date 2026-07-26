@@ -6,24 +6,25 @@
 |---|---|
 | ID | T-0708 |
 | Title | Registered Shared Close Projection |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-07-26T21:16 |
-| Updated | 2026-07-26T21:16 |
+| Updated | 2026-07-26T21:31 |
 
 ## Last Completed
 
 | Item | Evidence |
 |---|---|
-| Project State and Agent Handoff managed checkpoints already project from current state, but legacy advisories still demand duplicate task mentions. | Code inspection |
+| Registered existing Project State and Agent Handoff managed checkpoints project automatically; absent optional documents are not requested or created. | `ev:T-0708:c53a8975802c466aaa165e40`, `ev:T-0708:9e610f42622e4bf3a3d9cd4e` |
 
 ## Next Recommended Step
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Complete registered shared close projection. | actionable | no | Continue the active capsule. | `tasks/T-0708-registered-shared-close-projection/TASK.md`; `docs/ARCHITECTURE.md`; `docs/SECURITY_MODEL.md` |
+| Add HADARA-dev low-resource Docker validation under `tools/` only. | actionable | yes | The public CLI must not expose repository-development resource controls. | `docs/HADARA_WORKFLOW.md`; `docs/TEST_STRATEGY.md`; `tools/dev-surfaces.ts` |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
 | Product narrative remains human-owned. | intentional | Project only the existing managed checkpoint; never generate prose or optional documents. |
+| Low-resource Docker mode is a HADARA-dev concern. | architectural | Implement it under `tools/` or scripts; do not add it to `src/`. |

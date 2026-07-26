@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0709 removes the redundant default `Targets | project` row from new TASK.md identity while preserving explicit targets and Task Board target ownership. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Resume existing T-0708 registered shared close projection, then add HADARA-dev-only low-resource Docker tooling under `tools/`, failure classification, and live-document archival.
+T-0708 makes shared close projection registry-aware and bounded: existing registered Project State/Handoff managed checkpoints project automatically, absent optional documents are not requested, and Development Slices applies only when it already links the task. Full validation passed 142 public files/1106 tests and 16 HADARA-dev files/129 tests. Next add HADARA-dev-only low-resource Docker validation under `tools/`, never `src/`; then implement failure classification and archive non-live docs.
 
 ## Previous Handoff
 

@@ -81,14 +81,14 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Serialize same-file prose writes, Task Capsule doc writes, Task Board writes');
     expect(workflow).toContain('Evidence commands may run in parallel because every append is internally serialized');
     expect(workflow).toContain('JSON responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.');
-    expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning task close');
+    expect(workflow).toContain('changing close-source documents requires rerunning task close');
     expect(workflow).toContain('After close proof is recorded, close-source document edits intentionally invalidate the previous close proof.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
     expect(hadaraWorkflow).toContain('| Find next work | `hadara task status --json` | Read-only selection cockpit. |');
     expect(hadaraWorkflow).toContain('Before running `task close`, finish all close-source edits');
     expect(hadaraWorkflow).toContain('`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint.');
-    expect(hadaraWorkflow).toContain('convert `HANDOFF.md` from any WIP checkpoint into close-time handoff');
+    expect(hadaraWorkflow).toContain('convert task-local `HANDOFF.md` into close-time guidance');
     expect(hadaraWorkflow).toContain('## Task Document Timing');
     expect(hadaraWorkflow).toContain('Do not hand-edit `evidence.jsonl`.');
     expect(hadaraWorkflow).toContain('Avoid writing volatile close evidence ids into close-source docs');

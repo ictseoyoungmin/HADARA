@@ -60,6 +60,8 @@ T-0707 separates Validation state from explanation. `validation run` now exposes
 
 T-0709 removes redundant default targeting from Task Capsule identity. New default tasks omit `Targets | project` from TASK.md, explicit non-project targets remain visible, and Task Board continues to persist all targets. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Resume the already-created T-0708 registered shared close projection next.
 
+T-0708 makes shared close projection registry-aware and bounded. Existing registered Project State and Agent Handoff managed checkpoints are projected automatically, absent optional documents are neither requested nor created, and Development Slices participates only when it already links the task. Full validation passed 142 public files/1106 tests and 16 HADARA-dev files/129 tests. HADARA-dev-only low-resource Docker validation under `tools/` is next.
+
 | Stage | State | Purpose |
 |---|---|---|
 | P0 Currentness integrity | Done | Align next-work selection, active docs, and validation fixtures. |

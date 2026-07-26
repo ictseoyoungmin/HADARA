@@ -280,7 +280,7 @@ HADARA Task Capsules contain \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, and \
 | Before execution | Refine \`TASK.md\` Plan, Source Documents, and Acceptance. |
 | During execution | Update \`TASK.md\` Plan, Change Summary, Risks / Follow-ups; update \`HANDOFF.md\` warnings if continuity changes. |
 | After validation | Use \`validation run\` when possible; record evidence, then update \`TASK.md\` Validation and Acceptance deliberately with evidence ids or residual notes. |
-| Before close | Finish \`TASK.md\` Change Summary, Acceptance, Validation, Risks / Follow-ups; update \`HANDOFF.md\`; update shared state docs when the task changed them. |
+| Before close | Finish \`TASK.md\` Change Summary, Acceptance, Validation, Risks / Follow-ups; update task-local \`HANDOFF.md\`. Registered existing Project State/Handoff managed checkpoints are projected by close. |
 | Close execute | Run \`task close --json\`. Do not edit close-source docs during execute. |
 | Close review | Use \`task close --dry-run --json\` only when a separate review/debug path is needed. |
 | After close | Only clarify docs if the task contract did not change; rerun task close after close-source edits. |
@@ -854,14 +854,14 @@ Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`
 | \`EVIDENCE.md\` and \`evidence.jsonl\` | Evidence writer-owned; do not hand-edit \`evidence.jsonl\`. Treat \`evidence.jsonl\` as canonical and \`EVIDENCE.md\` as a non-canonical human summary; evidence rebuild is not implemented in this scaffold and any future execute mode must be dry-run-first and before-hash guarded. |
 | Task-local \`HANDOFF.md\` Identity table | Command-owned for \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` during task create/close bookkeeping. |
 | Task-local \`HANDOFF.md\` prose/tables | Worker-owned close-time handoff guidance. Persist \`TaskStatus\` only; \`CloseState\` is derived by status/close/state read models and should not be written into close-source handoff tables. |
-| Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
+| Shared state docs | Optional registered documents. Close updates existing Project State/Handoff managed checkpoints; human prose remains user-owned. |
 | \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
-Before task close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes, remove stale next-step prose, or mark already-completed follow-up work as completed/superseded with the task id that closed it. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing those documents changes the close source hash and requires rerunning task close. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
+Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board bookkeeping and existing registered Project State/Handoff managed checkpoints are projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing close-source documents requires rerunning task close.
 
 ## Documentation Timing and Write Coordination
 
-Do not defer all documentation until after implementation. Keep \`PLAN.md\` current before execution; update \`DECISIONS.md\`, \`RISKS.md\`, and \`FILES.md\` during execution; update \`TESTS.md\` and \`EVIDENCE.md\` immediately after validation; update \`ACCEPTANCE.md\`, convert \`HANDOFF.md\` from any WIP checkpoint into close-time handoff, and update shared state docs before task close; and update shared close-source docs before the close-source hash is captured.
+Do not defer all documentation until after implementation. Keep \`PLAN.md\` current before execution; update \`DECISIONS.md\`, \`RISKS.md\`, and \`FILES.md\` during execution; update \`TESTS.md\` and \`EVIDENCE.md\` immediately after validation; update \`ACCEPTANCE.md\` and convert \`HANDOFF.md\` from any WIP checkpoint into close-time handoff. Finish any human-owned shared prose before the close-source hash is captured.
 
 Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
@@ -899,7 +899,7 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Pr
 
 ## State Documents
 
-\`task close --json\` and \`task close --execute --plan-hash <hash>\` deliberately preserve narrow write boundaries; they do not update broad prose state beyond bounded status bookkeeping and close evidence. Operators still update \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and any roadmap/slice docs generated for the selected profile before task close when the task changes project state.
+\`task close --json\` and \`task close --execute --plan-hash <hash>\` never create optional shared documents or invent broad prose. They update bounded managed checkpoints in registered existing Project State/Handoff documents. Development Slices participates only when it already links the selected task; product narrative remains human-owned.
 `;
 }
 

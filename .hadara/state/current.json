@@ -1,6 +1,6 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 341,
+  "rev": 342,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
@@ -12,29 +12,29 @@
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Resume T-0708 Registered Shared Close Projection.",
-    "reason": "Its Capsule already exists and its implementation was temporarily isolated for this task commit.",
+    "title": "Add HADARA-dev low-resource Docker validation under `tools/` only.",
+    "reason": "The public CLI must not expose repository-development resource controls.",
     "references": [
       {
-        "path": "`tasks/T-0708-registered-shared-close-projection/TASK.md`",
+        "path": "`docs/HADARA_WORKFLOW.md`",
         "required": true
       },
       {
-        "path": "`docs/ARCHITECTURE.md`",
+        "path": "`docs/TEST_STRATEGY.md`",
         "required": true
       },
       {
-        "path": "`docs/SECURITY_MODEL.md`",
+        "path": "`tools/dev-surfaces.ts`",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0709",
-      "path": "tasks/T-0709-compact-task-identity-targets/HANDOFF.md"
+      "workId": "T-0708",
+      "path": "tasks/T-0708-registered-shared-close-projection/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
