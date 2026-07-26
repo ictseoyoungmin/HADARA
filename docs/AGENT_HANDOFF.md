@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0704 Init v1 Task Board and Close Projection | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0705 Compact Workflow Output | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0704 completes the Init v1 Task Board and Close Projection boundary. A shared schema-aware Board model now supports the frozen six-column v1 contract and preserves legacy Notes/extra cells. Task creation defaults Targets to `project`, accepts repeated explicit TargetRefs, and persists the compact ordered source in both TASK.md and the Board. Valid finish/close bookkeeping projects only the exact optional `## Close Summary` as one plain-text Result capped at 160 Unicode code points; generic Notes are never inferred. Corrected serial Docker validation passed all 142 public files/1102 tests and 16 HADARA-dev files/129 tests, `dist` is current, and built CLI create plus read-only close smokes passed. Continue with Init v1 Document Routing from capsule 6 of the implementation map; keep legacy isolation, installed acceptance, and RC2 promotion in their ordered later capsules.
+T-0705 completes compact lifecycle output. Default `task status --json` now exposes only selected-task identity, phase/readiness, a focused TASK.md read/edit route, bounded issues, and the primary next action; default `task close --json` returns a compact transaction summary without phase-progress noise. `--detail full --json` preserves both complete v2 reports. Full validation passed 142 public files/1102 tests and 16 HADARA-dev files/129 tests in the home-directory ext4 clone. Continue with Validation state-token/detail separation, then shared-state projection automation, official serial/low-resource Docker validation, failure classification, and live-document archival.
 
 ## Previous Handoff
 

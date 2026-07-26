@@ -542,7 +542,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.close',
-    command: 'hadara task close --task <task-id> [--dry-run | --execute --plan-hash <hash>] [--json]',
+    command: 'hadara task close --task <task-id> [--dry-run | --execute --plan-hash <hash>] [--detail full] [--json]',
     summary: 'Close a Task Capsule through the 0.5 proof-last transaction route; clean capsules close in one command, blocked capsules return one recovery action without lifecycle-owned writes.',
     canonical: true,
     appearsInDefaultHelp: true,
@@ -560,8 +560,9 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-close-transaction.ts', 'src/task/task-finalize.ts', 'src/task/task-close.ts'],
     testFiles: ['tests/unit/task-close.test.ts', 'tests/unit/task-finalize.test.ts'],
     examples: [
-      example('Close a clean task', 'hadara task close --task T-0001 --json', 'For ordinary task completion; the CLI reviews, verifies, writes, appends proof, and audits internally.'),
+      example('Close a clean task', 'hadara task close --task T-0001 --json', 'For ordinary task completion with a compact summary; the CLI reviews, verifies, writes, appends proof, and audits internally.'),
       example('Preview close readiness', 'hadara task close --task T-0001 --dry-run --json', 'When a human or automation wants the close plan without writes.'),
+      example('Inspect full close diagnostics', 'hadara task close --task T-0001 --detail full --json', 'When the complete transaction, locks, finalize source, and diagnostics are needed.'),
       example('Execute an externally reviewed close plan', 'hadara task close --task T-0001 --execute --plan-hash sha256:... --json', 'For advanced reviewed flows that carry an explicit current plan hash.')
     ],
     related: ['task.status', 'task.close-source', 'protocol.doctor', 'task.finalize'],

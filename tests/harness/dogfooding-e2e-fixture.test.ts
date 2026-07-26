@@ -131,12 +131,11 @@ describe('Dogfooding E2E fixture', () => {
 
     const taskReport = runBuiltCliJson(root, executedCommands, ['task', 'status', '--task', task.id, '--json']);
     expect(taskReport).toMatchObject({
-      schemaVersion: 'hadara.task.status.v2',
+      schemaVersion: 'hadara.task.status.summary.v1',
       command: 'task.status',
       ok: true,
       mode: 'selected-task',
       task: {
-        id: task.id,
         title: fixture.taskTitle
       }
     });

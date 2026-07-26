@@ -90,7 +90,7 @@ function printStatus(input: StatusCommandInput): void {
 
 function withStatusV1CompatibilityMetadata<T extends { schemaVersion: string }>(report: T): T & {
   compatibility: {
-    defaultSchemaVersion: 'hadara.taskSelection.status.v2';
+    defaultSchemaVersion: 'hadara.task.status.summary.v1';
     recommendedCommand: 'hadara task status --json';
     migration: string;
   };
@@ -98,7 +98,7 @@ function withStatusV1CompatibilityMetadata<T extends { schemaVersion: string }>(
   return {
     ...report,
     compatibility: {
-      defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+      defaultSchemaVersion: 'hadara.task.status.summary.v1',
       recommendedCommand: 'hadara task status --json',
       migration: 'This v1 status report is an explicit 0.5.x compatibility route for legacy status/read-model consumers. New agents should use hadara task status --json.'
     }

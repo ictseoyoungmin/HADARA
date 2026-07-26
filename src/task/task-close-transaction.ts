@@ -150,7 +150,10 @@ export function createTaskCloseTransactionReport(
   return withTaskCloseTransactionLocks(projectRoot, taskId, run, options.lockTimeoutMs);
 }
 
-export function formatTaskCloseTransactionReport(report: TaskCloseTransactionReport): string {
+export function formatTaskCloseTransactionReport(
+  report: TaskCloseTransactionReport,
+  options: { detail?: 'compact' | 'full' } = {}
+): string {
   const lines = [
     `[HADARA] task close ${report.taskId}: ${report.ok ? 'ok' : 'blocked'}`,
     `state\t${report.closeState}`,
@@ -171,7 +174,7 @@ export function formatTaskCloseTransactionReport(report: TaskCloseTransactionRep
     lines.push('', 'Issues:');
     for (const issue of report.issues) lines.push(`- [${issue.severity}] ${issue.code}: ${issue.message}`);
   }
-  lines.push('', 'Finalize source:', formatTaskFinalizeReport(report.source.finalize));
+  if (options.detail === 'full') lines.push('', 'Finalize source:', formatTaskFinalizeReport(report.source.finalize));
   return lines.join('\n');
 }
 

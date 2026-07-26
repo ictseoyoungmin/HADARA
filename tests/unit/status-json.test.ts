@@ -644,13 +644,13 @@ describe('Operations Status JSON', () => {
     const stateOnly = JSON.parse(String(log.mock.calls[3]?.[0]));
     const summary = JSON.parse(String(log.mock.calls[4]?.[0]));
     const compatFull = JSON.parse(String(log.mock.calls[5]?.[0]));
-    expect(first.schemaVersion).toBe('hadara.taskSelection.status.v2');
+    expect(first.schemaVersion).toBe('hadara.task.status.summary.v1');
     expect(first.command).toBe('task.status');
-    expect(first.compatibility.legacyCommand).toBe('hadara task status --compat v1 --json');
+    expect(first.detailCommand).toBe('hadara task status --detail full --json');
     expect(compat.schemaVersion).toBe('hadara.ops.status.v1');
     expect(compat.command).toBe('ops.status');
     expect(compat.compatibility).toMatchObject({
-      defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+      defaultSchemaVersion: 'hadara.task.status.summary.v1',
       recommendedCommand: 'hadara task status --json'
     });
     expect(compat.stateConsistency).toBeUndefined();
@@ -766,9 +766,8 @@ describe('Operations Status JSON', () => {
     expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
 
     expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
-      schemaVersion: 'hadara.task.status.v2',
+      schemaVersion: 'hadara.task.status.summary.v1',
       command: 'task.status',
-      scope: 'task',
       mode: 'selected-task',
       taskId: task.id
     });

@@ -431,7 +431,7 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v2', retry).ok).toBe(true);
   });
 
-  it('routes task close through the CLI v2 transaction report', () => {
+  it('prints compact task close JSON by default and keeps the v2 transaction behind --detail full', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI close transaction');
     completeTask(root, task.id, task.dir);
@@ -449,17 +449,36 @@ describe('task close report', () => {
 
     const report = JSON.parse(output.join('\n'));
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.close.v2',
+      schemaVersion: 'hadara.task.close.summary.v1',
       command: 'task.close',
       ok: true,
       mode: 'execute',
+      closeState: 'closed-valid',
+      terminal: true,
+      writes: {
+        closeProofAppended: true
+      },
       diagnostics: {
         generatedBy: 'cli',
         commandPath: 'task.close',
         slow: false
-      }
+      },
+      detailCommand: `hadara task close --task ${task.id} --detail full --json`
     });
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+
+    output.length = 0;
+    console.log = (message?: unknown) => {
+      output.push(String(message));
+    };
+    try {
+      expect(handleTaskCommand({ args: ['task', 'close', '--task', task.id, '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+    const full = JSON.parse(output.join('\n'));
+    expect(full.schemaVersion).toBe('hadara.task.close.v2');
+    expect(full.source.finalize.schemaVersion).toBe('hadara.task.finalize.v1');
+    expect(validateSchema('hadara.task.close.v2', full).ok).toBe(true);
   });
 
   it('creates a read-only close plan with loop-boundary next actions for a completed task', () => {

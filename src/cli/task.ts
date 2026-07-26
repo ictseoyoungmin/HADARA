@@ -1,5 +1,5 @@
 import { createTaskCloseSourceReport } from '../task/task-close';
-import { createTaskCloseTransactionReport, formatTaskCloseTransactionReport } from '../task/task-close-transaction';
+import { createTaskCloseTransactionReport, formatTaskCloseTransactionReport, type TaskCloseTransactionReport } from '../task/task-close-transaction';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
 import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
@@ -10,8 +10,8 @@ import { CliArgsError, getFlag, getStringOption } from './args';
 import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createTaskListReport, formatTaskListReport } from './task-json';
-import { createTaskSelectionStatusV2Report, formatTaskSelectionStatusV2Report } from '../services/task-selection-status-v2';
-import { createAdaptiveTaskStatusV2Report, createTaskStatusV2Report, formatTaskStatusV2Report } from '../services/task-status-v2';
+import { createTaskSelectionStatusV2Report, formatTaskSelectionStatusV2Report, type TaskSelectionStatusV2Report } from '../services/task-selection-status-v2';
+import { createAdaptiveTaskStatusV2Report, createTaskStatusV2Report, formatTaskStatusV2Report, type TaskStatusV2Report } from '../services/task-status-v2';
 import { parseTaskTarget } from '../task/task-board';
 
 export interface TaskCommandInput {
@@ -115,18 +115,21 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     if (!getFlag(input.args, '--dry-run') && blockLegacyMutation(input, 'task.close')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task close requires --task <task-id>');
+    const detail = getStringOption(input.args, '--detail');
+    if (detail && detail !== 'full') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', 'task close --detail must be full');
+    const fullDetail = detail === 'full';
     const report = createTaskCloseTransactionReport(input.projectRoot, id, {
       dryRun: getFlag(input.args, '--dry-run'),
       executeRequested: getFlag(input.args, '--execute'),
       planHash: getStringOption(input.args, '--plan-hash'),
       actor: getActorContextOption(input.args),
-      onProgress: !getFlag(input.args, '--dry-run') ? createTaskLifecycleProgressWriter(id, 'task close') : undefined
+      onProgress: fullDetail && !getFlag(input.args, '--dry-run') ? createTaskLifecycleProgressWriter(id, 'task close') : undefined
     });
     attachCliDiagnostics(report, timer, 'task.close');
     if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
+      console.log(JSON.stringify(fullDetail ? report : createTaskCloseSummaryReport(report), null, 2));
     } else {
-      console.log(formatTaskCloseTransactionReport(report));
+      console.log(formatTaskCloseTransactionReport(report, { detail: fullDetail ? 'full' : 'compact' }));
     }
     if (!report.ok) process.exitCode = 6;
     return true;
@@ -161,7 +164,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
         const report = createAdaptiveTaskStatusV2Report(input.projectRoot, new Date(), workbenchOptions);
         attachCliDiagnostics(report, timer, 'task.status');
         if (input.jsonOutput) {
-          console.log(JSON.stringify(report, null, 2));
+          console.log(JSON.stringify(detail === 'full' ? report : createCompactTaskStatusReport(report), null, 2));
         } else if (report.scope === 'task') {
           console.log(formatTaskStatusV2Report(report));
         } else {
@@ -186,7 +189,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       const report = createTaskStatusV2Report(input.projectRoot, id, new Date(), workbenchOptions);
       attachCliDiagnostics(report, timer, 'task.status');
       if (input.jsonOutput) {
-        console.log(JSON.stringify(report, null, 2));
+        console.log(JSON.stringify(detail === 'full' ? report : createCompactTaskStatusReport(report), null, 2));
       } else {
         console.log(formatTaskStatusV2Report(report));
       }
@@ -235,6 +238,105 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   return false;
 }
 
+function createCompactTaskStatusReport(report: TaskStatusV2Report | TaskSelectionStatusV2Report): Record<string, unknown> {
+  if (report.scope === 'task-selection') {
+    const recommendation = report.recommendations[0];
+    return {
+      schemaVersion: 'hadara.task.status.summary.v1',
+      command: 'task.status',
+      ok: report.ok,
+      mode: report.mode,
+      phase: report.phase,
+      health: report.health,
+      readiness: report.readiness,
+      focus: {
+        read: recommendation?.requiredReading ?? [],
+        edit: []
+      },
+      ...(report.primaryNextAction ? { primaryNextAction: report.primaryNextAction } : {}),
+      recommendations: report.recommendations.length,
+      issues: compactIssues(report.issues),
+      diagnostics: report.diagnostics,
+      detailCommand: 'hadara task status --detail full --json'
+    };
+  }
+
+  const taskPath = `${report.task.capsule}/TASK.md`;
+  const issueEdits = report.issues.flatMap((issue) => issue.remediationHint
+    ? [{
+        path: issue.remediationHint.path,
+        ...(issue.remediationHint.heading ? { section: issue.remediationHint.heading } : {}),
+        change: issue.remediationHint.requiredChange
+      }]
+    : []);
+  const phaseEdit = report.phase === 'author-task' || report.phase === 'plan-work' || report.phase === 'implement'
+    ? [{ path: taskPath, section: report.phase === 'author-task' ? 'Goal / Scope' : 'Plan / Changes', change: report.primaryNextAction?.message ?? 'Continue the active task contract.' }]
+    : report.phase === 'validate'
+    ? [{ path: taskPath, section: 'Validation / Acceptance', change: report.primaryNextAction?.message ?? 'Record current validation evidence.' }]
+    : [];
+  return {
+    schemaVersion: 'hadara.task.status.summary.v1',
+    command: 'task.status',
+    ok: report.ok,
+    mode: report.mode,
+    taskId: report.taskId,
+    task: {
+      title: report.task.title,
+      capsule: report.task.capsule,
+      status: report.task.taskStatus
+    },
+    phase: report.phase,
+    health: report.health,
+    readiness: report.readiness,
+    focus: {
+      read: [taskPath],
+      edit: uniqueEdits([...issueEdits, ...phaseEdit])
+    },
+    counts: report.counts,
+    ...(report.primaryNextAction ? { primaryNextAction: report.primaryNextAction } : {}),
+    issues: compactIssues(report.issues),
+    diagnostics: report.diagnostics,
+    detailCommand: `hadara task status --task ${report.taskId} --detail full --json`
+  };
+}
+
+function createTaskCloseSummaryReport(report: TaskCloseTransactionReport): Record<string, unknown> {
+  return {
+    schemaVersion: 'hadara.task.close.summary.v1',
+    command: 'task.close',
+    ok: report.ok,
+    taskId: report.taskId,
+    mode: report.mode,
+    closeState: report.closeState,
+    terminal: report.terminal,
+    planStatus: report.planStatus,
+    planHash: report.transaction.planHash,
+    writes: {
+      planned: report.writeSummary.plannedWrites,
+      executed: report.writeSummary.executedWrites,
+      closeProofAppended: report.writeSummary.closeProofAppended
+    },
+    ...(report.primaryNextAction ? { primaryNextAction: report.primaryNextAction } : {}),
+    issues: compactIssues(report.issues),
+    diagnostics: report.diagnostics,
+    detailCommand: `hadara task close --task ${report.taskId} --detail full --json`
+  };
+}
+
+function compactIssues(issues: Array<{ severity: string; code: string; message: string; path?: string; heading?: string }>): Array<Record<string, string>> {
+  return issues.slice(0, 5).map((issue) => ({
+    severity: issue.severity,
+    code: issue.code,
+    message: issue.message,
+    ...(issue.path ? { path: issue.path } : {}),
+    ...(issue.heading ? { section: issue.heading } : {})
+  }));
+}
+
+function uniqueEdits(edits: Array<{ path: string; section?: string; change: string }>): Array<{ path: string; section?: string; change: string }> {
+  return edits.filter((edit, index) => edits.findIndex((candidate) => candidate.path === edit.path && candidate.section === edit.section) === index);
+}
+
 function getRepeatedStringOptions(args: string[], name: string): string[] {
   const values: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
@@ -248,7 +350,7 @@ function getRepeatedStringOptions(args: string[], name: string): string[] {
 
 function withTaskWorkbenchV1CompatibilityMetadata<T extends TaskWorkbenchReport>(report: T): T & {
   compatibility: {
-    defaultSchemaVersion: 'hadara.task.status.v2';
+    defaultSchemaVersion: 'hadara.task.status.summary.v1';
     recommendedCommand: string;
     migration: string;
   };
@@ -256,7 +358,7 @@ function withTaskWorkbenchV1CompatibilityMetadata<T extends TaskWorkbenchReport>
   return {
     ...report,
     compatibility: {
-      defaultSchemaVersion: 'hadara.task.status.v2',
+      defaultSchemaVersion: 'hadara.task.status.summary.v1',
       recommendedCommand: `hadara task status --task ${report.taskId} --json`,
       migration: 'This v1 selected-task workbench report is an explicit 0.5.x compatibility route for legacy consumers. New agents should use the default selected-task status v2 report.'
     }
@@ -265,7 +367,7 @@ function withTaskWorkbenchV1CompatibilityMetadata<T extends TaskWorkbenchReport>
 
 function withTaskSelectionV1CompatibilityMetadata<T extends TaskStatusSelectionReport>(report: T): T & {
   compatibility: {
-    defaultSchemaVersion: 'hadara.taskSelection.status.v2';
+    defaultSchemaVersion: 'hadara.task.status.summary.v1';
     recommendedCommand: 'hadara task status --json';
     migration: string;
   };
@@ -273,7 +375,7 @@ function withTaskSelectionV1CompatibilityMetadata<T extends TaskStatusSelectionR
   return {
     ...report,
     compatibility: {
-      defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+      defaultSchemaVersion: 'hadara.task.status.summary.v1',
       recommendedCommand: 'hadara task status --json',
       migration: 'This v1 select-work report is an explicit 0.5.x compatibility route for legacy consumers. New agents should use hadara task status --json.'
     }

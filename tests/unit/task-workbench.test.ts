@@ -369,13 +369,12 @@ describe('task workbench status report', () => {
     expect(process.exitCode).toBe(6);
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({
-      schemaVersion: 'hadara.task.status.v2',
+      schemaVersion: 'hadara.task.status.summary.v1',
       command: 'task.status',
       ok: false,
-      scope: 'task',
       mode: 'selected-task',
       taskId: 'T-9999',
-      task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false },
+      task: { title: 'Unknown', capsule: '', status: 'Missing' },
       readiness: { status: 'blocked', currentReady: false, closeProofValid: false },
       diagnostics: {
         generatedBy: 'cli',
@@ -385,7 +384,6 @@ describe('task workbench status report', () => {
       }
     });
     expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
-    expect(validateSchema('hadara.task.status.v2', payload).ok).toBe(true);
   });
 
   it('opens the sole open Markdown capsule through v2 while keeping v1 selection compat', () => {
@@ -402,11 +400,13 @@ describe('task workbench status report', () => {
     expect(handled).toBe(true);
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({
-      schemaVersion: 'hadara.task.status.v2',
+      schemaVersion: 'hadara.task.status.summary.v1',
       command: 'task.status',
-      scope: 'task',
       mode: 'selected-task',
       phase: 'author-task',
+      focus: {
+        read: ['tasks/T-0001-workbench-cli-selection/TASK.md']
+      },
       diagnostics: {
         generatedBy: 'cli',
         commandPath: 'task.status',
@@ -415,9 +415,8 @@ describe('task workbench status report', () => {
       }
     });
     expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
-    expect(payload.sources).toMatchObject({ detail: 'fast', workbenchSummary: { loopPhase: 'author-task' } });
-    expect(payload.sources).not.toHaveProperty('workbench');
-    expect(validateSchema('hadara.task.status.v2', payload).ok).toBe(true);
+    expect(payload).not.toHaveProperty('sources');
+    expect(payload.detailCommand).toBe('hadara task status --task T-0001 --detail full --json');
 
     const compatHandled = handleTaskCommand({
       args: ['task', 'status', '--compat', 'v1', '--json'],
@@ -431,7 +430,7 @@ describe('task workbench status report', () => {
       command: 'task.status',
       mode: 'select-work',
       compatibility: {
-        defaultSchemaVersion: 'hadara.taskSelection.status.v2',
+        defaultSchemaVersion: 'hadara.task.status.summary.v1',
         recommendedCommand: 'hadara task status --json'
       }
     });
@@ -449,18 +448,19 @@ describe('task workbench status report', () => {
 
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({
-      schemaVersion: 'hadara.task.status.v2',
+      schemaVersion: 'hadara.task.status.summary.v1',
       command: 'task.status',
-      scope: 'task',
       mode: 'selected-task',
-      taskId: task.id
+      taskId: task.id,
+      focus: {
+        read: [`tasks/${task.id}-workbench-active-default/TASK.md`]
+      }
     });
     expect(payload.ok).toBe(true);
     expect(payload.issues).toContainEqual(expect.objectContaining({
       severity: 'warning',
       code: 'PROJECT_CURRENT_STATE_INVALID_JSON'
     }));
-    expect(validateSchema('hadara.task.status.v2', payload).ok).toBe(true);
   });
 
   it('uses fast selected-task CLI status by default and full diagnostics only on request', () => {
@@ -487,15 +487,20 @@ describe('task workbench status report', () => {
     expect(fullHandled).toBe(true);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(fastPayload).toMatchObject({
-      schemaVersion: 'hadara.task.status.v2',
-      scope: 'task',
+      schemaVersion: 'hadara.task.status.summary.v1',
       mode: 'selected-task',
-      compatibility: { legacySchemaVersion: 'hadara.task.workbench.v1' }
+      taskId: task.id,
+      focus: {
+        read: [`tasks/${task.id}-workbench-cli-detail/TASK.md`],
+        edit: expect.arrayContaining([
+          expect.objectContaining({ path: `tasks/${task.id}-workbench-cli-detail/TASK.md` })
+        ])
+      },
+      detailCommand: `hadara task status --task ${task.id} --detail full --json`
     });
     expect(fullPayload.schemaVersion).toBe('hadara.task.status.v2');
     expect(fastPayload.readiness.reason).toContain('Fast task status skipped done-level readiness checks');
     expect(fullPayload.readiness.reason).toContain('Current done-level readiness is blocked');
-    expect(validateSchema('hadara.task.status.v2', fastPayload).ok).toBe(true);
     expect(validateSchema('hadara.task.status.v2', fullPayload).ok).toBe(true);
 
     const compatHandled = handleTaskCommand({
@@ -508,7 +513,7 @@ describe('task workbench status report', () => {
     expect(compatPayload).toMatchObject({
       schemaVersion: 'hadara.task.workbench.v1',
       compatibility: {
-        defaultSchemaVersion: 'hadara.task.status.v2',
+        defaultSchemaVersion: 'hadara.task.status.summary.v1',
         recommendedCommand: `hadara task status --task ${task.id} --json`
       }
     });

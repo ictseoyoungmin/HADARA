@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0704 Init v1 Task Board and Close Projection |
+| Latest Completed Task | T-0705 Compact Workflow Output |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -51,6 +51,8 @@ T-0701 hardens failed-apply rollback against concurrent external edits. T-0702 r
 T-0703 completes Re-init and Upgrade Ownership. Base init is now checksum-preserving on complete v1 projects, rejects explicit configuration expansion, and leaves partial repair to `init upgrade`. Upgrade reuses reviewed plan/hash/lock/journal apply, changes only managed core artifacts, preserves canonical configuration, existing registry bytes, Task Board content, and optional user documents, and fails closed on invalid authority or malformed AGENTS markers. Clean Docker passed 141 public files/1098 tests plus 16 HADARA-dev files/129 tests, and built CLI end-to-end init/re-init/upgrade/no-op smoke passed. The next ordered Init v1 boundary is Task Board and Close Projection; RC2 release promotion remains deferred.
 
 T-0704 completes Init v1 Task Board and Close Projection. Fresh v1 task creation now uses the frozen `ID | Title | Status | Targets | Capsule | Result` Board contract, persists project-default or explicit ordered TargetRefs in the Task Capsule, and projects only the exact optional `Close Summary` into Result after valid lifecycle bookkeeping. The shared Board model keeps legacy Notes and extra cells intact, and the close-source/read-model consumers no longer assume fixed legacy columns. Corrected serial Docker validation passed all 142 public files/1102 tests and 16 HADARA-dev files/129 tests; refreshed built CLI create and read-only close smokes passed. The next ordered Init v1 boundary is Document Routing; legacy isolation, installed acceptance, and RC2 promotion remain deferred.
+
+T-0705 makes ordinary lifecycle output materially smaller. Default task status now returns a bounded summary with the selected capsule, phase/readiness, one focused read/edit route, compact issues, and the next action; default task close returns only its transaction summary and suppresses phase progress. Complete v2 diagnostics remain available through `--detail full --json`. Full validation passed 142 public files/1102 tests and 16 HADARA-dev files/129 tests in the home-directory ext4 clone. The next user-prioritized boundary separates Validation state tokens from explanatory detail, followed by shared-state projection automation, official serial/low-resource Docker validation, failure classification, and live-document archival.
 
 | Stage | State | Purpose |
 |---|---|---|

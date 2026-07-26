@@ -27,8 +27,8 @@ hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
-# For compact automation/human scanning:
-hadara task status --task T-XXXX --summary-json
+# Only for complete diagnostics:
+hadara task status --task T-XXXX --detail full --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
@@ -46,6 +46,7 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --dry-run --json
+hadara task close --task T-XXXX --detail full --json
 hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
@@ -53,7 +54,7 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 Successful close is terminal for that capsule. When the report returns `ok:true` and `closed-valid`, report the result and stop. Do not run `task status` merely to confirm the same audit or discover another capsule. Continue only when the current human/reviewer instruction explicitly requires more work; persisted handoff prose alone does not override that boundary.
 
-For review/debug flows, `hadara task close --task T-XXXX --dry-run --json` returns the current transaction plan and `planHash` without writes. `hadara task close --task T-XXXX --execute --plan-hash ... --json` rechecks that plan hash before writing. Keep the explicit `--plan-hash` flow when a separate reviewer approves the plan.
+Default status and close JSON are compact. Use their reported `detailCommand`, or add `--detail full --json`, only when complete source, lock, evaluation, or protocol diagnostics are needed. For review/debug flows, `hadara task close --task T-XXXX --dry-run --json` returns a compact current plan and `planHash` without writes. `hadara task close --task T-XXXX --execute --plan-hash ... --json` rechecks that plan hash before writing.
 
 The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013) and is no longer routed as standalone public JSON commands. The internal finish/ready/close/audit modules remain the engine of `task close`; only the old standalone step surfaces are gone.
 
@@ -190,14 +191,14 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 
 | Command | Role | Default Mode | Writes? | `ok` Meaning | Failure Exit |
 |---|---|---|---|---|---|
-| `hadara task status --json` | Select next work when no Task Capsule is selected. | Read-only report. | No. | Selection report was generated; not that a capsule exists. | Task-style failures use 6. |
+| `hadara task status --json` | Select or inspect work through compact focused reads/edits. `--detail full` exposes the complete v2 report. | Read-only report. | No. | Selection/status report was generated; not that a capsule exists or is ready. | Task-style failures use 6. |
 | `hadara schema [--domain <domain>] --json` | Look up controlled token vocabularies (TASK.md tables, evidence records, docs registry) before writing values, instead of learning tokens from finalize failures. | Read-only report. | No. | Vocabulary report was generated; unknown domains return `ok:false`. | Unknown domains use 1. |
 | `hadara task create --from release-read-model --title "..." --json` | Create a Draft Task Capsule from a known template. | Write command. | Yes, Task Capsule files and one Task Board row. | Capsule was created. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --json` | Fast phase-aware operator cockpit for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --summary-json` | Compact phase/readiness/counts/next-action summary for one task. | Read-only report. | No. | Summary report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --detail full --json` | Full selected-task cockpit with close/protocol diagnostics. | Read-only report. | No. | Full report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task lifecycle --task T-XXXX --json` | Removed from public routing; use `task status --task T-XXXX --json`. | Not routed. | No. | N/A. | Default help/unknown command path. |
-| `hadara task close --task T-XXXX --json` | Execute the ordinary proof-last close transaction, including bounded finish bookkeeping, readiness evidence when needed, close proof append, and final audit. | Execute with internal review. | Yes, through bounded task/status/evidence write boundaries only. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
+| `hadara task close --task T-XXXX --json` | Execute the ordinary proof-last close transaction and return a compact summary. Add `--detail full` for complete transaction JSON/progress. | Execute with internal review. | Yes, through bounded task/status/evidence write boundaries only. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
 | `hadara task close --task T-XXXX --dry-run --json` | Preview close blockers, deferred checks, pending writes, and the reviewed plan hash without writing. | Read-only report. | No. | Close report was generated and is either clean or blocked with recovery guidance. | Task-style failures use 6. |
 | `hadara task close --task T-XXXX --execute --plan-hash <hash> --json` | Execute a human-reviewed close plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through bounded task/status/evidence write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
 | `hadara task finalize --task T-XXXX --json` | Compatibility/debug route for the underlying finish/ready/close/audit or close-proof repair plan. | Read-only report. | No. | The internal plan was generated. | Task-style failures use 6. |
@@ -218,7 +219,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `task create --from` applies template defaults only at creation time. Templates remain Draft scaffolds: they must not mark acceptance done, attach evidence, run validation, close the task, or imply that expected evidence already exists.
 - Init v1 Task Boards use `ID | Title | Status | Targets | Capsule | Result`. `task create` defaults Targets to `project` or accepts repeated `--target <namespace:id>` values. `task close` projects only an exact optional `## Close Summary` into Result; it never infers Result from Notes, evidence, or handoff prose.
 - `task create` uses bounded local collision retries for sequential task ids. If the selected task directory appears before creation or the Task Board already contains the candidate id, it retries another id; exhausted retries return `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`. This is a collision guard, not a durable global task allocator.
-- `task status` is an operator cockpit; `ok: true` means report generation succeeded. Default selected-task status is a fast loop cockpit and may skip close-grade readiness/protocol diagnostics. Use `task status --task T-XXXX --summary-json` when automation or humans only need phase, readiness, counts, and primary next action. Use `task close --task T-XXXX --dry-run --json` for close planning or `task status --task T-XXXX --detail full --json` when you explicitly need the heavier diagnostic projection. Readiness lives in `state.ready`, `summary.blockers`, `issues`, and selected-capsule loop guidance lives in `loop.phase` and `loop.primaryNextAction`.
+- `task status` is an operator cockpit; `ok: true` means report generation succeeded. Default JSON is the compact summary with `focus.read`, `focus.edit`, counts, and one primary action. It may skip close-grade diagnostics. Use `task status --task T-XXXX --detail full --json` only for the complete v2 projection or `task close --task T-XXXX --dry-run --json` for close planning.
 - `task complete` and `task lifecycle` are fully removed from public routing. `task next` has been fully removed from public routing; use `task status --json` for next-work selection and `task status --task T-XXXX --json` for phase/next-action guidance.
 - `task close` is the public proof-last transaction. By default it executes the internally reviewed close plan once; `--dry-run` previews ordered finish/ready/close/audit steps, write boundaries, expected write paths, close-proof repair when current close evidence is stale or invalid, and a `planHash`; reviewed execute requires the matching current plan hash, records readiness evidence when needed, runs phases serially, stops on the first blocker, and returns success only after the final audit is `closed-valid`.
 - `task finalize` is compatibility/debug only. It exposes the underlying internal plan for old automation and deep diagnostics, but it is not the default agent loop command.
