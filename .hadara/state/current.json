@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 342,
+  "rev": 344,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0709",
-    "title": "Compact Task Identity Targets"
+    "id": "T-0710",
+    "title": "HADARA-dev Low-resource Docker Validation"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,27 +14,23 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Add HADARA-dev low-resource Docker validation under `tools/` only.",
-    "reason": "The public CLI must not expose repository-development resource controls.",
+    "title": "Classify validation failures as assertion, timeout, or environment setup.",
+    "reason": "This is the next independent user-requested improvement.",
     "references": [
-      {
-        "path": "`docs/HADARA_WORKFLOW.md`",
-        "required": true
-      },
       {
         "path": "`docs/TEST_STRATEGY.md`",
         "required": true
       },
       {
-        "path": "`tools/dev-surfaces.ts`",
+        "path": "validation runner and Docker wrapper contracts",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0708",
-      "path": "tasks/T-0708-registered-shared-close-projection/HANDOFF.md"
+      "workId": "T-0710",
+      "path": "tasks/T-0710-hadara-dev-low-resource-docker-validation/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

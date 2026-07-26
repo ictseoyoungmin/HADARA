@@ -23,7 +23,7 @@ function renderUsage(): string {
     'Examples:',
     '  npm run dev:surface -- release gate --mode strict --json',
     '  npm run dev:surface -- smoke clean-checkout --execute --task T-XXXX --json',
-    '  npm run dev:surface -- dev docker-check --focused tests/unit/help.test.ts --json'
+    '  npm run dev:surface -- dev docker-check --focused tests/unit/help.test.ts --serial --json'
   ].join('\n');
 }
 

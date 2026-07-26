@@ -36,6 +36,16 @@ node --import tsx tools/dev-surfaces.ts dev docker-check --focused tests/unit/<f
 
 It reports `hadara.dev.docker_check.v1`, redacts raw paths/logs/secrets from JSON, creates a run-scoped temp copy, runs `npm ci`, and only refreshes `/workspace/dist` when `--sync-dist` is explicit.
 
+For constrained machines, the repo-local wrapper and reusable script expose the same resource modes:
+
+```bash
+npm run dev:surface -- dev docker-check --serial --json
+npm run dev:surface -- dev docker-check --low-resource --json
+npm run dev:docker-check -- --low-resource
+```
+
+`--serial` runs both Vitest suites with one worker and disables file parallelism. `--low-resource` implies serial mode, caps each Node process heap at 1024 MiB, and limits npm jobs to one. These are HADARA-dev controls under `tools/` and `scripts/`; they are not public HADARA CLI options.
+
 The reusable npm helper for this repeated workflow remains:
 
 ```bash

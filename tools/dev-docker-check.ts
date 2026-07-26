@@ -35,6 +35,13 @@ export interface DevDockerCheckReport {
     retention: 'deleted' | 'kept-temporary';
     runScoped: true;
   };
+  resources: {
+    serial: boolean;
+    lowResource: boolean;
+    maxWorkers?: 1;
+    nodeHeapMb?: 1024;
+    npmJobs?: 1;
+  };
   focusedTests: string[];
   steps: DevDockerCheckStep[];
   distSync?: {
@@ -88,6 +95,8 @@ export interface DevDockerCheckOptions {
   actor?: HadaraActorContext;
   distBeforeHash?: string;
   allowMissingBeforeHash?: boolean;
+  serial?: boolean;
+  lowResource?: boolean;
 }
 
 export interface DevDockerCommandRunner {
@@ -113,13 +122,22 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   const syncDist = options.syncDist === true;
   const reviewedBeforeHash = normalizeOptionalString(options.distBeforeHash);
   const allowMissingBeforeHash = options.allowMissingBeforeHash === true;
+  const lowResource = options.lowResource === true;
+  const serial = options.serial === true || lowResource;
+  const resources: DevDockerCheckReport['resources'] = {
+    serial,
+    lowResource,
+    ...(serial ? { maxWorkers: 1 as const } : {}),
+    ...(lowResource ? { nodeHeapMb: 1024 as const, npmJobs: 1 as const } : {})
+  };
   const mode: DevDockerCheckReport['mode'] = focusedTests.length > 0 && runFullCheck ? 'focused-and-full' : focusedTests.length > 0 ? 'focused' : 'full';
   const container = options.container ?? process.env.HADARA_DEV_CONTAINER ?? 'hadara-dev';
   const workspace = options.workspace ?? process.env.HADARA_WORKSPACE ?? '/workspace';
   const tmpWorkdir = options.tmpWorkdir ?? `${process.env.HADARA_DOCKER_TMP_WORKDIR ?? '/tmp/hadara-dev-check'}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const env = {
     HADARA_WORKSPACE: workspace,
-    HADARA_TMP_WORKDIR: tmpWorkdir
+    HADARA_TMP_WORKDIR: tmpWorkdir,
+    ...(lowResource ? { NODE_OPTIONS: '--max-old-space-size=1024', npm_config_jobs: '1' } : {})
   };
   const execution: DevDockerCheckReport['execution'] = {
     subprocessExecuted: true,
@@ -138,7 +156,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   const syncGuard = evaluateDistSyncGuard(syncDist, beforeHash, reviewedBeforeHash, allowMissingBeforeHash, issues);
   const steps: DevDockerCheckStep[] = [];
 
-  const internalSteps = buildSteps(focusedTests, runFullCheck, syncDist, syncGuard.allowed);
+  const internalSteps = buildSteps(focusedTests, runFullCheck, syncDist, syncGuard.allowed, resources);
   let blocked = false;
   for (const step of internalSteps) {
     if (!step.runWhen || blocked) {
@@ -146,7 +164,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       continue;
     }
     const timer = startMonotonicTimer();
-    const result = runner.run('docker', dockerExecArgs(container, step.script), env);
+    const result = runner.run('docker', dockerExecArgs(container, step.script, lowResource), env);
     const elapsedMs = timer.elapsedMs();
     if (result.ok) {
       steps.push({ id: step.id, status: 'passed', elapsedMs, summary: step.summary });
@@ -200,6 +218,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       retention: 'kept-temporary',
       runScoped: true
     },
+    resources,
     focusedTests,
     steps,
     distSync: distSyncReport,
@@ -215,6 +234,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
 
 export function formatDevDockerCheckReport(report: DevDockerCheckReport): string {
   const lines = [`[HADARA] dev docker-check ${report.mode}: ${report.ok ? 'ok' : 'failed'}`];
+  lines.push(`resources=serial:${report.resources.serial} low-resource:${report.resources.lowResource}`);
   lines.push(report.evidenceSummary.summary);
   if (report.distSync?.requested) lines.push(`dist-sync=${report.distSync.executed ? 'executed' : 'not-executed'} output-mutation=${report.execution.outputMutation} conflict=${report.distSync.conflictDetected}`);
   for (const step of report.steps) lines.push(`${step.status}\t${step.id}\t${step.summary}`);
@@ -222,7 +242,14 @@ export function formatDevDockerCheckReport(report: DevDockerCheckReport): string
   return lines.join('\n');
 }
 
-function buildSteps(focusedTests: string[], runFullCheck: boolean, syncDistRequested: boolean, syncDistAllowed: boolean): InternalStep[] {
+function buildSteps(
+  focusedTests: string[],
+  runFullCheck: boolean,
+  syncDistRequested: boolean,
+  syncDistAllowed: boolean,
+  resources: DevDockerCheckReport['resources']
+): InternalStep[] {
+  const serialArgs = resources.serial ? ' --maxWorkers=1 --no-file-parallelism' : '';
   return [
     {
       id: 'temp-workspace',
@@ -241,14 +268,16 @@ function buildSteps(focusedTests: string[], runFullCheck: boolean, syncDistReque
     {
       id: 'focused-tests',
       summary: focusedTests.length > 0 ? `Ran focused tests: ${focusedTests.join(', ')}.` : 'No focused tests requested.',
-      script: `cd "$HADARA_TMP_WORKDIR" && npm run test:focused -- ${focusedTests.join(' ')}`,
+      script: `cd "$HADARA_TMP_WORKDIR" && npm run test:focused -- ${focusedTests.join(' ')}${serialArgs}`,
       mark: 'focusedTestsExecuted',
       runWhen: focusedTests.length > 0
     },
     {
       id: 'full-check',
       summary: 'Ran full repository check.',
-      script: 'cd "$HADARA_TMP_WORKDIR" && npm run check',
+      script: resources.serial
+        ? 'cd "$HADARA_TMP_WORKDIR" && npm run build && npm run typecheck:tools && npm test -- --maxWorkers=1 --no-file-parallelism && npm run test:hadara-dev -- --maxWorkers=1 --no-file-parallelism'
+        : 'cd "$HADARA_TMP_WORKDIR" && npm run check',
       mark: 'fullCheckExecuted',
       runWhen: runFullCheck
     },
@@ -295,8 +324,17 @@ function markExecution(execution: DevDockerCheckReport['execution'], mark: keyof
   }
 }
 
-function dockerExecArgs(container: string, script: string): string[] {
-  return ['exec', '-e', 'HADARA_WORKSPACE', '-e', 'HADARA_TMP_WORKDIR', container, 'bash', '-lc', script];
+function dockerExecArgs(container: string, script: string, lowResource: boolean): string[] {
+  return [
+    'exec',
+    '-e', 'HADARA_WORKSPACE',
+    '-e', 'HADARA_TMP_WORKDIR',
+    ...(lowResource ? ['-e', 'NODE_OPTIONS', '-e', 'npm_config_jobs'] : []),
+    container,
+    'bash',
+    '-lc',
+    script
+  ];
 }
 
 function normalizeFocusedTests(values: string[]): string[] {

@@ -31,6 +31,10 @@ describe('Docker dev sync-build script', () => {
     expect(content).toContain('copy_build_workspace');
     expect(content).toContain('copy_full_workspace');
     expect(content).toContain('npm run check');
+    expect(content).toContain('--serial');
+    expect(content).toContain('--low-resource');
+    expect(content).toContain('--maxWorkers=1 --no-file-parallelism');
+    expect(content).toContain('--max-old-space-size=1024');
     expect(content).toContain('npm run build');
     expect(content).toContain('run_step "copy minimal build workspace"');
     expect(content).toContain('rm -rf "$HADARA_WORKSPACE/dist"');

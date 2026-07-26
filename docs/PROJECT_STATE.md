@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0709 Compact Task Identity Targets |
+| Latest Completed Task | T-0710 HADARA-dev Low-resource Docker Validation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -61,6 +61,8 @@ T-0707 separates Validation state from explanation. `validation run` now exposes
 T-0709 removes redundant default targeting from Task Capsule identity. New default tasks omit `Targets | project` from TASK.md, explicit non-project targets remain visible, and Task Board continues to persist all targets. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Resume the already-created T-0708 registered shared close projection next.
 
 T-0708 makes shared close projection registry-aware and bounded. Existing registered Project State and Agent Handoff managed checkpoints are projected automatically, absent optional documents are neither requested nor created, and Development Slices participates only when it already links the task. Full validation passed 142 public files/1106 tests and 16 HADARA-dev files/129 tests. HADARA-dev-only low-resource Docker validation under `tools/` is next.
+
+T-0710 adds official HADARA-dev-only `--serial` and `--low-resource` Docker validation modes under `tools/` and `scripts/`, with no shipped `src/` implementation change. Low-resource mode implies one Vitest worker, disabled file parallelism, a 1024 MiB Node heap cap, and one npm job. Full validation passed 142 public files/1107 tests and 16 HADARA-dev files/131 tests; a real home-mounted Docker smoke passed. Automatic failure classification is next.
 
 | Stage | State | Purpose |
 |---|---|---|

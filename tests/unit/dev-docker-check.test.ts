@@ -107,6 +107,43 @@ describe('dev docker-check report', () => {
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
 
+  it('runs full validation serially with one Vitest worker', () => {
+    const root = tempProject();
+    const scripts: string[] = [];
+    const report = createDevDockerCheckReport(root, {
+      serial: true,
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, fakeRunner(root, undefined, scripts));
+
+    expect(report.resources).toEqual({ serial: true, lowResource: false, maxWorkers: 1 });
+    expect(scripts.find((script) => script.includes('npm test'))).toContain('npm test -- --maxWorkers=1 --no-file-parallelism');
+    expect(scripts.find((script) => script.includes('npm test'))).toContain('npm run test:hadara-dev -- --maxWorkers=1 --no-file-parallelism');
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
+  it('makes low-resource mode serial and bounds Node/npm resources', () => {
+    const root = tempProject();
+    const envs: Array<Record<string, string>> = [];
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      lowResource: true,
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, fakeRunner(root, undefined, undefined, envs));
+
+    expect(report.resources).toEqual({
+      serial: true,
+      lowResource: true,
+      maxWorkers: 1,
+      nodeHeapMb: 1024,
+      npmJobs: 1
+    });
+    expect(envs.every((env) => env.NODE_OPTIONS === '--max-old-space-size=1024')).toBe(true);
+    expect(envs.every((env) => env.npm_config_jobs === '1')).toBe(true);
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
   it('blocks dist sync when no reviewed before-hash is supplied', () => {
     const root = tempProject();
 
@@ -208,11 +245,12 @@ describe('dev docker-check report', () => {
   });
 });
 
-function fakeRunner(root: string, failStep?: string, scripts?: string[]): DevDockerCommandRunner {
+function fakeRunner(root: string, failStep?: string, scripts?: string[], envs?: Array<Record<string, string>>): DevDockerCommandRunner {
   return {
-    run(_command, args) {
+    run(_command, args, env) {
       const script = args.at(-1) ?? '';
       scripts?.push(script);
+      envs?.push(env);
       const stepId = classifyScript(script);
       if (stepId === failStep) return { ok: false, exitCode: 1 };
       if (stepId === 'dist-sync') {

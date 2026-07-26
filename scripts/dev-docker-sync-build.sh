@@ -7,6 +7,9 @@ TMP_WORKDIR="${HADARA_DOCKER_TMP_WORKDIR:-/tmp/hadara}"
 SMOKE_COMMAND="${HADARA_DEV_SMOKE_COMMAND:-version --verbose --json}"
 CHECK_ONLY=0
 RUN_SMOKE=1
+HADARA_TEST_SERIAL=0
+HADARA_DEV_NODE_OPTIONS=""
+HADARA_NPM_JOBS=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -16,6 +19,16 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-smoke)
       RUN_SMOKE=0
+      shift
+      ;;
+    --serial)
+      HADARA_TEST_SERIAL=1
+      shift
+      ;;
+    --low-resource)
+      HADARA_TEST_SERIAL=1
+      HADARA_DEV_NODE_OPTIONS="--max-old-space-size=1024"
+      HADARA_NPM_JOBS=1
       shift
       ;;
     --smoke-command)
@@ -39,8 +52,18 @@ docker exec \
   -e HADARA_CHECK_ONLY="$CHECK_ONLY" \
   -e HADARA_RUN_SMOKE="$RUN_SMOKE" \
   -e HADARA_SMOKE_COMMAND="$SMOKE_COMMAND" \
+  -e HADARA_TEST_SERIAL="$HADARA_TEST_SERIAL" \
+  -e HADARA_DEV_NODE_OPTIONS="$HADARA_DEV_NODE_OPTIONS" \
+  -e HADARA_NPM_JOBS="$HADARA_NPM_JOBS" \
   "$CONTAINER" bash -lc '
 set -euo pipefail
+
+if [[ -n "$HADARA_DEV_NODE_OPTIONS" ]]; then
+  export NODE_OPTIONS="$HADARA_DEV_NODE_OPTIONS"
+fi
+if [[ -n "$HADARA_NPM_JOBS" ]]; then
+  export npm_config_jobs="$HADARA_NPM_JOBS"
+fi
 
 log_step() {
   printf "[dev-docker-sync-build] %s %s\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$1"
@@ -78,6 +101,17 @@ copy_build_workspace() {
   done
 }
 
+run_full_check() {
+  if [[ "$HADARA_TEST_SERIAL" == "1" ]]; then
+    npm run build
+    npm run typecheck:tools
+    npm test -- --maxWorkers=1 --no-file-parallelism
+    npm run test:hadara-dev -- --maxWorkers=1 --no-file-parallelism
+  else
+    npm run check
+  fi
+}
+
 mkdir -p "$HADARA_TMP_WORKDIR"
 HADARA_TMP_WORKDIR="$(mktemp -d "$HADARA_TMP_WORKDIR/run.XXXXXX")"
 trap '"'"'rm -rf "$HADARA_TMP_WORKDIR"'"'"' EXIT
@@ -89,7 +123,7 @@ fi
 cd "$HADARA_TMP_WORKDIR"
 run_step "npm ci" npm ci
 if [[ "$HADARA_CHECK_ONLY" == "1" ]]; then
-  run_step "npm run check" npm run check
+  run_step "npm run check" run_full_check
 else
   run_step "npm run build" npm run build
 fi

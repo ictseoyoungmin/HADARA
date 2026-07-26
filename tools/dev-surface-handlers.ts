@@ -69,7 +69,7 @@ export function handleDevCommand(input: DevCommandInput): boolean {
   const sub = input.args[1];
   if (sub !== 'docker-check') return false;
   if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
-    console.log(renderCommandHelp('dev.docker-check'));
+    console.log(`${renderCommandHelp('dev.docker-check')}\n\nHADARA-dev resource options:\n  --serial        Run Vitest files with one worker.\n  --low-resource  Imply --serial and cap Node heap at 1024 MiB with one npm job.`);
     return true;
   }
   const report = createDevDockerCheckReport(input.projectRoot, {
@@ -78,7 +78,9 @@ export function handleDevCommand(input: DevCommandInput): boolean {
     fullCheck: getFlag(input.args, '--full'),
     actor: getActorContextOption(input.args),
     distBeforeHash: getStringOption(input.args, '--before-hash'),
-    allowMissingBeforeHash: getFlag(input.args, '--allow-missing-before-hash')
+    allowMissingBeforeHash: getFlag(input.args, '--allow-missing-before-hash'),
+    serial: getFlag(input.args, '--serial'),
+    lowResource: getFlag(input.args, '--low-resource')
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));

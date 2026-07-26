@@ -135,10 +135,12 @@ HADARA-dev CLI work should prefer the reusable `hadara-dev` Docker workflow when
 |---|---|---|
 | Check container availability | `docker info` | Start or recreate the reusable container only when Docker itself is available. |
 | Sync/build development CLI | `npm run dev:docker-sync-build` | Fast path: copies the minimal build workspace to Docker ext4, runs `npm ci`, `npm run build`, refreshes workspace `dist`, and runs the built CLI smoke. |
-| Run the Docker validation wrapper | `npm run dev:docker-check` | Full path: copies the full workspace to Docker ext4 and runs `npm run check`; use for broader repo validation when time permits. |
+| Run the Docker validation wrapper | `npm run dev:docker-check` | Full path: copies the full workspace to Docker ext4 and runs `npm run check`; append `-- --serial` or `-- --low-resource` for HADARA-dev constrained-host validation. |
 | Run focused built-CLI smoke | `node dist/cli/main.js <command> ... --json` | Run only after `dist` has been refreshed from the Docker build. |
 
 Do not assume container-global `/usr/local/bin/hadara` is the latest development build. For source changes, build first, refresh `/workspace/dist`, then run built-CLI smokes from `dist/cli/main.js`.
+
+The repo-local JSON wrapper also accepts `--serial` and `--low-resource`. Serial mode uses one Vitest worker with file parallelism disabled. Low-resource mode implies serial execution, a 1024 MiB Node heap cap, and one npm job. These flags belong only to `tools/` and `scripts/`, never the shipped `src/` CLI.
 
 ### Release Recycle Quickstart
 

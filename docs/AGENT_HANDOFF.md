@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0709 Compact Task Identity Targets | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0710 HADARA-dev Low-resource Docker Validation | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0708 makes shared close projection registry-aware and bounded: existing registered Project State/Handoff managed checkpoints project automatically, absent optional documents are not requested, and Development Slices applies only when it already links the task. Full validation passed 142 public files/1106 tests and 16 HADARA-dev files/129 tests. Next add HADARA-dev-only low-resource Docker validation under `tools/`, never `src/`; then implement failure classification and archive non-live docs.
+T-0710 adds repo-local `--serial` and `--low-resource` Docker validation under `tools/` and `scripts/` only. Low-resource mode uses one Vitest worker, disabled file parallelism, a 1024 MiB Node heap cap, and one npm job; full validation passed 142 public files/1107 tests and 16 HADARA-dev files/131 tests, plus a real home-mounted Docker smoke. Next classify failures as assertion, timeout, or environment setup, then archive non-live docs.
 
 ## Previous Handoff
 

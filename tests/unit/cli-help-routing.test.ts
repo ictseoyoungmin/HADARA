@@ -80,6 +80,8 @@ describe('command-level help routing', () => {
 
     expect(handleDevCommand({ args: ['dev', 'docker-check', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('dev.docker-check');
+    expect(latestOutput()).toContain('--serial');
+    expect(latestOutput()).toContain('--low-resource');
 
     expect(handleReleaseDryRunCommand({ args: ['release', 'dry-run', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('release.dry-run');
