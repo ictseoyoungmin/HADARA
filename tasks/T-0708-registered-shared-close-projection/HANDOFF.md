@@ -14,7 +14,7 @@
 
 | Item | Evidence |
 |---|---|
-| Registered existing Project State and Agent Handoff managed checkpoints project automatically; absent optional documents are not requested or created. | `ev:T-0708:c53a8975802c466aaa165e40`, `ev:T-0708:9e610f42622e4bf3a3d9cd4e` |
+| Registered existing Project State and Agent Handoff managed checkpoints project automatically; absent optional documents are not requested or created. | `ev:T-0708:14273b23b09a4257bbbd0883`, `ev:T-0708:5c4abdd37b4347719a3d47fb` |
 
 ## Next Recommended Step
 

@@ -37,18 +37,18 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | Fresh Init v1 close does not create or request absent Project State, Agent Handoff, or Development Slices documents. | Met | `ev:T-0708:9e610f42622e4bf3a3d9cd4e` | Init v1 compact boundary |
-| AC-2 | Existing registered Project State/Handoff managed sections are projected automatically and do not require duplicate prose mentions. | Met | `ev:T-0708:c53a8975802c466aaa165e40`, `ev:T-0708:9a59fb2db23e458b8c8e5721` | User instruction |
-| AC-3 | Development Slices is applicable only when the task is explicitly linked; focused/full/built validation passes. | Met | `ev:T-0708:c53a8975802c466aaa165e40`, `ev:T-0708:9a59fb2db23e458b8c8e5721` | Ownership boundary |
+| AC-1 | Fresh Init v1 close does not create or request absent Project State, Agent Handoff, or Development Slices documents. | Met | `ev:T-0708:5c4abdd37b4347719a3d47fb` | Init v1 compact boundary |
+| AC-2 | Existing registered Project State/Handoff managed sections are projected automatically and do not require duplicate prose mentions. | Met | `ev:T-0708:14273b23b09a4257bbbd0883`, `ev:T-0708:236719561b504c798608745f` | User instruction |
+| AC-3 | Development Slices is applicable only when the task is explicitly linked; focused/full/built validation passes. | Met | `ev:T-0708:14273b23b09a4257bbbd0883`, `ev:T-0708:236719561b504c798608745f` | Ownership boundary |
 
 ## Validation
 
 | Check | Gate | Status | Detail | Evidence |
 |---|---|---|---|---|
-| Focused shared-projection regressions | Yes | Passed | Focused task finish, close, workflow-doc, and current-state suites passed 4 files/46 tests. | ev:T-0708:c53a8975802c466aaa165e40 |
-| Full repository validation | Yes | Passed | npm run check passed 142 public files/1106 tests and 16 HADARA-dev files/129 tests. | ev:T-0708:9a59fb2db23e458b8c8e5721 |
-| Built CLI fresh Init close-plan smoke | Yes | Passed | Fresh standard Init built-CLI close dry-run reported zero optional shared-document state entries or advisories. | ev:T-0708:9e610f42622e4bf3a3d9cd4e |
-| Diff and evidence hygiene | Yes | Passed | git diff --check and evidence lint passed with zero issues. | ev:T-0708:e8828b7000424068846fab77 |
+| Focused shared-projection regressions | Yes | Passed | Final focused finish/workflow/init suites passed 4 files/61 tests; the interim assertion-scope failure is resolved. | ev:T-0708:14273b23b09a4257bbbd0883 |
+| Full repository validation | Yes | Passed | npm run check passed 142 public files/1107 tests and 16 HADARA-dev files/129 tests. | ev:T-0708:236719561b504c798608745f |
+| Built CLI fresh Init close-plan smoke | Yes | Passed | Docker-built CLI fresh standard Init close dry-run planned only capsule and Task Board writes. | ev:T-0708:5c4abdd37b4347719a3d47fb |
+| Diff and evidence hygiene | Yes | Passed | Final git diff --check and evidence lint passed with zero issues. | ev:T-0708:e77c94fa33a54d769ea24fe7 |
 
 ## Inputs / Constraints
 
