@@ -298,7 +298,7 @@ hadara evidence list --task T-XXXX --json
 hadara evidence project --task T-XXXX --json
 \`\`\`
 
-Use \`validation run\` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes \`EVIDENCE.md\`. Add \`--update-task\` only when you intentionally want the matching \`TASK.md\` Validation row updated by the CLI.
+Use \`validation run\` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes \`EVIDENCE.md\`. Its controlled \`execution.failureClass\` is \`assertion\` for a started non-zero command, \`timeout\` for an expired command, \`environment-setup\` for launch/preparation failures, and \`none\` for success. Add \`--update-task\` only when you intentionally want the matching \`TASK.md\` Validation row updated by the CLI.
 Place HADARA flags such as \`--json\` before the child-command separator \`--\`; tokens after \`--\` are passed to the validation command.
 
 If the wrapper cannot launch a command in the current tool environment (for example \`EPERM\`, \`EACCES\`, or \`ENOENT\`) but the same command runs directly, record the direct result through \`validation run\` so validation-check resolution tags and optional TASK.md row sync remain consistent:
@@ -874,7 +874,7 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Pr
 | \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task close --dry-run\` for close-grade readiness diagnostics. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, optional \`--idempotency-key\` prevents duplicate same-key records, and JSON responses expose \`evidence.appendLock\` wait diagnostics. |
-| \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`validation run --direct-result\`. |
+| \`validation run\` | Execute + evidence append | Runs a real command, records validation evidence, and classifies failure as assertion, timeout, or environment-setup. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`validation run --direct-result\`. |
 | \`task next\` / \`task show\` | Fully removed public commands | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Fully removed public command | Prefer \`task status --task T-XXXX --json\`. |
 | \`task close\` | Executes by default; \`--dry-run\` is read-only; reviewed execute uses \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence when needed, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |

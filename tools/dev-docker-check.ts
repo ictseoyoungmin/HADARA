@@ -10,6 +10,7 @@ export interface DevDockerCheckReport {
   schemaVersion: 'hadara.dev.docker_check.v1';
   command: 'dev.dockerCheck';
   ok: boolean;
+  failureClass: DevDockerFailureClass;
   mode: 'focused' | 'full' | 'focused-and-full';
   generatedAt: string;
   actor: HadaraActorContext;
@@ -72,6 +73,7 @@ export interface DevDockerCheckReport {
 export interface DevDockerCheckStep {
   id: string;
   status: 'passed' | 'failed' | 'skipped';
+  failureClass?: Exclude<DevDockerFailureClass, 'none'>;
   elapsedMs?: number;
   summary: string;
 }
@@ -83,7 +85,10 @@ export interface DevDockerCheckIssue {
   stepId?: string;
   exitCode?: number;
   debugHint?: string;
+  failureClass?: Exclude<DevDockerFailureClass, 'none'>;
 }
+
+export type DevDockerFailureClass = 'none' | 'assertion' | 'timeout' | 'environment-setup';
 
 export interface DevDockerCheckOptions {
   focusedTests?: string[];
@@ -106,6 +111,7 @@ export interface DevDockerCommandRunner {
 export interface DevDockerCommandResult {
   ok: boolean;
   exitCode?: number;
+  timedOut?: boolean;
 }
 
 interface InternalStep {
@@ -155,6 +161,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   const beforeHash = syncDist ? hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
   const syncGuard = evaluateDistSyncGuard(syncDist, beforeHash, reviewedBeforeHash, allowMissingBeforeHash, issues);
   const steps: DevDockerCheckStep[] = [];
+  let failureClass: DevDockerFailureClass = 'none';
 
   const internalSteps = buildSteps(focusedTests, runFullCheck, syncDist, syncGuard.allowed, resources);
   let blocked = false;
@@ -170,16 +177,24 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       steps.push({ id: step.id, status: 'passed', elapsedMs, summary: step.summary });
       if (step.mark) markExecution(execution, step.mark);
     } else {
-      steps.push({ id: step.id, status: 'failed', elapsedMs, summary: step.summary });
+      failureClass = classifyDevDockerFailure(step.id, result);
+      steps.push({ id: step.id, status: 'failed', failureClass, elapsedMs, summary: step.summary });
       issues.push({
         severity: 'error',
         code: 'DEV_DOCKER_CHECK_STEP_FAILED',
         message: `Docker validation step failed: ${step.id}${typeof result.exitCode === 'number' ? ` (exit code ${result.exitCode})` : ''}. Raw subprocess logs are intentionally omitted from the JSON report.`,
         stepId: step.id,
+        failureClass,
         ...(typeof result.exitCode === 'number' ? { exitCode: result.exitCode } : {}),
         debugHint: `Rerun dev docker-check without --json, or inspect the Docker container step ${step.id}; JSON reports keep subprocess logs private.`
       });
       blocked = true;
+    }
+  }
+  if (failureClass === 'none' && issues.some((issue) => issue.severity === 'error')) {
+    failureClass = 'environment-setup';
+    for (const issue of issues) {
+      if (issue.severity === 'error' && !issue.failureClass) issue.failureClass = failureClass;
     }
   }
 
@@ -204,6 +219,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
     schemaVersion: 'hadara.dev.docker_check.v1',
     command: 'dev.dockerCheck',
     ok,
+    failureClass,
     mode,
     generatedAt: new Date().toISOString(),
     actor: options.actor ?? defaultTaskLifecycleActor(),
@@ -337,6 +353,15 @@ function dockerExecArgs(container: string, script: string, lowResource: boolean)
   ];
 }
 
+function classifyDevDockerFailure(
+  stepId: string,
+  result: DevDockerCommandResult
+): Exclude<DevDockerFailureClass, 'none'> {
+  if (result.timedOut) return 'timeout';
+  if (stepId === 'temp-workspace' || stepId === 'npm-ci' || stepId === 'dist-sync') return 'environment-setup';
+  return 'assertion';
+}
+
 function normalizeFocusedTests(values: string[]): string[] {
   const tests = values.map((value) => value.trim()).filter(Boolean);
   for (const test of tests) {
@@ -424,7 +449,7 @@ const defaultRunner: DevDockerCommandRunner = {
       return { ok: true, exitCode: 0 };
     } catch (error) {
       const exitCode = typeof (error as { status?: unknown })?.status === 'number' ? Number((error as { status: number }).status) : undefined;
-      return { ok: false, exitCode };
+      return { ok: false, exitCode, timedOut: (error as NodeJS.ErrnoException)?.code === 'ETIMEDOUT' };
     }
   }
 };

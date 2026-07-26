@@ -46,6 +46,8 @@ npm run dev:docker-check -- --low-resource
 
 `--serial` runs both Vitest suites with one worker and disables file parallelism. `--low-resource` implies serial mode, caps each Node process heap at 1024 MiB, and limits npm jobs to one. These are HADARA-dev controls under `tools/` and `scripts/`; they are not public HADARA CLI options.
 
+Validation reports classify failures without parsing their explanatory prose. A command that starts and returns non-zero is `assertion`; an expired command is `timeout`; launch, permission, missing-command, temp-workspace, dependency-install, and dist-sync preparation failures are `environment-setup`. Use the lower-level `failureKind` or failed Docker step id for deeper diagnosis.
+
 The reusable npm helper for this repeated workflow remains:
 
 ```bash

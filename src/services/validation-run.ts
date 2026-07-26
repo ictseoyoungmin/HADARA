@@ -26,6 +26,7 @@ export interface ValidationRunReport {
     stderrHash: string;
     commandStarted: boolean;
     failureKind: 'none' | 'non-zero-exit' | 'timeout' | 'permission-denied' | 'command-not-found' | 'launch-error';
+    failureClass: 'none' | 'assertion' | 'timeout' | 'environment-setup';
     capture: {
       mode: 'file' | 'injected' | 'direct';
       stdoutBytes: number;
@@ -125,6 +126,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
   const durationMs = timer.elapsedMs();
   const timedOut = !directExecution && Boolean(executed.error && (executed.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
   const executionSemantics = directExecution ? classifyDirectExecution(options.directResult ?? 'Blocked') : classifyExecution(executed, timedOut);
+  const failureClass = classifyFailure(executionSemantics.failureKind);
   const result: ValidationRunReport['result'] = options.directResult ?? (executionSemantics.failureKind !== 'none' && executionSemantics.failureKind !== 'non-zero-exit' ? 'Blocked' : executed.status === 0 ? 'Passed' : 'Failed');
   if (executionSemantics.issueCode) {
     issues.push({
@@ -140,6 +142,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     `Validation "${options.check}" ${result.toLowerCase()}${options.directResult ? ' from direct result' : ''}`,
     ...(options.directSummary ? [options.directSummary] : []),
     ...(blockedReason ? [blockedReason] : []),
+    `failureClass: ${failureClass}`,
     `command: ${options.argv.length > 0 ? options.argv.join(' ') : 'direct-result'}`,
     `exitCode: ${executed.status ?? 'null'}`,
     `signal: ${executed.signal ?? 'null'}`,
@@ -200,6 +203,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       stderrHash: hashText(executed.stderr ?? ''),
       commandStarted: executionSemantics.commandStarted,
       failureKind: executionSemantics.failureKind,
+      failureClass,
       capture: executionCapture(executed, { direct: Boolean(directExecution), injected: injectedSpawn }),
       ...(options.directResult ? { directResult: true, directSummary: options.directSummary ?? null } : {}),
       ...(executionSemantics.error ? { error: executionSemantics.error } : {})
@@ -389,6 +393,15 @@ function classifyDirectExecution(result: ValidationRunReport['result']): Executi
   };
 }
 
+function classifyFailure(
+  failureKind: ValidationRunReport['execution']['failureKind']
+): ValidationRunReport['execution']['failureClass'] {
+  if (failureKind === 'none') return 'none';
+  if (failureKind === 'non-zero-exit') return 'assertion';
+  if (failureKind === 'timeout') return 'timeout';
+  return 'environment-setup';
+}
+
 function executionError(error: NodeJS.ErrnoException): NonNullable<ValidationRunReport['execution']['error']> {
   return {
     code: error.code ?? null,
@@ -444,6 +457,7 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       stderrHash: hashText(''),
       commandStarted: false,
       failureKind: 'launch-error',
+      failureClass: 'environment-setup',
       capture: { mode: 'direct', stdoutBytes: 0, stderrBytes: 0, fallbackUsed: false }
     },
     status: 'Blocked',

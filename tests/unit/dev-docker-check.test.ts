@@ -40,6 +40,7 @@ describe('dev docker-check report', () => {
       schemaVersion: 'hadara.dev.docker_check.v1',
       command: 'dev.dockerCheck',
       ok: true,
+      failureClass: 'none',
       mode: 'focused',
       execution: {
         subprocessExecuted: true,
@@ -155,6 +156,7 @@ describe('dev docker-check report', () => {
     }, fakeRunner(root));
 
     expect(report.ok).toBe(false);
+    expect(report.failureClass).toBe('environment-setup');
     expect(report.execution.outputMutation).toBe(false);
     expect(report.execution.distSyncExecuted).toBe(false);
     expect(report.distSync).toMatchObject({
@@ -166,7 +168,10 @@ describe('dev docker-check report', () => {
       requiresBeforeHash: true,
       allowMissingBeforeHash: false
     });
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED' }));
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
+      failureClass: 'environment-setup'
+    }));
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
 
@@ -230,18 +235,46 @@ describe('dev docker-check report', () => {
     const report = createDevDockerCheckReport(root, { focusedTests: ['tests/unit/schema-runtime.test.ts'], workspace: '/workspace', tmpWorkdir: '/tmp/hadara-dev-check-test' }, runner);
 
     expect(report.ok).toBe(false);
+    expect(report.failureClass).toBe('assertion');
     expect(report.steps.find((step) => step.id === 'focused-tests')?.status).toBe('failed');
+    expect(report.steps.find((step) => step.id === 'focused-tests')?.failureClass).toBe('assertion');
     expect(report.steps.find((step) => step.id === 'dist-sync')?.status).toBe('skipped');
     expect(report.issues).toContainEqual(
       expect.objectContaining({
         code: 'DEV_DOCKER_CHECK_STEP_FAILED',
         stepId: 'focused-tests',
+        failureClass: 'assertion',
         exitCode: 1,
         debugHint: expect.stringContaining('without --json')
       })
     );
     expect(JSON.stringify(report)).not.toContain('npm error');
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
+  it('classifies Docker setup failures and timeouts separately', () => {
+    const root = tempProject();
+    const setup = createDevDockerCheckReport(root, {
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, fakeRunner(root, 'npm-ci'));
+    const timeout = createDevDockerCheckReport(root, {
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, {
+      run(_command, args) {
+        const script = args.at(-1) ?? '';
+        if (script.includes('npm run check')) return { ok: false, timedOut: true };
+        return { ok: true, exitCode: 0 };
+      }
+    });
+
+    expect(setup.failureClass).toBe('environment-setup');
+    expect(setup.issues).toContainEqual(expect.objectContaining({ stepId: 'npm-ci', failureClass: 'environment-setup' }));
+    expect(timeout.failureClass).toBe('timeout');
+    expect(timeout.steps.find((step) => step.id === 'full-check')?.failureClass).toBe('timeout');
+    expect(validateSchema('hadara.dev.docker_check.v1', setup).ok).toBe(true);
+    expect(validateSchema('hadara.dev.docker_check.v1', timeout).ok).toBe(true);
   });
 });
 

@@ -52,6 +52,7 @@ describe('validation run', () => {
       ok: true,
       result: 'Passed',
       execution: {
+        failureClass: 'none',
         capture: {
           mode: 'file',
           stdoutBytes: 2,
@@ -204,7 +205,9 @@ describe('validation run', () => {
 
     expect(report.ok).toBe(false);
     expect(report.result).toBe('Failed');
+    expect(report.execution.failureClass).toBe('assertion');
     expect(report.evidence?.result).toBe('failed');
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('failureClass: assertion');
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMd).toContain(`| Focused tests | Yes | Failed | ${report.detail} | ${report.evidence?.id} |`);
     expect(taskMd).toContain('| AC-1 | Scope is implemented. | Pending | TBD | TBD |');
@@ -226,6 +229,7 @@ describe('validation run', () => {
     expect(report.execution).toMatchObject({
       commandStarted: false,
       failureKind: 'command-not-found',
+      failureClass: 'environment-setup',
       error: { code: 'ENOENT' }
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'VALIDATION_COMMAND_NOT_FOUND' }));
@@ -273,6 +277,7 @@ describe('validation run', () => {
         exitCode: 0,
         commandStarted: false,
         failureKind: 'none',
+        failureClass: 'none',
         capture: {
           mode: 'direct',
           fallbackUsed: false
@@ -322,6 +327,7 @@ describe('validation run', () => {
       execution: {
         commandStarted: false,
         failureKind: 'permission-denied',
+        failureClass: 'environment-setup',
         capture: {
           mode: 'injected',
           fallbackUsed: false
@@ -348,6 +354,37 @@ describe('validation run', () => {
       })
     );
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('could not be launched (EPERM)');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
+  it('classifies validation timeouts separately from assertions and environment setup', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation timeout classification');
+    const timeoutError = Object.assign(new Error('spawnSync node ETIMEDOUT'), { code: 'ETIMEDOUT' });
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Slow check',
+      argv: [process.execPath, '-e', 'setTimeout(() => {}, 1000)'],
+      spawnSyncFn: () => ({
+        pid: 1,
+        output: [null, '', ''],
+        stdout: '',
+        stderr: '',
+        status: null,
+        signal: 'SIGTERM',
+        error: timeoutError
+      })
+    });
+
+    expect(report).toMatchObject({
+      status: 'Blocked',
+      execution: {
+        timedOut: true,
+        failureKind: 'timeout',
+        failureClass: 'timeout'
+      }
+    });
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
@@ -447,6 +484,7 @@ describe('validation run', () => {
     expect(text).toContain(`[HADARA] validation run ${task.id}: Passed`);
     expect(text).toContain('[HADARA] child command');
     expect(text).toContain(`command=${process.execPath} -e process.exit(0)`);
+    expect(text).toContain('failureClass=none');
     expect(text).toContain('childOutput=not printed; stdout/stderr hashes are recorded in HADARA evidence');
     expect(text).toContain('[HADARA] evidence');
     expect(text).toContain('taskValidationRow=skipped not-updated');

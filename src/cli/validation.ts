@@ -40,6 +40,7 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     console.log(`[HADARA] child command`);
     console.log(`command=${report.argv.join(' ')}`);
     console.log(`exitCode=${report.execution.exitCode ?? 'null'} signal=${report.execution.signal ?? 'null'} durationMs=${report.execution.durationMs}`);
+    console.log(`failureClass=${report.execution.failureClass}`);
     console.log(`stdoutHash=${report.execution.stdoutHash}`);
     console.log(`stderrHash=${report.execution.stderrHash}`);
     console.log(`childOutput=not printed; stdout/stderr hashes are recorded in HADARA evidence`);

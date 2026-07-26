@@ -4,11 +4,12 @@
   "x-hadara-schema-id": "hadara.dev.docker_check.v1",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "mode", "generatedAt", "actor", "execution", "source", "workspace", "focusedTests", "steps", "evidenceSummary", "privacy", "issues"],
+  "required": ["schemaVersion", "command", "ok", "failureClass", "mode", "generatedAt", "actor", "execution", "source", "workspace", "focusedTests", "steps", "evidenceSummary", "privacy", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.dev.docker_check.v1" },
     "command": { "const": "dev.dockerCheck" },
     "ok": { "type": "boolean" },
+    "failureClass": { "enum": ["none", "assertion", "timeout", "environment-setup"] },
     "mode": { "enum": ["focused", "full", "focused-and-full"] },
     "generatedAt": { "type": "string" },
     "actor": {
@@ -69,6 +70,7 @@
         "properties": {
           "id": { "type": "string" },
           "status": { "enum": ["passed", "failed", "skipped"] },
+          "failureClass": { "enum": ["assertion", "timeout", "environment-setup"] },
           "elapsedMs": { "type": "number" },
           "summary": { "type": "string" }
         }
@@ -122,7 +124,8 @@
           "message": { "type": "string" },
           "stepId": { "type": "string" },
           "exitCode": { "type": "number" },
-          "debugHint": { "type": "string" }
+          "debugHint": { "type": "string" },
+          "failureClass": { "enum": ["assertion", "timeout", "environment-setup"] }
         }
       }
     }

@@ -16,7 +16,7 @@
     "execution": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["exitCode", "signal", "timedOut", "durationMs", "stdoutHash", "stderrHash"],
+      "required": ["exitCode", "signal", "timedOut", "durationMs", "stdoutHash", "stderrHash", "failureClass"],
       "properties": {
         "exitCode": { "type": ["number", "null"] },
         "signal": { "type": ["string", "null"] },
@@ -26,6 +26,7 @@
         "stderrHash": { "type": "string" },
         "commandStarted": { "type": "boolean" },
         "failureKind": { "enum": ["none", "non-zero-exit", "timeout", "permission-denied", "command-not-found", "launch-error"] },
+        "failureClass": { "enum": ["none", "assertion", "timeout", "environment-setup"] },
         "capture": {
           "type": "object",
           "additionalProperties": true,

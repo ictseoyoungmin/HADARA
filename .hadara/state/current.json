@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 344,
+  "rev": 346,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0710",
-    "title": "HADARA-dev Low-resource Docker Validation"
+    "id": "T-0711",
+    "title": "Automatic Validation Failure Classification"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,23 +14,27 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Classify validation failures as assertion, timeout, or environment setup.",
-    "reason": "This is the next independent user-requested improvement.",
+    "title": "Define the live docs set and archive every other current docs entry.",
+    "reason": "This is the last implementation improvement before the completion audit.",
     "references": [
       {
-        "path": "`docs/TEST_STRATEGY.md`",
+        "path": "`.hadara/context/HADARA_CONTEXT.md`",
         "required": true
       },
       {
-        "path": "validation runner and Docker wrapper contracts",
+        "path": "`.hadara/documents.json`",
+        "required": true
+      },
+      {
+        "path": "`docs/TASK_BOARD.md`",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0710",
-      "path": "tasks/T-0710-hadara-dev-low-resource-docker-validation/HANDOFF.md"
+      "workId": "T-0711",
+      "path": "tasks/T-0711-automatic-validation-failure-classification/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
