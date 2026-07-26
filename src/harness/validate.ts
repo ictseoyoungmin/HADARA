@@ -332,6 +332,7 @@ function validateTaskValidationTable(content: string, relativePath: string, issu
     !requireAnyTableHeader(
       table.rows,
       [
+        ['Check', 'Gate', 'Status', 'Detail', 'Evidence'],
         ['Check', 'Gate', 'Result', 'Evidence'],
         ['Check', 'Command / Method', 'Required', 'Latest Result', 'Evidence']
       ],
@@ -343,7 +344,7 @@ function validateTaskValidationTable(content: string, relativePath: string, issu
   for (const row of table.dataRows) {
     if (!row.some(Boolean)) continue;
     checkToken(tableCellAny(row, table.header, ['Gate', 'Required']), 'task.validation.gate', 'VALIDATION_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
-    checkToken(tableCellAny(row, table.header, ['Result', 'Latest Result']), 'task.validation.result', 'VALIDATION_RESULT_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCellAny(row, table.header, ['Status', 'Result', 'Latest Result']), 'task.validation.result', 'VALIDATION_RESULT_INVALID_TOKEN', relativePath, heading, issues);
   }
 }
 

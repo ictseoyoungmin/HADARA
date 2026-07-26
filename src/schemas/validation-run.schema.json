@@ -4,7 +4,7 @@
   "x-hadara-schema-id": "hadara.validation.run.v1",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "taskId", "check", "cwd", "argv", "execution", "result", "attempt", "taskValidationRow", "acceptanceRows", "issues"],
+  "required": ["schemaVersion", "command", "ok", "taskId", "check", "cwd", "argv", "execution", "status", "detail", "result", "attempt", "taskValidationRow", "acceptanceRows", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.validation.run.v1" },
     "command": { "const": "validation.run" },
@@ -50,7 +50,9 @@
         }
       }
     },
-    "result": { "enum": ["Passed", "Failed", "Blocked"] },
+    "status": { "enum": ["Passed", "Failed", "Blocked"] },
+    "detail": { "type": "string" },
+    "result": { "enum": ["Passed", "Failed", "Blocked"], "deprecated": true },
     "attempt": {
       "type": "object",
       "additionalProperties": true,

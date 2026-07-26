@@ -156,8 +156,9 @@ describe('validation run', () => {
     });
 
     expect(report.taskValidationRow).toMatchObject({ mode: 'updated', updated: true });
+    expect(report).toMatchObject({ status: 'Passed', detail: expect.stringMatching(/^exit 0 in \d+ms$/), result: 'Passed' });
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
-    expect(taskMd).toContain(`| Focused tests | Yes | Passed | ${report.evidence?.id} |`);
+    expect(taskMd).toContain(`| Focused tests | Yes | Passed | ${report.detail} | ${report.evidence?.id} |`);
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
@@ -167,7 +168,10 @@ describe('validation run', () => {
     const taskPath = path.join(task.dir, 'TASK.md');
     fs.writeFileSync(
       taskPath,
-      fs.readFileSync(taskPath, 'utf8').replace('| TBD | Yes | Not Run | TBD |', '| `npm test` | Yes | Not Run | TBD |'),
+      fs.readFileSync(taskPath, 'utf8').replace(
+        '| TBD | Yes | Not Run | Not executed. | TBD |',
+        '| `npm test` | Yes | Not Run | Not executed. | TBD |'
+      ),
       'utf8'
     );
 
@@ -183,7 +187,7 @@ describe('validation run', () => {
       .readFileSync(taskPath, 'utf8')
       .split(/\r?\n/)
       .filter((line) => line.includes('npm test'));
-    expect(validationRows).toEqual([`| npm test | Yes | Passed | ${report.evidence?.id} |`]);
+    expect(validationRows).toEqual([`| npm test | Yes | Passed | ${report.detail} | ${report.evidence?.id} |`]);
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
@@ -202,7 +206,7 @@ describe('validation run', () => {
     expect(report.result).toBe('Failed');
     expect(report.evidence?.result).toBe('failed');
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
-    expect(taskMd).toContain(`| Focused tests | Yes | Failed | ${report.evidence?.id} |`);
+    expect(taskMd).toContain(`| Focused tests | Yes | Failed | ${report.detail} | ${report.evidence?.id} |`);
     expect(taskMd).toContain('| AC-1 | Scope is implemented. | Pending | TBD | TBD |');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
@@ -280,7 +284,9 @@ describe('validation run', () => {
     });
     expect(passed.attempt.previousFailedOrBlockedEvidenceIds).toEqual([blocked.evidence?.id]);
     expect(passed.evidence?.tags).toContain(`resolves:${blocked.evidence?.id}`);
-    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain(`| Focused tests | Yes | Passed | ${passed.evidence?.id} |`);
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain(
+      `| Focused tests | Yes | Passed | ${passed.detail} | ${passed.evidence?.id} |`
+    );
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('from direct result');
     expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
   });

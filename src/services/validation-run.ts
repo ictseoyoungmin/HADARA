@@ -40,6 +40,9 @@ export interface ValidationRunReport {
       path?: string;
     };
   };
+  status: 'Passed' | 'Failed' | 'Blocked';
+  detail: string;
+  /** @deprecated Use status. */
   result: 'Passed' | 'Failed' | 'Blocked';
   attempt: {
     checkKey: string;
@@ -132,6 +135,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
   }
 
   const blockedReason = result === 'Blocked' ? executionSemantics.blockedReason : null;
+  const detail = validationDetail(options, result, executed.status, durationMs, blockedReason);
   const summary = [
     `Validation "${options.check}" ${result.toLowerCase()}${options.directResult ? ' from direct result' : ''}`,
     ...(options.directSummary ? [options.directSummary] : []),
@@ -170,7 +174,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     });
   }
   const taskValidationRow = options.updateTask
-    ? updateTaskValidationRow(projectRoot, task.dir, options.check, options.argv.join(' '), result, evidenceId)
+    ? updateTaskValidationRow(projectRoot, task.dir, options.check, options.argv.join(' '), result, detail, evidenceId)
     : {
         mode: 'skipped' as const,
         updated: false,
@@ -200,6 +204,8 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       ...(options.directResult ? { directResult: true, directSummary: options.directSummary ?? null } : {}),
       ...(executionSemantics.error ? { error: executionSemantics.error } : {})
     },
+    status: result,
+    detail,
     result,
     attempt: {
       checkKey,
@@ -440,6 +446,8 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       failureKind: 'launch-error',
       capture: { mode: 'direct', stdoutBytes: 0, stderrBytes: 0, fallbackUsed: false }
     },
+    status: 'Blocked',
+    detail: message,
     result: 'Blocked',
     attempt: {
       checkKey: validationCheckKey(options.check),
@@ -497,7 +505,7 @@ function taskIdFromTaskDir(taskDir: string): string {
   return /^T-\d+/.exec(name)?.[0] ?? name;
 }
 
-function updateTaskValidationRow(projectRoot: string, taskDir: string, check: string, command: string, result: ValidationRunReport['result'], evidenceId: string): ValidationRunReport['taskValidationRow'] {
+function updateTaskValidationRow(projectRoot: string, taskDir: string, check: string, command: string, status: ValidationRunReport['status'], detail: string, evidenceId: string): ValidationRunReport['taskValidationRow'] {
   const taskPath = path.join(taskDir, 'TASK.md');
   const content = fs.readFileSync(taskPath, 'utf8');
   const bounds = findValidationSectionBounds(content);
@@ -522,9 +530,10 @@ function updateTaskValidationRow(projectRoot: string, taskDir: string, check: st
     return cells.length > 0 && normalizeValidationCheckLabel(cells[0]) === normalizeValidationCheckLabel(check);
   });
   const safeCommand = isSafeMarkdownTableCell(command) ? command : command.replace(/[|\r\n]/g, ' ');
+  const hasDetail = header.includes('Detail');
   const nextRow = header[1] === 'Gate'
-    ? formatMarkdownTableRow([check, 'Yes', result, evidenceId])
-    : formatMarkdownTableRow([check, safeCommand, 'Yes', result, evidenceId]);
+    ? formatMarkdownTableRow(hasDetail ? [check, 'Yes', status, detail, evidenceId] : [check, 'Yes', status, evidenceId])
+    : formatMarkdownTableRow(hasDetail ? [check, safeCommand, 'Yes', status, detail, evidenceId] : [check, safeCommand, 'Yes', status, evidenceId]);
   let appended = false;
   if (rowIndex >= 0) {
     lines[rowIndex] = nextRow;
@@ -536,6 +545,19 @@ function updateTaskValidationRow(projectRoot: string, taskDir: string, check: st
   const next = `${content.slice(0, bounds.start)}${lines.join('\n')}${content.slice(bounds.end)}`;
   fs.writeFileSync(taskPath, next, 'utf8');
   return { mode: 'updated', updated: true, appended, path: path.relative(projectRoot, taskPath).split(path.sep).join('/') };
+}
+
+function validationDetail(
+  options: ValidationRunOptions,
+  status: ValidationRunReport['status'],
+  exitCode: number | null,
+  durationMs: number,
+  blockedReason: string | null
+): string {
+  const value = options.directSummary
+    ?? blockedReason
+    ?? (status === 'Passed' ? `exit 0 in ${durationMs}ms` : `exit ${exitCode ?? 'null'} in ${durationMs}ms`);
+  return value.replace(/[|\r\n]/g, ' ').trim().slice(0, 160);
 }
 
 function findValidationSectionBounds(content: string): { start: number; end: number } | null {

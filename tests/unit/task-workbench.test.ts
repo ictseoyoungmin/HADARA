@@ -814,7 +814,7 @@ function makeTaskAuthored(taskDir: string, options: { planStatus: 'Pending' | 'I
     .replace(/\| 3 \| Validate and record evidence\. \| (Pending|In Progress|Done) \|/g, `| 3 | Validate and record evidence. | ${options.planStatus === 'Done' ? 'Done' : 'Pending'} |`)
     .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Selected-task v2 phase is explicit. | Met | ev:fixture | `tests/unit/task-workbench.test.ts` |')
     .replace('| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Met | ev:fixture | `tests/unit/task-workbench.test.ts` |')
-    .replace('| TBD | Yes | Not Run | TBD |', '| Fixture validation | Yes | Passed | ev:fixture |')
+    .replace('| TBD | Yes | Not Run | Not executed. | TBD |', '| Fixture validation | Yes | Passed | Fixture passed. | ev:fixture |')
     .replace('| TBD | reference | active | TBD |', '| `tests/unit/task-workbench.test.ts` | implementation-source | active | Fixture source. |')
     .replace('| N/A | TBD |', '| `src/services/task-status-v2.ts` | Fixture change summary. |')
     .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Closed | N/A |');

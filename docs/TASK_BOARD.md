@@ -707,3 +707,4 @@
 | T-0704 | Init v1 Task Board and Close Projection | Done | tasks/T-0704-init-v1-task-board-and-close-projection | |
 | T-0705 | Compact Workflow Output | Done | tasks/T-0705-compact-workflow-output | |
 | T-0706 | Init v1 Mutation Authority | Done | tasks/T-0706-init-v1-mutation-authority | |
+| T-0707 | Validation State and Detail Separation | Done | tasks/T-0707-validation-state-and-detail-separation | |

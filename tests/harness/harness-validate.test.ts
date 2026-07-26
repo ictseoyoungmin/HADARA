@@ -126,7 +126,7 @@ describe('Harness Task Capsule validation', () => {
         .replace('| Status | Draft |', '| Status | Ready |')
         .replace('| 1 | Define the task contract. | Pending |', '| 1 | Define the task contract. | Working |')
         .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Started | TBD | TBD |')
-        .replace('| TBD | Yes | Not Run | TBD |', '| TBD | Maybe | Green | TBD |')
+        .replace('| TBD | Yes | Not Run | Not executed. | TBD |', '| TBD | Maybe | Green | Invalid detail. | TBD |')
         .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Decision | TBD | Maybe | TBD |'),
       'utf8'
     );

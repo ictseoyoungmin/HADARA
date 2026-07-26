@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0706 Init v1 Mutation Authority |
+| Latest Completed Task | T-0707 Validation State and Detail Separation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -55,6 +55,8 @@ T-0704 completes Init v1 Task Board and Close Projection. Fresh v1 task creation
 T-0705 makes ordinary lifecycle output materially smaller. Default task status now returns a bounded summary with the selected capsule, phase/readiness, one focused read/edit route, compact issues, and the next action; default task close returns only its transaction summary and suppresses phase progress. Complete v2 diagnostics remain available through `--detail full --json`. Full validation passed 142 public files/1102 tests and 16 HADARA-dev files/129 tests in the home-directory ext4 clone. The next user-prioritized boundary separates Validation state tokens from explanatory detail, followed by shared-state projection automation, official serial/low-resource Docker validation, failure classification, and live-document archival.
 
 T-0706 connects Init v1 to the existing mutation lifecycle. The shared mutation guard now accepts schema-valid `.hadara/project.json` plus `.hadara/documents.json`, rejects partial or invalid authority before writes, and retains `hadaraProtocol: 0.4` only as a legacy compatibility fallback. Built CLI standard init followed by task creation passed without generating `.hadara/scaffold.json`; full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Validation state/detail separation remains next.
+
+T-0707 separates Validation state from explanation. `validation run` now exposes canonical `status: Passed|Failed|Blocked` plus bounded `detail`; deprecated `result` remains for compatibility. New Task Capsules use `Status | Detail`, while legacy Result tables remain valid. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Registered existing shared-document projection is next; fresh Init must not gain optional global prose files.
 
 | Stage | State | Purpose |
 |---|---|---|
