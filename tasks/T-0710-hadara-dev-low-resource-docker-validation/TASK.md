@@ -37,18 +37,18 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | `--serial` runs public and HADARA-dev Vitest suites with one worker and file parallelism disabled. | Met | `ev:T-0710:6dc32fbb76e9416999acdf44` | User instruction |
-| AC-2 | `--low-resource` implies serial mode, caps Node heap at 1024 MiB, and limits npm jobs to one. | Met | `ev:T-0710:4bfd272309984fedbfd5ed6a` | Constrained-host workflow |
+| AC-1 | `--serial` runs public and HADARA-dev Vitest suites with one worker and file parallelism disabled. | Met | `ev:T-0710:3d2456b28f1044fba908c4fd`, `ev:T-0710:81ab9e87ca3c4f9391300f67` | User instruction |
+| AC-2 | `--low-resource` implies serial mode, caps Node heap at 1024 MiB, and limits npm jobs to one. | Met | `ev:T-0710:81ab9e87ca3c4f9391300f67` | Constrained-host workflow |
 | AC-3 | Options are discoverable in repo-local help/docs and no `src/` file changes. | Met | `ev:T-0710:6dc32fbb76e9416999acdf44`, `ev:T-0710:5386a019fa8a4dedb00f0b27` | Architecture boundary |
-| AC-4 | Focused/full tests plus a real Docker low-resource smoke pass. | Met | `ev:T-0710:86dc5dfc9ce843c79c86681e`, `ev:T-0710:4bfd272309984fedbfd5ed6a` | `docs/TEST_STRATEGY.md` |
+| AC-4 | Focused/full tests plus a real Docker low-resource smoke pass. | Met | `ev:T-0710:3d2456b28f1044fba908c4fd`, `ev:T-0710:81ab9e87ca3c4f9391300f67` | `docs/TEST_STRATEGY.md` |
 
 ## Validation
 
 | Check | Gate | Status | Detail | Evidence |
 |---|---|---|---|---|
-| Focused tools and script regressions | Yes | Passed | Tools typecheck, public help 3 tests, HADARA-dev Docker 11 tests, shell syntax, and diff check passed. | ev:T-0710:6dc32fbb76e9416999acdf44 |
-| Full repository validation | Yes | Passed | npm run check passed 142 public files/1107 tests and 16 HADARA-dev files/131 tests. | ev:T-0710:86dc5dfc9ce843c79c86681e |
-| Real Docker low-resource smoke | Yes | Passed | home-mounted hadara-home-dev ran public help-routing focused validation with serial=true, maxWorkers=1, 1024 MiB Node heap, and npmJobs=1. | ev:T-0710:4bfd272309984fedbfd5ed6a |
+| Focused tools and script regressions | Yes | Passed | Tools typecheck, public help 3 tests, and HADARA-dev Docker wrapper/script 11 tests passed. | ev:T-0710:3d2456b28f1044fba908c4fd |
+| Full repository validation | Yes | Passed | Home-mounted low-resource Docker check passed 142 public files/1107 tests and 16 HADARA-dev files/131 tests. | ev:T-0710:81ab9e87ca3c4f9391300f67 |
+| Real Docker low-resource smoke | Yes | Passed | Full check ran with maxWorkers=1, file parallelism disabled, 1024 MiB Node heap, and npmJobs=1; initial environment setup blocker was resolved. | ev:T-0710:81ab9e87ca3c4f9391300f67 |
 | Diff, scope, and evidence hygiene | Yes | Passed | No src diff; bash syntax, git diff --check, and evidence lint passed with zero issues. | ev:T-0710:5386a019fa8a4dedb00f0b27 |
 
 ## Inputs / Constraints
