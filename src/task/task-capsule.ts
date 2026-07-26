@@ -6,12 +6,15 @@ import { startMonotonicTimer } from '../core/timing';
 import { managedSectionBlock, parseManagedSections } from '../services/managed-sections';
 import { readMarkdownSection } from '../services/markdown-table';
 import { getTaskTemplate } from './task-templates';
+import type { TargetRef } from '../init/types';
+import { defaultTaskBoard, formatTaskBoardRow, parseTaskBoard, renderTaskTargets } from './task-board';
 
 export interface TaskCapsule {
   id: string;
   title: string;
   slug: string;
   dir: string;
+  targets?: TargetRef[];
 }
 
 function taskTitleForTable(task: TaskCapsule): string {
@@ -21,7 +24,7 @@ function taskTitleForTable(task: TaskCapsule): string {
 export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'TASK.md': (task) => {
     const timestamp = formatLocalMinuteTimestamp();
-    return `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${taskTitleForTable(task)} |\n| Status | Draft |\n| Created | ${timestamp} |\n| Updated | ${timestamp} |\n\nSchema hint: use \`hadara schema --json\` or \`hadara schema --domain <domain-id> --json\` for controlled values before replacing scaffold tokens.\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| Boundary | Items |\n|---|---|\n| In | TBD |\n| Out | TBD |\n\n## Plan\n\n| Step | Action | Status |\n|---|---|---|\n| 1 | Define the task contract. | Pending |\n| 2 | Implement the smallest useful slice. | Pending |\n| 3 | Validate and record evidence. | Pending |\n\n## Acceptance\n\n| ID | Criterion | State | Evidence | Reference |\n|---|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD | TBD |\n| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |\n\n## Validation\n\n| Check | Gate | Result | Evidence |\n|---|---|---|---|\n| TBD | Yes | Not Run | TBD |\n\n## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |\n\n## Changes\n\n| Area | Summary |\n|---|---|\n| N/A | TBD |\n\n## Risks / Follow-ups\n\n| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Follow-up | TBD | Open | TBD |\n\n## History\n\n| Date | State | Note |\n|---|---|---|\n| ${formatLocalDate()} | Draft | Initial task scaffold. |\n`;
+    return `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${taskTitleForTable(task)} |\n| Status | Draft |\n| Targets | ${renderTaskTargets(task.targets)} |\n| Created | ${timestamp} |\n| Updated | ${timestamp} |\n\nSchema hint: use \`hadara schema --json\` or \`hadara schema --domain <domain-id> --json\` for controlled values before replacing scaffold tokens.\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| Boundary | Items |\n|---|---|\n| In | TBD |\n| Out | TBD |\n\n## Plan\n\n| Step | Action | Status |\n|---|---|---|\n| 1 | Define the task contract. | Pending |\n| 2 | Implement the smallest useful slice. | Pending |\n| 3 | Validate and record evidence. | Pending |\n\n## Acceptance\n\n| ID | Criterion | State | Evidence | Reference |\n|---|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD | TBD |\n| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |\n\n## Validation\n\n| Check | Gate | Result | Evidence |\n|---|---|---|---|\n| TBD | Yes | Not Run | TBD |\n\n## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |\n\n## Changes\n\n| Area | Summary |\n|---|---|\n| N/A | TBD |\n\n## Risks / Follow-ups\n\n| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Follow-up | TBD | Open | TBD |\n\n## History\n\n| Date | State | Note |\n|---|---|---|\n| ${formatLocalDate()} | Draft | Initial task scaffold. |\n`;
   },
   'HANDOFF.md': (task) => {
     const timestamp = formatLocalMinuteTimestamp();
@@ -96,6 +99,7 @@ export interface CreateTaskCapsuleOptions {
   onBeforeCreateAttempt?: (attempt: { id: string; dir: string; attempt: number }) => void;
   lock?: boolean;
   lockTimeoutMs?: number;
+  targets?: TargetRef[];
 }
 
 export class TaskCapsuleCreateCollisionError extends Error {
@@ -141,7 +145,7 @@ export function createTaskCapsule(projectRoot: string, title: string, options: C
   for (let attempt = 1; attempt <= maxCreateRetries; attempt += 1) {
     const id = nextTaskId(tasksDir, blockedIds);
     const dir = path.join(tasksDir, `${id}-${slug}`);
-    const task: TaskCapsule = { id, title, slug, dir };
+    const task: TaskCapsule = { id, title, slug, dir, targets: options.targets };
 
     if (taskBoardContainsId(projectRoot, id)) {
       blockedIds.add(id);
@@ -169,12 +173,24 @@ export function createTaskCapsule(projectRoot: string, title: string, options: C
         if (factory) fs.writeFileSync(path.join(dir, fileName), factory(task), 'utf8');
       }
     }
+    ensureCloseSummaryInterface(path.join(dir, 'TASK.md'));
 
     appendTaskBoardRow(projectRoot, task);
     return task;
   }
 
   throw new TaskCapsuleCreateCollisionError(maxCreateRetries);
+}
+
+function ensureCloseSummaryInterface(taskPath: string): void {
+  const content = fs.readFileSync(taskPath, 'utf8');
+  if (/^## Close Summary\s*$/m.test(content)) return;
+  const heading = '\n## Close Summary\n\n';
+  const historyIndex = content.indexOf('\n## History\n');
+  const next = historyIndex >= 0
+    ? `${content.slice(0, historyIndex)}${heading}${content.slice(historyIndex)}`
+    : `${content.trimEnd()}${heading}`;
+  fs.writeFileSync(taskPath, `${next.trimEnd()}\n`, 'utf8');
 }
 
 export function withTaskCreateProjectLock<T>(projectRoot: string, fn: () => T, options: { timeoutMs?: number } = {}): T {
@@ -212,20 +228,47 @@ export function withTaskCreateProjectLock<T>(projectRoot: string, fn: () => T, o
 function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   ensureDir(path.dirname(taskBoard));
-  const line = `| ${task.id} | ${task.title.replace(/\|/g, '/')} | Draft | ${path.relative(projectRoot, task.dir)} | |\n`;
   if (!fs.existsSync(taskBoard)) {
-    fs.writeFileSync(taskBoard, `# TASK_BOARD\n\n${managedSectionBlock('task-board', { schema: 'hadara.managedSection.v1', owner: 'task.create', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n${line}`)}\n`, 'utf8');
+    const schema = initV1ProjectPresent(projectRoot) ? 'v1' : 'legacy';
+    const line = `${formatTaskBoardRow(schema, {
+      id: task.id,
+      title: task.title,
+      status: 'Draft',
+      targets: renderTaskTargets(task.targets),
+      capsule: path.relative(projectRoot, task.dir),
+      result: '-'
+    })}\n`;
+    const table = defaultTaskBoard(schema).split(/\r?\n/).slice(2).filter(Boolean).join('\n');
+    fs.writeFileSync(taskBoard, `# ${schema === 'v1' ? 'Task Board' : 'TASK_BOARD'}\n\n${managedSectionBlock('task-board', { schema: 'hadara.managedSection.v1', owner: 'task.create', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `${table}\n${line}`)}\n`, 'utf8');
     return;
   }
   const current = fs.readFileSync(taskBoard, 'utf8');
   if (current.includes(`| ${task.id} |`)) throw new TaskCapsuleCreateCollisionError(1);
   const managed = validateTaskBoardWriteMode(current);
+  const line = `${formatTaskBoardRow(managed.schema, {
+    id: task.id,
+    title: task.title,
+    status: 'Draft',
+    targets: renderTaskTargets(task.targets),
+    capsule: path.relative(projectRoot, task.dir),
+    result: '-'
+  })}\n`;
   if (managed.mode === 'managed') {
     const marker = '<!-- hadara:managed:end task-board -->';
     fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');
     return;
   }
   fs.writeFileSync(taskBoard, `${current.replace(/\s*$/, '\n')}${line}`, 'utf8');
+}
+
+function initV1ProjectPresent(projectRoot: string): boolean {
+  const projectPath = path.join(projectRoot, '.hadara', 'project.json');
+  if (!fs.existsSync(projectPath)) return false;
+  try {
+    return JSON.parse(fs.readFileSync(projectPath, 'utf8')).schemaVersion === 'hadara.project.v1';
+  } catch {
+    return false;
+  }
 }
 
 function assertTaskBoardWritable(projectRoot: string): void {
@@ -240,27 +283,24 @@ function taskBoardContainsId(projectRoot: string, id: string): boolean {
   return fs.readFileSync(taskBoard, 'utf8').includes(`| ${id} |`);
 }
 
-function validateTaskBoardWriteMode(content: string): { mode: 'managed' | 'legacy-table' } {
+function validateTaskBoardWriteMode(content: string): { mode: 'managed' | 'legacy-table'; schema: 'v1' | 'legacy' } {
   const parsed = parseManagedSections(content, 'docs/TASK_BOARD.md');
   const error = parsed.issues.find((issue) => issue.severity === 'error');
   if (error) {
     throw new TaskBoardManagedSectionError(error.message);
   }
   const taskBoardSections = parsed.sections.filter((section) => section.id === 'task-board');
+  const schema = parseTaskBoard(content).schema;
+  if (schema === 'unknown') {
+    throw new TaskBoardManagedSectionError('docs/TASK_BOARD.md is missing a supported task table frame; refusing task create append.');
+  }
   if (taskBoardSections.length === 1) {
-    return { mode: 'managed' };
+    return { mode: 'managed', schema };
   }
   if (taskBoardSections.length > 1) {
     throw new TaskBoardManagedSectionError(`docs/TASK_BOARD.md must contain exactly one managed task-board section; found ${taskBoardSections.length}.`);
   }
-  if (!hasCanonicalTaskBoardTable(content)) {
-    throw new TaskBoardManagedSectionError('docs/TASK_BOARD.md is missing the canonical task table frame; refusing task create append.');
-  }
-  return { mode: 'legacy-table' };
-}
-
-function hasCanonicalTaskBoardTable(content: string): boolean {
-  return /\|\s*ID\s*\|\s*Title\s*\|\s*Status\s*\|\s*Capsule\s*\|\s*Notes\s*\|/.test(content) && /\|\s*---\s*\|\s*---\s*\|\s*---\s*\|\s*---\s*\|\s*---\s*\|/.test(content);
+  return { mode: 'legacy-table', schema };
 }
 
 function writeTaskCreateLockMetadata(lockDir: string): void {

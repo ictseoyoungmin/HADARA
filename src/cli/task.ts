@@ -12,6 +12,7 @@ import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } f
 import { createTaskListReport, formatTaskListReport } from './task-json';
 import { createTaskSelectionStatusV2Report, formatTaskSelectionStatusV2Report } from '../services/task-selection-status-v2';
 import { createAdaptiveTaskStatusV2Report, createTaskStatusV2Report, formatTaskStatusV2Report } from '../services/task-status-v2';
+import { parseTaskTarget } from '../task/task-board';
 
 export interface TaskCommandInput {
   args: string[];
@@ -87,7 +88,10 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     if (blockLegacyMutation(input, 'task.create')) return true;
     const title = extractTaskCreateTitle(input.args);
     if (!title) throw new Error('task create requires a title');
-    const report = createTaskCreateReport(input.projectRoot, title, { templateId: getStringOption(input.args, '--from') });
+    const report = createTaskCreateReport(input.projectRoot, title, {
+      templateId: getStringOption(input.args, '--from'),
+      targets: getRepeatedStringOptions(input.args, '--target').map(parseTaskTarget)
+    });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -231,6 +235,17 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   return false;
 }
 
+function getRepeatedStringOptions(args: string[], name: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== name) continue;
+    const value = args[index + 1];
+    if (!value || value.startsWith('--')) throw new CliArgsError('CLI_OPTION_MISSING_VALUE', `${name} requires a value`);
+    values.push(value);
+  }
+  return values;
+}
+
 function withTaskWorkbenchV1CompatibilityMetadata<T extends TaskWorkbenchReport>(report: T): T & {
   compatibility: {
     defaultSchemaVersion: 'hadara.task.status.v2';
@@ -372,7 +387,7 @@ function blockLegacyMutation(input: TaskCommandInput, command: string): boolean 
 export function extractTaskCreateTitle(args: string[]): string {
   const explicitTitle = getStringOption(args, '--title');
   if (explicitTitle) return explicitTitle.trim();
-  const optionsWithValues = new Set(['--project', '--from', '--title']);
+  const optionsWithValues = new Set(['--project', '--from', '--title', '--target']);
   const titleParts: string[] = [];
   for (let index = 2; index < args.length; index += 1) {
     const value = args[index];

@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0703 Init v1 Re-init and Upgrade Ownership |
+| Latest Completed Task | T-0704 Init v1 Task Board and Close Projection |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -49,6 +49,8 @@ v0.4.6 is published and recycled. The `0.5.0-rc.0` and `0.5.0-rc.1` line proved 
 T-0701 hardens failed-apply rollback against concurrent external edits. T-0702 restores the release/evidence/Docker/task-state trust baseline: release artifact execution owns source build and built-version verification; acceptance evidence is outcome-consistent; tracked `.hadara` reaches Docker validation without machine-local state; HANDOFF sync is idempotent; rollback and TUI debt branches are covered; dependency metadata is clean. Docker passed 140 public files/1094 tests and 16 HADARA-dev files/129 tests with zero npm vulnerabilities, and the executed `0.5.0-rc.1` artifact verified 261 packaged files. Re-init and Upgrade Ownership remains the next Init v1 boundary.
 
 T-0703 completes Re-init and Upgrade Ownership. Base init is now checksum-preserving on complete v1 projects, rejects explicit configuration expansion, and leaves partial repair to `init upgrade`. Upgrade reuses reviewed plan/hash/lock/journal apply, changes only managed core artifacts, preserves canonical configuration, existing registry bytes, Task Board content, and optional user documents, and fails closed on invalid authority or malformed AGENTS markers. Clean Docker passed 141 public files/1098 tests plus 16 HADARA-dev files/129 tests, and built CLI end-to-end init/re-init/upgrade/no-op smoke passed. The next ordered Init v1 boundary is Task Board and Close Projection; RC2 release promotion remains deferred.
+
+T-0704 completes Init v1 Task Board and Close Projection. Fresh v1 task creation now uses the frozen `ID | Title | Status | Targets | Capsule | Result` Board contract, persists project-default or explicit ordered TargetRefs in the Task Capsule, and projects only the exact optional `Close Summary` into Result after valid lifecycle bookkeeping. The shared Board model keeps legacy Notes and extra cells intact, and the close-source/read-model consumers no longer assume fixed legacy columns. Corrected serial Docker validation passed all 142 public files/1102 tests and 16 HADARA-dev files/129 tests; refreshed built CLI create and read-only close smokes passed. The next ordered Init v1 boundary is Document Routing; legacy isolation, installed acceptance, and RC2 promotion remain deferred.
 
 | Stage | State | Purpose |
 |---|---|---|

@@ -7,6 +7,13 @@ import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSection
 import { continuationFromTaskHandoffStep, planCompletedProjectCurrentStateWrites } from '../services/project-current-state';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 import { findTaskCapsule, TaskCapsule } from './task-capsule';
+import {
+  defaultTaskBoard,
+  formatTaskBoardRow,
+  normalizeCloseSummary,
+  parseTaskBoard,
+  type TaskBoardSchema
+} from './task-board';
 
 export type TaskFinishMode = 'dry-run' | 'execute';
 
@@ -339,8 +346,8 @@ function planWrites(
   }
 
   if (!board.present) {
-    const beforeContent = board.content ?? defaultTaskBoard();
-    const afterRow = formatTaskBoardRow(task, capsule, 'Done');
+    const beforeContent = board.content ?? defaultTaskBoard('v1');
+    const afterRow = boardRowAfterClose(task, capsule, board);
     const afterContent = normalizeAtomicTextDocument(appendTaskBoardRow(beforeContent, afterRow));
     writes.push({
       path: 'docs/TASK_BOARD.md',
@@ -367,7 +374,7 @@ function planWrites(
     return writes;
   }
 
-  const expected = formatTaskBoardRow(task, capsule, 'Done', board.cells ?? undefined);
+  const expected = boardRowAfterClose(task, capsule, board);
   if (board.line !== expected) {
     const beforeContent = board.content ?? '';
     const afterContent = normalizeAtomicTextDocument(replaceTaskBoardRow(beforeContent, task.id, expected));
@@ -536,19 +543,21 @@ interface TaskBoardProjection {
   line: string | null;
   cells: string[] | null;
   status: string | null;
+  schema: TaskBoardSchema;
+  targets: string;
+  result: string;
   content: string | null;
 }
 
 function readTaskBoard(projectRoot: string, taskId: string): TaskBoardProjection {
   const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-  if (!fs.existsSync(taskBoardPath)) return { exists: false, present: false, duplicates: false, tableFramePresent: false, line: null, cells: null, status: null, content: null };
+  if (!fs.existsSync(taskBoardPath)) return { exists: false, present: false, duplicates: false, tableFramePresent: false, line: null, cells: null, status: null, schema: 'v1', targets: 'project', result: '-', content: null };
   const content = fs.readFileSync(taskBoardPath, 'utf8');
-  const lines = content.split(/\r?\n/);
-  const matches = lines.filter((line) => line.startsWith(`| ${taskId} |`));
-  const tableFramePresent = hasTaskBoardTableFrame(lines);
-  if (matches.length === 0) return { exists: true, present: false, duplicates: false, tableFramePresent, line: null, cells: null, status: null, content };
-  const cells = splitTaskBoardRowCells(matches[0]);
-  return { exists: true, present: true, duplicates: matches.length > 1, tableFramePresent, line: matches[0], cells, status: cells[2] ?? null, content };
+  const parsed = parseTaskBoard(content);
+  const matches = parsed.rows.filter((row) => row.id === taskId);
+  if (matches.length === 0) return { exists: true, present: false, duplicates: false, tableFramePresent: parsed.tableFramePresent, line: null, cells: null, status: null, schema: parsed.schema, targets: 'project', result: '-', content };
+  const row = matches[0];
+  return { exists: true, present: true, duplicates: matches.length > 1, tableFramePresent: parsed.tableFramePresent, line: row.line, cells: row.cells, status: row.status, schema: parsed.schema, targets: row.targets, result: row.result, content };
 }
 
 function readTaskStatus(task: TaskCapsule): string {
@@ -806,63 +815,19 @@ function appendTaskBoardRow(content: string, row: string): string {
   return `${normalized}${row}\n`;
 }
 
-function formatTaskBoardRow(task: TaskCapsule, capsule: string, status: string, existingCells: string[] = []): string {
-  const preservedHumanCells = existingCells.slice(4);
-  const cells = [task.id, sanitizeTaskBoardCell(task.title), status, capsule, ...preservedHumanCells];
-  if (cells.length < 5) cells.push('');
-  return formatTaskBoardCells(cells);
-}
-
-function defaultTaskBoard(): string {
-  return '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n';
-}
-
-function hasTaskBoardTableFrame(lines: string[]): boolean {
-  return (
-    lines.some((line) => {
-      const cells = splitTaskBoardRowCells(line);
-      return cells[0] === 'ID' && cells[1] === 'Title' && cells[2] === 'Status' && cells[3] === 'Capsule' && cells[4] === 'Notes';
-    }) && lines.some((line) => /^\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+/.test(line.trim()))
-  );
-}
-
-function splitTaskBoardRowCells(line: string): string[] {
-  const trimmed = line.trim();
-  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return [];
-  const cells: string[] = [];
-  let current = '';
-  let inInlineCode = false;
-  const body = trimmed.slice(1, -1);
-  for (let index = 0; index < body.length; index += 1) {
-    const char = body[index];
-    const previous = index > 0 ? body[index - 1] : '';
-    const escaped = previous === '\\';
-    if (char === '`' && !escaped) {
-      inInlineCode = !inInlineCode;
-      current += char;
-      continue;
-    }
-    if (char === '|' && !escaped && !inInlineCode) {
-      cells.push(current.trim());
-      current = '';
-      continue;
-    }
-    current += char;
-  }
-  cells.push(current.trim());
-  return cells;
-}
-
-function sanitizeTaskBoardCell(value: string): string {
-  return value.replace(/\|/g, '/').replace(/\r?\n/g, ' ').trim();
-}
-
-function formatTaskBoardCells(cells: string[]): string {
-  return cells.reduce((row, cell, index) => {
-    const value = cell.trim();
-    if (value === '' && index === cells.length - 1) return `${row} |`;
-    return `${row} ${value} |`;
-  }, '|');
+function boardRowAfterClose(task: TaskCapsule, capsule: string, board: TaskBoardProjection): string {
+  const schema = board.schema === 'unknown' ? 'v1' : board.schema;
+  const taskPath = path.join(task.dir, 'TASK.md');
+  const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
+  const result = schema === 'v1' ? normalizeCloseSummary(readMarkdownSection(taskContent, '## Close Summary')) || '-' : '-';
+  return formatTaskBoardRow(schema, {
+    id: task.id,
+    title: task.title,
+    status: 'Done',
+    targets: board.targets,
+    capsule,
+    result
+  }, board.cells ?? undefined);
 }
 
 function hashContent(content: string): string {

@@ -7,6 +7,7 @@ import { createStateProjectionReport, StateProjectionAdvisory, toStateProjection
 import { ProtocolRemediationFix } from './protocol-remediation';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
 import { findTaskCapsule, isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
+import { parseTaskBoard } from '../task/task-board';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
 export type ProtocolConsistencySeverity = 'error' | 'warning' | 'info';
@@ -952,22 +953,11 @@ function readTaskBoardRows(projectRoot: string, checkedDocs: Set<string>): TaskB
   const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   checkedDocs.add(toPortablePath(path.relative(projectRoot, taskBoardPath)));
   if (!fs.existsSync(taskBoardPath)) return [];
-  return fs
-    .readFileSync(taskBoardPath, 'utf8')
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => /^\|\s*T-\d{4}\s*\|/.test(line))
-    .map((line) => {
-      const cells = line
-        .slice(1, line.endsWith('|') ? -1 : undefined)
-        .split('|')
-        .map((cell) => cell.trim());
-      return {
-        id: cells[0] ?? '',
-        status: cells[2] ?? '',
-        capsule: cells[3] ?? ''
-      };
-    });
+  return parseTaskBoard(fs.readFileSync(taskBoardPath, 'utf8')).rows.map((row) => ({
+    id: row.id,
+    status: row.status,
+    capsule: row.capsule
+  }));
 }
 
 function findLatestDoneTask(tasks: TaskCapsule[]): TaskCapsule | undefined {

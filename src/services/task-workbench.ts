@@ -13,6 +13,7 @@ import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyRe
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../task/authoring-guidance';
 import { createTaskSelectionReport, TaskSelectionRecommendation } from '../task/task-selection';
+import { parseTaskBoard } from '../task/task-board';
 
 type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
 type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'closed-valid-current-not-checked' | 'missing-task';
@@ -1066,16 +1067,16 @@ function readTaskBoardProjection(projectRoot: string, taskId: string): TaskBoard
     return { status: 'Missing', path: taskBoardPath, present: false, capsule: null };
   }
 
-  const rows = parseMarkdownRows(fs.readFileSync(absolutePath, 'utf8')).filter((row) => row[0] === taskId);
+  const rows = parseTaskBoard(fs.readFileSync(absolutePath, 'utf8')).rows.filter((row) => row.id === taskId);
   if (rows.length !== 1) {
     return { status: 'Missing', path: taskBoardPath, present: false, capsule: null };
   }
 
   return {
-    status: rows[0][2] || 'Unknown',
+    status: rows[0].status || 'Unknown',
     path: taskBoardPath,
     present: true,
-    capsule: rows[0][3] || null
+    capsule: rows[0].capsule || null
   };
 }
 

@@ -13,6 +13,7 @@ import {
   readProjectCurrentState
 } from './project-current-state';
 import { SLICES_STATE_PATH } from './slices-state';
+import { parseTaskBoard } from '../task/task-board';
 
 export type StateProjectionSeverity = 'error' | 'warning' | 'info';
 
@@ -329,13 +330,12 @@ function readSource(projectRoot: string, relativePath: string): SourceText {
 }
 
 function parseTaskBoardRows(content: string): TaskBoardRow[] {
-  return parseMarkdownRows(content)
-    .filter((row) => /^T-\d{4}$/.test(row[0] ?? ''))
+  return parseTaskBoard(content).rows
     .map((row) => ({
-      id: row[0],
-      title: row[1] ?? '',
-      status: row[2] ?? '',
-      capsule: row[3] ?? ''
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      capsule: row.capsule
     }));
 }
 

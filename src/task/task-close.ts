@@ -7,6 +7,7 @@ import { createHarnessValidateReport, HarnessValidateResult } from '../services/
 import type { RemediationHint } from '../harness/validate';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
 import type { HadaraActorContext } from '../core/actor-context';
+import { parseTaskBoard } from './task-board';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { analyzeAcceptanceReadiness } from './acceptance';
 import { findTaskCapsule } from './task-capsule';
@@ -565,14 +566,16 @@ function hashFileIfPresent(projectRoot: string, relativePath: string): string {
 
 function taskBoardRowSnapshot(projectRoot: string, taskId: string): Record<string, string | boolean> {
   const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-  const row = fs.existsSync(taskBoardPath) ? parseMarkdownRows(fs.readFileSync(taskBoardPath, 'utf8')).find((cells) => cells[0] === taskId) : undefined;
+  const row = fs.existsSync(taskBoardPath) ? parseTaskBoard(fs.readFileSync(taskBoardPath, 'utf8')).rows.find((candidate) => candidate.id === taskId) : undefined;
   return {
     selector: `task:${taskId}:command-owned-cells`,
     present: row !== undefined,
-    id: row?.[0] ?? taskId,
-    title: row?.[1] ?? '',
-    status: row?.[2] ?? '',
-    capsule: row?.[3] ?? ''
+    id: row?.id ?? taskId,
+    title: row?.title ?? '',
+    status: row?.status ?? '',
+    targets: row?.targets ?? '',
+    capsule: row?.capsule ?? '',
+    result: row?.result ?? ''
   };
 }
 

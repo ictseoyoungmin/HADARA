@@ -75,6 +75,8 @@ Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AG
 
 Done-level harness validation is the minimum completion gate for Task Capsules. It requires Done status, completed acceptance, indexed evidence, updated handoff sections, Task Board alignment, non-placeholder standard capsule docs, and concrete `TASK.md` Created/Updated metadata formatted as `YYYY-MM-DD`.
 
+Init v1 Task Board coverage must compare the six-column template with the parser/writer, verify compact target rendering and project fallback, prove invalid close leaves Board status unchanged, normalize only an exact optional Close Summary to at most 160 Unicode code points, and keep legacy Notes/extra cells intact.
+
 ## Read-Only UI Checks
 
 The remaining UI surface is the integrated TUI. Focused validation for UI-adjacent capsules should cover:

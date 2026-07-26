@@ -36,7 +36,7 @@ export interface TaskCreateReport {
   }>;
 }
 
-export function createTaskCreateReport(projectRoot: string, title: string, options: Pick<CreateTaskCapsuleOptions, 'templateId' | 'maxCreateRetries' | 'onBeforeCreateAttempt' | 'lockTimeoutMs'> = {}): TaskCreateReport {
+export function createTaskCreateReport(projectRoot: string, title: string, options: Pick<CreateTaskCapsuleOptions, 'templateId' | 'maxCreateRetries' | 'onBeforeCreateAttempt' | 'lockTimeoutMs' | 'targets'> = {}): TaskCreateReport {
   const supportedTemplates = supportedTaskTemplateIds();
   const template = getTaskTemplate(options.templateId);
   const templateReport = templateSummary(template);
@@ -72,6 +72,7 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
         maxCreateRetries: options.maxCreateRetries,
         onBeforeCreateAttempt: options.onBeforeCreateAttempt,
         lockTimeoutMs: options.lockTimeoutMs,
+        targets: options.targets,
         lock: false
       });
       for (const issue of activateProjectCurrentTask(projectRoot, { id: created.id, title: created.title })) {

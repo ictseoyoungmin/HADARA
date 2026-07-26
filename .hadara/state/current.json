@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 330,
+  "rev": 332,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0703",
-    "title": "Init v1 Re-init and Upgrade Ownership"
+    "id": "T-0704",
+    "title": "Init v1 Task Board and Close Projection"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,27 +14,47 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Create the Init v1 Task Board and Close Projection capsule from the frozen implementation map.",
-    "reason": "Re-init/upgrade ownership is complete; Task Board v1 migration and Close Summary projection are the next ordered boundary.",
+    "title": "Implement Init v1 Document Routing.",
+    "reason": "This is ordered capsule 6 after Board targets establish the matching source; it owns registry services, exact TargetRef matching, requiredDocuments, deterministic ordering, READ_MAP projection, and stale diagnostics.",
     "references": [
+      {
+        "path": "`.hadara/context/HADARA_CONTEXT.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/PROJECT_STATE.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/AGENT_HANDOFF.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/TASK_BOARD.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/HADARA_WORKFLOW.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/DEVELOPMENT_SLICES.md`",
+        "required": true
+      },
       {
         "path": "`tasks/T-0698-init-v1-contract-and-characterization/INIT_V1_IMPLEMENTATION_MAP.md`",
         "required": true
       },
       {
-        "path": "frozen Init v1 specs",
-        "required": true
-      },
-      {
-        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+        "path": "frozen Init v1 design and acceptance specs",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0703",
-      "path": "tasks/T-0703-init-v1-re-init-and-upgrade-ownership/HANDOFF.md"
+      "workId": "T-0704",
+      "path": "tasks/T-0704-init-v1-task-board-and-close-projection/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

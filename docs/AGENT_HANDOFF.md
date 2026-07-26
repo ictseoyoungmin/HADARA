@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0703 Init v1 Re-init and Upgrade Ownership | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0704 Init v1 Task Board and Close Projection | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,9 +33,11 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0703 completes the Init v1 Re-init and Upgrade Ownership boundary. Base init is a complete-project no-op, rejects explicit preset/profile changes after initialization, and does not repair partial installations. Canonical v1 `init upgrade` is now dry-run-first and plan-hash guarded through the existing recoverable transaction; it repairs only missing/managed core artifacts, preserves project configuration, existing document-registry bytes, Task Board content, AGENTS user prose, and optional documents, and rejects invalid authority, malformed managed blocks, stale plans, and configuration changes before writes. Clean Docker passed 141 public files/1098 tests and 16 HADARA-dev files/129 tests with zero npm vulnerabilities; the refreshed built CLI passed init → re-init no-op → partial diagnostic → reviewed upgrade → upgrade no-op. Continue with Init v1 Task Board and Close Projection; keep routing, legacy isolation, installed acceptance, and RC2 promotion in their ordered later capsules.
+T-0704 completes the Init v1 Task Board and Close Projection boundary. A shared schema-aware Board model now supports the frozen six-column v1 contract and preserves legacy Notes/extra cells. Task creation defaults Targets to `project`, accepts repeated explicit TargetRefs, and persists the compact ordered source in both TASK.md and the Board. Valid finish/close bookkeeping projects only the exact optional `## Close Summary` as one plain-text Result capped at 160 Unicode code points; generic Notes are never inferred. Corrected serial Docker validation passed all 142 public files/1102 tests and 16 HADARA-dev files/129 tests, `dist` is current, and built CLI create plus read-only close smokes passed. Continue with Init v1 Document Routing from capsule 6 of the implementation map; keep legacy isolation, installed acceptance, and RC2 promotion in their ordered later capsules.
 
 ## Previous Handoff
+
+T-0703 completed Init v1 Re-init and Upgrade Ownership: complete-project base init is a no-op, configuration expansion fails closed, and reviewed upgrade repairs only canonical managed core artifacts while preserving registry bytes and user-owned content.
 
 T-0702 restored the cross-cutting trust boundary before the Init v1 program continued. Release artifact execution builds and version-checks current source; acceptance evidence is outcome-consistent; Docker copies tracked `.hadara` without local state; HANDOFF sync is idempotent; rollback/TUI branches are covered; dependency metadata is clean. Clean Docker passed 140 public files/1094 tests plus 16 HADARA-dev files/129 tests with zero npm vulnerabilities, and the executed artifact verified 261 packaged files.
 

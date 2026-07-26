@@ -704,3 +704,4 @@
 | T-0701 | Init v1 Safe Apply Rollback Hardening | Done | tasks/T-0701-init-v1-safe-apply-rollback-hardening | |
 | T-0702 | Trust Boundary Normalization | Done | tasks/T-0702-trust-boundary-normalization | Release, acceptance evidence, Docker state, HANDOFF sync, rollback, TUI debt, lockfile, and validation trust boundaries normalized; proof-last close pending. |
 | T-0703 | Init v1 Re-init and Upgrade Ownership | Done | tasks/T-0703-init-v1-re-init-and-upgrade-ownership | |
+| T-0704 | Init v1 Task Board and Close Projection | Done | tasks/T-0704-init-v1-task-board-and-close-projection | |

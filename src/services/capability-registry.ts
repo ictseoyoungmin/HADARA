@@ -473,7 +473,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.create',
-    command: 'hadara task create <title> [--from <template-id>] [--json]',
+    command: 'hadara task create <title> [--target <namespace:id>]... [--from <template-id>] [--json]',
     summary: 'Create a Task Capsule under `tasks/`.',
     canonical: true,
     appearsInDefaultHelp: true,
