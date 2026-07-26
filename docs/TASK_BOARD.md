@@ -706,3 +706,4 @@
 | T-0703 | Init v1 Re-init and Upgrade Ownership | Done | tasks/T-0703-init-v1-re-init-and-upgrade-ownership | |
 | T-0704 | Init v1 Task Board and Close Projection | Done | tasks/T-0704-init-v1-task-board-and-close-projection | |
 | T-0705 | Compact Workflow Output | Done | tasks/T-0705-compact-workflow-output | |
+| T-0706 | Init v1 Mutation Authority | Done | tasks/T-0706-init-v1-mutation-authority | |

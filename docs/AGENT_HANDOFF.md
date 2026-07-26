@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0705 Compact Workflow Output | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0706 Init v1 Mutation Authority | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0705 completes compact lifecycle output. Default `task status --json` now exposes only selected-task identity, phase/readiness, a focused TASK.md read/edit route, bounded issues, and the primary next action; default `task close --json` returns a compact transaction summary without phase-progress noise. `--detail full --json` preserves both complete v2 reports. Full validation passed 142 public files/1102 tests and 16 HADARA-dev files/129 tests in the home-directory ext4 clone. Continue with Validation state-token/detail separation, then shared-state projection automation, official serial/low-resource Docker validation, failure classification, and live-document archival.
+T-0706 connects fresh Init v1 projects to mutation commands without restoring legacy scaffold metadata. The shared guard validates canonical project/document authority, fails closed on partial or invalid v1 state, and keeps `hadaraProtocol: 0.4` only as a compatibility fallback. Built CLI standard init and task creation passed without `.hadara/scaffold.json`; full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Continue with Validation state-token/detail separation, then shared projection policy, official serial/low-resource Docker validation, failure classification, and live-document archival.
 
 ## Previous Handoff
 

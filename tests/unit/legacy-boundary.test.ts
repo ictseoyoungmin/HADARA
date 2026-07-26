@@ -8,6 +8,7 @@ import { handleEvidenceCommand } from '../../src/cli/evidence';
 import { handleInitCommand, initProject } from '../../src/cli/init';
 import { handleReleaseArtifactCommand } from '../../tools/dev-surface-handlers';
 import { handleTaskCommand } from '../../src/cli/task';
+import { applyInitPlanningResult, createInitPlanningResult } from '../../src/cli/init';
 
 const roots: string[] = [];
 
@@ -97,6 +98,45 @@ describe('legacy project mutation boundary', () => {
       task: { id: 'T-0001', title: 'Allowed task' }
     });
     expect(fs.existsSync(path.join(root, 'tasks', 'T-0001-allowed-task', 'TASK.md'))).toBe(true);
+  });
+
+  it('allows task create from validated Init v1 authority without legacy scaffold metadata', () => {
+    const root = tempProject();
+    const planning = createInitPlanningResult(root, 'minimal');
+    expect(applyInitPlanningResult(root, planning, { planHash: planning.plan.planHash }).ok).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'scaffold.json'))).toBe(false);
+
+    const report = captureJson(() =>
+      handleTaskCommand({ args: ['task', 'create', 'Allowed v1 task', '--json'], projectRoot: root, jsonOutput: true })
+    );
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.create.v1',
+      ok: true,
+      task: { id: 'T-0001', title: 'Allowed v1 task' }
+    });
+  });
+
+  it('blocks partial or invalid Init v1 authority before mutation', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'project.json'), '{}\n', 'utf8');
+
+    const report = captureJson(() =>
+      handleTaskCommand({ args: ['task', 'create', 'Blocked v1 task', '--json'], projectRoot: root, jsonOutput: true })
+    );
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.legacyProjectBoundary.v1',
+      ok: false,
+      mutationAllowed: false,
+      supportedAuthorities: ['hadara.project.v1', 'hadaraProtocol:0.4']
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'HADARA_PROTOCOL_UNSUPPORTED',
+      path: '.hadara/project.json'
+    }));
+    expect(fs.existsSync(path.join(root, 'tasks'))).toBe(false);
   });
 });
 

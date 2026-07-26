@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 334,
+  "rev": 336,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0705",
-    "title": "Compact Workflow Output"
+    "id": "T-0706",
+    "title": "Init v1 Mutation Authority"
   },
   "activeTask": null,
   "nextWork": null,
@@ -15,7 +15,7 @@
     "disposition": "actionable",
     "kind": "task-handoff",
     "title": "Separate Validation status tokens from explanatory detail.",
-    "reason": "This is the next user-requested reduction and should establish the result model before failure classification consumes it.",
+    "reason": "The fresh mutation boundary now works; this is the next ordered user-requested reduction and precedes failure classification.",
     "references": [
       {
         "path": "`.hadara/context/HADARA_CONTEXT.md`",
@@ -53,8 +53,8 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0705",
-      "path": "tasks/T-0705-compact-workflow-output/HANDOFF.md"
+      "workId": "T-0706",
+      "path": "tasks/T-0706-init-v1-mutation-authority/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

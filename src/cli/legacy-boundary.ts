@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { assertInitDocuments, assertInitProjectConfig } from '../init/model';
 
 export interface LegacyBoundaryIssue {
   severity: 'error';
   code: 'HADARA_PROTOCOL_MISSING' | 'HADARA_PROTOCOL_UNSUPPORTED' | 'HADARA_LEGACY_PROJECT_MUTATION_BLOCKED';
-  path: '.hadara/scaffold.json';
+  path: string;
   message: string;
 }
 
@@ -15,11 +16,32 @@ export interface LegacyBoundaryReport {
   mutationAllowed: false;
   detectedProtocol: string | null;
   supportedProtocol: '0.4';
+  supportedAuthorities: ['hadara.project.v1', 'hadaraProtocol:0.4'];
   issues: LegacyBoundaryIssue[];
   nextActions: Array<{ label: string; command: string }>;
 }
 
 export function createLegacyMutationBlockedReport(projectRoot: string, command: string): LegacyBoundaryReport | null {
+  const projectPath = path.join(projectRoot, '.hadara', 'project.json');
+  const documentsPath = path.join(projectRoot, '.hadara', 'documents.json');
+  if (fs.existsSync(projectPath) || fs.existsSync(documentsPath)) {
+    try {
+      if (!fs.existsSync(projectPath) || !fs.existsSync(documentsPath)) {
+        throw new Error('both .hadara/project.json and .hadara/documents.json are required');
+      }
+      assertInitProjectConfig(JSON.parse(fs.readFileSync(projectPath, 'utf8')));
+      assertInitDocuments(JSON.parse(fs.readFileSync(documentsPath, 'utf8')));
+      return null;
+    } catch (error) {
+      return report(command, null, {
+        severity: 'error',
+        code: 'HADARA_PROTOCOL_UNSUPPORTED',
+        path: '.hadara/project.json',
+        message: `Init v1 project authority is invalid: ${error instanceof Error ? error.message : String(error)}`
+      });
+    }
+  }
+
   const scaffoldPath = path.join(projectRoot, '.hadara', 'scaffold.json');
   if (!fs.existsSync(scaffoldPath)) {
     return report(command, null, {
@@ -66,6 +88,7 @@ function report(command: string, detectedProtocol: string | null, issue: LegacyB
     mutationAllowed: false,
     detectedProtocol,
     supportedProtocol: '0.4',
+    supportedAuthorities: ['hadara.project.v1', 'hadaraProtocol:0.4'],
     issues: [
       issue,
       {
