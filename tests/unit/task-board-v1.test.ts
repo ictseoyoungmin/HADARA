@@ -46,6 +46,7 @@ describe('Init v1 Task Board', () => {
       .replace('## Close Summary\n\n', '## Close Summary\n\n**Added** the [small path](https://example.test).\nSecond line.\n\n')
       .concat('\n## Notes\n\nNever copy this.\n');
     fs.writeFileSync(taskPath, taskContent, 'utf8');
+    expect(taskContent).not.toContain('| Targets | project |');
 
     const report = createTaskFinishReport(root, task.id, 'execute');
     const row = parseTaskBoard(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).rows[0];

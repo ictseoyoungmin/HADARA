@@ -1,40 +1,24 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 338,
+  "rev": 341,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0707",
-    "title": "Validation State and Detail Separation"
+    "id": "T-0709",
+    "title": "Compact Task Identity Targets"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Automate close projection only into registered, existing shared state documents.",
-    "reason": "Preserve the compact Init v1 baseline: Task Board remains default, and task close must not create optional global prose documents.",
+    "title": "Resume T-0708 Registered Shared Close Projection.",
+    "reason": "Its Capsule already exists and its implementation was temporarily isolated for this task commit.",
     "references": [
       {
-        "path": "`.hadara/context/HADARA_CONTEXT.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/PROJECT_STATE.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/AGENT_HANDOFF.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/TASK_BOARD.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/HADARA_WORKFLOW.md`",
+        "path": "`tasks/T-0708-registered-shared-close-projection/TASK.md`",
         "required": true
       },
       {
@@ -44,17 +28,13 @@
       {
         "path": "`docs/SECURITY_MODEL.md`",
         "required": true
-      },
-      {
-        "path": "current user instruction",
-        "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0707",
-      "path": "tasks/T-0707-validation-state-and-detail-separation/HANDOFF.md"
+      "workId": "T-0709",
+      "path": "tasks/T-0709-compact-task-identity-targets/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

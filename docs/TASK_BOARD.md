@@ -708,3 +708,5 @@
 | T-0705 | Compact Workflow Output | Done | tasks/T-0705-compact-workflow-output | |
 | T-0706 | Init v1 Mutation Authority | Done | tasks/T-0706-init-v1-mutation-authority | |
 | T-0707 | Validation State and Detail Separation | Done | tasks/T-0707-validation-state-and-detail-separation | |
+| T-0708 | Registered Shared Close Projection | Draft | tasks/T-0708-registered-shared-close-projection | |
+| T-0709 | Compact Task Identity Targets | Done | tasks/T-0709-compact-task-identity-targets | |

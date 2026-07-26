@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0707 Validation State and Detail Separation |
+| Latest Completed Task | T-0709 Compact Task Identity Targets |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -57,6 +57,8 @@ T-0705 makes ordinary lifecycle output materially smaller. Default task status n
 T-0706 connects Init v1 to the existing mutation lifecycle. The shared mutation guard now accepts schema-valid `.hadara/project.json` plus `.hadara/documents.json`, rejects partial or invalid authority before writes, and retains `hadaraProtocol: 0.4` only as a legacy compatibility fallback. Built CLI standard init followed by task creation passed without generating `.hadara/scaffold.json`; full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Validation state/detail separation remains next.
 
 T-0707 separates Validation state from explanation. `validation run` now exposes canonical `status: Passed|Failed|Blocked` plus bounded `detail`; deprecated `result` remains for compatibility. New Task Capsules use `Status | Detail`, while legacy Result tables remain valid. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Registered existing shared-document projection is next; fresh Init must not gain optional global prose files.
+
+T-0709 removes redundant default targeting from Task Capsule identity. New default tasks omit `Targets | project` from TASK.md, explicit non-project targets remain visible, and Task Board continues to persist all targets. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Resume the already-created T-0708 registered shared close projection next.
 
 | Stage | State | Purpose |
 |---|---|---|

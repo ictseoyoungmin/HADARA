@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0707 Validation State and Detail Separation | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0709 Compact Task Identity Targets | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0707 separates Validation state tokens from explanatory detail in JSON, plain output, and new Task Capsule rows while preserving legacy Result tables. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Continue with close projection only for registered existing shared documents; do not add optional global prose files to fresh Init. Then add HADARA-dev-only low-resource Docker tooling under `tools/`, failure classification, and live-document archival.
+T-0709 removes the redundant default `Targets | project` row from new TASK.md identity while preserving explicit targets and Task Board target ownership. Full validation passed 142 public files/1104 tests and 16 HADARA-dev files/129 tests. Resume existing T-0708 registered shared close projection, then add HADARA-dev-only low-resource Docker tooling under `tools/`, failure classification, and live-document archival.
 
 ## Previous Handoff
 
