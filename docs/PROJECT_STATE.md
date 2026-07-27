@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0711 Automatic Validation Failure Classification |
+| Latest Completed Task | T-0712 Live Documentation Set and Archive |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -90,8 +90,8 @@ T-0711 adds controlled automatic failure classification. `validation run` and re
 
 | History Type | Path | Use |
 |---|---|---|
-| Pre-P1 project state snapshot | `docs/history/PROJECT_STATE_PRE_T0558.md` | Full pre-compaction project narrative through T-0557. |
-| Pre-P1 handoff snapshot | `docs/history/AGENT_HANDOFF_PRE_T0558.md` | Full pre-compaction handoff, known-problem, and validation tables. |
+| Pre-P1 project state snapshot | `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | Full pre-compaction project narrative through T-0557. |
+| Pre-P1 handoff snapshot | `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | Full pre-compaction handoff, known-problem, and validation tables. |
 | Documentation archive map | `docs/archive/README.md` | Completed specs, historical logs, and old-to-new path mapping. |
 | Completed task handoff history | `docs/HANDOFF_HISTORY.md` | Older completed-task summaries. |
 | Validation history | `docs/VALIDATION_HISTORY.md` | Older accumulated validation observations. |
@@ -112,4 +112,4 @@ T-0711 adds controlled automatic failure classification. `validation run` and re
 | Active task contract | `tasks/T-*/TASK.md` |
 | Canonical task evidence | `tasks/T-*/evidence.jsonl` |
 | Document classification and routing | `.hadara/docs-registry.json` |
-| Primary lifecycle growth/invocation budget | `docs/PRIMARY_WORKFLOW_BUDGET.md` |
+| Primary lifecycle growth/invocation budget | `docs/archive/retired-2026-07-26/PRIMARY_WORKFLOW_BUDGET.md` |

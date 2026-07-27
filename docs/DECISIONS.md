@@ -44,8 +44,8 @@ Reason:
 Reason:
 - `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md` is the broad technical plan and may include target designs that are ahead of implementation.
 - Future Task Capsules need smaller, concrete references so schema details, file candidates, and acceptance notes are not lost.
-- `docs/V1_0_CAPSULE_BACKLOG.md` tracks candidate slices and ordering.
-- `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` tracks detailed schemas, file candidates, and implementation notes.
+- `docs/archive/retired-2026-07-26/V1_0_CAPSULE_BACKLOG.md` tracks candidate slices and ordering.
+- `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md` tracks detailed schemas, file candidates, and implementation notes.
 - Existing contract docs remain authoritative for implemented stable surfaces; v1.0 reference docs describe planned or partial surfaces until promoted.
 
 ## D-0008: Generic init preserves HADARA structure, not HADARA-dev assumptions
@@ -127,7 +127,7 @@ Reason:
 - Before 0.5 stable, default `task status` therefore opens the active capsule automatically or selects work when none is active; `--task` remains the explicit override.
 - Top-level `status` is a deprecated 0.5.x alias to the same evaluator, not a second routing authority.
 - Successful public `task close` already performs final audit and is terminal; it must not recommend a confirming status call.
-- Structured current-state authority and generated profile scaffolds are migrated in subsequent substantial capsules under `docs/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`.
+- Structured current-state authority and generated profile scaffolds are migrated in subsequent substantial capsules under `docs/archive/retired-2026-07-26/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`.
 - Evidence: T-0679.
 
 ## D-0016: Markdown owns inspectable intent; structured current state is a compatibility checkpoint
@@ -143,7 +143,7 @@ Reason:
 ## D-0017: Init v1 uses one lifecycle, init-time presets, and minimal explicit state
 
 Reason:
-- The frozen Init v1 design and acceptance contracts under `docs/specs/0.5/redesign/` replace runtime-facing project profiles with `minimal`, `standard`, and `governed` init-time presets; `basic` remains only a deprecated alias for `minimal`.
+- The frozen Init v1 design and acceptance contracts under `docs/archive/retired-2026-07-26/specs/0.5/redesign/` replace runtime-facing project profiles with `minimal`, `standard`, and `governed` init-time presets; `basic` remains only a deprecated alias for `minimal`.
 - New projects store static configuration in `.hadara/project.json` and registered local-document routing in `.hadara/documents.json`; current task, release, validation, evidence, runtime locks, and stale verdicts do not belong in those files.
 - JSON, non-interactive, agent, and CI init flows are plan/apply transactions. They must be non-destructive, hash-guarded, root-contained, serialized, recoverable, and explicit about dry-run/applied/no-op results.
 - Optional preset documents are scaffold-once and user-owned; `AGENTS.md` is mixed managed-block content, `HADARA_WORKFLOW.md` is HADARA-managed, `TASK_BOARD.md` is command-managed, and `READ_MAP.md` is a generated projection.

@@ -18,7 +18,7 @@ describe('primary workflow budget', () => {
   });
 
   it('documents the six-invocation path and capability freeze', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'PRIMARY_WORKFLOW_BUDGET.md'), 'utf8');
+    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'archive', 'retired-2026-07-26', 'PRIMARY_WORKFLOW_BUDGET.md'), 'utf8');
 
     expect(content).toContain('four unique public commands and six CLI invocations');
     expect(content).toContain('The ordinary path budget is `<= 6` invocations after init.');
@@ -43,7 +43,7 @@ describe('primary workflow budget', () => {
   });
 
   it('documents all seven metrics and installed-package completion boundary', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'PRIMARY_WORKFLOW_BUDGET.md'), 'utf8');
+    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'archive', 'retired-2026-07-26', 'PRIMARY_WORKFLOW_BUDGET.md'), 'utf8');
 
     for (const phrase of ['installation/available-CLI start to first capsule', 'first correct current-state file', 'manual document edit count', 'stale command/version/current-state references', 'profile dropout stage', 'recommendation accepted/ignored/corrected']) {
       expect(content).toContain(phrase);

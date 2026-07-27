@@ -33,13 +33,13 @@ describe('HADARA-dev compact current-state ownership', () => {
     }
     expect(projectState).not.toContain('## Next Planned Line');
     expect(handoff).not.toContain('## Last 3 Completed Tasks');
-    expect(projectState).toContain('docs/history/PROJECT_STATE_PRE_T0558.md');
-    expect(handoff).toContain('docs/history/AGENT_HANDOFF_PRE_T0558.md');
+    expect(projectState).toContain('docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md');
+    expect(handoff).toContain('docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md');
   });
 
   it('preserves pre-P1 snapshots as explicitly frozen historical records', () => {
-    const projectSnapshot = read('docs/history/PROJECT_STATE_PRE_T0558.md');
-    const handoffSnapshot = read('docs/history/AGENT_HANDOFF_PRE_T0558.md');
+    const projectSnapshot = read('docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md');
+    const handoffSnapshot = read('docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md');
 
     expect(projectSnapshot).toContain('# PROJECT_STATE');
     expect(handoffSnapshot).toContain('# AGENT_HANDOFF');

@@ -15,7 +15,7 @@ Assisted mode.
 - Binary evidence and secret-bearing evidence must stay private until a dedicated sanitized artifact policy exists.
 - Private evidence source artifacts are copied into the private portable store only when the source resolves inside the project boundary by default.
 - External absolute private evidence paths may be recorded only as sanitized committed evidence metadata unless a future explicit override policy is added.
-- Shell-executing evidence capture is not implemented. Future `evidence from-command` work must follow `docs/EVIDENCE_FROM_COMMAND_DESIGN.md`, require explicit execution mode, run policy preflight, bound raw logs, and keep raw/private output out of committed evidence by default.
+- Shell-executing evidence capture is not implemented. Future `evidence from-command` work must follow `docs/archive/retired-2026-07-26/EVIDENCE_FROM_COMMAND_DESIGN.md`, require explicit execution mode, run policy preflight, bound raw logs, and keep raw/private output out of committed evidence by default.
 - Init v1 apply requires a reviewed plan hash; brownfield apply additionally requires explicit adoption confirmation. Apply recomputes the plan under a project-local lock and rejects stale, conflicting, or partially safe plans before writes.
 - Init v1 paths must remain inside the resolved project root, must not traverse symbolic-link path segments, must not collide by case, and must not create nested HADARA projects. Transaction locks and recovery journals stay under ignored `.hadara/local/` runtime state.
 - Init v1 rollback restores only journaled transaction-owned mutations and verifies created-file hashes before removal; a path changed by another actor is retained and reported for manual recovery.

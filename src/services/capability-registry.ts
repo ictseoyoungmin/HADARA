@@ -253,7 +253,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'experimental',
     schemaVersion: 'hadara.slice.report.v1',
-    docs: ['docs/SCHEMAS.md', 'docs/specs/0.4.1/rc0-scope.md'],
+    docs: ['docs/SCHEMAS.md', 'docs/archive/retired-2026-07-26/specs/0.4.1/rc0-scope.md'],
     examples: [example('List slices', 'hadara slice list --json', 'When selecting or reviewing roadmap slices.')],
     related: ['slice.list', 'task.status'],
     conflictsWith: []
@@ -274,7 +274,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'experimental',
     schemaVersion: 'hadara.slice.report.v1',
-    docs: ['docs/SCHEMAS.md', 'docs/specs/0.4.1/rc0-scope.md'],
+    docs: ['docs/SCHEMAS.md', 'docs/archive/retired-2026-07-26/specs/0.4.1/rc0-scope.md'],
     examples: [example('Add a slice', 'hadara slice add --id M1 --title "Tutorial slice" --json', 'When planning a new roadmap slice.')],
     related: ['slice.list', 'task.status'],
     conflictsWith: []
@@ -295,7 +295,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'experimental',
     schemaVersion: 'hadara.slice.report.v1',
-    docs: ['docs/SCHEMAS.md', 'docs/specs/0.4.1/rc0-scope.md'],
+    docs: ['docs/SCHEMAS.md', 'docs/archive/retired-2026-07-26/specs/0.4.1/rc0-scope.md'],
     examples: [example('Mark a slice done', 'hadara slice set --id M1 --status done --capsule T-0002 --json', 'When a slice starts, completes, or changes capsule binding.')],
     related: ['slice.list', 'task.status'],
     conflictsWith: []
@@ -316,7 +316,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'experimental',
     schemaVersion: 'hadara.slice.report.v1',
-    docs: ['docs/SCHEMAS.md', 'docs/specs/0.4.1/rc0-scope.md'],
+    docs: ['docs/SCHEMAS.md', 'docs/archive/retired-2026-07-26/specs/0.4.1/rc0-scope.md'],
     examples: [example('Bootstrap slices state', 'hadara slice migrate --execute --json', 'When adopting the FD-012 slices state prototype in an existing project.')],
     related: ['slice.list', 'task.status'],
     conflictsWith: []
@@ -337,7 +337,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'experimental',
     schemaVersion: 'hadara.slice.report.v1',
-    docs: ['docs/SCHEMAS.md', 'docs/specs/0.4.1/rc0-scope.md'],
+    docs: ['docs/SCHEMAS.md', 'docs/archive/retired-2026-07-26/specs/0.4.1/rc0-scope.md'],
     examples: [example('Regenerate the projection', 'hadara slice render --json', 'After SLICES_RENDER_DRIFT_DETECTED, to discard a manual projection edit.')],
     related: ['slice.list', 'task.status'],
     conflictsWith: []
@@ -1183,7 +1183,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     since: '0.4.5',
     schemaVersion: 'hadara.docs.registryMutation.v1',
-    docs: ['docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
+    docs: ['docs/archive/retired-2026-07-26/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
     examples: [example('Preview registry field update', 'hadara docs update --path docs/specs/example.md --set status=reference --json', 'When correcting one registered document field.')],
     related: ['docs.archive', 'docs.supersede', 'docs.unregister', 'docs.render', 'docs.doctor'],
     conflictsWith: [],
@@ -1206,7 +1206,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     since: '0.4.5',
     schemaVersion: 'hadara.docs.registryMutation.v1',
-    docs: ['docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
+    docs: ['docs/archive/retired-2026-07-26/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
     examples: [example('Preview archive', 'hadara docs archive --path docs/specs/old.md --reason "No longer current" --json', 'When a document should remain as non-default history.')],
     related: ['docs.update', 'docs.supersede', 'docs.unregister', 'docs.doctor'],
     conflictsWith: []
@@ -1228,7 +1228,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     since: '0.4.5',
     schemaVersion: 'hadara.docs.registryMutation.v1',
-    docs: ['docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
+    docs: ['docs/archive/retired-2026-07-26/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
     examples: [example('Preview supersede', 'hadara docs supersede --path docs/specs/old.md --by docs/specs/new.md --reason "Replaced" --json', 'When one current document replaces another.')],
     related: ['docs.update', 'docs.archive', 'docs.unregister', 'docs.doctor'],
     conflictsWith: []
@@ -1250,7 +1250,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     since: '0.4.5',
     schemaVersion: 'hadara.docs.registryMutation.v1',
-    docs: ['docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
+    docs: ['docs/archive/retired-2026-07-26/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
     examples: [example('Preview unregister', 'hadara docs unregister --path docs/specs/stale.md --reason "No desired-state value" --json', 'When a stale entry should be deleted from desired state.')],
     related: ['docs.update', 'docs.archive', 'docs.supersede', 'docs.doctor'],
     conflictsWith: []
@@ -1272,7 +1272,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     since: '0.4.5',
     schemaVersion: 'hadara.docs.registryMutation.v1',
-    docs: ['docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
+    docs: ['docs/archive/retired-2026-07-26/specs/0.4.5/docs-registry-v3-and-init-cleanup.md', 'docs/SCHEMAS.md'],
     examples: [example('Preview docs registry render', 'hadara docs render --json', 'When syncing the human DOC_REGISTRY projection from JSON.')],
     related: ['docs.update', 'docs.register', 'docs.doctor'],
     conflictsWith: []

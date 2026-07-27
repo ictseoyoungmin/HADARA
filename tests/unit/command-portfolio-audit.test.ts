@@ -31,7 +31,7 @@ describe('Phase 7.2 command portfolio audit', () => {
   });
 
   it('records canonical, alias, diagnostic, advanced, dev-only, and release-only decisions in docs', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'COMMAND_PORTFOLIO_AUDIT.md'), 'utf8');
+    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'archive', 'retired-2026-07-26', 'COMMAND_PORTFOLIO_AUDIT.md'), 'utf8');
 
     expect(content).toContain('## Primary Lifecycle Commands');
     expect(content).toContain('## Diagnostic Commands');
@@ -47,7 +47,7 @@ describe('Phase 7.2 command portfolio audit', () => {
   });
 
   it('keeps the lifecycle guide document aligned with the report primary path', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'LIFECYCLE_GUIDE.md'), 'utf8');
+    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'archive', 'retired-2026-07-26', 'LIFECYCLE_GUIDE.md'), 'utf8');
     const report = createCommandPortfolioAuditReport();
 
     for (const commandId of report.primaryCommandIds) expect(content).toContain(`\`${commandId}\``);

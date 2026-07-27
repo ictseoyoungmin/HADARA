@@ -842,7 +842,7 @@ describe('Operations Status JSON', () => {
   });
 
   it('keeps the dashboard sample fixture aligned with the status schema', () => {
-    const fixture = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'docs', 'design', 'fixtures', 'hadara.ops.status.sample.json'), 'utf8'));
+    const fixture = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'docs', 'archive', 'retired-2026-07-26', 'design', 'fixtures', 'hadara.ops.status.sample.json'), 'utf8'));
 
     expect(fixture).toMatchObject({
       schemaVersion: 'hadara.ops.status.v1',

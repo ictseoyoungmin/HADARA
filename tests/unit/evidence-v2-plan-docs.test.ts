@@ -10,7 +10,7 @@ function read(relativePath: string): string {
 
 describe('evidence v2 writer and migration plan docs', () => {
   it('documents v2 writer shape, dry-run-first migration, and non-goals', () => {
-    const plan = read('docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md');
+    const plan = read('docs/archive/retired-2026-07-26/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md');
     const schemas = read('docs/SCHEMAS.md');
     const tests = read('docs/TEST_STRATEGY.md');
 
@@ -28,7 +28,7 @@ describe('evidence v2 writer and migration plan docs', () => {
     expect(plan).toContain('Later passed same-category evidence remains a v1 compatibility-only transitional fallback');
     expect(plan).toContain('No failed-evidence resolution unless an exact marker, v1 compatibility-only later passed same-category evidence, or explicit residual-risk documentation provides the signal.');
 
-    expect(schemas).toContain('docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md');
+    expect(schemas).toContain('docs/archive/retired-2026-07-26/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md');
     expect(schemas).toContain('must not imply that existing v1 evidence has already been migrated');
     expect(tests).toContain('dual-read v1/v2 normalization');
     expect(tests).toContain('hash-guarded execute behavior');

@@ -107,7 +107,7 @@ The historical `hadara.task.audit_close.v1` report shape remains an internal fin
 
 The historical next-work projection is now internal to `task status --json`; public `hadara task next --json` is no longer routed.
 
-`hadara evidence from-command` is intentionally not implemented. The design boundary lives in `docs/EVIDENCE_FROM_COMMAND_DESIGN.md`; until a future capsule implements it, shell-executing evidence capture must not be inferred from `evidence add-command`.
+`hadara evidence from-command` is intentionally not implemented. The design boundary lives in `docs/archive/retired-2026-07-26/EVIDENCE_FROM_COMMAND_DESIGN.md`; until a future capsule implements it, shell-executing evidence capture must not be inferred from `evidence add-command`.
 
 `hadara validation run ... --json` returns `hadara.validation.run.v1`. `status` is the controlled `Passed|Failed|Blocked` token and `detail` is a bounded human explanation; consumers must not parse detail text to infer state. `result` remains a deprecated compatibility alias for `status`. New Task Capsules use `Check | Gate | Status | Detail | Evidence`; legacy Result tables remain readable and writable without forced migration.
 
@@ -217,4 +217,4 @@ The following schemas are planned or partial and should not be treated as stable
 
 - `hadara.redaction.report.v1`
 
-Detailed target schemas live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+Detailed target schemas live in `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md`.

@@ -5,7 +5,7 @@ Schema: `hadara.docs.registry.v1`
 <!-- hadara:managed:start doc-registry-summary {"schema":"hadara.managedSection.v1","owner":"docs.registry","kind":"markdown-table","mode":"replace","version":1,"required":true,"closeSourceRole":"included"} -->
 | Path | Kind | Status | Read When | Required | Owner |
 |---|---|---|---|---|---|
-| `.hadara/context/HADARA_CONTEXT.md` | project-context | canonical | session-start | yes | hadara-docs |
+| `.hadara/context/HADARA_CONTEXT.md` | project-context | reference | never-default | no | hadara-docs |
 | `.hadara/state/current.json` | schema-reference | canonical | session-start | yes | hadara-docs |
 | `AGENTS.md` | protocol | canonical | session-start | yes | hadara-docs |
 | `docs/AGENT_HANDOFF.md` | handoff | canonical | session-start | yes | hadara-docs |
@@ -51,24 +51,34 @@ Schema: `hadara.docs.registry.v1`
 | `docs/archive/specs/0.4.0/productization-redesign/templates/0.4/HANDOFF.md` | task-capsule | historical | never-default | no | hadara-dev |
 | `docs/archive/specs/0.4.0/productization-redesign/templates/0.4/TASK.md` | task-capsule | historical | never-default | no | hadara-dev |
 | `docs/archive/specs/0.4.0/state-first/proposal.md` | spec | historical | never-default | no | hadara-docs |
-| `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | performance-baseline | reference | only-when-linked | no | hadara-dev |
-| `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | performance-thresholds | reference | only-when-linked | no | hadara-dev |
+| `docs/archive/retired-2026-07-26/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | performance-baseline | historical | never-default | no | hadara-dev |
+| `docs/archive/retired-2026-07-26/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | performance-thresholds | historical | never-default | no | hadara-dev |
 | `docs/DECISIONS.md` | decision-log | reference | only-when-linked | no | hadara-docs |
 | `docs/DEVELOPMENT_SLICES.md` | roadmap | active | task-start | yes | hadara-docs |
 | `docs/GETTING_STARTED.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
 | `docs/HADARA_WORKFLOW.md` | workflow-guide | canonical | session-start | yes | hadara-docs |
-| `docs/history/AGENT_HANDOFF_PRE_T0558.md` | handoff | historical | never-default | no | hadara-docs |
-| `docs/history/PROJECT_STATE_PRE_T0558.md` | project-state | historical | never-default | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | handoff | historical | never-default | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | project-state | historical | never-default | no | hadara-docs |
 | `docs/LIFECYCLE_QUICKSTART.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
-| `docs/PRIMARY_WORKFLOW_BUDGET.md` | implementation-guide | canonical | docs-work | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/PRIMARY_WORKFLOW_BUDGET.md` | implementation-guide | historical | never-default | no | hadara-docs |
 | `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |
-| `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` | release | active | release-work | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` | release | historical | never-default | no | hadara-docs |
 | `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
 | `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
-| `docs/specs/0.4.1/rc0-scope.md` | spec | active | task-start | no | hadara-docs |
-| `docs/specs/0.4.5/brownfield-init-adoption.md` | spec | active | docs-work | no | project |
-| `docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md` | spec | active | docs-work | no | hadara-docs |
-| `docs/specs/0.5/state-first/RFC.md` | spec | reference | task-start | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/specs/0.4.1/rc0-scope.md` | spec | historical | never-default | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/specs/0.4.5/brownfield-init-adoption.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.4.5/docs-registry-v3-and-init-cleanup.md` | spec | historical | never-default | no | hadara-docs |
+| `docs/archive/retired-2026-07-26/specs/0.5/0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/0.5.1/HADARA_0_5_1_Task_Close_Transaction_Development_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/0.5.2/HADARA_0_5_2_Public_Close_Migration_Development_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/0.5.3/HADARA_0_5_3_Structured_State_and_Projection_Development_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/0.5.4/HADARA_0_5_4_Dogfood_and_Hardening_Development_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/0.5.5/HADARA_0_5_5_Stabilization_and_Promotion_Development_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/all/HADARA_0_5_X_Combined_Agent_Loop_Plan.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/all/HADARA_0_5_X_Combined_Lifecycle_Usecases.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/README.md` | spec | historical | never-default | no | project |
+| `docs/archive/retired-2026-07-26/specs/0.5/state-first/RFC.md` | spec | historical | never-default | no | hadara-docs |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
 | `docs/TEST_STRATEGY.md` | test-strategy | reference | debugging | no | hadara-docs |

@@ -10,7 +10,7 @@ function read(relativePath: string): string {
 
 describe('evidence semantic consumer contract docs', () => {
   it('documents selected-task evidence semantics without raw evidence parsing', () => {
-    const workbench = read('docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md');
+    const workbench = read('docs/archive/retired-2026-07-26/TASK_WORKBENCH_READ_MODEL_CONTRACT.md');
 
     for (const status of ['sufficient', 'weak', 'failed', 'blocked', 'private-only', 'unknown']) {
       expect(workbench).toContain(`| \`${status}\` |`);

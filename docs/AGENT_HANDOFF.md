@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0711 Automatic Validation Failure Classification | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0712 Live Documentation Set and Archive | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -51,8 +51,8 @@ T-0698 adopts and maps the complete eight-capsule Init v1 program. T-0699 implem
 
 | History Type | Path | When to Use |
 |---|---|---|
-| Pre-P1 handoff snapshot | `docs/history/AGENT_HANDOFF_PRE_T0558.md` | Full handoff tables and historical known problems before compact ownership. |
-| Pre-P1 project state snapshot | `docs/history/PROJECT_STATE_PRE_T0558.md` | Full project narrative through T-0557. |
+| Pre-P1 handoff snapshot | `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | Full handoff tables and historical known problems before compact ownership. |
+| Pre-P1 project state snapshot | `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | Full project narrative through T-0557. |
 | Documentation archive map | `docs/archive/README.md` | Locate completed specs and historical logs without default-reading them. |
 | Completed task history | `docs/HANDOFF_HISTORY.md` | Older completed-task details. |
 | Validation history | `docs/VALIDATION_HISTORY.md` | Older validation observations. |

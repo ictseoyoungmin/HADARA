@@ -55,7 +55,7 @@ Both release-gate modes are read-only reports. They do not execute release, pack
 
 The current implementation is a foundational report, not the final v1.0 debt system.
 
-Planned follow-up details are tracked in `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+Planned follow-up details are tracked in `docs/archive/retired-2026-07-26/V1_0_CAPSULE_BACKLOG.md` and `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md`.
 
 Future work should add:
 

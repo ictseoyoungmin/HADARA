@@ -150,7 +150,7 @@ Initial fixtures:
 | `hadara.smokeEvidenceSummary.v1` | `src/schemas/smoke-evidence-summary.schema.json` | fixture | Documents reduced public smoke evidence summary artifacts for package-smoke, package-recycle, and clean-checkout smoke attachment. |
 | `hadara.releaseArtifact.manifest.v1` | `src/schemas/release-artifact-manifest.schema.json` | fixture | Documents generated release artifact manifest files for tarball hash and package file lists without publish/GitHub mutation. |
 
-Historical dashboard fixtures are intentionally absent from the active schema registry. See `docs/DASHBOARD_READ_MODEL_CONTRACT.md` for the removal note.
+Historical dashboard fixtures are intentionally absent from the active schema registry. See `docs/archive/retired-2026-07-26/DASHBOARD_READ_MODEL_CONTRACT.md` for the removal note.
 
 Planned Phase 2 fixtures:
 
@@ -232,7 +232,7 @@ The validator currently covers the JSON Schema keywords used by registered fixtu
 
 The terminal TUI composes existing read-model schemas instead of introducing a new stable public TUI read-model schema. Deterministic TUI snapshot JSON can be used for tests, but it is a presentation test artifact unless a later capsule explicitly promotes it to a stable contract.
 
-The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` under `TUI Mockup Parity / HADARA-Native Runtime Design`. Schema-related TUI requirements from that design are:
+The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md` under `TUI Mockup Parity / HADARA-Native Runtime Design`. Schema-related TUI requirements from that design are:
 
 ```text
 source = service by default
@@ -321,7 +321,7 @@ Expected first-slice schema posture:
 | `hadara.evidence.v1` | Remains the persisted evidence index format. |
 | `hadara.evidence.lint.v1` | Remains the lint report id; semantic summary/issues are additive if implemented. |
 | `hadara.evidence.normalized.v1` | Planned read model, not a persisted writer format. |
-| `hadara.evidence.v2` | Planned persisted writer format; see `docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md` before implementation. |
+| `hadara.evidence.v2` | Planned persisted writer format; see `docs/archive/retired-2026-07-26/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md` before implementation. |
 
 Evidence semantic schemas must not introduce init scaffold changes, evidence JSONL rewrites, public binary artifact policy, MCP writes, release/package execution, or strict release-gate enforcement in the same slice.
 

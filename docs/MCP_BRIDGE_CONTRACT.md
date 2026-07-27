@@ -12,7 +12,7 @@ The first implementation must be safe for external agents to call while preservi
 
 Future write-capable evidence attachment is documented separately in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`. It is not part of the read-only bridge.
 
-Planned v1.0 read-only MCP extensions are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current default tool contract until their individual Task Capsules complete.
+Planned v1.0 read-only MCP extensions are tracked in `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current default tool contract until their individual Task Capsules complete.
 T-0076 completed `hadara.evidence.list` as a read-only extension.
 T-0077 completed `hadara.context.export` as a read-only memory-payload extension.
 T-0078 completed `hadara.tools.list` as a read-only capability discovery extension.
@@ -692,4 +692,4 @@ Output schema:
 
 The bridge should treat `docs/CLI_JSON_CONTRACT.md` as the source for command/report envelope behavior. MCP should not invent competing command schemas when a CLI JSON schema already exists.
 
-Future selected-task MCP read tools should prefer `hadara.task.workbench.v1` from `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` for task readiness, evidence health, close/audit state, protocol summaries, and next actions. Such a tool must remain read-only, wrap the report as JSON text, and must not expose remediation execution, close execution, evidence attach, shell execution, provider calls, or broad file writes.
+Future selected-task MCP read tools should prefer `hadara.task.workbench.v1` from `docs/archive/retired-2026-07-26/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` for task readiness, evidence health, close/audit state, protocol summaries, and next actions. Such a tool must remain read-only, wrap the report as JSON text, and must not expose remediation execution, close execution, evidence attach, shell execution, provider calls, or broad file writes.

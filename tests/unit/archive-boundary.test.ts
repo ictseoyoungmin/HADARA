@@ -7,9 +7,10 @@ const root = process.cwd();
 
 describe('HADARA-dev archive boundary', () => {
   it('keeps only current and future version lines in docs/specs', () => {
-    const entries = fs.readdirSync(path.join(root, 'docs', 'specs')).sort();
+    const specsPath = path.join(root, 'docs', 'specs');
+    const entries = fs.existsSync(specsPath) ? fs.readdirSync(specsPath).sort() : [];
 
-    expect(entries).toEqual(['0.4.1', '0.4.5', '0.5']);
+    expect(entries).toEqual([]);
   });
 
   it('preserves completed committed spec lines under docs/archive', () => {

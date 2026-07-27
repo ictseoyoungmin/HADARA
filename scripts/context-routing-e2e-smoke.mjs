@@ -108,7 +108,7 @@ const workloads = [
     label: 'context_slice_range',
     args: [
       'context', 'slice',
-      '--path', 'docs/specs/0.5/0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md',
+      '--path', 'docs/archive/retired-2026-07-26/specs/0.5/0.5.0/HADARA_0_5_0_Status_Ingress_and_Evaluation_Development_Plan.md',
       '--from', '1',
       '--to', '8',
       '--project', projectRoot,

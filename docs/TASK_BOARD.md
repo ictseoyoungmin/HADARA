@@ -712,3 +712,4 @@
 | T-0709 | Compact Task Identity Targets | Done | tasks/T-0709-compact-task-identity-targets | |
 | T-0710 | HADARA-dev Low-resource Docker Validation | Done | tasks/T-0710-hadara-dev-low-resource-docker-validation | |
 | T-0711 | Automatic Validation Failure Classification | Done | tasks/T-0711-automatic-validation-failure-classification | |
+| T-0712 | Live Documentation Set and Archive | Done | tasks/T-0712-live-documentation-set-and-archive | |

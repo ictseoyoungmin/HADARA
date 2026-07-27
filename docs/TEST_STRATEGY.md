@@ -228,7 +228,7 @@ Approval and boundary rules:
 
 ## Release Install Package Smoke Plan
 
-Tracked remaining capsule sequencing for package smoke, package metadata, Linux/WSL and Windows installers, USB portable launchers, install matrix smoke, evidence-backed release gates, release artifacts, and final publish/deploy scripts lives in `docs/DEVELOPMENT_SLICES.md` and `docs/V1_0_CAPSULE_BACKLOG.md`.
+Tracked remaining capsule sequencing for package smoke, package metadata, Linux/WSL and Windows installers, USB portable launchers, install matrix smoke, evidence-backed release gates, release artifacts, and final publish/deploy scripts lives in `docs/DEVELOPMENT_SLICES.md` and `docs/archive/retired-2026-07-26/V1_0_CAPSULE_BACKLOG.md`.
 
 T-0138 evidence freeze:
 
@@ -386,7 +386,7 @@ node dist/cli/main.js harness validate --task <task-id> --json
 
 ## Protocol Consistency Validation
 
-Project Protocol Consistency Phase 2 must stay read-first and evidence-backed. Use the detailed source plan in `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` and the assimilated implementation notes in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+Project Protocol Consistency Phase 2 must stay read-first and evidence-backed. Use the detailed source plan in `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` and the assimilated implementation notes in `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md`.
 
 Required checks by slice:
 
@@ -409,7 +409,7 @@ Protocol doctor and remediation surfaces must not enable Hermes/MCP runtime capa
 
 ## TUI Validation Strategy
 
-The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. TUI slices should use that section as the detailed source for validation requirements.
+The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/archive/retired-2026-07-26/V1_0_IMPLEMENTATION_SCHEMAS.md`. TUI slices should use that section as the detailed source for validation requirements.
 
 ### TUI Unit Suites
 
