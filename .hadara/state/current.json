@@ -1,6 +1,6 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 348,
+  "rev": 349,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
@@ -12,17 +12,17 @@
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Run the completion audit and decide whether `docs/specs/0.5/redesign/` (now archived) is still needed live for the remaining Init v1 capsules (document routing, legacy compatibility isolation, full installed-package acceptance).",
-    "reason": "Flagged in RF-1; a human review decision, not new implementation scope on its own.",
+    "title": "Define the live docs set and archive every other current docs entry.",
+    "reason": "This is the last implementation improvement before the completion audit.",
     "references": [
       {
         "path": "`.hadara/context/HADARA_CONTEXT.md`",
         "required": true
       },
       {
-        "path": "`docs/ROADMAP.md`",
+        "path": "`.hadara/documents.json`",
         "required": true
       },
       {
@@ -30,11 +30,11 @@
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0712",
-      "path": "tasks/T-0712-live-documentation-set-and-archive/HANDOFF.md"
+      "workId": "T-0711",
+      "path": "tasks/T-0711-automatic-validation-failure-classification/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

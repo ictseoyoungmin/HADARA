@@ -16,6 +16,7 @@ Do not hand-edit this file.
 | ev:T-0711:6c3bf6e3fc5d495eaa2ce80b | passed | validation | Task finalize done-level readiness for T-0711 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:3c64b0799385ba37fac1eb7ac1a2bad8b8c16e9d20c05d431208b4897eff46c4 |
 | ev:T-0711:85da91bf031b4aafa6e01ee7 | passed | validation | After restoring dist ownership, final npm run check passed 142 public files/1108 tests and 16 HADARA-dev files/132 tests. |
 | ev:T-0711:6fcb7ae8c3944b1a9b1cbe91 | passed | validation | Final src/tools typechecks passed; validation/help/registry focused suites passed 3 files/27 tests and Docker classification passed 1 file/10 tests, including guarded preflight environment-setup and timeout guidance. |
+| ev:T-0711:136513ed265f4c97b2983f37 | passed | validation | Task finalize done-level readiness for T-0711 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:dbaab30e28d4a80cad7d1986950d447f664fc0667e74781df306b4dbed980852 |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -24,6 +25,7 @@ Do not hand-edit this file.
 | Check | Result | Evidence |
 |---|---|---|
 | close evidence | passed | ev:T-0711:5b6a47d5ddac4e2089248558 |
+| close evidence | passed | ev:T-0711:b304bb2a3a574d589b41cfcd |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence
