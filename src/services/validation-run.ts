@@ -413,18 +413,21 @@ function executionError(error: NodeJS.ErrnoException): NonNullable<ValidationRun
 
 function createValidationRunNextActions(options: ValidationRunOptions, result: ValidationRunReport['result'], failureKind: ValidationRunReport['execution']['failureKind']): ValidationRunReport['nextActions'] {
   if (result !== 'Blocked') return [];
+  const timedOut = failureKind === 'timeout';
   const summary = `Validation "${options.check}" was blocked by ${failureKind}.`;
   return [
     {
       id: 'run-direct-command',
       kind: 'guidance',
-      message: 'Run the validation command directly in the current environment to distinguish command failure from wrapper launch failure.'
+      message: timedOut
+        ? 'Rerun with a suitable --timeout-ms or run the command directly to diagnose why it exceeded the deadline.'
+        : 'Run the validation command directly in the current environment to distinguish command failure from wrapper launch failure.'
     },
     {
       id: 'record-direct-validation-result',
       kind: 'command',
       message: 'Record an already-run direct result through validation run so TASK.md row sync and validation-check resolution tags remain consistent.',
-      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote('Direct command passed after wrapper launch failure.')}${options.updateTask ? ' --update-task' : ''} --json`
+      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote(timedOut ? 'Direct command completed after wrapper timeout.' : 'Direct command passed after wrapper launch failure.')}${options.updateTask ? ' --update-task' : ''} --json`
     },
     {
       id: 'record-direct-result',

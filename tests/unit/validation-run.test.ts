@@ -385,6 +385,14 @@ describe('validation run', () => {
         failureClass: 'timeout'
       }
     });
+    expect(report.nextActions).toContainEqual(expect.objectContaining({
+      id: 'run-direct-command',
+      message: expect.stringContaining('--timeout-ms')
+    }));
+    expect(report.nextActions).toContainEqual(expect.objectContaining({
+      id: 'record-direct-validation-result',
+      command: expect.stringContaining('after wrapper timeout')
+    }));
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 

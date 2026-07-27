@@ -622,7 +622,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'validation.run',
-    command: 'hadara validation run --task <task-id> --check <name> [--update-task] [--direct-result passed|failed|blocked] [--direct-summary <text>] [--resolves <id>] [--supersedes <id>] -- <command...>',
+    command: 'hadara validation run --task <task-id> --check <name> [--timeout-ms <ms>] [--update-task] [--direct-result passed|failed|blocked] [--direct-summary <text>] [--resolves <id>] [--supersedes <id>] -- <command...>',
     summary: 'Run a validation command, append execution evidence, refresh evidence projection, auto-resolve earlier failed attempts for the same check, and optionally sync the matching TASK.md Validation row with --update-task.',
     canonical: true,
     appearsInDefaultHelp: true,

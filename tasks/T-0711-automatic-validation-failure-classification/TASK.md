@@ -66,6 +66,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Validation reports | Added controlled execution.failureClass and durable evidence summary projection. |
 | Docker reports | Added report, failed-step, and issue failureClass projection. |
 | Contracts/docs | Updated schemas, plain output, command notes, generated workflow, and validation guidance. |
+| Addendum | Documented `--timeout-ms` in the `validation.run` command registry entry and made blocked-by-timeout nextActions guidance/direct-summary wording timeout-specific instead of generic launch-failure wording. |
 
 ## Risks / Follow-ups
 
@@ -84,3 +85,4 @@ Validation failures now expose controlled assertion, timeout, or environment-set
 | 2026-07-26 | Draft | Initial task scaffold. |
 | 2026-07-26 | In Progress | Implemented signal-based failure classes without child-log heuristics. |
 | 2026-07-26 | Done | Focused, full, built CLI, and evidence validation passed. |
+| 2026-07-26 | Done | Addendum: timeout-aware nextActions guidance and `--timeout-ms` registry documentation added after an environment-setup blocked/retry cycle; full validation re-passed 142 public files/1108 tests and 16 HADARA-dev files/132 tests. |
