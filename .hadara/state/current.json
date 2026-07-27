@@ -1,28 +1,28 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 349,
+  "rev": 351,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0712",
-    "title": "Live Documentation Set and Archive"
+    "id": "T-0713",
+    "title": "Task Close Atomicity and Evidence Integrity Hardening"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Define the live docs set and archive every other current docs entry.",
-    "reason": "This is the last implementation improvement before the completion audit.",
+    "title": "Consider a full journal-before-write close transaction (mirroring Init v1 apply) to close the remaining narrow race window between the virtual preflight and the real finish/close-evidence writes.",
+    "reason": "Flagged in RF-1; materially larger scope than this capsule, worth a deliberate decision rather than folding in unprompted.",
     "references": [
       {
         "path": "`.hadara/context/HADARA_CONTEXT.md`",
         "required": true
       },
       {
-        "path": "`.hadara/documents.json`",
+        "path": "`src/task/task-close-transaction.ts`",
         "required": true
       },
       {
@@ -30,11 +30,11 @@
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0711",
-      "path": "tasks/T-0711-automatic-validation-failure-classification/HANDOFF.md"
+      "workId": "T-0713",
+      "path": "tasks/T-0713-task-close-atomicity-and-evidence-integrity-hardening/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

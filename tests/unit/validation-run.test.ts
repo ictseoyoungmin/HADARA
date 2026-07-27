@@ -121,9 +121,31 @@ describe('validation run', () => {
     }
   });
 
-  it('auto-resolves earlier failed attempts for the same validation check when a later attempt passes', () => {
+  it('auto-resolves earlier failed attempts for the same validation check and command when a later attempt passes', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation run attempt resolution');
+    const scriptPath = path.join(root, 'validation-check.js');
+    fs.writeFileSync(scriptPath, 'process.exit(Number(process.env.HADARA_TEST_EXIT_CODE ?? "0"));', 'utf8');
+    const argv = [process.execPath, scriptPath];
+
+    process.env.HADARA_TEST_EXIT_CODE = '2';
+    const failed = createValidationRunReport(root, { taskId: task.id, check: 'Focused tests', argv });
+    process.env.HADARA_TEST_EXIT_CODE = '0';
+    const passed = createValidationRunReport(root, { taskId: task.id, check: 'Focused tests', argv });
+    delete process.env.HADARA_TEST_EXIT_CODE;
+
+    expect(failed.result).toBe('Failed');
+    expect(passed.result).toBe('Passed');
+    expect(passed.attempt.previousFailedOrBlockedEvidenceIds).toEqual([failed.evidence?.id]);
+    expect(passed.attempt.autoResolvedEvidenceIds).toEqual([failed.evidence?.id]);
+    expect(passed.evidence?.tags).toContain(`resolves:${failed.evidence?.id}`);
+    expect(passed.evidence?.tags).toContain(`validation-check:${failed.attempt.checkKey}`);
+    expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
+  });
+
+  it('does not auto-resolve an earlier failed attempt when a later attempt reuses the check name with a different command', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run attempt identity');
 
     const failed = createValidationRunReport(root, {
       taskId: task.id,
@@ -138,11 +160,10 @@ describe('validation run', () => {
 
     expect(failed.result).toBe('Failed');
     expect(passed.result).toBe('Passed');
-    expect(passed.attempt.previousFailedOrBlockedEvidenceIds).toEqual([failed.evidence?.id]);
-    expect(passed.attempt.autoResolvedEvidenceIds).toEqual([failed.evidence?.id]);
-    expect(passed.evidence?.tags).toContain(`resolves:${failed.evidence?.id}`);
-    expect(passed.evidence?.tags).toContain(`validation-check:${failed.attempt.checkKey}`);
-    expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
+    expect(passed.attempt.checkKey).not.toBe(failed.attempt.checkKey);
+    expect(passed.attempt.previousFailedOrBlockedEvidenceIds).toEqual([]);
+    expect(passed.attempt.autoResolvedEvidenceIds).toEqual([]);
+    expect(passed.evidence?.tags).not.toContain(`resolves:${failed.evidence?.id}`);
   });
 
   it('updates the TASK Validation row when explicitly requested', () => {

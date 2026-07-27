@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidenceWithResult, CloseEvidenceSnapshot, EvidenceOutcome } from '../evidence/evidence';
-import { createEvidenceLintReport, EvidenceLintReport } from '../services/evidence-lint';
+import { appendEvidenceWithResult, CloseEvidenceSnapshot } from '../evidence/evidence';
+import { normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
+import { findUnexplainedBlockedEvidence, findUnresolvedFailedEvidence } from '../evidence/semantics';
+import { createEvidenceLintReport, EvidenceLintReport, readTaskDocs, readValidPersistedEvidenceRecords } from '../services/evidence-lint';
 import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
 import type { RemediationHint } from '../harness/validate';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
@@ -161,7 +163,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const validationReportHash = hashValidationInputs(validation, evidenceLint, protocolDoctor);
   const sourceHash = hashCloseRelevantSource(projectRoot, task.dir);
   const slotRegistry = readSlotRegistryMetadata(projectRoot);
-  const closeEvidenceSnapshot = createCloseEvidenceSnapshot(task.dir);
+  const closeEvidenceSnapshot = createCloseEvidenceSnapshot(task.dir, taskId);
   const slotRegistryVersion = slotRegistry.slotRegistryVersion == null ? 'unknown' : String(slotRegistry.slotRegistryVersion);
   const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}; slotRegistryVersion ${slotRegistryVersion}; slotRegistryHash ${slotRegistry.slotRegistryHash}.`;
 
@@ -500,7 +502,7 @@ export function createTaskCloseSourceReport(projectRoot: string, taskId: string)
       kind: 'derived-projection',
       path: evidencePath,
       selector: 'readiness-summary',
-      sha256: createCloseEvidenceSnapshot(task.dir).evidenceSummaryHash,
+      sha256: createCloseEvidenceSnapshot(task.dir, taskId).evidenceSummaryHash,
       closeSourceRole: 'snapshot'
     },
     {
@@ -790,7 +792,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const latestHash = latest ? extractReportHash(latest.summary) : undefined;
   const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
   const latestSlotRegistryHash = latest ? extractSlotRegistryHash(latest.summary) : undefined;
-  const currentSnapshot = closePlan.closeEvidence.closeEvidenceSnapshot ?? createCloseEvidenceSnapshot(task.dir);
+  const currentSnapshot = closePlan.closeEvidence.closeEvidenceSnapshot ?? createCloseEvidenceSnapshot(task.dir, taskId);
   if (latest && latest.kind !== 'command-log') {
     issues.push({
       severity: 'error',
@@ -1048,20 +1050,23 @@ function createAuditVerdict(
   };
 }
 
-function createCloseEvidenceSnapshot(taskDir: string): CloseEvidenceSnapshot {
+function createCloseEvidenceSnapshot(taskDir: string, taskId: string): CloseEvidenceSnapshot {
   const taskPath = path.join(taskDir, 'TASK.md');
   const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
   const acceptancePath = path.join(taskDir, 'ACCEPTANCE.md');
   const acceptanceContent = fs.existsSync(acceptancePath) ? fs.readFileSync(acceptancePath, 'utf8') : taskContent;
   const acceptance = analyzeAcceptanceReadiness(acceptanceContent);
-  const evidenceRecords = readSnapshotEvidenceRecords(path.join(taskDir, 'evidence.jsonl'));
-  const unresolvedEvidenceClassifications = evidenceRecords
-    .filter(isUnresolvedSnapshotEvidence)
-    .map((record) => ({
-      evidenceRef: record.id,
-      outcome: record.outcome,
-      summary: record.summary
-    }));
+  // Reuse the same resolution-aware analyzer evidence lint uses (resolves:/supersedes:
+  // markers, legacy same-category fallback, residual-risk documentation) instead of an
+  // independent outcome-only check, so a failure this snapshot has already cleared does
+  // not stay flagged as unresolved.
+  const validRecords = readValidPersistedEvidenceRecords(path.join(taskDir, 'evidence.jsonl'), taskId);
+  const normalizedRecords = normalizeEvidenceRecordsWithSourceLines(validRecords, { taskDir });
+  const taskDocs = readTaskDocs(taskDir);
+  const unresolvedEvidenceClassifications = [
+    ...findUnresolvedFailedEvidence(normalizedRecords, taskDocs).map((record) => ({ evidenceRef: record.id, outcome: 'failed' as const, summary: record.summary })),
+    ...findUnexplainedBlockedEvidence(normalizedRecords, taskDocs).map((record) => ({ evidenceRef: record.id, outcome: 'blocked' as const, summary: record.summary }))
+  ].filter((item) => !normalizedRecords.find((record) => record.id === item.evidenceRef)?.tags.includes('close-proof'));
   const snapshotWithoutHash = {
     requiredAcceptanceIds: acceptance.rows.filter((row) => row.required).map((row) => row.id).sort(),
     evidenceRefsUsedForReadiness: Array.from(new Set([...acceptance.rows.flatMap((row) => row.evidenceRefs), ...extractEvidenceRefs(taskContent)])).sort(),
@@ -1074,57 +1079,8 @@ function createCloseEvidenceSnapshot(taskDir: string): CloseEvidenceSnapshot {
   };
 }
 
-interface SnapshotEvidenceRecord {
-  id: string;
-  outcome: EvidenceOutcome;
-  summary: string;
-  tags: string[];
-}
-
-function isUnresolvedSnapshotEvidence(record: SnapshotEvidenceRecord): record is SnapshotEvidenceRecord & { outcome: 'failed' | 'blocked' } {
-  return !record.tags.includes('close-proof') && (record.outcome === 'failed' || record.outcome === 'blocked');
-}
-
-function readSnapshotEvidenceRecords(evidencePath: string): SnapshotEvidenceRecord[] {
-  if (!fs.existsSync(evidencePath)) return [];
-  return fs
-    .readFileSync(evidencePath, 'utf8')
-    .trim()
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .flatMap((line) => {
-      try {
-        const record = JSON.parse(line) as {
-          schemaVersion?: unknown;
-          id?: unknown;
-          outcome?: unknown;
-          result?: unknown;
-          summary?: unknown;
-          tags?: unknown;
-          legacy?: { result?: unknown };
-        };
-        const outcome = record.schemaVersion === 'hadara.evidence.v2' ? record.outcome : record.result;
-        if (typeof record.id !== 'string' || !isEvidenceOutcome(outcome) || typeof record.summary !== 'string') return [];
-        return [
-          {
-            id: record.id,
-            outcome,
-            summary: record.summary,
-            tags: Array.isArray(record.tags) ? record.tags.map(String) : []
-          }
-        ];
-      } catch {
-        return [];
-      }
-    });
-}
-
 function extractEvidenceRefs(content: string): string[] {
   return Array.from(new Set(content.match(/\bev:T-\d{4}:[A-Za-z0-9]+\b/g) ?? []));
-}
-
-function isEvidenceOutcome(value: unknown): value is EvidenceOutcome {
-  return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown' || value === 'recorded' || value === 'not-applicable';
 }
 
 function isCloseEvidenceSnapshot(value: unknown): value is CloseEvidenceSnapshot {

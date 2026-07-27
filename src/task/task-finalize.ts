@@ -444,6 +444,29 @@ function executeFinalizePlan(
   let steps = initialSteps;
   let finishStep = steps.find((step) => step.id === 'finish');
   if (finishStep?.status === 'required') {
+    // Done is written last: verify close would succeed against a virtual
+    // post-finish snapshot before writing TASK.md/Task Board Done. The
+    // --auto path already runs this same preflight before ever calling this
+    // function; this guard closes the gap for the reviewed --plan-hash path,
+    // which otherwise wrote finish first and could discover a close/ready
+    // blocker only afterward, leaving Done written without valid close proof.
+    emitFinalizeProgress(onProgress, finishStep.id, 'start', 'Verifying close would succeed before writing Done.');
+    const preflightBlockers = createAutoFinalizePreflightBlockers(projectRoot, taskId, actor);
+    if (preflightBlockers.length > 0) {
+      const refusalReview = createFinalizeReport(
+        taskId,
+        actor,
+        'execute-refused',
+        true,
+        steps,
+        initialIssues,
+        currentPlanHash,
+        { requestedPlanHash, currentPlanHash, planHashMatched: true, executedSteps: [], stoppedAt: 'finish' },
+        initialReports
+      );
+      emitFinalizeProgress(onProgress, finishStep.id, 'blocked', 'Close would not succeed after finish; finish was not applied.', false);
+      return createAutoPreflightBlockedReport(taskId, refusalReview, preflightBlockers);
+    }
     emitFinalizeProgress(onProgress, finishStep.id, 'start', finishStep.summary);
     const finishReport = createTaskFinishReport(projectRoot, taskId, 'execute', { actor });
     executedSteps.push(createExecutedStep(finishStep, finishReport.ok, finishReport, finishReport.ok ? 'executed' : 'blocked'));

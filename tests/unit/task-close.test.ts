@@ -831,6 +831,42 @@ describe('task close report', () => {
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('## Close Proof');
   });
 
+  it('does not flag a failed evidence record as unresolved once a later record resolves it', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close snapshot resolution reuse');
+    completeTask(root, task.id, task.dir);
+
+    const failed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Full validation failed on a transient environment issue.',
+      result: 'failed',
+      category: 'validation',
+      outcome: 'failed',
+      visibility: 'public'
+    });
+    const failedId = failed.evidence.schemaVersion === 'hadara.evidence.v2' ? failed.evidence.id : undefined;
+    expect(failedId).toBeDefined();
+
+    const beforeResolution = createTaskCloseReport(root, task.id, 'dry-run');
+    expect(beforeResolution.closeEvidence.closeEvidenceSnapshot?.latestFailedOrBlockedEvidenceRefs).toContain(failedId);
+
+    appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Full validation passed after re-running in a clean environment.',
+      result: 'passed',
+      category: 'validation',
+      outcome: 'passed',
+      visibility: 'public',
+      tags: [`resolves:${failedId}`]
+    });
+
+    const afterResolution = createTaskCloseReport(root, task.id, 'dry-run');
+    expect(afterResolution.closeEvidence.closeEvidenceSnapshot?.latestFailedOrBlockedEvidenceRefs).not.toContain(failedId);
+    expect(afterResolution.closeEvidence.closeEvidenceSnapshot?.unresolvedEvidenceClassifications).not.toContainEqual(expect.objectContaining({ evidenceRef: failedId }));
+  });
+
   it('reports missing close evidence during audit', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close audit missing');

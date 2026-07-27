@@ -61,13 +61,18 @@ export function formatTaskBoardRow(
     if (cells.length < 5) cells.push('');
     return formatCells(cells);
   }
+  // Preserve any trailing cell beyond the frozen six-column v1 contract
+  // (e.g. an operator-added column) instead of silently dropping it on
+  // every rewrite, matching the legacy branch's preservation behavior.
+  const preserved = existingCells.slice(6);
   return formatCells([
     input.id,
     cleanCell(input.title),
     input.status,
     cleanCell(input.targets || 'project'),
     input.capsule,
-    cleanCell(input.result || '-')
+    cleanCell(input.result || '-'),
+    ...preserved
   ]);
 }
 

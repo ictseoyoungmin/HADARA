@@ -713,3 +713,4 @@
 | T-0710 | HADARA-dev Low-resource Docker Validation | Done | tasks/T-0710-hadara-dev-low-resource-docker-validation | |
 | T-0711 | Automatic Validation Failure Classification | Done | tasks/T-0711-automatic-validation-failure-classification | |
 | T-0712 | Live Documentation Set and Archive | Done | tasks/T-0712-live-documentation-set-and-archive | |
+| T-0713 | Task Close Atomicity and Evidence Integrity Hardening | Done | tasks/T-0713-task-close-atomicity-and-evidence-integrity-hardening | |

@@ -46,6 +46,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Captured before the long install/build steps run below; rechecked
+# immediately before the destructive dist replace so a workspace dist
+# changed during that window is not silently overwritten.
+DIST_BEFORE_HASH="$(sha256sum "$WORKSPACE/dist/cli/main.js" 2>/dev/null | cut -d' ' -f1 || true)"
+
 docker exec \
   -e HADARA_WORKSPACE="$WORKSPACE" \
   -e HADARA_TMP_WORKDIR="$TMP_WORKDIR" \
@@ -55,6 +60,7 @@ docker exec \
   -e HADARA_TEST_SERIAL="$HADARA_TEST_SERIAL" \
   -e HADARA_DEV_NODE_OPTIONS="$HADARA_DEV_NODE_OPTIONS" \
   -e HADARA_NPM_JOBS="$HADARA_NPM_JOBS" \
+  -e HADARA_DIST_BEFORE_HASH="$DIST_BEFORE_HASH" \
   "$CONTAINER" bash -lc '
 set -euo pipefail
 
@@ -128,6 +134,11 @@ else
   run_step "npm run build" npm run build
 fi
 if [[ "$HADARA_CHECK_ONLY" != "1" ]]; then
+  DIST_CURRENT_HASH="$(sha256sum "$HADARA_WORKSPACE/dist/cli/main.js" 2>/dev/null | cut -d'"'"' '"'"' -f1 || true)"
+  if [[ -n "$HADARA_DIST_BEFORE_HASH" && "$DIST_CURRENT_HASH" != "$HADARA_DIST_BEFORE_HASH" ]]; then
+    echo "error: workspace dist/cli/main.js changed after this run started; refusing to overwrite it. Rerun the sync." >&2
+    exit 1
+  fi
   run_step "sync dist to mounted workspace" bash -lc '"'"'rm -rf "$HADARA_WORKSPACE/dist" && mkdir -p "$HADARA_WORKSPACE/dist" && cp -R dist/. "$HADARA_WORKSPACE/dist/"'"'"'
 fi
 if [[ "$HADARA_RUN_SMOKE" == "1" ]]; then

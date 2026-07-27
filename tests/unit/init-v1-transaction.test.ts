@@ -324,6 +324,10 @@ describe('Init v1 safe apply transaction', () => {
     fs.writeFileSync(path.join(descendantRoot, 'nested', '.hadara', 'project.json'), '{}', 'utf8');
     expect(validateInitPaths(descendantRoot, ['AGENTS.md'])).toContainEqual(expect.objectContaining({ code: 'INIT_NESTED_PROJECT_UNSUPPORTED' }));
 
+    const truncatedScanRoot = tempProject();
+    for (let index = 0; index < 10006; index += 1) fs.mkdirSync(path.join(truncatedScanRoot, `dir-${index}`));
+    expect(validateInitPaths(truncatedScanRoot, ['AGENTS.md'])).toContainEqual(expect.objectContaining({ code: 'INIT_NESTED_PROJECT_SCAN_INCOMPLETE' }));
+
     const caseRoot = tempProject();
     fs.mkdirSync(path.join(caseRoot, 'docs'));
     fs.writeFileSync(path.join(caseRoot, 'docs', 'task_board.md'), 'collision\n', 'utf8');

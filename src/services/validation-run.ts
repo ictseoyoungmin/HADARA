@@ -151,8 +151,8 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     `stderrHash: ${hashText(executed.stderr ?? '')}`
   ].join('; ');
   const legacyResult = result === 'Passed' ? 'passed' : result === 'Failed' ? 'failed' : 'blocked';
-  const checkKey = validationCheckKey(options.check);
-  const previousFailedOrBlockedEvidenceIds = findUnresolvedFailedOrBlockedAttempts(task.dir, options.check, checkKey);
+  const checkKey = validationCheckKey(options.check, options.argv);
+  const previousFailedOrBlockedEvidenceIds = findUnresolvedFailedOrBlockedAttempts(task.dir, options.check, checkKey, validationCommandText(options.argv));
   const autoResolvedEvidenceIds = result === 'Passed' ? previousFailedOrBlockedEvidenceIds : [];
   const tags = Array.from(
     new Set([...(options.tags ?? []), `validation-check:${checkKey}`, ...autoResolvedEvidenceIds.map((id) => `resolves:${id}`)])
@@ -467,7 +467,7 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
     detail: message,
     result: 'Blocked',
     attempt: {
-      checkKey: validationCheckKey(options.check),
+      checkKey: validationCheckKey(options.check, options.argv),
       previousFailedOrBlockedEvidenceIds: [],
       autoResolvedEvidenceIds: []
     },
@@ -481,16 +481,21 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
   };
 }
 
-function validationCheckKey(check: string): string {
-  return crypto.createHash('sha256').update(check.trim().replace(/\s+/g, ' ').toLowerCase(), 'utf8').digest('hex').slice(0, 16);
+function validationCheckKey(check: string, argv: string[]): string {
+  const normalizedCheck = check.trim().replace(/\s+/g, ' ').toLowerCase();
+  return crypto.createHash('sha256').update(`${normalizedCheck}\0${argv.join('\0')}`, 'utf8').digest('hex').slice(0, 16);
 }
 
-function findUnresolvedFailedOrBlockedAttempts(taskDir: string, check: string, checkKey: string): string[] {
+function validationCommandText(argv: string[]): string {
+  return argv.length > 0 ? argv.join(' ') : 'direct-result';
+}
+
+function findUnresolvedFailedOrBlockedAttempts(taskDir: string, check: string, checkKey: string, commandText: string): string[] {
   const parsed = parseEvidenceIndexFile(path.join(taskDir, 'evidence.jsonl'), taskIdFromTaskDir(taskDir));
   const records = parsed.records;
   const unresolved: string[] = [];
   for (const record of records) {
-    if (!isValidationAttemptForCheck(record, check, checkKey)) continue;
+    if (!isValidationAttemptForCheck(record, check, checkKey, commandText)) continue;
     if (record.outcome === 'passed' || record.outcome === 'recorded') {
       for (const tag of record.tags) {
         if (!tag.startsWith('resolves:') && !tag.startsWith('supersedes:')) continue;
@@ -507,14 +512,23 @@ function findUnresolvedFailedOrBlockedAttempts(taskDir: string, check: string, c
   return unresolved;
 }
 
-function isValidationAttemptForCheck(record: EvidenceListRecord, check: string, checkKey: string): boolean {
+// A record only counts as an attempt at the same check when both the check
+// name and the underlying command match. Matching on check name alone would
+// let a validation run with a swapped command (e.g. a no-op) silently
+// auto-resolve an unrelated earlier command's failure under a reused name.
+function isValidationAttemptForCheck(record: EvidenceListRecord, check: string, checkKey: string, commandText: string): boolean {
   if (record.category !== 'validation') return false;
   if (record.tags.includes(`validation-check:${checkKey}`)) return true;
-  return extractValidationCheckFromSummary(record.summary) === check;
+  if (extractValidationCheckFromSummary(record.summary) !== check) return false;
+  return extractValidationCommandFromSummary(record.summary) === commandText;
 }
 
 function extractValidationCheckFromSummary(summary: string): string | undefined {
   return /^Validation "([^"]+)"\s/.exec(summary)?.[1];
+}
+
+function extractValidationCommandFromSummary(summary: string): string | undefined {
+  return /;\s*command:\s*([^;]*);/.exec(summary)?.[1]?.trim();
 }
 
 function taskIdFromTaskDir(taskDir: string): string {

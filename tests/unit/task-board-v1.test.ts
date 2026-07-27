@@ -66,6 +66,33 @@ describe('Init v1 Task Board', () => {
     expect(renderTaskTargets([])).toBe('project');
   });
 
+  it('preserves an operator-added extra column on a v1 Board during finish', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '# Task Board\n\n| ID | Title | Status | Targets | Capsule | Result | Owner |\n|---|---|---|---|---|---|---|\n',
+      'utf8'
+    );
+    const task = createTaskCapsule(root, 'V1 extra column preservation');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(
+        /^\| T-0001 .+$/m,
+        `| ${task.id} | V1 extra column preservation | Draft | project | tasks/${path.basename(task.dir)} | - | reviewer |`
+      ),
+      'utf8'
+    );
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    const rewrittenRow = fs.readFileSync(boardPath, 'utf8').split(/\r?\n/).find((line) => line.startsWith(`| ${task.id} |`));
+    expect(rewrittenRow).toContain('| reviewer |');
+    expect(rewrittenRow).toContain('| Done |');
+  });
+
   it('preserves legacy Notes and extra cells during finish', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });

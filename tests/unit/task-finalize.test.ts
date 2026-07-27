@@ -191,7 +191,7 @@ describe('task finalize dry-run plan', () => {
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
-  it('executes matching finish then stops before close when readiness blocks', () => {
+  it('refuses to write finish when a virtual post-finish close plan would block, leaving Done unwritten', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finalize stop on blocker');
     const plan = createTaskFinalizeReport(root, task.id);
@@ -200,17 +200,17 @@ describe('task finalize dry-run plan', () => {
 
     expect(report).toMatchObject({
       ok: false,
-      readOnly: false,
-      mode: 'execute',
+      readOnly: true,
+      mode: 'execute-refused',
       execution: {
         requestedPlanHash: plan.planHash,
         planHashMatched: true,
-        stoppedAt: 'ready'
+        stoppedAt: 'finish'
       }
     });
-    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready']);
-    expect(report.execution?.executedSteps[0]).toMatchObject({ id: 'finish', status: 'executed', ok: true, writeBoundary: 'task-local' });
-    expect(report.execution?.executedSteps[1]).toMatchObject({ id: 'ready', status: 'blocked', ok: false, writeBoundary: 'read-only' });
+    expect(report.execution?.executedSteps ?? []).toEqual([]);
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).not.toContain('| Status | Done |');
+    expect(fs.existsSync(path.join(root, 'docs', 'TASK_BOARD.md')) ? fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8') : '').not.toContain(`| ${task.id} | ${task.title} | Done |`);
     expect(snapshotFiles(root)[`tasks/${task.id}-finalize-stop-on-blocker/evidence.jsonl`]).not.toContain('Task close validation');
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });

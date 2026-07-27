@@ -170,6 +170,22 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       steps.push({ id: step.id, status: 'skipped', summary: step.runWhen ? 'Skipped because an earlier step failed.' : step.summary });
       continue;
     }
+    if (step.id === 'dist-sync') {
+      // beforeHash was reviewed before the long install/test/build steps ran;
+      // recheck it immediately before the destructive rm+copy so a workspace
+      // dist changed during that window is not silently overwritten.
+      const immediateHash = hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js'));
+      if (immediateHash !== undefined && immediateHash !== reviewedBeforeHash) {
+        steps.push({ id: step.id, status: 'skipped', summary: 'Skipped because workspace dist changed after the reviewed before-hash was captured.' });
+        issues.push({
+          severity: 'error',
+          code: 'HADARA_DIST_SYNC_BEFORE_HASH_STALE',
+          message: 'Workspace dist/cli/main.js changed after the reviewed --before-hash was captured; refusing to overwrite it. Rerun with a fresh --before-hash.'
+        });
+        blocked = true;
+        continue;
+      }
+    }
     const timer = startMonotonicTimer();
     const result = runner.run('docker', dockerExecArgs(container, step.script, lowResource), env);
     const elapsedMs = timer.elapsedMs();

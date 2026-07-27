@@ -144,6 +144,28 @@ function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: strin
   return records;
 }
 
+/**
+ * Reads the same valid, in-order evidence records evidence lint keeps for
+ * semantic analysis, without emitting lint issues. Other consumers that need
+ * resolution-aware evidence semantics (e.g. task close readiness snapshots)
+ * must reuse this instead of re-parsing evidence.jsonl with separate rules.
+ */
+export function readValidPersistedEvidenceRecords(indexPath: string, taskId: string): EvidenceIndexRecordWithSourceLine[] {
+  if (!fs.existsSync(indexPath)) return [];
+  const content = fs.readFileSync(indexPath, 'utf8').trim();
+  if (!content) return [];
+  const records: EvidenceIndexRecordWithSourceLine[] = [];
+  content.split(/\r?\n/).forEach((line, index) => {
+    try {
+      const record = JSON.parse(line) as Partial<PersistedEvidenceRecord>;
+      if (isValidRecord(record, taskId)) records.push({ record, lineNumber: index + 1 });
+    } catch {
+      // Malformed lines are surfaced by evidence lint; readiness snapshots skip them.
+    }
+  });
+  return records;
+}
+
 function lintEvidenceMarkdown(projectRoot: string, evidencePath: string, issues: EvidenceLintIssue[]): number {
   const relativePath = toPortablePath(path.relative(projectRoot, evidencePath));
   if (!fs.existsSync(evidencePath)) {
@@ -316,7 +338,7 @@ function readTaskBoardStatus(projectRoot: string, taskId: string): string {
   return cells[2] ?? '';
 }
 
-function readTaskDocs(taskDir: string): { acceptance?: string; risks?: string; handoff?: string } {
+export function readTaskDocs(taskDir: string): { acceptance?: string; risks?: string; handoff?: string } {
   const taskPath = path.join(taskDir, 'TASK.md');
   const taskContent = readOptionalFile(taskPath);
   return {

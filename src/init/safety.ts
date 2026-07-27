@@ -15,9 +15,15 @@ export function validateInitPaths(projectRoot: string, targetPaths: string[]): I
   if (ancestor) {
     issues.push(issue('INIT_NESTED_PROJECT_UNSUPPORTED', '.', `Ancestor HADARA project found at ${ancestor}.`));
   }
-  const descendant = findDescendantProject(root);
-  if (descendant) {
-    issues.push(issue('INIT_NESTED_PROJECT_UNSUPPORTED', descendant, 'A descendant HADARA project cannot be merged into this init root.'));
+  const descendantScan = findDescendantProject(root);
+  if (descendantScan.found) {
+    issues.push(issue('INIT_NESTED_PROJECT_UNSUPPORTED', descendantScan.found, 'A descendant HADARA project cannot be merged into this init root.'));
+  } else if (descendantScan.incomplete) {
+    issues.push(issue(
+      'INIT_NESTED_PROJECT_SCAN_INCOMPLETE',
+      '.',
+      'The descendant HADARA project scan stopped before inspecting the entire directory tree; init cannot verify no nested project exists.'
+    ));
   }
   for (const targetPath of targetPaths) {
     const normalized = targetPath.replaceAll('\\', '/');
@@ -70,17 +76,19 @@ function findAncestorProject(root: string): string | null {
   return null;
 }
 
-function findDescendantProject(root: string): string | null {
-  if (!fs.existsSync(root) || !fs.lstatSync(root).isDirectory()) return null;
+const DESCENDANT_SCAN_LIMIT = 10000;
+
+function findDescendantProject(root: string): { found: string | null; incomplete: boolean } {
+  if (!fs.existsSync(root) || !fs.lstatSync(root).isDirectory()) return { found: null, incomplete: false };
   const queue = fs.readdirSync(root, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !SKIP_DESCENDANTS.has(entry.name))
     .map((entry) => path.join(root, entry.name));
   let inspected = 0;
-  while (queue.length > 0 && inspected < 10000) {
+  while (queue.length > 0 && inspected < DESCENDANT_SCAN_LIMIT) {
     const directory = queue.shift()!;
     inspected += 1;
     if (fs.existsSync(path.join(directory, '.hadara', 'project.json'))) {
-      return path.relative(root, directory).replaceAll('\\', '/');
+      return { found: path.relative(root, directory).replaceAll('\\', '/'), incomplete: false };
     }
     try {
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -92,7 +100,11 @@ function findDescendantProject(root: string): string | null {
       // Unreadable descendants are not write targets; target-specific checks still fail closed.
     }
   }
-  return null;
+  // Hitting the cap with directories still queued means the tree was not
+  // fully inspected. Reporting "no nested project" here would be an
+  // unverified guess, not a fact; fail closed instead of proceeding as if
+  // the scan had completed.
+  return { found: null, incomplete: queue.length > 0 };
 }
 
 function issue(code: string, issuePath: string, message: string): InitIssue {
