@@ -1,43 +1,61 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 375,
+  "rev": 377,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0722",
-    "title": "Clean Close Naming And Registry Remnants"
+    "id": "T-0723",
+    "title": "Enforce Close Proof Last"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Decide whether to harden the measurement script against the known child-process EPERM environment limit or keep that as an external environment caveat.",
-    "reason": "The stale finalize regression is fixed, but direct `measure:primary-workflow` execution still cannot complete in this tool environment because nested CLI spawn hits the known EPERM failure before init.",
+    "title": "Continue rc2 task-close transaction hardening against the remaining fault matrix, especially durable marker persistence counts and installed-package dogfood.",
+    "reason": "T-0723 fixed the immediate proof-last ordering violation but did not claim the entire rc2 fault matrix.",
     "references": [
       {
-        "path": "`tasks/T-0720-update-primary-workflow-measurement-for-task-close/TASK.md`",
+        "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
         "required": true
       },
       {
-        "path": "`scripts/primary-workflow-measurement.mjs`",
-        "required": true
-      },
-      {
-        "path": "`docs/PROJECT_STATE.md`",
+        "path": "docs/TASK_WORKFLOW_COMMANDS.md",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0720",
-      "path": "tasks/T-0720-update-primary-workflow-measurement-for-task-close/HANDOFF.md"
+      "workId": "T-0723",
+      "path": "tasks/T-0723-enforce-close-proof-last/HANDOFF.md"
     }
   },
   "continuations": [
+    {
+      "disposition": "actionable",
+      "kind": "task-handoff",
+      "title": "Continue rc2 task-close transaction hardening against the remaining fault matrix, especially durable marker persistence counts and installed-package dogfood.",
+      "reason": "T-0723 fixed the immediate proof-last ordering violation but did not claim the entire rc2 fault matrix.",
+      "references": [
+        {
+          "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
+          "required": true
+        },
+        {
+          "path": "docs/TASK_WORKFLOW_COMMANDS.md",
+          "required": true
+        }
+      ],
+      "createCommandAllowed": true,
+      "source": {
+        "type": "work-handoff",
+        "workId": "T-0723",
+        "path": "tasks/T-0723-enforce-close-proof-last/HANDOFF.md"
+      }
+    },
     {
       "disposition": "waiting-for-operator",
       "kind": "task-handoff",

@@ -417,16 +417,16 @@ describe('task close report', () => {
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     expect(report.ok).toBe(false);
     expect(report.writeSummary.executedWrites).toBeGreaterThan(0);
-    expect(report.writeSummary.closeProofAppended).toBe(true);
+    expect(report.writeSummary.closeProofAppended).toBe(false);
     expect(report.transaction.operation).toMatchObject({
       taskId: task.id,
       phase: 'recovery-required',
       persisted: true,
-      completedSteps: ['ready', 'close', 'bookkeeping'],
-      pendingSteps: ['audit-close'],
+      completedSteps: ['ready', 'bookkeeping'],
+      pendingSteps: ['close', 'audit-close'],
       mutationSummary: {
-        executedWrites: 2,
-        closeProofAppended: true,
+        executedWrites: 1,
+        closeProofAppended: false,
         idempotentNoop: false
       }
     });
@@ -434,8 +434,7 @@ describe('task close report', () => {
       expect.objectContaining({ step: 'bookkeeping', phase: 'intent', status: 'start', mutated: false }),
       expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'executed', mutated: true }),
       expect.objectContaining({ step: 'ready', phase: 'outcome', status: 'satisfied', mutated: false }),
-      expect.objectContaining({ step: 'close', phase: 'outcome', status: 'executed', mutated: true, writeOutcome: 'appended' }),
-      expect.objectContaining({ step: 'audit-close', phase: 'outcome', status: 'blocked', mutated: false })
+      expect.objectContaining({ step: 'close', phase: 'outcome', status: 'blocked', mutated: false })
     ]));
     expect(report.transaction.operation?.attempts).toHaveLength(1);
     expect(fs.existsSync(operationPath)).toBe(true);
@@ -443,14 +442,14 @@ describe('task close report', () => {
     expect(persisted).toMatchObject({
       taskId: task.id,
       phase: 'recovery-required',
-      completedSteps: ['ready', 'close', 'bookkeeping'],
+      completedSteps: ['ready', 'bookkeeping'],
       mutationSummary: {
-        executedWrites: 2,
-        closeProofAppended: true,
+        executedWrites: 1,
+        closeProofAppended: false,
         idempotentNoop: false
       }
     });
-    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).not.toContain('close-proof');
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
@@ -505,7 +504,7 @@ describe('task close report', () => {
       .split(/\n/)
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(2);
+    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(1);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
@@ -549,7 +548,7 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
-  it('journals proof-first recovery when close proof is appended before bookkeeping later fails', () => {
+  it('journals post-proof recovery only after bookkeeping already succeeded', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof before bookkeeping failure');
     completeTask(root, task.id, task.dir);

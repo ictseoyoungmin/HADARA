@@ -528,8 +528,8 @@ function executeTaskClosePlan(
   let steps = initialSteps;
   let bookkeepingStep = steps.find((step) => step.id === 'bookkeeping');
   if (bookkeepingStep?.status === 'required') {
-    // Done is written last: verify close would succeed against a virtual
-    // post-bookkeeping snapshot before writing TASK.md/Task Board Done. The
+    // Verify close would succeed against a virtual post-bookkeeping snapshot
+    // before writing TASK.md/Task Board Done. The
     // --auto path already runs this same preflight before ever calling this
     // function; this guard closes the gap for the reviewed --plan-hash path,
     // which otherwise wrote bookkeeping first and could discover a close/ready
@@ -568,37 +568,11 @@ function executeTaskClosePlan(
       if (!virtualReadyOk) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'ready');
     }
 
-    const virtualCloseStep = steps.find((step) => step.id === 'close');
-    let readinessEvidence: TaskClosePlanReadinessEvidence | undefined;
-    if (virtualCloseStep) {
-      if (recordReadinessEvidence) {
-        readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, virtualReports.close);
-      }
-      emitClosePlanProgress(onProgress, virtualCloseStep.id, 'start', virtualCloseStep.summary);
-      if (virtualReports.close?.ok) executeTaskCloseEvidence(projectRoot, virtualReports.close);
-      const virtualCloseOk = virtualReports.close?.ok ?? false;
-      const virtualCloseExecutionStep = {
-        ...virtualCloseStep,
-        writeBoundary: 'evidence-append' as const
-      };
-      executedSteps.push(
-        createExecutedStep(
-          virtualCloseExecutionStep,
-          virtualCloseOk,
-          virtualReports.close,
-          virtualCloseOk ? 'executed' : 'blocked',
-          closeWriteOutcome(virtualReports.close, virtualCloseOk)
-        )
-      );
-      emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
-      if (!virtualCloseOk) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence);
-    }
-
     emitClosePlanProgress(onProgress, bookkeepingStep.id, 'start', bookkeepingStep.summary);
     const bookkeepingReport = executeReviewedCloseBookkeepingPlan(projectRoot, reports.bookkeeping);
     executedSteps.push(createExecutedStep(bookkeepingStep, bookkeepingReport.ok, bookkeepingReport, bookkeepingReport.ok ? 'executed' : 'blocked'));
     emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
-    if (!bookkeepingReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'bookkeeping', readinessEvidence);
+    if (!bookkeepingReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'bookkeeping');
     emitClosePlanProgress(onProgress, 'refresh', 'start', 'Recomputing close plan state after bookkeeping.');
     reports = createClosePlanReports(projectRoot, taskId, actor);
     steps = createSteps(taskId, reports);

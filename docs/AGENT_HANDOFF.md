@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0722 Clean Close Naming And Registry Remnants | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0723 Enforce Close Proof Last | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0722 completed the requested P3 cleanup after T-0721. Current close output no longer exposes mechanical phrases such as duplicated bookkeeping wording or malformed retry text, v3 task-close tests no longer describe themselves as v2, and deleted docs are removed from the current docs registry projections. Docs doctor reports no missing registered documents. Reviewer P1/P2 findings in the same attachment remain separate work if selected next.
+T-0723 enforced the rc2 physical proof-last ordering for required-bookkeeping closes. The required-bookkeeping path no longer appends close proof against a virtual post-bookkeeping snapshot before lifecycle writes; it writes bookkeeping first, refreshes actual close state, then appends proof only if the real final source still passes. Full check passed after allowing the current `docs/specs/0.5.0-rc2` spec directory in the archive-boundary test. Remaining rc2 hardening should continue with durable marker persistence counts, broader fault injection, and installed-package dogfood.
 
 ## Previous Handoff
 

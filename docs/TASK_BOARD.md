@@ -723,3 +723,4 @@
 | T-0720 | Update Primary Workflow Measurement For Task Close | Done | tasks/T-0720-update-primary-workflow-measurement-for-task-close | |
 | T-0721 | Harden Close Journal And Measurement Continuations | Done | tasks/T-0721-harden-close-journal-and-measurement-continuations | |
 | T-0722 | Clean Close Naming And Registry Remnants | Done | tasks/T-0722-clean-close-naming-and-registry-remnants | |
+| T-0723 | Enforce Close Proof Last | Done | tasks/T-0723-enforce-close-proof-last | |

@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0722 Clean Close Naming And Registry Remnants |
+| Latest Completed Task | T-0723 Enforce Close Proof Last |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -65,6 +65,8 @@ T-0708 makes shared close projection registry-aware and bounded. Existing regist
 T-0710 adds official HADARA-dev-only `--serial` and `--low-resource` Docker validation modes under `tools/` and `scripts/`, with no shipped `src/` implementation change. Low-resource mode implies one Vitest worker, disabled file parallelism, a 1024 MiB Node heap cap, and one npm job. Full validation passed 142 public files/1107 tests and 16 HADARA-dev files/131 tests; a real home-mounted Docker smoke passed. Automatic failure classification is next.
 
 T-0711 adds controlled automatic failure classification. `validation run` and repo-local Docker reports now expose `assertion`, `timeout`, or `environment-setup` from execution signals while preserving low-level `failureKind` or Docker step detail and keeping raw child output private. Full validation passed 142 public files/1108 tests and 16 HADARA-dev files/132 tests; a built CLI smoke proved all three classes. Live-doc selection and archival is next.
+
+T-0723 enforces the rc2 physical proof-last ordering for required-bookkeeping task closes. The close plan no longer appends proof against a virtual post-bookkeeping snapshot before lifecycle writes; it writes bookkeeping first, refreshes actual close state, then appends proof only if the real final source still passes. Focused close tests, TypeScript build, and full check passed. Remaining rc2 transaction hardening should target marker persistence counts, broader fault injection, and installed-package dogfood.
 
 | Stage | State | Purpose |
 |---|---|---|

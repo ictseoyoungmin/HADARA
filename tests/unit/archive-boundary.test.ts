@@ -10,7 +10,7 @@ describe('HADARA-dev archive boundary', () => {
     const specsPath = path.join(root, 'docs', 'specs');
     const entries = fs.existsSync(specsPath) ? fs.readdirSync(specsPath).sort() : [];
 
-    expect(entries).toEqual([]);
+    expect(entries).toEqual(['0.5.0-rc2']);
   });
 
   it('preserves completed committed spec lines under docs/archive', () => {
