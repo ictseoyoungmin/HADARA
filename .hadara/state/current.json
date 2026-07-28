@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 379,
+  "rev": 381,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0724",
-    "title": "Expose Close Marker Counts"
+    "id": "T-0725",
+    "title": "Add Close Fault Hooks"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,30 +14,48 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Add close fault injection for proof-pending and partial recovery paths.",
-    "reason": "T-0723/T-0724 covered proof-last ordering and marker count reporting, but the rc2 fault matrix still needs direct recovery/fault coverage.",
+    "title": "Run installed-package task-close transaction dogfood for clean, blocked, race/retry, and recovery paths.",
+    "reason": "User requested all rc2 task-close work within four capsules; T-0726 should be the fourth and final capsule, focused on installed dogfood proof and residual-risk reporting.",
     "references": [
       {
         "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
         "required": true
       },
       {
-        "path": "src/task/close/execute.ts",
-        "required": true
-      },
-      {
-        "path": "tests/unit/task-close.test.ts",
+        "path": "docs/TASK_WORKFLOW_COMMANDS.md",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0724",
-      "path": "tasks/T-0724-expose-close-marker-counts/HANDOFF.md"
+      "workId": "T-0725",
+      "path": "tasks/T-0725-add-close-fault-hooks/HANDOFF.md"
     }
   },
   "continuations": [
+    {
+      "disposition": "actionable",
+      "kind": "task-handoff",
+      "title": "Run installed-package task-close transaction dogfood for clean, blocked, race/retry, and recovery paths.",
+      "reason": "User requested all rc2 task-close work within four capsules; T-0726 should be the fourth and final capsule, focused on installed dogfood proof and residual-risk reporting.",
+      "references": [
+        {
+          "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
+          "required": true
+        },
+        {
+          "path": "docs/TASK_WORKFLOW_COMMANDS.md",
+          "required": true
+        }
+      ],
+      "createCommandAllowed": true,
+      "source": {
+        "type": "work-handoff",
+        "workId": "T-0725",
+        "path": "tasks/T-0725-add-close-fault-hooks/HANDOFF.md"
+      }
+    },
     {
       "disposition": "actionable",
       "kind": "task-handoff",

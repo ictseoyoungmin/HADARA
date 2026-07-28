@@ -725,3 +725,4 @@
 | T-0722 | Clean Close Naming And Registry Remnants | Done | tasks/T-0722-clean-close-naming-and-registry-remnants | |
 | T-0723 | Enforce Close Proof Last | Done | tasks/T-0723-enforce-close-proof-last | |
 | T-0724 | Expose Close Marker Counts | Done | tasks/T-0724-expose-close-marker-counts | |
+| T-0725 | Add Close Fault Hooks | Done | tasks/T-0725-add-close-fault-hooks | |

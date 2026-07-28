@@ -15,8 +15,15 @@ export interface TaskCloseTransactionOptions {
   planHash?: string;
   actor?: HadaraActorContext;
   onProgress?: (event: TaskClosePlanProgressEvent) => void;
+  faultHooks?: TaskCloseFaultHooks;
   lockTimeoutMs?: number;
   onAutoReview?: (review: TaskClosePlanReport) => void;
+}
+
+export interface TaskCloseFaultHooks {
+  afterOperationPrepared?: () => void;
+  afterCloseProofAppend?: () => void;
+  beforeTerminalCleanup?: () => void;
 }
 
 const TASK_CLOSE_LOCK_STALE_MS = 5 * 60 * 1000;
@@ -173,6 +180,9 @@ export function createTaskCloseTransactionReport(
       if (event.step !== 'refresh') {
         operation = updateCloseOperationFromProgress(operation, event);
         if (shouldPersistCloseOperationProgress(operation, event)) operation = persistOperation(operation);
+        if (event.step === 'close' && event.phase === 'executed' && event.writeOutcome === 'appended') {
+          options.faultHooks?.afterCloseProofAppend?.();
+        }
       }
       options.onProgress?.(event);
     };
@@ -202,10 +212,12 @@ export function createTaskCloseTransactionReport(
     const operationPlanHash = options.planHash ?? reviewedPlan?.planHash;
     operation = createCloseOperation(projectRoot, taskId, operationPlanHash ?? hashObject({ taskId, phase: 'applying' }), 'applying');
     operation = persistOperation(operation);
+    options.faultHooks?.afterOperationPrepared?.();
     const closePlan = createTaskClosePlanReport(projectRoot, taskId, closePlanOptions);
     let updatedOperation = updateCloseOperationFromClosePlan(operation, closePlan);
     if (updatedOperation.persisted) updatedOperation = persistOperation(updatedOperation);
     if (closePlan.ok || countMutatingExecutedSteps(closePlan.execution?.executedSteps ?? []) === 0) {
+      options.faultHooks?.beforeTerminalCleanup?.();
       if (removeCloseOperation(projectRoot, operation.path)) markerPersistence.cleanupWrites += 1;
     }
     const report = fromClosePlanReport(projectRoot, taskId, closePlan, {

@@ -562,6 +562,75 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
+  it('recovers an interrupted run after close proof append without duplicating proof', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction proof append fault');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+    let interrupted = false;
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterCloseProofAppend() {
+          interrupted = true;
+          throw new Error('fault after close proof append');
+        }
+      }
+    })).toThrow('fault after close proof append');
+
+    expect(interrupted).toBe(true);
+    expect(fs.existsSync(operationPath)).toBe(true);
+    expect(closeProofCount(task.dir)).toBe(1);
+
+    const recovered = createTaskCloseTransactionReport(root, task.id);
+
+    expect(recovered).toMatchObject({
+      ok: true,
+      closeState: 'closed-valid',
+      writeSummary: {
+        closeProofAppended: false,
+        idempotentNoop: true
+      }
+    });
+    expect(fs.existsSync(operationPath)).toBe(false);
+    expect(closeProofCount(task.dir)).toBe(1);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
+  it('recovers an interrupted run before terminal cleanup without duplicating proof', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction terminal cleanup fault');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        beforeTerminalCleanup() {
+          throw new Error('fault before terminal cleanup');
+        }
+      }
+    })).toThrow('fault before terminal cleanup');
+
+    expect(fs.existsSync(operationPath)).toBe(true);
+    expect(closeProofCount(task.dir)).toBe(1);
+
+    const recovered = createTaskCloseTransactionReport(root, task.id);
+
+    expect(recovered).toMatchObject({
+      ok: true,
+      closeState: 'closed-valid',
+      writeSummary: {
+        closeProofAppended: false,
+        idempotentNoop: true
+      }
+    });
+    expect(fs.existsSync(operationPath)).toBe(false);
+    expect(closeProofCount(task.dir)).toBe(1);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
   it('journals post-proof recovery only after bookkeeping already succeeded', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof before bookkeeping failure');
@@ -1206,6 +1275,17 @@ function markStateDocsCurrent(root: string, taskId: string): void {
   const agentHandoffPath = path.join(root, 'docs', 'AGENT_HANDOFF.md');
   fs.writeFileSync(projectStatePath, `# Project State\n\n${taskId} is current and complete.\n`, 'utf8');
   fs.writeFileSync(agentHandoffPath, `# Agent Handoff\n\n${taskId} is current and complete.\n`, 'utf8');
+}
+
+function closeProofCount(taskDir: string): number {
+  return fs
+    .readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8')
+    .trim()
+    .split(/\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as { tags?: string[] })
+    .filter((record) => (record.tags ?? []).includes('close-proof'))
+    .length;
 }
 
 function snapshotFiles(root: string): Record<string, string> {

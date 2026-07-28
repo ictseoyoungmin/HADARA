@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0724 Expose Close Marker Counts | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0725 Add Close Fault Hooks | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0724 exposed close marker persistence counts and rc2 write-summary aliases in `hadara.task.close.v3`. Clean close now reports progress persistence writes as zero and keeps marker content writes within the rc2 budget; focused close tests, schema/workflow docs tests, TypeScript build, and full check passed. Remaining rc2 hardening should continue with proof-pending/partial recovery fault injection, blocked-preflight marker write tightening, and installed-package dogfood.
+T-0725 added internal task-close fault hooks and recovery tests for interruption after close proof append and before terminal cleanup. Retrying both scenarios returns `closed-valid`, removes the local operation marker, and keeps close proof count at one; focused close tests, TypeScript build, and full check passed. The fourth and final user-budgeted capsule should run installed-package task-close transaction dogfood and report any residual rc2 risks.
 
 ## Previous Handoff
 
