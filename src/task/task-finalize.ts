@@ -141,11 +141,24 @@ export interface TaskFinalizeOptions {
   actor?: HadaraActorContext;
   onProgress?: (event: TaskFinalizeProgressEvent) => void;
   /**
+   * Internal orchestration seam: reuse a previously reviewed finalize artifact
+   * instead of recomputing the same dry-run state.
+   */
+  reviewedPlan?: ReviewedTaskFinalizePlan;
+  /**
    * Test seam: invoked after the `auto` review pass and before the execute
    * pass so race fixtures can mutate close-source state in the window the
    * plan-hash guard must protect. Not used by CLI callers.
    */
   onAutoReview?: (review: TaskFinalizeReport) => void;
+}
+
+export interface ReviewedTaskFinalizePlan {
+  reports: FinalizeReports;
+  steps: TaskFinalizeStep[];
+  issues: TaskFinalizeIssue[];
+  planHash: string;
+  review: TaskFinalizeReport;
 }
 
 interface FinalizeReports {
@@ -166,12 +179,23 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
   if (options.executeRequested && options.auto) {
     return executeAutoFinalize(projectRoot, taskId, actor, options);
   }
-  const reports = createFinalizeReports(projectRoot, taskId, actor);
-  const steps = createSteps(taskId, reports);
-  const issues = collectIssues(taskId, reports);
-  const planHash = hashPlan(taskId, steps, reports);
-  if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash, options.onProgress, options.recordReadinessEvidence ?? false);
-  const report = createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
+  const reviewed = options.reviewedPlan ?? createReviewedTaskFinalizePlan(projectRoot, taskId, actor);
+  if (options.executeRequested) {
+    return executeFinalizePlan(
+      projectRoot,
+      taskId,
+      actor,
+      reviewed.reports,
+      reviewed.steps,
+      reviewed.issues,
+      reviewed.planHash,
+      options.planHash,
+      options.onProgress,
+      options.recordReadinessEvidence ?? false
+    );
+  }
+  const report = reviewed.review;
+  const steps = reviewed.steps;
   const finishRequired = steps.some((step) => step.id === 'finish' && step.status === 'required');
   const preflightBlockers = finishRequired && report.authoringGuidance.status !== 'needs-authoring'
     ? createAutoFinalizePreflightBlockers(projectRoot, taskId, actor).filter(isDryRunPreflightBlocker)
@@ -188,41 +212,33 @@ function executeAutoFinalize(
   options: TaskFinalizeOptions
 ): TaskFinalizeReport {
   if (options.planHash) {
-    const reports = createFinalizeReports(projectRoot, taskId, actor);
-    const steps = createSteps(taskId, reports);
-    const planHash = hashPlan(taskId, steps, reports);
+    const reviewed = options.reviewedPlan ?? createReviewedTaskFinalizePlan(projectRoot, taskId, actor);
     return createExecuteRefusal(
       taskId,
       actor,
       'TASK_FINALIZE_AUTO_PLAN_HASH_CONFLICT',
       'task finalize --execute --auto is mutually exclusive with --plan-hash. Use --auto alone, or review a dry-run and pass its --plan-hash without --auto.',
-      planHash,
-      steps
+      reviewed.planHash,
+      reviewed.steps
     );
   }
 
   // Review pass: identical to a manual dry-run. Zero writes.
-  const reports = createFinalizeReports(projectRoot, taskId, actor);
-  const steps = createSteps(taskId, reports);
-  const issues = collectIssues(taskId, reports);
-  const planHash = hashPlan(taskId, steps, reports);
-  const review = createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
+  const reviewed = options.reviewedPlan ?? createReviewedTaskFinalizePlan(projectRoot, taskId, actor);
+  const review = reviewed.review;
   options.onAutoReview?.(review);
-  const currentReports = createFinalizeReports(projectRoot, taskId, actor);
-  const currentSteps = createSteps(taskId, currentReports);
-  const currentIssues = collectIssues(taskId, currentReports);
-  const currentPlanHash = hashPlan(taskId, currentSteps, currentReports);
-  if (currentPlanHash !== planHash) {
+  const current = createReviewedTaskFinalizePlan(projectRoot, taskId, actor);
+  if (current.planHash !== reviewed.planHash) {
     return createExecuteRefusal(
       taskId,
       actor,
       'TASK_FINALIZE_PLAN_HASH_MISMATCH',
       'task finalize --execute refused because --auto review became stale before execution.',
-      currentPlanHash,
-      currentSteps,
+      current.planHash,
+      current.steps,
       {
-        requestedPlanHash: planHash,
-        currentPlanHash,
+        requestedPlanHash: reviewed.planHash,
+        currentPlanHash: current.planHash,
         planHashMatched: false,
         executedSteps: []
       }
@@ -231,7 +247,7 @@ function executeAutoFinalize(
   // Board bookkeeping blockers are owned and resolved by the finish step;
   // the manual flow executes through them, so --auto must not refuse on
   // them while a required finish step is part of the reviewed plan.
-  const finishRequired = review.steps.some((step) => step.id === 'finish' && step.status === 'required');
+  const finishRequired = reviewed.steps.some((step) => step.id === 'finish' && step.status === 'required');
   const preflightBlockers = finishRequired ? createAutoFinalizePreflightBlockers(projectRoot, taskId, actor) : [];
   if (preflightBlockers.length > 0) return createAutoPreflightBlockedReport(taskId, review, preflightBlockers);
 
@@ -248,14 +264,27 @@ function executeAutoFinalize(
     projectRoot,
     taskId,
     actor,
-    reports,
-    steps,
-    issues,
-    planHash,
-    planHash,
+    reviewed.reports,
+    reviewed.steps,
+    reviewed.issues,
+    reviewed.planHash,
+    reviewed.planHash,
     options.onProgress,
     true
   );
+}
+
+export function createReviewedTaskFinalizePlan(
+  projectRoot: string,
+  taskId: string,
+  actor: HadaraActorContext
+): ReviewedTaskFinalizePlan {
+  const reports = createFinalizeReports(projectRoot, taskId, actor);
+  const steps = createSteps(taskId, reports);
+  const issues = collectIssues(taskId, reports);
+  const planHash = hashPlan(taskId, steps, reports);
+  const review = createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
+  return { reports, steps, issues, planHash, review };
 }
 
 function createAutoFinalizePreflightBlockers(projectRoot: string, taskId: string, actor: HadaraActorContext): TaskFinalizeIssue[] {

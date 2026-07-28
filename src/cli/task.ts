@@ -118,7 +118,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     const fullDetail = detail === 'full';
     const report = createTaskCloseTransactionReport(input.projectRoot, id, {
       dryRun: getFlag(input.args, '--dry-run'),
-      executeRequested: getFlag(input.args, '--execute'),
       planHash: getStringOption(input.args, '--plan-hash'),
       actor: getActorContextOption(input.args),
       onProgress: fullDetail && !getFlag(input.args, '--dry-run') ? createTaskLifecycleProgressWriter(id, 'task close') : undefined

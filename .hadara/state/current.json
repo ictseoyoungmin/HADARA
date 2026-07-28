@@ -1,40 +1,40 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 361,
+  "rev": 363,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0717",
-    "title": "Remove Task Finalize Compatibility Surface"
+    "id": "T-0718",
+    "title": "Share Reviewed Finalize Plan In Task Close"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Decide whether to clean historical release/history documents that still mention past `task finalize` behavior.",
-    "reason": "Current/public routing is fixed, but historical notes and closed historical capsules still describe the older surface.",
+    "title": "Harden the remaining close transaction residuals around full journal atomicity and no-op write accounting.",
+    "reason": "This task removed marker/execute hash drift, but recovery semantics still overcount `existing-noop` writes and the full proof/write/projection transaction is not yet journal-atomic.",
     "references": [
       {
-        "path": "`tasks/T-0717-remove-task-finalize-compatibility-surface/TASK.md`",
+        "path": "`tasks/T-0718-share-reviewed-finalize-plan-in-task-close/TASK.md`",
         "required": true
       },
       {
-        "path": "`docs/RELEASE_NOTES.md`",
+        "path": "`src/task/task-close-transaction.ts`",
         "required": true
       },
       {
-        "path": "`docs/RELEASE_READINESS.md`",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0717",
-      "path": "tasks/T-0717-remove-task-finalize-compatibility-surface/HANDOFF.md"
+      "workId": "T-0718",
+      "path": "tasks/T-0718-share-reviewed-finalize-plan-in-task-close/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

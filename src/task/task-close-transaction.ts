@@ -5,18 +5,18 @@ import type { HadaraActorContext } from '../core/actor-context';
 import type { HadaraNextAction } from '../core/next-action';
 import { ensureDir } from '../core/fs';
 import { startMonotonicTimer } from '../core/timing';
-import { createTaskFinalizeReport, formatTaskFinalizeReport, type TaskFinalizeOptions, type TaskFinalizeProgressEvent, type TaskFinalizeReport, type TaskFinalizeStepId } from './task-finalize';
+import { createReviewedTaskFinalizePlan, createTaskFinalizeReport, formatTaskFinalizeReport, type TaskFinalizeOptions, type TaskFinalizeProgressEvent, type TaskFinalizeReport, type TaskFinalizeStepId } from './task-finalize';
 import { defaultTaskLifecycleActor } from './lifecycle-next-actions';
 
 export type TaskCloseTransactionMode = 'dry-run' | 'execute' | 'execute-refused';
 
 export interface TaskCloseTransactionOptions {
   dryRun?: boolean;
-  executeRequested?: boolean;
   planHash?: string;
   actor?: HadaraActorContext;
   onProgress?: (event: TaskFinalizeProgressEvent) => void;
   lockTimeoutMs?: number;
+  onAutoReview?: (review: TaskFinalizeReport) => void;
 }
 
 const TASK_CLOSE_LOCK_STALE_MS = 5 * 60 * 1000;
@@ -121,17 +121,19 @@ export function createTaskCloseTransactionReport(
       executeRequested: true,
       actor,
       recordReadinessEvidence: true,
-      onProgress: progressWrapper
+      onProgress: progressWrapper,
+      onAutoReview: options.onAutoReview
     };
     const strategy = options.planHash ? 'finalize-reviewed-plan' : 'finalize-auto';
+    const reviewedPlan = options.planHash ? undefined : createReviewedTaskFinalizePlan(projectRoot, taskId, actor);
     if (options.planHash) {
       finalizeOptions.planHash = options.planHash;
     } else {
       finalizeOptions.auto = true;
+      finalizeOptions.reviewedPlan = reviewedPlan;
     }
-
-    const review = createTaskFinalizeReport(projectRoot, taskId, { actor });
-    operation = createCloseOperation(projectRoot, taskId, review.planHash ?? hashObject({ taskId, state: review.state }), 'applying');
+    const operationPlanHash = options.planHash ?? reviewedPlan?.planHash;
+    operation = createCloseOperation(projectRoot, taskId, operationPlanHash ?? hashObject({ taskId, phase: 'applying' }), 'applying');
     operation = persistCloseOperation(projectRoot, operation);
     const finalize = createTaskFinalizeReport(projectRoot, taskId, finalizeOptions);
     const updatedOperation = updateCloseOperationFromFinalize(projectRoot, operation, finalize);

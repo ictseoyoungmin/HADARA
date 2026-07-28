@@ -1,13 +1,14 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/task-close';
 import { createTaskCloseTransactionReport } from '../../src/task/task-close-transaction';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { createTaskFinalizeReport } from '../../src/task/task-finalize';
 import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 
 const roots: string[] = [];
@@ -79,6 +80,8 @@ describe('task close report', () => {
       persisted: false,
       pendingSteps: []
     });
+    expect(report.transaction.operation?.planHash).toBe(report.transaction.planHash);
+    expect(report.source.finalize.execution?.requestedPlanHash).toBe(report.transaction.planHash);
     expect(fs.existsSync(path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`))).toBe(false);
     expect(report.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(report.primaryNextAction).toBeUndefined();
@@ -303,6 +306,92 @@ describe('task close report', () => {
     expect(fs.existsSync(lockDir)).toBe(true);
     expect(fs.existsSync(path.join(lockDir, 'lock.json'))).toBe(false);
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('keeps the explicit reviewed plan hash on both the operation marker and the execute refusal report', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction reviewed hash');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const review = createTaskFinalizeReport(root, task.id);
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      boardPath,
+      fs
+        .readFileSync(boardPath, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+        .join('\n'),
+      'utf8'
+    );
+
+    const report = createTaskCloseTransactionReport(root, task.id, { planHash: review.planHash });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      transaction: {
+        strategy: 'finalize-reviewed-plan',
+        internalReview: false
+      }
+    });
+    expect(report.transaction.planHash).toBe(review.planHash);
+    expect(report.transaction.operation?.planHash).toBe(review.planHash);
+    expect(report.source.finalize.execution?.requestedPlanHash).toBe(review.planHash);
+    expect(report.source.finalize.execution?.planHashMatched).toBe(false);
+    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+  });
+
+  it('keeps the shared reviewed hash across the public auto-close minute-boundary refusal', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-28T13:59:59.000+09:00'));
+    try {
+      const root = tempProject();
+      const task = createTaskCapsule(root, 'Close transaction minute boundary');
+      completeTask(root, task.id, task.dir);
+      markStateDocsCurrent(root, task.id);
+      const taskPath = path.join(task.dir, 'TASK.md');
+      const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+      fs.writeFileSync(
+        taskPath,
+        fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'),
+        'utf8'
+      );
+      fs.writeFileSync(
+        boardPath,
+        fs
+          .readFileSync(boardPath, 'utf8')
+          .split(/\r?\n/)
+          .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+          .join('\n'),
+        'utf8'
+      );
+
+      let reviewedPlanHash: string | undefined;
+      const report = createTaskCloseTransactionReport(root, task.id, {
+        onAutoReview(review) {
+          reviewedPlanHash = review.planHash;
+          vi.setSystemTime(new Date('2026-07-28T14:00:00.000+09:00'));
+        }
+      });
+
+      expect(report).toMatchObject({
+        ok: false,
+        mode: 'execute-refused',
+        transaction: {
+          strategy: 'finalize-auto',
+          internalReview: true
+        }
+      });
+      expect(reviewedPlanHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+      expect(report.transaction.planHash).toBe(reviewedPlanHash);
+      expect(report.transaction.operation?.planHash).toBe(reviewedPlanHash);
+      expect(report.source.finalize.execution?.requestedPlanHash).toBe(reviewedPlanHash);
+      expect(report.source.finalize.execution?.planHashMatched).toBe(false);
+      expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('persists local operation state when execution writes lifecycle state then stops on a later blocker', () => {
