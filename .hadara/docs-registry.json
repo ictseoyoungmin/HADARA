@@ -2321,6 +2321,32 @@
         "type": "hadara-scaffold",
         "generator": "hadara init"
       }
+    },
+    {
+      "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
+      "title": "HADARA Task Close Transaction Specification",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review"
     }
   ],
   "generatedAt": "2026-07-22T08:19:21.257Z",

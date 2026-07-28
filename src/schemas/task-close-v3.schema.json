@@ -181,10 +181,26 @@
     },
     "recovery": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": ["required", "action"],
       "properties": {
         "required": { "type": "boolean" },
+        "operationId": { "type": "string" },
+        "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
+        "resumable": { "type": "boolean" },
+        "completedWrites": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recoveryWrite" }
+        },
+        "pendingWrites": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recoveryWrite" }
+        },
+        "conflictingWrites": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recoveryWrite" }
+        },
+        "primaryAction": { "type": "object", "additionalProperties": true },
         "action": { "type": "object", "additionalProperties": true }
       }
     },
@@ -282,6 +298,18 @@
         "mutated": { "type": "boolean" },
         "fileWrites": { "type": "integer", "minimum": 0 },
         "at": { "type": "string" }
+      }
+    },
+    "recoveryWrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "path", "writeBoundary", "status", "sequence"],
+      "properties": {
+        "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
+        "path": { "type": "string" },
+        "writeBoundary": { "enum": ["task-local", "evidence-append"] },
+        "status": { "enum": ["before", "after", "conflict", "missing-conflict", "pending"] },
+        "sequence": { "type": "integer", "minimum": 1 }
       }
     }
   }

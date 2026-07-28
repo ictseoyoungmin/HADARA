@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 391,
+  "rev": 393,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0730",
-    "title": "Docker Sync Dist Guard Path Fix"
+    "id": "T-0731",
+    "title": "Close Operation Reconciliation Hardening"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,26 +14,48 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Continue with deterministic partial-write reconciliation and `bookkeeping` domain removal.",
-    "reason": "T-0728 persisted the write-set/proof intent and fail-closed marker behavior; the remaining spec gap is prefix/non-prefix reconciliation and replacing the legacy bookkeeping report/domain with generic close writes.",
+    "title": "Continue with the remaining normative close-transaction design gaps if reviewer wants more rc2 hardening.",
+    "reason": "Full bookkeeping domain removal and closeBasisHash/finalSourceHash separation remain intentionally out of this capsule.",
     "references": [
       {
-        "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
+        "path": "`docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md`",
         "required": true
       },
       {
-        "path": "docs/TASK_WORKFLOW_COMMANDS.md",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0728",
-      "path": "tasks/T-0728-deterministic-close-recovery-contract/HANDOFF.md"
+      "workId": "T-0731",
+      "path": "tasks/T-0731-close-operation-reconciliation-hardening/HANDOFF.md"
     }
   },
   "continuations": [
+    {
+      "disposition": "actionable",
+      "kind": "task-handoff",
+      "title": "Continue with the remaining normative close-transaction design gaps if reviewer wants more rc2 hardening.",
+      "reason": "Full bookkeeping domain removal and closeBasisHash/finalSourceHash separation remain intentionally out of this capsule.",
+      "references": [
+        {
+          "path": "`docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md`",
+          "required": true
+        },
+        {
+          "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+          "required": true
+        }
+      ],
+      "createCommandAllowed": true,
+      "source": {
+        "type": "work-handoff",
+        "workId": "T-0731",
+        "path": "tasks/T-0731-close-operation-reconciliation-hardening/HANDOFF.md"
+      }
+    },
     {
       "disposition": "actionable",
       "kind": "task-handoff",

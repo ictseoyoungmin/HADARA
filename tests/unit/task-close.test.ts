@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -488,6 +489,45 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
+  it('fails closed when a close operation marker has schema-invalid nested state', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction invalid marker schema');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterOperationPrepared() {
+          throw new Error('stop after operation marker');
+        }
+      }
+    })).toThrow('stop after operation marker');
+    const marker = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
+    marker.attempts = [{}];
+    marker.mutationSummary = { executedWrites: -10, closeProofAppended: false, idempotentNoop: false };
+    marker.unexpected = true;
+    fs.writeFileSync(operationPath, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      recovery: {
+        required: true,
+        resumable: true
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_OPERATION_MARKER_INVALID'
+    }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
   it('fails closed with zero writes when a close operation marker is schema-invalid JSON', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction invalid marker');
@@ -673,7 +713,7 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
-  it('recovers a persisted partial operation by rerunning the same public close command after repair', () => {
+  it('fails closed when a persisted partial operation has close-source drift after repair', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction partial retry');
     completeTask(root, task.id, task.dir);
@@ -703,28 +743,106 @@ describe('task close report', () => {
     const recovered = createTaskCloseTransactionReport(root, task.id);
 
     expect(recovered).toMatchObject({
-      ok: true,
-      closeState: 'closed-valid',
-      writeSummary: {
-        closeProofAppended: true,
-        idempotentNoop: false
-      },
-      transaction: {
-        operation: {
-          phase: 'closed-valid',
-          persisted: false,
-          pendingSteps: []
-        }
+      ok: false,
+      closeState: 'blocked',
+      recovery: {
+        required: true,
+        operationId: partial.transaction.operation?.operationId,
+        phase: 'recovery-required',
+        resumable: true
       }
     });
-    expect(fs.existsSync(operationPath)).toBe(false);
+    expect(recovered.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
+      message: expect.stringContaining('close source hash changed')
+    }));
+    expect(fs.existsSync(operationPath)).toBe(true);
     const records = fs
       .readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')
       .trim()
       .split(/\n/)
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(1);
+    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(0);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
+  it('resumes a prefix-partial marker after reconciling actual task-local file hashes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction prefix resume');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterOperationPrepared() {
+          throw new Error('stop after operation marker');
+        }
+      }
+    })).toThrow('stop after operation marker');
+
+    const marker = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
+    const firstPath = path.join(task.dir, 'prefix-a.txt');
+    const secondPath = path.join(task.dir, 'prefix-b.txt');
+    fs.writeFileSync(firstPath, 'after-a\n', 'utf8');
+    fs.writeFileSync(secondPath, 'before-b\n', 'utf8');
+    marker.phase = 'recovery-required';
+    marker.expectedWrites = [
+      {
+        step: 'bookkeeping',
+        path: path.relative(root, firstPath).split(path.sep).join('/'),
+        writeBoundary: 'task-local',
+        action: 'update',
+        field: 'task-status',
+        expectedBeforeExists: true,
+        expectedBeforeHash: hashText('before-a\n'),
+        afterHash: hashText('after-a\n')
+      },
+      {
+        step: 'bookkeeping',
+        path: path.relative(root, secondPath).split(path.sep).join('/'),
+        writeBoundary: 'task-local',
+        action: 'update',
+        field: 'task-status',
+        expectedBeforeExists: true,
+        expectedBeforeHash: hashText('before-b\n'),
+        afterHash: hashText('after-b\n')
+      }
+    ];
+    marker.writeSetHash = hashText(JSON.stringify(marker.expectedWrites));
+    marker.mutationSummary = {
+      executedWrites: 1,
+      plannedMutationSteps: 2,
+      executedMutationSteps: 1,
+      plannedFileWrites: 2,
+      executedFileWrites: 1,
+      evidenceAppends: 0,
+      recoveredWrites: 0,
+      closeProofAppended: false,
+      idempotentNoop: false
+    };
+    marker.attempts = [{
+      attemptNumber: 1,
+      startedAt: marker.createdAt,
+      phase: 'recovery-required',
+      stepJournal: [],
+      mutationSummary: marker.mutationSummary
+    }];
+    fs.writeFileSync(operationPath, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
+
+    const recovered = createTaskCloseTransactionReport(root, task.id);
+
+    expect(recovered.ok).toBe(true);
+    expect(recovered.transaction.operation).toMatchObject({
+      operationId: marker.operationId,
+      phase: 'closed-valid',
+      resumedFromOperation: true,
+      persisted: false
+    });
+    expect(recovered.transaction.operation?.expectedWrites).toEqual(marker.expectedWrites);
+    expect(fs.existsSync(operationPath)).toBe(false);
+    expect(closeProofCount(task.dir)).toBe(1);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
@@ -1064,22 +1182,24 @@ describe('task close report', () => {
     const recovered = createTaskCloseTransactionReport(root, task.id);
 
     expect(recovered).toMatchObject({
-      ok: true,
-      closeState: 'closed-valid',
+      ok: false,
+      closeState: 'blocked',
       writeSummary: {
         executedWrites: 0,
         closeProofAppended: false,
-        idempotentNoop: true
+        idempotentNoop: false
       },
-      transaction: {
-        operation: {
-          phase: 'closed-valid',
-          persisted: false
-        }
+      recovery: {
+        required: true,
+        phase: 'recovery-required',
+        resumable: true
       }
     });
-    expect(recovered.transaction.operation?.attempts?.length).toBeGreaterThanOrEqual(1);
-    expect(fs.existsSync(operationPath)).toBe(false);
+    expect(recovered.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
+      message: expect.stringContaining('close source hash changed')
+    }));
+    expect(fs.existsSync(operationPath)).toBe(true);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
@@ -1686,4 +1806,8 @@ function snapshotFiles(root: string): Record<string, string> {
   }
   walk(root);
   return result;
+}
+
+function hashText(value: string): string {
+  return `sha256:${crypto.createHash('sha256').update(value, 'utf8').digest('hex')}`;
 }

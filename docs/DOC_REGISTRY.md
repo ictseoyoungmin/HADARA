@@ -78,6 +78,7 @@ Schema: `hadara.docs.registry.v1`
 | `docs/archive/retired-2026-07-26/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md` | spec | historical | never-default | no | project |
 | `docs/archive/retired-2026-07-26/specs/0.5/README.md` | spec | historical | never-default | no | project |
 | `docs/archive/retired-2026-07-26/specs/0.5/state-first/RFC.md` | spec | historical | never-default | no | hadara-docs |
+| `docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md` | spec | active | only-when-linked | no | project |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
 <!-- hadara:managed:end doc-registry-summary -->

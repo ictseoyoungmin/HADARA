@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0730 Docker Sync Dist Guard Path Fix | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0731 Close Operation Reconciliation Hardening | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0730 fixed two operator-reported failures. `scripts/dev-docker-sync-build.sh` now captures the `dist/cli/main.js` before-hash inside the container, using the same `$HADARA_WORKSPACE` namespace as the later recheck, so host `/home/ymin/HADARA-dev` and container `/workspace` paths no longer trigger a false concurrent-edit error. `.gitignore` now unignores `docs/specs/0.5.0-rc2/**`, making the existing rc2 spec line visible to CI archive-boundary tests. Shell syntax, archive-boundary focused test, and full `npm run check` passed. The Codex tool environment could not complete Docker sync validation because container `npm ci` hung, but the spawned processes were cleaned up; rerun `npm run dev:docker-sync-build` in a normal terminal to confirm the operator path.
+T-0731 hardens reviewer P1 task-close recovery gaps. Operation marker recovery now reads persisted task-local expected writes from the actual filesystem and classifies before/after/conflict/missing-conflict, fails closed on non-prefix/conflict/source drift, preserves previous operation identity/hash fields while resuming safe prefix/all-after/proof-pending states, and exposes completed/pending/conflicting write details in the v3 recovery report/schema. Runtime marker validation now rejects malformed attempts, negative mutation counts, bad journal/step enums, invalid finalSourceHash, and unknown marker properties. The active rc2 Task Close Transaction Specification is registered in `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`. Validation passed no-emit TypeScript, tools typecheck, focused task-close/schema/docs tests, and `npm test`; `npm run build` remains blocked in this workspace by non-writable `dist/` output files and is recorded/resolved as environment evidence, so run Docker sync-build or fix `dist` ownership for release-grade build proof. Remaining P2 design work is bookkeeping-domain removal and closeBasisHash/finalSourceHash separation.
 
 ## Previous Handoff
 

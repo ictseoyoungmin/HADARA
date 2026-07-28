@@ -177,6 +177,13 @@ export interface TaskCloseTransactionReport {
   };
   recovery?: {
     required: boolean;
+    operationId?: string;
+    phase?: TaskCloseOperationPhase;
+    resumable?: boolean;
+    completedWrites?: TaskCloseRecoveryWrite[];
+    pendingWrites?: TaskCloseRecoveryWrite[];
+    conflictingWrites?: TaskCloseRecoveryWrite[];
+    primaryAction?: HadaraNextAction;
     action: HadaraNextAction;
   };
   primaryNextAction?: HadaraNextAction;
@@ -186,6 +193,14 @@ export interface TaskCloseTransactionReport {
   };
   diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   issues: TaskClosePlanReport['issues'];
+}
+
+export interface TaskCloseRecoveryWrite {
+  step: TaskClosePlanStepId;
+  path: string;
+  writeBoundary: 'task-local' | 'evidence-append';
+  status: 'before' | 'after' | 'conflict' | 'missing-conflict' | 'pending';
+  sequence: number;
 }
 
 export interface TaskCloseMarkerPersistenceSummary {
@@ -281,16 +296,27 @@ export function createTaskCloseTransactionReport(
     const operationPlanHash = options.planHash ?? operationReview.planHash;
     const operationBasis = createCloseOperationBasis(operationReview);
     const previousOperation = readCloseOperation(projectRoot, taskId);
-    const markerReconciliationProblem = reconcileCloseOperationMarker(
+    const markerReconciliation = reconcileCloseOperationMarker(
+      projectRoot,
       taskId,
       operationPlanHash ?? hashObject({ taskId, phase: 'applying' }),
       operationBasis,
       previousOperation
     );
-    if (markerReconciliationProblem) {
-      return createCloseOperationMarkerBlockedReport(projectRoot, taskId, actor, markerReconciliationProblem, markerPersistence);
+    if (markerReconciliation.issue) {
+      return createCloseOperationMarkerBlockedReport(projectRoot, taskId, actor, markerReconciliation.issue, markerPersistence, markerReconciliation);
     }
-    operation = createCloseOperation(taskId, operationPlanHash ?? hashObject({ taskId, phase: 'applying' }), 'applying', operationReview, operationBasis, previousOperation);
+    const initialPhase = markerReconciliation.startPhase ?? 'applying';
+    if (markerReconciliation.resumeKind === 'proof-pending') closePlanOptions.recordReadinessEvidence = false;
+    operation = createCloseOperation(
+      taskId,
+      operationPlanHash ?? hashObject({ taskId, phase: initialPhase }),
+      initialPhase,
+      operationReview,
+      operationBasis,
+      previousOperation,
+      markerReconciliation
+    );
     operation = persistOperation(operation);
     options.faultHooks?.afterOperationPrepared?.();
     const closePlan = createTaskClosePlanReport(projectRoot, taskId, closePlanOptions);
@@ -413,11 +439,49 @@ function fromClosePlanReport(
       closeProofAppended,
       idempotentNoop
     },
-    ...(recoveryAction ? { recovery: { required: true, action: recoveryAction }, primaryNextAction: recoveryAction } : {}),
+    ...(recoveryAction ? {
+      recovery: createRecoveryReport(options.operation, recoveryAction),
+      primaryNextAction: recoveryAction
+    } : {}),
     nextActions,
     source: { closePlan },
     issues: closePlan.issues
   };
+}
+
+function createRecoveryReport(
+  operation: TaskCloseOperationState | undefined,
+  action: HadaraNextAction,
+  reconciliation?: CloseOperationMarkerReconciliation
+): NonNullable<TaskCloseTransactionReport['recovery']> {
+  const completedWrites = reconciliation?.completedWrites ?? recoveryWritesFromOperation(operation, 'after');
+  const pendingWrites = reconciliation?.pendingWrites ?? recoveryWritesFromOperation(operation, 'before');
+  const conflictingWrites = reconciliation?.conflictingWrites ?? recoveryWritesFromOperation(operation, 'conflict');
+  return {
+    required: true,
+    ...(operation?.operationId ? { operationId: operation.operationId } : {}),
+    ...(operation?.phase ? { phase: operation.phase } : {}),
+    resumable: conflictingWrites.length === 0,
+    completedWrites,
+    pendingWrites,
+    conflictingWrites,
+    primaryAction: action,
+    action
+  };
+}
+
+function recoveryWritesFromOperation(
+  operation: TaskCloseOperationState | undefined,
+  status: TaskCloseRecoveryWrite['status']
+): TaskCloseRecoveryWrite[] {
+  if (!operation) return [];
+  return operation.expectedWrites.map((write, index) => ({
+    step: write.step,
+    path: write.path,
+    writeBoundary: write.writeBoundary,
+    status,
+    sequence: index + 1
+  }));
 }
 
 function withTaskCloseTransactionLocks<T>(
@@ -713,10 +777,36 @@ function inspectCloseOperationMarker(projectRoot: string, taskId: string): TaskC
 }
 
 function validateCloseOperationMarkerShape(state: Partial<TaskCloseOperationState>): string | null {
+  const unknown = unknownKeys(state, [
+    'operationId',
+    'taskId',
+    'idempotencyKey',
+    'intendedFinalState',
+    'phase',
+    'closeSourceHash',
+    'planFingerprint',
+    'planHash',
+    'writeSetHash',
+    'expectedWrites',
+    'completedSteps',
+    'pendingSteps',
+    'stepJournal',
+    'mutationSummary',
+    'attempts',
+    'path',
+    'persisted',
+    'resumedFromOperation',
+    'finalSourceHash',
+    'proof',
+    'createdAt',
+    'updatedAt'
+  ]);
+  if (unknown.length > 0) return `unknown property ${unknown[0]}`;
   const stringFields: Array<keyof TaskCloseOperationState> = ['operationId', 'taskId', 'idempotencyKey', 'closeSourceHash', 'planHash', 'writeSetHash', 'path', 'createdAt', 'updatedAt'];
   for (const field of stringFields) {
     if (typeof state[field] !== 'string') return `missing string field ${field}`;
   }
+  if (state.planFingerprint !== undefined && typeof state.planFingerprint !== 'string') return 'planFingerprint must be a string';
   if (state.intendedFinalState !== 'closed-valid') return 'intendedFinalState must be closed-valid';
   if (!isCloseOperationPhase(state.phase)) return 'phase is not a known close operation phase';
   if (!Array.isArray(state.expectedWrites)) return 'expectedWrites must be an array';
@@ -724,11 +814,29 @@ function validateCloseOperationMarkerShape(state: Partial<TaskCloseOperationStat
     const problem = validateExpectedWriteShape(write);
     if (problem) return `expectedWrites[${index}] ${problem}`;
   }
-  if (!Array.isArray(state.completedSteps)) return 'completedSteps must be an array';
-  if (!Array.isArray(state.pendingSteps)) return 'pendingSteps must be an array';
+  const completedStepsProblem = validateStepArray(state.completedSteps, 'completedSteps');
+  if (completedStepsProblem) return completedStepsProblem;
+  const pendingStepsProblem = validateStepArray(state.pendingSteps, 'pendingSteps');
+  if (pendingStepsProblem) return pendingStepsProblem;
+  if (state.stepJournal !== undefined) {
+    const journalProblem = validateStepJournal(state.stepJournal, 'stepJournal');
+    if (journalProblem) return journalProblem;
+  }
+  if (state.mutationSummary !== undefined) {
+    const mutationProblem = validateMutationSummary(state.mutationSummary, 'mutationSummary');
+    if (mutationProblem) return mutationProblem;
+  }
   if (!Array.isArray(state.attempts)) return 'attempts must be an array';
+  for (const [index, attempt] of state.attempts.entries()) {
+    const problem = validateOperationAttempt(attempt, `attempts[${index}]`);
+    if (problem) return problem;
+  }
   if (typeof state.persisted !== 'boolean') return 'persisted must be a boolean';
+  if (state.resumedFromOperation !== undefined && typeof state.resumedFromOperation !== 'boolean') return 'resumedFromOperation must be a boolean';
+  if (state.finalSourceHash !== undefined && typeof state.finalSourceHash !== 'string') return 'finalSourceHash must be a string';
   if (state.proof) {
+    const proofUnknown = unknownKeys(state.proof, ['idempotencyKey', 'outcome']);
+    if (proofUnknown.length > 0) return `proof unknown property ${proofUnknown[0]}`;
     if (typeof state.proof.idempotencyKey !== 'string') return 'proof.idempotencyKey must be a string';
     if (!['pending', 'appended', 'existing-noop'].includes(state.proof.outcome)) return 'proof.outcome is invalid';
   }
@@ -738,8 +846,25 @@ function validateCloseOperationMarkerShape(state: Partial<TaskCloseOperationStat
 function validateExpectedWriteShape(value: unknown): string | null {
   if (!value || typeof value !== 'object') return 'must be an object';
   const write = value as Partial<TaskCloseExpectedWrite>;
+  const unknown = unknownKeys(write, [
+    'step',
+    'path',
+    'writeBoundary',
+    'action',
+    'field',
+    'expectedBeforeExists',
+    'expectedBeforeHash',
+    'afterHash',
+    'appendKind',
+    'appendOrder',
+    'idempotencyKey',
+    'recordHash'
+  ]);
+  if (unknown.length > 0) return `unknown property ${unknown[0]}`;
   if (!['bookkeeping', 'ready', 'close', 'audit-close'].includes(String(write.step))) return 'step is invalid';
   if (typeof write.path !== 'string') return 'path must be a string';
+  if (write.action !== undefined && !['update', 'insert'].includes(String(write.action))) return 'action is invalid';
+  if (write.field !== undefined && !['task-status', 'task-handoff-identity', 'task-board-row', 'current-state', 'project-state-projection', 'handoff-projection'].includes(String(write.field))) return 'field is invalid';
   if (write.writeBoundary === 'task-local') {
     if (typeof write.expectedBeforeExists !== 'boolean') return 'task-local write requires expectedBeforeExists';
     if (typeof write.expectedBeforeHash !== 'string') return 'task-local write requires expectedBeforeHash';
@@ -748,12 +873,87 @@ function validateExpectedWriteShape(value: unknown): string | null {
   }
   if (write.writeBoundary === 'evidence-append') {
     if (!['readiness-evidence', 'close-proof'].includes(String(write.appendKind))) return 'evidence append requires appendKind';
-    if (typeof write.appendOrder !== 'number') return 'evidence append requires appendOrder';
+    if (!isNonNegativeInteger(write.appendOrder) || (write.appendOrder ?? 0) < 1) return 'evidence append requires positive appendOrder';
     if (typeof write.idempotencyKey !== 'string') return 'evidence append requires idempotencyKey';
     if (typeof write.recordHash !== 'string') return 'evidence append requires recordHash';
     return null;
   }
   return 'writeBoundary is invalid';
+}
+
+function validateStepArray(value: unknown, label: string): string | null {
+  if (!Array.isArray(value)) return `${label} must be an array`;
+  for (const [index, step] of value.entries()) {
+    if (!['bookkeeping', 'ready', 'close', 'audit-close'].includes(String(step))) return `${label}[${index}] is invalid`;
+  }
+  return null;
+}
+
+function validateOperationAttempt(value: unknown, label: string): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return `${label} must be an object`;
+  const attempt = value as Partial<TaskCloseOperationAttempt>;
+  const unknown = unknownKeys(attempt, ['attemptNumber', 'startedAt', 'completedAt', 'phase', 'stepJournal', 'mutationSummary']);
+  if (unknown.length > 0) return `${label} unknown property ${unknown[0]}`;
+  if (!isNonNegativeInteger(attempt.attemptNumber) || (attempt.attemptNumber ?? 0) < 1) return `${label}.attemptNumber must be a positive integer`;
+  if (typeof attempt.startedAt !== 'string') return `${label}.startedAt must be a string`;
+  if (attempt.completedAt !== undefined && typeof attempt.completedAt !== 'string') return `${label}.completedAt must be a string`;
+  if (!isCloseOperationPhase(attempt.phase)) return `${label}.phase is invalid`;
+  const journalProblem = validateStepJournal(attempt.stepJournal, `${label}.stepJournal`);
+  if (journalProblem) return journalProblem;
+  return validateMutationSummary(attempt.mutationSummary, `${label}.mutationSummary`);
+}
+
+function validateStepJournal(value: unknown, label: string): string | null {
+  if (!Array.isArray(value)) return `${label} must be an array`;
+  for (const [index, entry] of value.entries()) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return `${label}[${index}] must be an object`;
+    const journal = entry as Partial<TaskCloseOperationStepJournalEntry>;
+    const unknown = unknownKeys(journal, ['seq', 'step', 'phase', 'status', 'writeBoundary', 'writeOutcome', 'mutated', 'fileWrites', 'at']);
+    if (unknown.length > 0) return `${label}[${index}] unknown property ${unknown[0]}`;
+    if (!isNonNegativeInteger(journal.seq) || (journal.seq ?? 0) < 1) return `${label}[${index}].seq must be a positive integer`;
+    if (!['bookkeeping', 'ready', 'close', 'audit-close'].includes(String(journal.step))) return `${label}[${index}].step is invalid`;
+    if (!['intent', 'outcome'].includes(String(journal.phase))) return `${label}[${index}].phase is invalid`;
+    if (!['start', 'executed', 'satisfied', 'blocked', 'skipped'].includes(String(journal.status))) return `${label}[${index}].status is invalid`;
+    if (!['read-only', 'task-local', 'evidence-append'].includes(String(journal.writeBoundary))) return `${label}[${index}].writeBoundary is invalid`;
+    if (journal.writeOutcome !== undefined && !['appended', 'existing-noop', 'blocked'].includes(String(journal.writeOutcome))) return `${label}[${index}].writeOutcome is invalid`;
+    if (typeof journal.mutated !== 'boolean') return `${label}[${index}].mutated must be a boolean`;
+    if (journal.fileWrites !== undefined && !isNonNegativeInteger(journal.fileWrites)) return `${label}[${index}].fileWrites must be a non-negative integer`;
+    if (typeof journal.at !== 'string') return `${label}[${index}].at must be a string`;
+  }
+  return null;
+}
+
+function validateMutationSummary(value: unknown, label: string): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return `${label} must be an object`;
+  const summary = value as Partial<NonNullable<TaskCloseOperationState['mutationSummary']>>;
+  const unknown = unknownKeys(summary, [
+    'executedWrites',
+    'plannedMutationSteps',
+    'executedMutationSteps',
+    'plannedFileWrites',
+    'executedFileWrites',
+    'evidenceAppends',
+    'recoveredWrites',
+    'closeProofAppended',
+    'idempotentNoop'
+  ]);
+  if (unknown.length > 0) return `${label} unknown property ${unknown[0]}`;
+  for (const field of ['executedWrites', 'plannedMutationSteps', 'executedMutationSteps', 'plannedFileWrites', 'executedFileWrites', 'evidenceAppends', 'recoveredWrites'] as const) {
+    if (summary[field] !== undefined && !isNonNegativeInteger(summary[field])) return `${label}.${field} must be a non-negative integer`;
+  }
+  if (!isNonNegativeInteger(summary.executedWrites)) return `${label}.executedWrites must be a non-negative integer`;
+  if (typeof summary.closeProofAppended !== 'boolean') return `${label}.closeProofAppended must be a boolean`;
+  if (typeof summary.idempotentNoop !== 'boolean') return `${label}.idempotentNoop must be a boolean`;
+  return null;
+}
+
+function unknownKeys(value: object, allowed: string[]): string[] {
+  const allowedSet = new Set(allowed);
+  return Object.keys(value).filter((key) => !allowedSet.has(key));
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 0;
 }
 
 function isCloseOperationPhase(value: unknown): value is TaskCloseOperationPhase {
@@ -765,7 +965,8 @@ function createCloseOperationMarkerBlockedReport(
   taskId: string,
   actor: HadaraActorContext,
   issue: TaskClosePlanReport['issues'][number],
-  markerPersistence: TaskCloseMarkerPersistenceSummary
+  markerPersistence: TaskCloseMarkerPersistenceSummary,
+  reconciliation?: CloseOperationMarkerReconciliation
 ): TaskCloseTransactionReport {
   const fallback = createTaskClosePlanReport(projectRoot, taskId, { actor });
   const action: HadaraNextAction = {
@@ -805,7 +1006,7 @@ function createCloseOperationMarkerBlockedReport(
       closeProofAppended: false,
       idempotentNoop: false
     },
-    recovery: { required: true, action },
+    recovery: createRecoveryReport(reconciliation?.operation, action, reconciliation),
     primaryNextAction: action,
     nextActions: [],
     issues: [issue]
@@ -817,6 +1018,17 @@ interface CloseOperationBasis {
   writeSetHash: string;
   closeSourceHash: string;
   planFingerprint: string;
+}
+
+interface CloseOperationMarkerReconciliation {
+  issue: TaskClosePlanReport['issues'][number] | null;
+  operation?: TaskCloseOperationState;
+  resumeKind?: 'reuse' | 'all-before' | 'prefix-partial' | 'all-after' | 'proof-pending';
+  startPhase?: TaskCloseOperationPhase;
+  preservePreviousIdentity: boolean;
+  completedWrites: TaskCloseRecoveryWrite[];
+  pendingWrites: TaskCloseRecoveryWrite[];
+  conflictingWrites: TaskCloseRecoveryWrite[];
 }
 
 function createCloseOperationBasis(reviewedPlan: ReviewedTaskClosePlan): CloseOperationBasis {
@@ -837,22 +1049,153 @@ function createCloseOperationBasis(reviewedPlan: ReviewedTaskClosePlan): CloseOp
 }
 
 function reconcileCloseOperationMarker(
+  projectRoot: string,
   taskId: string,
   planHash: string,
   basis: CloseOperationBasis,
   previous: TaskCloseOperationState | null
-): TaskClosePlanReport['issues'][number] | null {
-  if (!previous) return null;
-  if (canContinueCloseOperation(previous, planHash, basis)) return null;
-  if (previous.phase === 'closed-valid') return null;
+): CloseOperationMarkerReconciliation {
+  const empty = (): CloseOperationMarkerReconciliation => ({
+    issue: null,
+    preservePreviousIdentity: false,
+    completedWrites: [],
+    pendingWrites: [],
+    conflictingWrites: []
+  });
+  if (!previous) return empty();
+  const writeState = reconcileExpectedTaskLocalWrites(projectRoot, previous.expectedWrites);
+  const base: CloseOperationMarkerReconciliation = {
+    issue: null,
+    operation: previous,
+    preservePreviousIdentity: false,
+    completedWrites: writeState.completedWrites,
+    pendingWrites: writeState.pendingWrites,
+    conflictingWrites: writeState.conflictingWrites
+  };
+  if (previous.phase === 'closed-valid') return { ...base, resumeKind: 'reuse', preservePreviousIdentity: true };
+  if (writeState.conflictingWrites.length > 0 || writeState.nonPrefix) {
+    return {
+      ...base,
+      issue: createOperationRecoveryIssue(taskId, previous, writeState.nonPrefix ? 'non-prefix task-local writes were detected' : 'conflicting task-local writes were detected')
+    };
+  }
+  if (canReuseCloseOperation(previous, planHash, basis)) {
+    return { ...base, resumeKind: 'reuse', preservePreviousIdentity: true };
+  }
+  if (previous.phase === 'proof-pending') {
+    if (writeState.kind === 'all-after' || writeState.kind === 'none') {
+      return { ...base, resumeKind: 'proof-pending', startPhase: 'proof-pending', preservePreviousIdentity: true };
+    }
+    return {
+      ...base,
+      issue: createOperationRecoveryIssue(taskId, previous, 'proof-pending writes are not fully applied')
+    };
+  }
+  if (previous.closeSourceHash !== basis.closeSourceHash) {
+    return {
+      ...base,
+      issue: createOperationRecoveryIssue(taskId, previous, 'close source hash changed')
+    };
+  }
+  if (writeState.kind === 'all-before') {
+    return { ...base, resumeKind: 'all-before', startPhase: 'applying', preservePreviousIdentity: true };
+  }
+  if (writeState.kind === 'prefix-partial') {
+    return { ...base, resumeKind: 'prefix-partial', startPhase: 'applying', preservePreviousIdentity: true };
+  }
+  if (writeState.kind === 'all-after') {
+    return { ...base, resumeKind: 'all-after', startPhase: 'verifying', preservePreviousIdentity: true };
+  }
+  return {
+    ...base,
+    issue: createOperationRecoveryIssue(taskId, previous, 'operation marker does not match the current close basis')
+  };
+}
+
+function createOperationRecoveryIssue(
+  taskId: string,
+  previous: TaskCloseOperationState,
+  reason: string
+): TaskClosePlanReport['issues'][number] {
   return {
     severity: 'error',
     code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
-    message: 'Existing task close recovery marker does not match the current close basis; refusing to overwrite valid recovery metadata.',
+    message: `Existing task close recovery marker cannot be resumed safely: ${reason}; refusing to overwrite valid recovery metadata.`,
     path: previous.path,
     fixHint: 'Inspect the marker, expected writes, and close-source files before retrying a write-capable close transaction.',
     example: `hadara task close --task ${taskId} --dry-run --json`
   };
+}
+
+function reconcileExpectedTaskLocalWrites(
+  projectRoot: string,
+  expectedWrites: TaskCloseExpectedWrite[]
+): {
+  kind: 'none' | 'all-before' | 'prefix-partial' | 'all-after' | 'non-prefix';
+  completedWrites: TaskCloseRecoveryWrite[];
+  pendingWrites: TaskCloseRecoveryWrite[];
+  conflictingWrites: TaskCloseRecoveryWrite[];
+  nonPrefix: boolean;
+} {
+  const taskLocalWrites = expectedWrites
+    .map((write, index) => ({ write, sequence: index + 1 }))
+    .filter((entry) => entry.write.writeBoundary === 'task-local');
+  if (taskLocalWrites.length === 0) {
+    return { kind: 'none', completedWrites: [], pendingWrites: [], conflictingWrites: [], nonPrefix: false };
+  }
+
+  const classified = taskLocalWrites.map(({ write, sequence }) => classifyTaskLocalExpectedWrite(projectRoot, write, sequence));
+  const completedWrites = classified.filter((entry) => entry.status === 'after');
+  const pendingWrites = classified.filter((entry) => entry.status === 'before');
+  const conflictingWrites = classified.filter((entry) => entry.status === 'conflict' || entry.status === 'missing-conflict');
+  if (conflictingWrites.length > 0) {
+    return { kind: 'non-prefix', completedWrites, pendingWrites, conflictingWrites, nonPrefix: false };
+  }
+
+  let seenBefore = false;
+  let nonPrefix = false;
+  for (const entry of classified) {
+    if (entry.status === 'before') {
+      seenBefore = true;
+      continue;
+    }
+    if (entry.status === 'after' && seenBefore) nonPrefix = true;
+  }
+  if (nonPrefix) return { kind: 'non-prefix', completedWrites, pendingWrites, conflictingWrites, nonPrefix: true };
+  if (completedWrites.length === 0) return { kind: 'all-before', completedWrites, pendingWrites, conflictingWrites, nonPrefix: false };
+  if (pendingWrites.length === 0) return { kind: 'all-after', completedWrites, pendingWrites, conflictingWrites, nonPrefix: false };
+  return { kind: 'prefix-partial', completedWrites, pendingWrites, conflictingWrites, nonPrefix: false };
+}
+
+function classifyTaskLocalExpectedWrite(
+  projectRoot: string,
+  write: TaskCloseExpectedWrite,
+  sequence: number
+): TaskCloseRecoveryWrite {
+  const status = classifyTaskLocalExpectedWriteStatus(projectRoot, write);
+  return {
+    step: write.step,
+    path: write.path,
+    writeBoundary: 'task-local',
+    status,
+    sequence
+  };
+}
+
+function classifyTaskLocalExpectedWriteStatus(
+  projectRoot: string,
+  write: TaskCloseExpectedWrite
+): 'before' | 'after' | 'conflict' | 'missing-conflict' {
+  const absolutePath = path.resolve(projectRoot, write.path);
+  const relative = path.relative(projectRoot, absolutePath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) return 'conflict';
+  const exists = fs.existsSync(absolutePath);
+  if (!exists && write.expectedBeforeExists) return 'missing-conflict';
+  const content = exists ? fs.readFileSync(absolutePath, 'utf8') : '';
+  const currentHash = hashContent(content);
+  if (currentHash === write.afterHash) return 'after';
+  if (exists === write.expectedBeforeExists && currentHash === write.expectedBeforeHash) return 'before';
+  return exists ? 'conflict' : 'missing-conflict';
 }
 
 function canReuseCloseOperation(previous: TaskCloseOperationState, planHash: string, basis: CloseOperationBasis): boolean {
@@ -861,10 +1204,7 @@ function canReuseCloseOperation(previous: TaskCloseOperationState, planHash: str
 
 function canContinueCloseOperation(previous: TaskCloseOperationState, planHash: string, basis: CloseOperationBasis): boolean {
   if (canReuseCloseOperation(previous, planHash, basis)) return true;
-  if (previous.phase === 'proof-pending' && previous.closeSourceHash === basis.closeSourceHash) return true;
-  if (previous.phase !== 'recovery-required') return false;
-  if ((previous.mutationSummary?.executedWrites ?? 0) <= 0) return false;
-  return !basis.expectedWrites.some((write) => write.writeBoundary === 'task-local');
+  return previous.closeSourceHash === basis.closeSourceHash && (previous.phase === 'proof-pending' || previous.phase === 'recovery-required');
 }
 
 function createCloseOperation(
@@ -873,11 +1213,12 @@ function createCloseOperation(
   phase: TaskCloseOperationPhase,
   reviewedPlan: ReviewedTaskClosePlan,
   basis: CloseOperationBasis,
-  previous: TaskCloseOperationState | null
+  previous: TaskCloseOperationState | null,
+  reconciliation?: CloseOperationMarkerReconciliation
 ): TaskCloseOperationState {
   const { expectedWrites, writeSetHash, closeSourceHash, planFingerprint } = basis;
   const idempotencyKey = hashObject({ taskId, closeSourceHash, intendedFinalState: 'closed-valid' });
-  const reusePrevious = previous ? canContinueCloseOperation(previous, planHash, basis) : false;
+  const reusePrevious = Boolean(previous && reconciliation?.preservePreviousIdentity && !reconciliation.issue);
   const previousState = reusePrevious ? previous : null;
   const operationId = hashObject({ taskId, planHash, writeSetHash }).replace(/^sha256:/, '');
   const now = new Date().toISOString();
@@ -906,11 +1247,11 @@ function createCloseOperation(
     idempotencyKey: previousState?.idempotencyKey ?? idempotencyKey,
     intendedFinalState: 'closed-valid',
     phase,
-    closeSourceHash,
-    planFingerprint,
-    planHash,
-    writeSetHash,
-    expectedWrites,
+    closeSourceHash: previousState?.closeSourceHash ?? closeSourceHash,
+    planFingerprint: previousState?.planFingerprint ?? planFingerprint,
+    planHash: previousState?.planHash ?? planHash,
+    writeSetHash: previousState?.writeSetHash ?? writeSetHash,
+    expectedWrites: previousState?.expectedWrites ?? expectedWrites,
     completedSteps: previousState?.completedSteps ?? [],
     pendingSteps: previousState?.pendingSteps ?? ['bookkeeping', 'ready', 'close', 'audit-close'],
     stepJournal: [],
@@ -1332,6 +1673,10 @@ function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | und
 
 function hashObject(value: unknown): string {
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex')}`;
+}
+
+function hashContent(value: string): string {
+  return `sha256:${crypto.createHash('sha256').update(value, 'utf8').digest('hex')}`;
 }
 
 function readJsonObject(absolutePath: string): Record<string, unknown> | null {
