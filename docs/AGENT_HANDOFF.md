@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0728 Deterministic Close Recovery Contract | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0729 Close Recovery Marker Reconciliation | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0728 addressed the next P1 close-transaction gap after T-0727: operation markers now persist close source hash, write set hash, expected guarded writes, intended final state, final source/proof intent, and stricter phases including durable `proof-pending`; malformed markers fail closed with zero lifecycle/evidence writes; `executedFileWrites` counts actual task-local target files separately from mutating transaction steps; and task-close v3 schema/tests cover the new contract. Focused close/schema tests, TypeScript build, and full check passed. Next capsule should use the persisted write descriptors to implement prefix/non-prefix partial-write reconciliation and then remove or rename the remaining legacy `bookkeeping` domain/report surface.
+T-0729 completed the reviewer Px follow-up for task close recovery markers. Schema-valid mismatched markers now reconcile only when safe or fail closed before overwrite; schema-invalid JSON markers fail closed; `closeSourceHash` is source-backed with a separate `planFingerprint`; expected writes include readiness/proof append descriptors; proof-pending no longer regresses through progress events; durable marker writes are journal-boundary writes; and v3 expectedWrite schema conditionally requires task-local before/after hashes. Focused close/schema tests, TypeScript build, full check, and built dist smoke passed. `npm run dev:docker-sync-build` was attempted but interrupted after hanging in container `npm ci`; local `npm run build` refreshed `dist` and built CLI smoke reported `distLooksStale:false`. Remaining follow-up: the legacy `bookkeeping` implementation/report naming should be removed or renamed in a separate low-risk refactor.
 
 ## Previous Handoff
 

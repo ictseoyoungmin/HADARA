@@ -729,3 +729,4 @@
 | T-0726 | Dogfood Close Transaction Package | Done | tasks/T-0726-dogfood-close-transaction-package | |
 | T-0727 | Complete Close Transaction Fault Matrix | Done | tasks/T-0727-complete-close-transaction-fault-matrix | |
 | T-0728 | Deterministic Close Recovery Contract | Done | tasks/T-0728-deterministic-close-recovery-contract | |
+| T-0729 | Close Recovery Marker Reconciliation | Done | tasks/T-0729-close-recovery-marker-reconciliation | |

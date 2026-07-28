@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 387,
+  "rev": 389,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0728",
-    "title": "Deterministic Close Recovery Contract"
+    "id": "T-0729",
+    "title": "Close Recovery Marker Reconciliation"
   },
   "activeTask": null,
   "nextWork": null,

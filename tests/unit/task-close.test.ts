@@ -407,13 +407,16 @@ describe('task close report', () => {
     const report = createTaskCloseTransactionReport(root, task.id);
     const expectedWrites = report.transaction.operation?.expectedWrites ?? [];
     const targetWrites = expectedWrites.filter((write) => write.writeBoundary === 'task-local');
+    const capsulePath = path.relative(root, task.dir).split(path.sep).join('/');
 
     expect(report.ok).toBe(true);
     expect(report.transaction.operation).toMatchObject({
       intendedFinalState: 'closed-valid',
       closeSourceHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      planFingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       writeSetHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/)
     });
+    expect(report.transaction.operation?.closeSourceHash).toBe(report.transaction.operation?.finalSourceHash);
     expect(expectedWrites).toEqual(expect.arrayContaining([
       expect.objectContaining({
         step: 'bookkeeping',
@@ -423,9 +426,31 @@ describe('task close report', () => {
         afterHash: expect.stringMatching(/^sha256:/)
       })
     ]));
+    expect(expectedWrites).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        step: 'close',
+        path: `${capsulePath}/evidence.jsonl`,
+        writeBoundary: 'evidence-append',
+        appendKind: 'readiness-evidence',
+        appendOrder: 1,
+        idempotencyKey: expect.stringContaining(`task-close-plan-readiness:${task.id}:`),
+        recordHash: expect.stringMatching(/^sha256:/)
+      }),
+      expect.objectContaining({
+        step: 'close',
+        path: `${capsulePath}/evidence.jsonl`,
+        writeBoundary: 'evidence-append',
+        appendKind: 'close-proof',
+        appendOrder: 2,
+        idempotencyKey: expect.stringContaining(`close:${task.id}:`),
+        recordHash: expect.stringMatching(/^sha256:/)
+      })
+    ]));
     expect(targetWrites.length).toBeGreaterThan(1);
     expect(report.writeSummary.executedMutationSteps).toBeLessThan(targetWrites.length);
     expect(report.writeSummary.executedFileWrites).toBe(targetWrites.length);
+    expect(report.transaction.markerPersistence.contentWrites).toBeLessThanOrEqual(4);
+    expect(report.transaction.markerPersistence.progressWrites).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
@@ -459,6 +484,80 @@ describe('task close report', () => {
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_OPERATION_MARKER_MALFORMED' }));
     expect(report.primaryNextAction?.writeBoundary).toBe('read-only');
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('fails closed with zero writes when a close operation marker is schema-invalid JSON', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction invalid marker');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+    fs.mkdirSync(path.dirname(operationPath), { recursive: true });
+    fs.writeFileSync(operationPath, `${JSON.stringify({ taskId: task.id, operationId: 'fixture', planHash: 'sha256:fixture' }, null, 2)}\n`, 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      readOnly: true,
+      writeSummary: {
+        executedWrites: 0,
+        executedFileWrites: 0,
+        evidenceAppends: 0,
+        closeProofAppended: false
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_OPERATION_MARKER_INVALID' }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('fails closed without overwriting a valid recovery marker when the close basis changed', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction marker mismatch');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterOperationPrepared() {
+          throw new Error('fault after operation prepared');
+        }
+      }
+    })).toThrow('fault after operation prepared');
+
+    const originalMarker = fs.readFileSync(operationPath, 'utf8');
+    const originalState = JSON.parse(originalMarker);
+    expect(originalState).toMatchObject({
+      taskId: task.id,
+      phase: 'applying',
+      expectedWrites: expect.any(Array)
+    });
+    fs.writeFileSync(path.join(task.dir, 'TASK.md'), `${fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')}\n`, 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(fs.readFileSync(operationPath, 'utf8')).toBe(originalMarker);
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      readOnly: true,
+      writeSummary: {
+        executedWrites: 0,
+        executedFileWrites: 0,
+        evidenceAppends: 0,
+        closeProofAppended: false
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED' }));
     expect(closeProofCount(task.dir)).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
@@ -790,6 +889,14 @@ describe('task close report', () => {
 
     expect(interrupted).toBe(true);
     expect(fs.existsSync(operationPath)).toBe(true);
+    expect(JSON.parse(fs.readFileSync(operationPath, 'utf8'))).toMatchObject({
+      taskId: task.id,
+      phase: 'proof-pending',
+      proof: {
+        idempotencyKey: expect.stringContaining(`close:${task.id}:`),
+        outcome: 'pending'
+      }
+    });
     expect(closeProofCount(task.dir)).toBe(1);
 
     const recovered = createTaskCloseTransactionReport(root, task.id);

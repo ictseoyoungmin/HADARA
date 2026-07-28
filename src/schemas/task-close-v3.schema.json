@@ -79,6 +79,7 @@
             "intendedFinalState": { "const": "closed-valid" },
             "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
             "closeSourceHash": { "type": "string" },
+            "planFingerprint": { "type": "string" },
             "planHash": { "type": "string" },
             "writeSetHash": { "type": "string" },
             "expectedWrites": {
@@ -232,6 +233,26 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["step", "path", "writeBoundary"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "writeBoundary": { "const": "task-local" } },
+            "required": ["writeBoundary"]
+          },
+          "then": {
+            "required": ["expectedBeforeExists", "expectedBeforeHash", "afterHash"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "writeBoundary": { "const": "evidence-append" } },
+            "required": ["writeBoundary"]
+          },
+          "then": {
+            "required": ["appendKind", "appendOrder", "idempotencyKey", "recordHash"]
+          }
+        }
+      ],
       "properties": {
         "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
         "path": { "type": "string" },
@@ -240,7 +261,11 @@
         "field": { "enum": ["task-status", "task-handoff-identity", "task-board-row", "current-state", "project-state-projection", "handoff-projection"] },
         "expectedBeforeExists": { "type": "boolean" },
         "expectedBeforeHash": { "type": "string" },
-        "afterHash": { "type": "string" }
+        "afterHash": { "type": "string" },
+        "appendKind": { "enum": ["readiness-evidence", "close-proof"] },
+        "appendOrder": { "type": "integer", "minimum": 1 },
+        "idempotencyKey": { "type": "string" },
+        "recordHash": { "type": "string" }
       }
     },
     "operationJournalEntry": {

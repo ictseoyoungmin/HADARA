@@ -61,6 +61,7 @@ export interface TaskCloseOperationState {
   intendedFinalState: 'closed-valid';
   phase: TaskCloseOperationPhase;
   closeSourceHash: string;
+  planFingerprint?: string;
   planHash: string;
   writeSetHash: string;
   expectedWrites: TaskCloseExpectedWrite[];
@@ -100,6 +101,10 @@ export interface TaskCloseExpectedWrite {
   expectedBeforeExists?: boolean;
   expectedBeforeHash?: string;
   afterHash?: string;
+  appendKind?: 'readiness-evidence' | 'close-proof';
+  appendOrder?: number;
+  idempotencyKey?: string;
+  recordHash?: string;
 }
 
 export interface TaskCloseOperationAttempt {
@@ -227,7 +232,6 @@ export function createTaskCloseTransactionReport(
     const progressWrapper = (event: TaskClosePlanProgressEvent): void => {
       if (event.step !== 'refresh') {
         operation = updateCloseOperationFromProgress(operation, event);
-        if (shouldPersistCloseOperationProgress(operation, event)) operation = persistOperation(operation);
         if (event.step === 'close' && event.phase === 'executed' && event.writeOutcome === 'appended') {
           options.faultHooks?.afterCloseProofAppend?.();
         }
@@ -275,7 +279,18 @@ export function createTaskCloseTransactionReport(
     }
     const operationReview = reviewedPlan ?? createReviewedTaskClosePlan(projectRoot, taskId, actor);
     const operationPlanHash = options.planHash ?? operationReview.planHash;
-    operation = createCloseOperation(projectRoot, taskId, operationPlanHash ?? hashObject({ taskId, phase: 'planned' }), 'planned', operationReview);
+    const operationBasis = createCloseOperationBasis(operationReview);
+    const previousOperation = readCloseOperation(projectRoot, taskId);
+    const markerReconciliationProblem = reconcileCloseOperationMarker(
+      taskId,
+      operationPlanHash ?? hashObject({ taskId, phase: 'applying' }),
+      operationBasis,
+      previousOperation
+    );
+    if (markerReconciliationProblem) {
+      return createCloseOperationMarkerBlockedReport(projectRoot, taskId, actor, markerReconciliationProblem, markerPersistence);
+    }
+    operation = createCloseOperation(taskId, operationPlanHash ?? hashObject({ taskId, phase: 'applying' }), 'applying', operationReview, operationBasis, previousOperation);
     operation = persistOperation(operation);
     options.faultHooks?.afterOperationPrepared?.();
     const closePlan = createTaskClosePlanReport(projectRoot, taskId, closePlanOptions);
@@ -684,15 +699,65 @@ function inspectCloseOperationMarker(projectRoot: string, taskId: string): TaskC
       fixHint: 'Do not ignore mismatched recovery metadata; inspect the marker before retrying close.'
     };
   }
-  if (typeof state.planHash !== 'string' || typeof state.operationId !== 'string') {
+  const shapeProblem = validateCloseOperationMarkerShape(state);
+  if (shapeProblem) {
     return {
       severity: 'error',
       code: 'TASK_CLOSE_OPERATION_MARKER_INVALID',
-      message: 'Task close recovery marker is missing required operation identity fields.',
-      path: toPortablePath(path.relative(projectRoot, absolutePath))
+      message: `Task close recovery marker is invalid: ${shapeProblem}.`,
+      path: toPortablePath(path.relative(projectRoot, absolutePath)),
+      fixHint: 'Inspect the local recovery marker and current close-source files before retrying task close.'
     };
   }
   return null;
+}
+
+function validateCloseOperationMarkerShape(state: Partial<TaskCloseOperationState>): string | null {
+  const stringFields: Array<keyof TaskCloseOperationState> = ['operationId', 'taskId', 'idempotencyKey', 'closeSourceHash', 'planHash', 'writeSetHash', 'path', 'createdAt', 'updatedAt'];
+  for (const field of stringFields) {
+    if (typeof state[field] !== 'string') return `missing string field ${field}`;
+  }
+  if (state.intendedFinalState !== 'closed-valid') return 'intendedFinalState must be closed-valid';
+  if (!isCloseOperationPhase(state.phase)) return 'phase is not a known close operation phase';
+  if (!Array.isArray(state.expectedWrites)) return 'expectedWrites must be an array';
+  for (const [index, write] of state.expectedWrites.entries()) {
+    const problem = validateExpectedWriteShape(write);
+    if (problem) return `expectedWrites[${index}] ${problem}`;
+  }
+  if (!Array.isArray(state.completedSteps)) return 'completedSteps must be an array';
+  if (!Array.isArray(state.pendingSteps)) return 'pendingSteps must be an array';
+  if (!Array.isArray(state.attempts)) return 'attempts must be an array';
+  if (typeof state.persisted !== 'boolean') return 'persisted must be a boolean';
+  if (state.proof) {
+    if (typeof state.proof.idempotencyKey !== 'string') return 'proof.idempotencyKey must be a string';
+    if (!['pending', 'appended', 'existing-noop'].includes(state.proof.outcome)) return 'proof.outcome is invalid';
+  }
+  return null;
+}
+
+function validateExpectedWriteShape(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return 'must be an object';
+  const write = value as Partial<TaskCloseExpectedWrite>;
+  if (!['bookkeeping', 'ready', 'close', 'audit-close'].includes(String(write.step))) return 'step is invalid';
+  if (typeof write.path !== 'string') return 'path must be a string';
+  if (write.writeBoundary === 'task-local') {
+    if (typeof write.expectedBeforeExists !== 'boolean') return 'task-local write requires expectedBeforeExists';
+    if (typeof write.expectedBeforeHash !== 'string') return 'task-local write requires expectedBeforeHash';
+    if (typeof write.afterHash !== 'string') return 'task-local write requires afterHash';
+    return null;
+  }
+  if (write.writeBoundary === 'evidence-append') {
+    if (!['readiness-evidence', 'close-proof'].includes(String(write.appendKind))) return 'evidence append requires appendKind';
+    if (typeof write.appendOrder !== 'number') return 'evidence append requires appendOrder';
+    if (typeof write.idempotencyKey !== 'string') return 'evidence append requires idempotencyKey';
+    if (typeof write.recordHash !== 'string') return 'evidence append requires recordHash';
+    return null;
+  }
+  return 'writeBoundary is invalid';
+}
+
+function isCloseOperationPhase(value: unknown): value is TaskCloseOperationPhase {
+  return ['planned', 'applying', 'verifying', 'proof-pending', 'closed-valid', 'blocked', 'recovery-required'].includes(String(value));
 }
 
 function createCloseOperationMarkerBlockedReport(
@@ -747,21 +812,76 @@ function createCloseOperationMarkerBlockedReport(
   };
 }
 
-function createCloseOperation(projectRoot: string, taskId: string, planHash: string, phase: TaskCloseOperationPhase, reviewedPlan: ReviewedTaskClosePlan): TaskCloseOperationState {
-  const previous = readCloseOperation(projectRoot, taskId);
+interface CloseOperationBasis {
+  expectedWrites: TaskCloseExpectedWrite[];
+  writeSetHash: string;
+  closeSourceHash: string;
+  planFingerprint: string;
+}
+
+function createCloseOperationBasis(reviewedPlan: ReviewedTaskClosePlan): CloseOperationBasis {
   const expectedWrites = createExpectedWrites(reviewedPlan);
   const writeSetHash = hashObject(expectedWrites);
-  const closeSourceHash = hashObject({
-    taskId,
+  const planFingerprint = hashObject({
+    taskId: reviewedPlan.review.taskId,
     steps: reviewedPlan.steps.map((step) => ({ id: step.id, status: step.status, expectedWritePaths: step.expectedWritePaths })),
     issues: reviewedPlan.issues.map((issue) => ({ severity: issue.severity, code: issue.code, path: issue.path ?? null })),
     writeSetHash
   });
+  return {
+    expectedWrites,
+    writeSetHash,
+    closeSourceHash: reviewedPlan.reports.close?.validation.validatedBeforeCloseEvidenceSourceHash ?? planFingerprint,
+    planFingerprint
+  };
+}
+
+function reconcileCloseOperationMarker(
+  taskId: string,
+  planHash: string,
+  basis: CloseOperationBasis,
+  previous: TaskCloseOperationState | null
+): TaskClosePlanReport['issues'][number] | null {
+  if (!previous) return null;
+  if (canContinueCloseOperation(previous, planHash, basis)) return null;
+  if (previous.phase === 'closed-valid') return null;
+  return {
+    severity: 'error',
+    code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
+    message: 'Existing task close recovery marker does not match the current close basis; refusing to overwrite valid recovery metadata.',
+    path: previous.path,
+    fixHint: 'Inspect the marker, expected writes, and close-source files before retrying a write-capable close transaction.',
+    example: `hadara task close --task ${taskId} --dry-run --json`
+  };
+}
+
+function canReuseCloseOperation(previous: TaskCloseOperationState, planHash: string, basis: CloseOperationBasis): boolean {
+  return previous.planHash === planHash && previous.writeSetHash === basis.writeSetHash && previous.closeSourceHash === basis.closeSourceHash;
+}
+
+function canContinueCloseOperation(previous: TaskCloseOperationState, planHash: string, basis: CloseOperationBasis): boolean {
+  if (canReuseCloseOperation(previous, planHash, basis)) return true;
+  if (previous.phase === 'proof-pending' && previous.closeSourceHash === basis.closeSourceHash) return true;
+  if (previous.phase !== 'recovery-required') return false;
+  if ((previous.mutationSummary?.executedWrites ?? 0) <= 0) return false;
+  return !basis.expectedWrites.some((write) => write.writeBoundary === 'task-local');
+}
+
+function createCloseOperation(
+  taskId: string,
+  planHash: string,
+  phase: TaskCloseOperationPhase,
+  reviewedPlan: ReviewedTaskClosePlan,
+  basis: CloseOperationBasis,
+  previous: TaskCloseOperationState | null
+): TaskCloseOperationState {
+  const { expectedWrites, writeSetHash, closeSourceHash, planFingerprint } = basis;
   const idempotencyKey = hashObject({ taskId, closeSourceHash, intendedFinalState: 'closed-valid' });
-  const reusePrevious = previous?.planHash === planHash && previous.writeSetHash === writeSetHash && previous.closeSourceHash === closeSourceHash;
+  const reusePrevious = previous ? canContinueCloseOperation(previous, planHash, basis) : false;
+  const previousState = reusePrevious ? previous : null;
   const operationId = hashObject({ taskId, planHash, writeSetHash }).replace(/^sha256:/, '');
   const now = new Date().toISOString();
-  const previousAttempts = reusePrevious ? previous.attempts ?? [] : [];
+  const previousAttempts = previousState?.attempts ?? [];
   const plannedFileWrites = expectedWrites.filter((write) => write.writeBoundary === 'task-local').length;
   const nextAttempt: TaskCloseOperationAttempt = {
     attemptNumber: previousAttempts.length + 1,
@@ -781,24 +901,27 @@ function createCloseOperation(projectRoot: string, taskId: string, planHash: str
     }
   };
   return {
-    operationId: reusePrevious ? previous.operationId : operationId,
+    operationId: previousState?.operationId ?? operationId,
     taskId,
-    idempotencyKey: reusePrevious ? previous.idempotencyKey : idempotencyKey,
+    idempotencyKey: previousState?.idempotencyKey ?? idempotencyKey,
     intendedFinalState: 'closed-valid',
     phase,
     closeSourceHash,
+    planFingerprint,
     planHash,
     writeSetHash,
     expectedWrites,
-    completedSteps: reusePrevious ? previous.completedSteps : [],
-    pendingSteps: reusePrevious ? previous.pendingSteps : ['bookkeeping', 'ready', 'close', 'audit-close'],
+    completedSteps: previousState?.completedSteps ?? [],
+    pendingSteps: previousState?.pendingSteps ?? ['bookkeeping', 'ready', 'close', 'audit-close'],
     stepJournal: [],
     mutationSummary: nextAttempt.mutationSummary,
     attempts: [...previousAttempts, nextAttempt],
     path: toPortablePath(path.join('.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`)),
     persisted: false,
-    ...(reusePrevious ? { resumedFromOperation: true } : {}),
-    createdAt: reusePrevious ? previous.createdAt : now,
+    ...(previousState ? { resumedFromOperation: true } : {}),
+    ...(previousState?.finalSourceHash ? { finalSourceHash: previousState.finalSourceHash } : {}),
+    ...(previousState?.proof ? { proof: previousState.proof } : {}),
+    createdAt: previousState?.createdAt ?? now,
     updatedAt: now
   };
 }
@@ -814,14 +937,60 @@ function createExpectedWrites(reviewedPlan: ReviewedTaskClosePlan): TaskCloseExp
     expectedBeforeHash: write.expectedBeforeHash,
     afterHash: write.afterHash
   }));
-  const evidenceWrites: TaskCloseExpectedWrite[] = reviewedPlan.review.pendingWrites
-    .filter((write) => write.step === 'close' && write.writeBoundary === 'evidence-append')
-    .flatMap((write) => write.paths.map((filePath) => ({
-      step: 'close' as const,
-      path: filePath,
-      writeBoundary: 'evidence-append' as const
-    })));
+  const closeReport = reviewedPlan.reports.close;
+  const evidencePath = reviewedPlan.reports.bookkeeping.task?.capsule
+    ? `${reviewedPlan.reports.bookkeeping.task.capsule}/evidence.jsonl`
+    : reviewedPlan.review.pendingWrites.find((write) => write.step === 'close' && write.writeBoundary === 'evidence-append')?.paths[0];
+  const evidenceWrites: TaskCloseExpectedWrite[] = closeReport?.ok && evidencePath
+    ? [
+        createReadinessEvidenceExpectedWrite(evidencePath, closeReport),
+        createCloseProofExpectedWrite(evidencePath, closeReport)
+      ]
+    : [];
   return [...bookkeepingWrites, ...evidenceWrites];
+}
+
+function createReadinessEvidenceExpectedWrite(evidencePath: string, closeReport: TaskCloseReport): TaskCloseExpectedWrite {
+  const validationHash = closeReport.validation.validatedBeforeCloseEvidenceReportHash;
+  const sourceHash = closeReport.validation.validatedBeforeCloseEvidenceSourceHash;
+  const idempotencyKey = `task-close-plan-readiness:${closeReport.taskId}:${validationHash}:${sourceHash}`;
+  return {
+    step: 'close',
+    path: evidencePath,
+    writeBoundary: 'evidence-append',
+    appendKind: 'readiness-evidence',
+    appendOrder: 1,
+    idempotencyKey,
+    recordHash: hashObject({
+      kind: 'readiness-evidence',
+      taskId: closeReport.taskId,
+      validationHash,
+      sourceHash,
+      idempotencyKey
+    })
+  };
+}
+
+function createCloseProofExpectedWrite(evidencePath: string, closeReport: TaskCloseReport): TaskCloseExpectedWrite {
+  const validationHash = closeReport.validation.validatedBeforeCloseEvidenceReportHash;
+  const sourceHash = closeReport.validation.validatedBeforeCloseEvidenceSourceHash;
+  const idempotencyKey = closeReport.closeEvidenceWrite?.idempotencyKey ?? hashObject({ taskId: closeReport.taskId, validationHash, sourceHash });
+  return {
+    step: 'close',
+    path: evidencePath,
+    writeBoundary: 'evidence-append',
+    appendKind: 'close-proof',
+    appendOrder: 2,
+    idempotencyKey,
+    recordHash: hashObject({
+      kind: 'close-proof',
+      taskId: closeReport.taskId,
+      validationHash,
+      sourceHash,
+      idempotencyKey,
+      result: closeReport.closeEvidence.result
+    })
+  };
 }
 
 function markOperationVerifying(operation: TaskCloseOperationState): TaskCloseOperationState {
@@ -863,7 +1032,15 @@ function readCloseOperation(projectRoot: string, taskId: string): TaskCloseOpera
 function persistCloseOperation(projectRoot: string, operation: TaskCloseOperationState): { operation: TaskCloseOperationState; persistence: Pick<TaskCloseMarkerPersistenceSummary, 'contentWrites' | 'fileFsyncs' | 'directoryFsyncs' | 'unchangedSkips'> } {
   const absolutePath = path.join(projectRoot, operation.path);
   ensureDir(path.dirname(absolutePath));
-  const persisted = { ...operation, persisted: true, updatedAt: new Date().toISOString() };
+  const existing = readJsonObject(absolutePath);
+  const semanticCandidate = { ...operation, persisted: true };
+  if (existing && jsonSemanticallyEqualIgnoringUpdatedAt(existing, semanticCandidate)) {
+    return {
+      operation: { ...semanticCandidate, updatedAt: typeof existing.updatedAt === 'string' ? existing.updatedAt : operation.updatedAt },
+      persistence: { contentWrites: 0, fileFsyncs: 0, directoryFsyncs: 0, unchangedSkips: 1 }
+    };
+  }
+  const persisted = { ...semanticCandidate, updatedAt: new Date().toISOString() };
   const persistence = writeJsonAtomic(absolutePath, persisted);
   return { operation: persisted, persistence };
 }
@@ -917,9 +1094,10 @@ function updateCloseOperationFromProgress(operation: TaskCloseOperationState, ev
   const stepJournal = activeAttempt?.stepJournal ?? [];
   const executedWrites = activeAttempt?.mutationSummary.executedWrites ?? 0;
   const closeProofAppended = activeAttempt?.mutationSummary.closeProofAppended ?? false;
+  const phase = nextProgressOperationPhase(operation, event.phase, executedWrites);
   return {
     ...operation,
-    phase: event.phase === 'blocked' ? (executedWrites > 0 ? 'recovery-required' : 'blocked') : 'applying',
+    phase,
     completedSteps,
     pendingSteps: allSteps.filter((step) => !completed.has(step)),
     stepJournal,
@@ -938,6 +1116,16 @@ function updateCloseOperationFromProgress(operation: TaskCloseOperationState, ev
     persisted: true,
     updatedAt: new Date().toISOString()
   };
+}
+
+function nextProgressOperationPhase(
+  operation: TaskCloseOperationState,
+  eventPhase: TaskClosePlanProgressEvent['phase'],
+  executedWrites: number
+): TaskCloseOperationPhase {
+  if (operation.phase === 'proof-pending' || operation.phase === 'closed-valid') return operation.phase;
+  if (eventPhase === 'blocked') return executedWrites > 0 ? 'recovery-required' : 'blocked';
+  return 'applying';
 }
 
 function countMutatingExecutedSteps(steps: TaskClosePlanExecutedStep[]): number {
@@ -1144,6 +1332,19 @@ function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | und
 
 function hashObject(value: unknown): string {
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex')}`;
+}
+
+function readJsonObject(absolutePath: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : null;
+  } catch {
+    return null;
+  }
+}
+
+function jsonSemanticallyEqualIgnoringUpdatedAt(left: Record<string, unknown>, right: Record<string, unknown>): boolean {
+  return JSON.stringify({ ...left, updatedAt: '' }) === JSON.stringify({ ...right, updatedAt: '' });
 }
 
 function writeJsonAtomic(absolutePath: string, value: unknown): Pick<TaskCloseMarkerPersistenceSummary, 'contentWrites' | 'fileFsyncs' | 'directoryFsyncs' | 'unchangedSkips'> {
