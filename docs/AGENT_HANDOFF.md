@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0729 Close Recovery Marker Reconciliation | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0730 Docker Sync Dist Guard Path Fix | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0729 completed the reviewer Px follow-up for task close recovery markers. Schema-valid mismatched markers now reconcile only when safe or fail closed before overwrite; schema-invalid JSON markers fail closed; `closeSourceHash` is source-backed with a separate `planFingerprint`; expected writes include readiness/proof append descriptors; proof-pending no longer regresses through progress events; durable marker writes are journal-boundary writes; and v3 expectedWrite schema conditionally requires task-local before/after hashes. Focused close/schema tests, TypeScript build, full check, and built dist smoke passed. `npm run dev:docker-sync-build` was attempted but interrupted after hanging in container `npm ci`; local `npm run build` refreshed `dist` and built CLI smoke reported `distLooksStale:false`. Remaining follow-up: the legacy `bookkeeping` implementation/report naming should be removed or renamed in a separate low-risk refactor.
+T-0730 fixed two operator-reported failures. `scripts/dev-docker-sync-build.sh` now captures the `dist/cli/main.js` before-hash inside the container, using the same `$HADARA_WORKSPACE` namespace as the later recheck, so host `/home/ymin/HADARA-dev` and container `/workspace` paths no longer trigger a false concurrent-edit error. `.gitignore` now unignores `docs/specs/0.5.0-rc2/**`, making the existing rc2 spec line visible to CI archive-boundary tests. Shell syntax, archive-boundary focused test, and full `npm run check` passed. The Codex tool environment could not complete Docker sync validation because container `npm ci` hung, but the spawned processes were cleaned up; rerun `npm run dev:docker-sync-build` in a normal terminal to confirm the operator path.
 
 ## Previous Handoff
 

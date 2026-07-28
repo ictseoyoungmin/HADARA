@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 389,
+  "rev": 391,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0729",
-    "title": "Close Recovery Marker Reconciliation"
+    "id": "T-0730",
+    "title": "Docker Sync Dist Guard Path Fix"
   },
   "activeTask": null,
   "nextWork": null,

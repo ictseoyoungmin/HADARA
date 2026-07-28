@@ -730,3 +730,4 @@
 | T-0727 | Complete Close Transaction Fault Matrix | Done | tasks/T-0727-complete-close-transaction-fault-matrix | |
 | T-0728 | Deterministic Close Recovery Contract | Done | tasks/T-0728-deterministic-close-recovery-contract | |
 | T-0729 | Close Recovery Marker Reconciliation | Done | tasks/T-0729-close-recovery-marker-reconciliation | |
+| T-0730 | Docker Sync Dist Guard Path Fix | Done | tasks/T-0730-docker-sync-dist-guard-path-fix | |

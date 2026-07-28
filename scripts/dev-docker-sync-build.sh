@@ -46,15 +46,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Captured before the long install/build steps run below; rechecked
-# immediately before the destructive dist replace so any existence/content
-# transition in workspace dist during that window is not silently overwritten.
-if [[ -f "$WORKSPACE/dist/cli/main.js" ]]; then
-  DIST_BEFORE_STATE="sha256:$(sha256sum "$WORKSPACE/dist/cli/main.js" | sed "s/ .*//")"
-else
-  DIST_BEFORE_STATE="missing"
-fi
-
 docker exec \
   -e HADARA_WORKSPACE="$WORKSPACE" \
   -e HADARA_TMP_WORKDIR="$TMP_WORKDIR" \
@@ -64,7 +55,6 @@ docker exec \
   -e HADARA_TEST_SERIAL="$HADARA_TEST_SERIAL" \
   -e HADARA_DEV_NODE_OPTIONS="$HADARA_DEV_NODE_OPTIONS" \
   -e HADARA_NPM_JOBS="$HADARA_NPM_JOBS" \
-  -e HADARA_DIST_BEFORE_STATE="$DIST_BEFORE_STATE" \
   "$CONTAINER" bash -lc '
 set -euo pipefail
 
@@ -127,6 +117,14 @@ sync_dist_workspace() {
   mkdir -p "$HADARA_WORKSPACE/dist"
   cp -R dist/. "$HADARA_WORKSPACE/dist/"
 }
+
+# Captured in the same path namespace used for the later recheck. This keeps
+# the concurrent-edit guard without confusing host paths with container paths.
+if [[ -f "$HADARA_WORKSPACE/dist/cli/main.js" ]]; then
+  HADARA_DIST_BEFORE_STATE="sha256:$(sha256sum "$HADARA_WORKSPACE/dist/cli/main.js" | sed "s/ .*//")"
+else
+  HADARA_DIST_BEFORE_STATE="missing"
+fi
 
 mkdir -p "$HADARA_TMP_WORKDIR"
 HADARA_TMP_WORKDIR="$(mktemp -d "$HADARA_TMP_WORKDIR/run.XXXXXX")"
