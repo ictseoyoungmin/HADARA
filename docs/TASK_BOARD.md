@@ -70,7 +70,7 @@
 | T-0066 | Compatibility Fixture | Done | tasks/T-0066-compatibility-fixture | Adds a Hermes-like read-only compatibility fixture replayed through context export and MCP tool dispatch. |
 | T-0067 | CLI/MCP Service Parity Refactor | Done | tasks/T-0067-cli-mcp-service-parity-refactor | Moves project/handoff read logic into shared services and adds CLI/MCP parity coverage. |
 | T-0068 | Single Active Run State | Done | tasks/T-0068-single-active-run-state | Adds local single active run manifest, resume projection, stale handoff warning, and status JSON exposure. |
-| T-0069 | Operational Debt Track | Done | tasks/T-0069-operational-debt-track | Converts `known_issue.log` themes into structured debt records, capsule size indicators, and premature acceptance warnings. |
+| T-0069 | Operational Debt Track | Done | tasks/T-0069-operational-debt-track | Converts `known_issue.log` themes into structured debt records, capsule footprint metrics, and premature acceptance warnings. |
 | T-0070 | Operations State Robustness Fix | Done | tasks/T-0070-operations-state-robustness-fix | Hardens active run corruption handling, missing-task warnings, premature acceptance checks, and shared section extraction. |
 | T-0071 | Reusable Docker Development Container | Done | tasks/T-0071-reusable-docker-development-container | Documents reusable Docker workflow and CLI-based Task Capsule creation. |
 | T-0072 | Core v1.0 Technical Plan Refresh | Done | tasks/T-0072-core-v1-0-technical-plan-refresh | Clarifies T-0066 through T-0070 implementation/design mismatches in v1.0 planning docs. |
@@ -727,3 +727,4 @@
 | T-0724 | Expose Close Marker Counts | Done | tasks/T-0724-expose-close-marker-counts | |
 | T-0725 | Add Close Fault Hooks | Done | tasks/T-0725-add-close-fault-hooks | |
 | T-0726 | Dogfood Close Transaction Package | Done | tasks/T-0726-dogfood-close-transaction-package | |
+| T-0727 | Complete Close Transaction Fault Matrix | Done | tasks/T-0727-complete-close-transaction-fault-matrix | |

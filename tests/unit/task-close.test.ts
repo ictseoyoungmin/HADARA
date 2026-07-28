@@ -196,6 +196,41 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
+  it('uses the same zero-write timeout contract for project and task-scoped locks', () => {
+    for (const [name, lockDir] of [
+      ['project-lifecycle', path.join('.hadara', 'local', 'locks', 'project-lifecycle.lock')],
+      ['task-scoped', 'TASK_LOCK']
+    ] as const) {
+      const root = tempProject();
+      const task = createTaskCapsule(root, `Close transaction ${name} timeout`);
+      completeTask(root, task.id, task.dir);
+      markStateDocsCurrent(root, task.id);
+      const actualLockDir = lockDir === 'TASK_LOCK'
+        ? path.join(root, '.hadara', 'local', 'locks', 'task-close', `${task.id}.lock`)
+        : path.join(root, lockDir);
+      fs.mkdirSync(actualLockDir, { recursive: true });
+      fs.writeFileSync(path.join(actualLockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, token: `${name}-fixture-lock`, command: 'test-holder', createdAt: new Date().toISOString() })}\n`, 'utf8');
+      const before = snapshotFiles(root);
+
+      const report = createTaskCloseTransactionReport(root, task.id, { lockTimeoutMs: 25 });
+
+      expect(snapshotFiles(root)).toEqual(before);
+      expect(report).toMatchObject({
+        ok: false,
+        mode: 'execute-refused',
+        writeSummary: {
+          executedMutationSteps: 0,
+          executedFileWrites: 0,
+          evidenceAppends: 0,
+          closeProofAppended: false
+        }
+      });
+      expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT' }));
+      expect(report.issues.find((issue) => issue.code === 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT')?.message).toContain(name);
+      expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+    }
+  });
+
   it('reclaims stale transaction locks with dead owners before retrying close', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction stale lock reclaim');
@@ -519,6 +554,105 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
+  it('stops before a guarded write without lifecycle mutation or close proof', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction before write fault');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction before write fault | Done |`, `| ${task.id} | Close transaction before write fault | Draft |`),
+      'utf8'
+    );
+    const beforeTask = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
+    const beforeBoard = fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8');
+
+    const report = createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        beforeWrite() {
+          throw new Error('fault before guarded write');
+        }
+      }
+    });
+
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toBe(beforeBoard);
+    expect(report).toMatchObject({
+      ok: false,
+      writeSummary: {
+        executedFileWrites: 0,
+        evidenceAppends: 0,
+        closeProofAppended: false
+      }
+    });
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('fails closed after a guarded write hook exception without close proof', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction guarded write hook');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction guarded write hook | Done |`, `| ${task.id} | Close transaction guarded write hook | Draft |`),
+      'utf8'
+    );
+    let writes = 0;
+
+    const report = createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterWrite() {
+          writes += 1;
+          if (writes === 1) throw new Error('fault after first guarded write');
+        }
+      }
+    });
+
+    expect(writes).toBe(1);
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HARNESS_TASK_BOARD_STATUS_NOT_DONE' }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('fails closed when a target file fsync fails before rename', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction fsync fault');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction fsync fault | Done |`, `| ${task.id} | Close transaction fsync fault | Draft |`),
+      'utf8'
+    );
+    const beforeTask = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
+    const beforeBoard = fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8');
+
+    const report = createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        beforeWrite() {
+          throw new Error('fsync fixture failure');
+        }
+      }
+    });
+
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toBe(beforeBoard);
+    expect(report).toMatchObject({
+      ok: false,
+      writeSummary: {
+        executedFileWrites: 0,
+        evidenceAppends: 0,
+        closeProofAppended: false
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HARNESS_TASK_BOARD_STATUS_NOT_DONE' }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
   it('does not count an execute-time duplicate close proof as a mutating write', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction existing noop');
@@ -595,6 +729,39 @@ describe('task close report', () => {
     });
     expect(fs.existsSync(operationPath)).toBe(false);
     expect(closeProofCount(task.dir)).toBe(1);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
+  it('recovers proof-pending interruption after readiness evidence append', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction proof pending fault');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterReadinessEvidenceAppend() {
+          throw new Error('fault after readiness evidence');
+        }
+      }
+    })).toThrow('fault after readiness evidence');
+
+    expect(closeProofCount(task.dir)).toBe(0);
+    const recordsAfterFault = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+    expect(recordsAfterFault).toContain('task-close-plan-readiness');
+
+    const recovered = createTaskCloseTransactionReport(root, task.id);
+    const recordsAfterRecovery = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    expect(recovered).toMatchObject({
+      ok: true,
+      closeState: 'closed-valid',
+      writeSummary: {
+        closeProofAppended: true
+      }
+    });
+    expect(closeProofCount(task.dir)).toBe(1);
+    expect(recordsAfterRecovery.split(/\n/).filter((line) => line.includes('"task-close-plan-readiness"'))).toHaveLength(1);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 

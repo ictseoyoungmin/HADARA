@@ -21,7 +21,16 @@ export interface TaskCloseTransactionOptions {
 }
 
 export interface TaskCloseFaultHooks {
+  afterLocksAcquired?: () => void;
+  afterPlanCreated?: () => void;
   afterOperationPrepared?: () => void;
+  beforeWrite?: (index: number, write: unknown) => void;
+  afterWrite?: (index: number, write: unknown) => void;
+  afterWritesPersisted?: () => void;
+  beforeFinalVerification?: () => void;
+  afterFinalVerification?: () => void;
+  afterProofIntent?: () => void;
+  afterReadinessEvidenceAppend?: () => void;
   afterCloseProofAppend?: () => void;
   beforeTerminalCleanup?: () => void;
 }
@@ -191,10 +200,12 @@ export function createTaskCloseTransactionReport(
       actor,
       recordReadinessEvidence: true,
       onProgress: progressWrapper,
-      onAutoReview: options.onAutoReview
+      onAutoReview: options.onAutoReview,
+      faultHooks: options.faultHooks
     };
     const strategy = options.planHash ? 'close-reviewed-plan' : 'close-auto';
     const reviewedPlan = options.planHash ? undefined : createReviewedTaskClosePlan(projectRoot, taskId, actor);
+    if (reviewedPlan) options.faultHooks?.afterPlanCreated?.();
     if (reviewedPlan && !reviewedPlan.review.summary.executeSupported) {
       return fromClosePlanReport(projectRoot, taskId, reviewedPlan.review, {
         mode: 'dry-run',
@@ -230,7 +241,7 @@ export function createTaskCloseTransactionReport(
     return report;
   };
 
-  return withTaskCloseTransactionLocks(projectRoot, taskId, run, options.lockTimeoutMs);
+  return withTaskCloseTransactionLocks(projectRoot, taskId, run, options.lockTimeoutMs, options.faultHooks);
 }
 
 export function formatTaskCloseTransactionReport(
@@ -339,7 +350,8 @@ function withTaskCloseTransactionLocks<T>(
   projectRoot: string,
   taskId: string,
   fn: () => T,
-  timeoutMs = 5000
+  timeoutMs = 5000,
+  faultHooks?: TaskCloseFaultHooks
 ): T {
   const acquired: Array<{ path: string; name: TaskCloseTransactionLockDiagnostics['name']; token: string | null; diagnostic: TaskCloseTransactionLockDiagnostics }> = [];
   const lockSpecs: Array<{ name: TaskCloseTransactionLockDiagnostics['name']; pathParts: string[] }> = [
@@ -349,6 +361,7 @@ function withTaskCloseTransactionLocks<T>(
   ];
   try {
     for (const spec of lockSpecs) acquired.push(acquireCloseLock(projectRoot, taskId, spec.name, spec.pathParts, timeoutMs));
+    faultHooks?.afterLocksAcquired?.();
     const report = fn();
     if (isTaskCloseReport(report)) {
       report.transaction.locks = acquired.map((entry) => entry.diagnostic);

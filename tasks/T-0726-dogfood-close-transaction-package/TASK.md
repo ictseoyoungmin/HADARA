@@ -72,11 +72,11 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | ID | Type | Summary | State | Link |
 |---|---|---|---|---|
-| RF-1 | Risk | The four-capsule user budget covered proof-last ordering, marker count reporting, proof-pending recovery hooks, and installed dogfood. It did not exhaust every rc2 fault matrix row such as lock timeout variants, fsync failure injection, and non-prefix partial conflicts in installed-package mode. | Open | docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md |
+| RF-1 | Risk | T-0726 covered installed clean, blocked, and retry dogfood. Remaining rc2 fault-matrix rows were carried into T-0727 for source-level hook, lock, write, and proof-pending coverage. | Residual | tasks/T-0727-complete-close-transaction-fault-matrix/TASK.md |
 
 ## Close Summary
 
-T-0726 completed the fourth user-budgeted rc2 capsule by packing and installing the current build, then running installed governed init, task create, blocked close, clean close, and identical retry. Dogfood found that done-level harness validation still parsed Task Board rows as legacy `ID | Title | Status | Capsule | Notes`; this was fixed by reusing the shared Init v1-aware Task Board parser. Focused tests, TypeScript build, installed dogfood, and full check passed.
+T-0726 packed and installed the current build, then ran installed governed init, task create, blocked close, clean close, and identical retry. Dogfood found that done-level harness validation still parsed Task Board rows as legacy `ID | Title | Status | Capsule | Notes`; this was fixed by reusing the shared Init v1-aware Task Board parser. Focused tests, TypeScript build, installed dogfood, and full check passed. Remaining rc2 fault-matrix hardening continues in T-0727.
 
 
 ## History

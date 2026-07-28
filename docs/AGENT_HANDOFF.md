@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0726 Dogfood Close Transaction Package | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0727 Complete Close Transaction Fault Matrix | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0726 completed the fourth user-budgeted rc2 close transaction capsule. Installed tarball dogfood passed for governed init, task create, blocked close, clean close, and identical retry after fixing done-level harness validation to parse Init v1 Task Board rows through the shared parser. Full check passed. Do not create a fifth capsule under the current instruction; report residual rc2 fault-matrix risks instead.
+T-0727 implemented the remaining rc2 close transaction hardening after T-0726 installed-package dogfood: `Residual` risk-state tokens are accepted, non-public close fault hooks now cover the remaining spec seams, guarded bookkeeping writes fsync temp files and parent directories, focused fault tests passed, full check passed, and stale fixed-count/fixed-size capsule guidance was removed. Close and commit this capsule, then stop unless a new human instruction asks for another task.
 
 ## Previous Handoff
 

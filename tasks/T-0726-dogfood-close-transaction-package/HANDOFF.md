@@ -21,10 +21,10 @@
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Stop the four-capsule rc2 implementation run and report residual fault-matrix risks. | terminal | no | The user constrained this effort to four capsules; T-0723 through T-0726 are complete and committed/ready to commit. | docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md |
+| Continue remaining rc2 close transaction fault-matrix hardening in T-0727. | terminal | no | T-0726 completed installed package dogfood; T-0727 owns the follow-up fault hook, write durability, and residual-token hardening. | tasks/T-0727-complete-close-transaction-fault-matrix/TASK.md |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| Full rc2 fault matrix is larger than four capsules. | Some rows remain residual rather than exhaustively implemented in this run. | Report residuals explicitly; do not create a fifth capsule under the current user constraint. |
+| T-0726 did not cover every synthetic fault row in installed-package mode. | Additional source-level fault matrix coverage is needed. | Continue in T-0727; do not treat a fixed capsule count as a protocol limit. |

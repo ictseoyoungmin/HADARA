@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 383,
+  "rev": 385,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0726",
-    "title": "Dogfood Close Transaction Package"
+    "id": "T-0727",
+    "title": "Complete Close Transaction Fault Matrix"
   },
   "activeTask": null,
   "nextWork": null,

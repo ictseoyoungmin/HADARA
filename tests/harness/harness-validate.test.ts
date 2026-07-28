@@ -181,6 +181,21 @@ describe('Harness Task Capsule validation', () => {
     });
   });
 
+  it('accepts Residual as a risk state token', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Residual risk token');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Risk | Known residual risk. | Residual | TBD |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.issues.map((issue) => issue.code)).not.toContain('TASK_RISK_STATE_INVALID_TOKEN');
+  });
+
   it('accepts Done acceptance state and active input constraint state as human-friendly aliases', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Task table token aliases');

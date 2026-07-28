@@ -38,7 +38,7 @@ Operational debt records track weaknesses discovered while dogfooding HADARA its
 
 - structured debt records;
 - aggregate counts for total/open/status/severity/high-open debt;
-- capsule size indicators using file count, line count, byte count, and `tiny|standard|large` size;
+- capsule footprint metrics using file count, line count, and byte count;
 - warning issues for checked acceptance when the task is not Done or has no valid `hadara.evidence.v1` records.
 
 Read-only surfaces:

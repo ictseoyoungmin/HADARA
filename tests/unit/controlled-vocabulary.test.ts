@@ -39,7 +39,7 @@ describe('controlled vocabulary (FD-006 / FD-009)', () => {
     assertSchema('hadara.schema.vocabulary.v1', report);
     expect(report.ok).toBe(true);
     expect(report.domains).toHaveLength(1);
-    expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
+    expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Residual', 'Closed', 'Superseded', 'Rejected']);
   });
 
   it('exposes human-friendly TASK.md aliases without changing canonical tokens', () => {

@@ -73,7 +73,7 @@ export const RISK_KIND_ALIASES: Readonly<Record<string, typeof RISK_KIND_TOKENS[
   followup: 'Follow-up',
   question: 'Question'
 };
-export const RISK_STATE_TOKENS = ['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected'] as const;
+export const RISK_STATE_TOKENS = ['Open', 'Accepted', 'Mitigated', 'Deferred', 'Residual', 'Closed', 'Superseded', 'Rejected'] as const;
 export const EVIDENCE_KIND_TOKENS = ['test-log', 'command-log', 'diff-summary', 'screenshot', 'note'] as const;
 export const EVIDENCE_RESULT_TOKENS = ['passed', 'failed', 'blocked', 'unknown'] as const;
 export const EVIDENCE_VISIBILITY_TOKENS = ['public', 'private'] as const;

@@ -153,6 +153,17 @@ export interface TaskClosePlanOptions {
    * plan-hash guard must protect. Not used by CLI callers.
    */
   onAutoReview?: (review: TaskClosePlanReport) => void;
+  faultHooks?: TaskClosePlanFaultHooks;
+}
+
+export interface TaskClosePlanFaultHooks {
+  beforeWrite?: (index: number, write: unknown) => void;
+  afterWrite?: (index: number, write: unknown) => void;
+  afterWritesPersisted?: () => void;
+  beforeFinalVerification?: () => void;
+  afterFinalVerification?: () => void;
+  afterProofIntent?: () => void;
+  afterReadinessEvidenceAppend?: () => void;
 }
 
 export interface ReviewedTaskClosePlan {
@@ -210,7 +221,8 @@ export function createTaskClosePlanReport(projectRoot: string, taskId: string, o
       reviewed.planHash,
       options.planHash,
       options.onProgress,
-      options.recordReadinessEvidence ?? false
+      options.recordReadinessEvidence ?? false,
+      options.faultHooks
     );
   }
   const report = reviewed.review;
@@ -289,7 +301,8 @@ function executeAutoClosePlan(
     reviewed.planHash,
     reviewed.planHash,
     options.onProgress,
-    true
+    true,
+    options.faultHooks
   );
 }
 
@@ -482,7 +495,8 @@ function executeTaskClosePlan(
   currentPlanHash: string,
   requestedPlanHash?: string,
   onProgress?: (event: TaskClosePlanProgressEvent) => void,
-  recordReadinessEvidence = false
+  recordReadinessEvidence = false,
+  faultHooks?: TaskClosePlanFaultHooks
 ): TaskClosePlanReport {
   if (!requestedPlanHash) return createExecuteRefusal(taskId, actor, 'TASK_CLOSE_PLAN_PLAN_HASH_REQUIRED', 'task close --execute requires a reviewed --plan-hash from a dry-run report.', currentPlanHash, initialSteps);
   if (requestedPlanHash !== currentPlanHash) {
@@ -569,7 +583,7 @@ function executeTaskClosePlan(
     }
 
     emitClosePlanProgress(onProgress, bookkeepingStep.id, 'start', bookkeepingStep.summary);
-    const bookkeepingReport = executeReviewedCloseBookkeepingPlan(projectRoot, reports.bookkeeping);
+    const bookkeepingReport = executeReviewedCloseBookkeepingPlan(projectRoot, reports.bookkeeping, faultHooks);
     executedSteps.push(createExecutedStep(bookkeepingStep, bookkeepingReport.ok, bookkeepingReport, bookkeepingReport.ok ? 'executed' : 'blocked'));
     emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
     if (!bookkeepingReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'bookkeeping');
@@ -577,6 +591,7 @@ function executeTaskClosePlan(
     reports = createClosePlanReports(projectRoot, taskId, actor);
     steps = createSteps(taskId, reports);
     emitClosePlanProgress(onProgress, 'refresh', 'satisfied', 'ClosePlan state refreshed after bookkeeping.', true);
+    faultHooks?.afterWritesPersisted?.();
   } else if (bookkeepingStep?.status === 'satisfied') {
     executedSteps.push(createExecutedStep(bookkeepingStep, true, reports.bookkeeping, 'satisfied'));
     emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
@@ -602,13 +617,17 @@ function executeTaskClosePlan(
   if (!closeAlreadyExecuted && closeStep?.status === 'required') {
     if (recordReadinessEvidence) {
       readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, reports.close);
+      faultHooks?.afterReadinessEvidenceAppend?.();
       emitClosePlanProgress(onProgress, 'refresh', 'start', 'Recomputing close plan state after readiness evidence.');
       reports = createClosePlanReports(projectRoot, taskId, actor);
       steps = createSteps(taskId, reports);
       emitClosePlanProgress(onProgress, 'refresh', 'satisfied', 'ClosePlan state refreshed after readiness evidence.', true);
     }
     emitClosePlanProgress(onProgress, closeStep.id, 'start', closeStep.summary);
+    faultHooks?.beforeFinalVerification?.();
     const closeReport = createTaskCloseReport(projectRoot, taskId, 'execute', { actor });
+    faultHooks?.afterFinalVerification?.();
+    if (closeReport.ok) faultHooks?.afterProofIntent?.();
     if (closeReport.ok) executeTaskCloseEvidence(projectRoot, closeReport);
     executedSteps.push(
       createExecutedStep(

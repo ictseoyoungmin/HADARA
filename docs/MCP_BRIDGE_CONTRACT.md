@@ -273,7 +273,7 @@ When the manifest `capsule` path differs from the canonical Task Capsule path re
 
 ### `hadara.debt.list`
 
-List operational debt records, aggregate counts, capsule size indicators, and debt-related warnings without mutating state.
+List operational debt records, aggregate counts, capsule footprint metrics, and debt-related warnings without mutating state.
 
 Input schema:
 

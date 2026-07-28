@@ -91,6 +91,11 @@ export interface CloseBookkeepingOptions {
   actor?: HadaraActorContext;
 }
 
+export interface CloseBookkeepingFaultHooks {
+  beforeWrite?: (index: number, write: CloseBookkeepingWrite) => void;
+  afterWrite?: (index: number, write: CloseBookkeepingWrite) => void;
+}
+
 export function createCloseBookkeepingReport(projectRoot: string, taskId: string, mode: CloseBookkeepingMode, options: CloseBookkeepingOptions = {}): CloseBookkeepingReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const task = findTaskCapsule(projectRoot, taskId);
@@ -206,11 +211,11 @@ export function createCloseBookkeepingReport(projectRoot: string, taskId: string
   };
 }
 
-export function executeReviewedCloseBookkeepingPlan(projectRoot: string, bookkeepingPlan: CloseBookkeepingReport): CloseBookkeepingReport {
+export function executeReviewedCloseBookkeepingPlan(projectRoot: string, bookkeepingPlan: CloseBookkeepingReport, faultHooks?: CloseBookkeepingFaultHooks): CloseBookkeepingReport {
   const writes = bookkeepingPlan.writes.map((write) => ({ ...write, applied: false }));
   const issues = [...bookkeepingPlan.issues];
   if (!issues.some((issue) => issue.severity === 'error')) {
-    applyCloseBookkeepingWrites(projectRoot, writes, issues);
+    applyCloseBookkeepingWrites(projectRoot, writes, issues, faultHooks);
   }
   const nextActions = createBookkeepingNextActions(bookkeepingPlan.taskId, 'execute', writes, bookkeepingPlan.stateDocs, issues);
   return {
@@ -433,7 +438,7 @@ function planWrites(
   return writes;
 }
 
-export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBookkeepingWrite[], issues: CloseBookkeepingIssue[]): void {
+export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBookkeepingWrite[], issues: CloseBookkeepingIssue[], faultHooks?: CloseBookkeepingFaultHooks): void {
   const prepared: Array<{ write: CloseBookkeepingWrite; absolutePath: string; tmpPath: string; existed: boolean; original: string }> = [];
   const committed: typeof prepared = [];
   try {
@@ -477,9 +482,11 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
         continue;
       }
 
+      faultHooks?.beforeWrite?.(prepared.length, write);
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
       const tmpPath = path.join(path.dirname(absolutePath), `.hadara-task-close-bookkeeping-${process.pid}-${Date.now()}-${prepared.length}-${path.basename(absolutePath)}.tmp`);
       fs.writeFileSync(tmpPath, next, { encoding: 'utf8', flag: 'wx' });
+      fsyncFile(tmpPath);
       prepared.push({ write, absolutePath, tmpPath, existed, original: current });
     }
     if (issues.some((issue) => issue.severity === 'error')) {
@@ -488,8 +495,10 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
     }
     for (const item of prepared) {
       fs.renameSync(item.tmpPath, item.absolutePath);
+      fsyncDirectory(path.dirname(item.absolutePath));
       committed.push(item);
       item.write.applied = true;
+      faultHooks?.afterWrite?.(committed.length - 1, item.write);
     }
   } catch (error) {
     for (const item of prepared) if (fs.existsSync(item.tmpPath)) fs.rmSync(item.tmpPath, { force: true });
@@ -507,6 +516,24 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
       code: 'TASK_CLOSE_BOOKKEEPING_ATOMIC_WRITE_FAILED',
       message: `Atomic task bookkeeping write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
     });
+  }
+}
+
+function fsyncFile(filePath: string): void {
+  const fd = fs.openSync(filePath, 'r');
+  try {
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+function fsyncDirectory(dirPath: string): void {
+  const fd = fs.openSync(dirPath, 'r');
+  try {
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
   }
 }
 

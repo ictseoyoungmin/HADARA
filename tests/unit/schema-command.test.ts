@@ -31,7 +31,7 @@ describe('schema command (FD-006)', () => {
     expect(report.ok).toBe(true);
     expect(report.filter).toBe('task.risk.state');
     expect(report.domains).toHaveLength(1);
-    expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
+    expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Residual', 'Closed', 'Superseded', 'Rejected']);
   });
 
   it('exposes the structured current-state next work state tokens', () => {
