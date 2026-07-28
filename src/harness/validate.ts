@@ -5,6 +5,7 @@ import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-tab
 import * as vocab from '../services/controlled-vocabulary';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
+import { parseTaskBoard } from '../task/task-board';
 import { findTaskCapsule, isTaskCapsuleScaffoldContent, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
@@ -1541,23 +1542,13 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
 }
 
 function parseTaskBoardRows(content: string): Array<{ id: string; title: string; status: string; capsule: string; notes: string }> {
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => /^\|\s*T-\d{4}\s*\|/.test(line))
-    .map((line) => {
-      const cells = line
-        .slice(1, line.endsWith('|') ? -1 : undefined)
-        .split('|')
-        .map((cell) => cell.trim());
-      return {
-        id: cells[0] ?? '',
-        title: cells[1] ?? '',
-        status: cells[2] ?? '',
-        capsule: cells[3] ?? '',
-        notes: cells[4] ?? ''
-      };
-    });
+  return parseTaskBoard(content).rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    capsule: row.capsule,
+    notes: row.result
+  }));
 }
 
 function isEvidenceTableHeader(line: string | undefined): boolean {

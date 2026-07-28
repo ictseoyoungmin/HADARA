@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0725 Add Close Fault Hooks |
+| Latest Completed Task | T-0726 Dogfood Close Transaction Package |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -71,6 +71,8 @@ T-0723 enforces the rc2 physical proof-last ordering for required-bookkeeping ta
 T-0724 exposes close marker persistence counts and rc2 write-summary aliases in the public v3 task-close transaction report. Clean close reports zero progress persistence writes and marker content writes within the rc2 budget, while preserving compatibility fields. Focused close tests, schema/workflow docs tests, TypeScript build, and full check passed. Remaining rc2 transaction work should focus on proof-pending/partial recovery fault injection, blocked-preflight marker tightening, and installed-package dogfood.
 
 T-0725 adds internal task-close fault hooks and recovery tests for interruption after close proof append and before terminal cleanup. Retrying both scenarios returns `closed-valid`, cleans the local operation marker, and does not duplicate close proof. Focused close tests, TypeScript build, and full check passed. The remaining user-budgeted rc2 capsule should run installed-package task-close transaction dogfood and report residual risks.
+
+T-0726 completes the fourth user-budgeted rc2 close transaction capsule. Installed tarball dogfood passed for governed init, task create, blocked close, clean close, and identical retry after fixing done-level harness validation to parse Init v1 Task Board rows through the shared parser. Full check passed. Remaining rc2 rows such as lock timeout variants, fsync failure injection, and non-prefix partial conflicts are residual risks rather than additional work under the current four-capsule constraint.
 
 | Stage | State | Purpose |
 |---|---|---|

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 381,
+  "rev": 383,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0725",
-    "title": "Add Close Fault Hooks"
+    "id": "T-0726",
+    "title": "Dogfood Close Transaction Package"
   },
   "activeTask": null,
   "nextWork": null,
