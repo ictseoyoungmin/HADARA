@@ -22,7 +22,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'task.list',
   'task.status',
   'task.close',
-  'task.finalize',
   'task.close-source',
   'validation.run',
   'evidence.add-command',
@@ -120,7 +119,7 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('task.lifecycle')).toBeUndefined();
     expect(findCommandRegistryEntry('task.status')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.close')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true, schemaVersion: 'hadara.task.close.v2' });
-    expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.finalize')).toBeUndefined();
     expect(findCommandRegistryEntry('task.finish')).toBeUndefined();
     expect(findCommandRegistryEntry('task.ready')).toBeUndefined();
     expect(findCommandRegistryEntry('task.audit-close')).toBeUndefined();

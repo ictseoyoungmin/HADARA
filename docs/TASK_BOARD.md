@@ -717,3 +717,4 @@
 | T-0714 | Task Close Proof-Last Refactor | Done | tasks/T-0714-task-close-proof-last-refactor | |
 | T-0715 | Post Proof-Last Hardening Followups | Done | tasks/T-0715-post-proof-last-hardening-followups | |
 | T-0716 | Close Replay and Validation Trust Hardening | Done | tasks/T-0716-close-replay-and-validation-trust-hardening | |
+| T-0717 | Remove Task Finalize Compatibility Surface | Done | tasks/T-0717-remove-task-finalize-compatibility-surface | |

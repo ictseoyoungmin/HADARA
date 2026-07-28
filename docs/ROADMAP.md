@@ -19,7 +19,7 @@ T-0699 completed the canonical model and planner. T-0700 completed reviewed safe
 | v0.4.3 | Can one local project stay current, resumable, and measurable without command growth? | Structured current-state canon; managed Markdown projections; docs-doctor currentness verdict; seven-metric basic/standard/governed workflow matrix; installed-package release smoke. | No new public command and no controller/provider/runtime expansion. |
 | v0.4.4 | Does the evidence-control workflow hold outside HADARA's own repository and authors? | Three external repositories of different shapes; 20–30 real capsules per repository; workers or agents without HADARA-developer intervention; wrong next-work and removed-command/version drift tracked as zero-tolerance defects. | External validation and usability fixes only; advanced commands must remain unnecessary for ordinary work. |
 
-The normal success path remains `task status` → real validation/evidence → guarded `task finalize`. v0.4.4 should measure where basic, standard, and governed users leave that path, and how often they ignore or correct CLI recommendations, before any capability expansion is reconsidered.
+The normal success path remains `task status` → real validation/evidence → guarded `task close`. v0.4.4 should measure where basic, standard, and governed users leave that path, and how often they ignore or correct CLI recommendations, before any capability expansion is reconsidered.
 
 The versioned sections below preserve the capability tracks that led to the current baseline; they are historical planning context, not current release sequencing.
 

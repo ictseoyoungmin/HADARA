@@ -42,9 +42,6 @@ describe('command-level help routing', () => {
     expect(handleValidationCommand({ args: ['validation', 'run', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('validation.run');
 
-    expect(handleTaskCommand({ args: ['task', 'finalize', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
-    expect(latestOutput()).toContain('task.finalize');
-
     expect(handleTaskCommand({ args: ['task', 'create', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('task.create');
     expect(latestOutput()).not.toContain('task create requires a title');

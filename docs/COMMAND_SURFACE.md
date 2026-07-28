@@ -80,7 +80,7 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `handoff suggest`, `evidence collect`, `ops status`, `init register-doc`, `docs archive`, `task lifecycle`, `task finish`, `task ready`, `task audit-close`, `task complete`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`.
 
-Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task close`, compatibility/debug `task finalize`, `validation run`, `evidence add-command`, `policy preflight-shell`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`. Top-level `status` remains only as a deprecated `0.5.x` alias for `task status`.
+Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task close`, `validation run`, `evidence add-command`, `policy preflight-shell`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`. Top-level `status` remains only as a deprecated `0.5.x` alias for `task status`.
 
 No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task close`; use `task status` and `task close --dry-run --json` for phase/readiness guidance.
 

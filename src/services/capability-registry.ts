@@ -50,7 +50,6 @@ export type LifecycleStage =
   | 'work'
   | 'evidence'
   | 'phase-check'
-  | 'finalize'
   | 'finish'
   | 'ready'
   | 'close'
@@ -565,37 +564,9 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Inspect full close diagnostics', 'hadara task close --task T-0001 --detail full --json', 'When the complete transaction, locks, finalize source, and diagnostics are needed.'),
       example('Execute an externally reviewed close plan', 'hadara task close --task T-0001 --execute --plan-hash sha256:... --json', 'For advanced reviewed flows that carry an explicit current plan hash.')
     ],
-    related: ['task.status', 'task.close-source', 'protocol.doctor', 'task.finalize'],
+    related: ['task.status', 'task.close-source', 'protocol.doctor'],
     conflictsWith: [],
     notes: 'Default mode executes the guarded close transaction. It internally uses the finalize engine and keeps proof-last, stale-plan guard, idempotent retry, and task-local evidence locality semantics.'
-  },
-  {
-    id: 'task.finalize',
-    command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash> | --execute --auto] [--json]',
-    summary: 'Create a reviewed finalize or close-repair plan, then execute the matching guarded lifecycle sequence; --auto folds the review and hash check into one guarded call for clean capsules.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'capsule-lifecycle',
-    scope: 'capsule',
-    lifecycleStage: 'finalize',
-    requiredness: 'conditional',
-    writeBoundary: 'task-status-bookkeeping',
-    readOnly: false,
-    risk: 'medium',
-    actor: 'agent-worker',
-    status: 'stable',
-    schemaVersion: 'hadara.task.finalize.v1',
-    docs: TASK_DOCS,
-    implementationFiles: ['src/cli/task.ts', 'src/task/task-finalize.ts'],
-    testFiles: ['tests/unit/task-finalize.test.ts'],
-    examples: [
-      example('Review finalize internals', 'hadara task finalize --task T-0001 --json', 'When debugging the underlying finish/ready/close/audit step plan used by task close.'),
-      example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'Compatibility path for existing automation; new agents should prefer task close.'),
-      example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'Compatibility path after a human or automation explicitly reviews and carries the current dry-run plan hash.')
-    ],
-    related: ['task.close', 'task.status', 'task.close-source', 'protocol.doctor'],
-    conflictsWith: [],
-    notes: 'Default mode is read-only. Execute uses either --auto for one-call guarded close or a matching current dry-run plan hash for externally reviewed flows; both run phases serially, preserve the underlying finish/close write boundaries, repair stale close proof by appending fresh close evidence when the plan requires it, and stop on the first blocker.'
   },
   {
     id: 'task.close-source',

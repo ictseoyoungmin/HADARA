@@ -252,7 +252,7 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 Use the explicit \`--plan-hash\` form only when a reviewed dry-run plan needs to cross a human or external automation boundary. The ordinary path is \`task close --json\`; it still performs the dry-run, folds in the current plan hash internally, and aborts if the close-source world changes before the write.
 
-Low-level lifecycle command surfaces (\`task finish\`, \`task ready\`, \`task audit-close\`, \`task complete\`, and \`task lifecycle\`) were removed from public routing. Use \`task status --task T-XXXX --detail full --json\` for diagnostics and \`task close\` for close execution. \`task finalize\` remains a compatibility/debug route for the underlying finish/ready/close/audit plan.
+Low-level lifecycle command surfaces (\`task finish\`, \`task ready\`, \`task audit-close\`, \`task complete\`, \`task lifecycle\`, and \`task finalize\`) were removed from public routing. Use \`task status --task T-XXXX --detail full --json\` for diagnostics and \`task close\` for close execution.
 
 Do not hand-edit lifecycle-owned status fields to force closure. \`TASK.md\` Identity \`Status\` and \`docs/TASK_BOARD.md\` Status are updated by \`task create\` and \`task close\`. Before close, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let close move the lifecycle status to Done.
 
@@ -786,7 +786,7 @@ hadara task close --task T-XXXX --dry-run --json
 hadara task close --task T-XXXX --json
 \`\`\`
 
-\`task finish\`, \`task ready\`, \`task audit-close\`, \`task complete\`, and \`task lifecycle\` are no longer the agent-facing cycle. \`task close\` owns the bounded finish/readiness/close/audit sequence; \`task finalize\` is compatibility/debug only.
+\`task finish\`, \`task ready\`, \`task audit-close\`, \`task complete\`, \`task lifecycle\`, and \`task finalize\` are no longer the agent-facing cycle. \`task close\` owns the bounded finish/readiness/close/audit sequence.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
@@ -865,7 +865,7 @@ Do not defer all documentation until after implementation. Keep \`PLAN.md\` curr
 
 Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task close\`, compatibility \`task finalize --execute\`, and release artifact or publish operations. Evidence commands may run in parallel because each append is internally serialized by a task-scoped local lock; JSON responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
+Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task close\`, and release artifact or publish operations. Evidence commands may run in parallel because each append is internally serialized by a task-scoped local lock; JSON responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
 
 ## Command Semantics
 
@@ -878,7 +878,6 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Pr
 | \`task next\` / \`task show\` | Fully removed public commands | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Fully removed public command | Prefer \`task status --task T-XXXX --json\`. |
 | \`task close\` | Executes by default; \`--dry-run\` is read-only; reviewed execute uses \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence and close proof against the virtual post-finish state when needed, commits lifecycle-owned Done bookkeeping, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
-| \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Compatibility/debug path for the underlying finish/ready/close/audit plan. |
 | \`task finish\` / \`task ready\` / \`task audit-close\` | Fully removed public commands | Use \`task status --detail full\` for diagnostics and \`task close\` for close execution. |
 | \`task complete\` | Fully removed public command | Prefer \`task status\` and \`task close\` for current agent flows. |
 

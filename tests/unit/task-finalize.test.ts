@@ -313,34 +313,12 @@ describe('task finalize dry-run plan', () => {
     expect(validateSchema('hadara.task.finalize.v1', repaired).ok).toBe(true);
   });
 
-  it('routes the CLI task finalize command through the read-only report', () => {
+  it('does not expose task finalize as a public CLI subcommand', () => {
     const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI finalize');
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      output.push(String(message));
-    };
-    try {
-      expect(handleTaskCommand({ args: ['task', 'finalize', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
+    createTaskCapsule(root, 'CLI finalize');
 
-    const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.task.finalize.v1');
-    expect(report.command).toBe('task.finalize');
-    expect(report.mode).toBe('dry-run');
-    expect(report.planHash).toMatch(/^sha256:/);
-    expect(report.diagnostics).toMatchObject({
-      generatedBy: 'cli',
-      commandPath: 'task.finalize',
-      slowThresholdMs: 10000,
-      slow: false
-    });
-    expect(report.diagnostics.durationMs).toEqual(expect.any(Number));
-    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
-    expect(process.exitCode).toBe(6);
+    expect(handleTaskCommand({ args: ['task', 'finalize', '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
+    expect(process.exitCode).toBeUndefined();
   });
 });
 

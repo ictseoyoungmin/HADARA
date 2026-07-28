@@ -444,7 +444,7 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues.map((issue) => issue.code)).not.toContain('EVIDENCE_SCAFFOLD_UNCHANGED');
   });
 
-  it('does not treat a planned finalize validation row as scaffold residue', () => {
+  it('does not treat a planned close validation row as scaffold residue', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finalize validation row');
     markTaskDone(root, task.id);
@@ -455,7 +455,7 @@ describe('Harness Task Capsule validation', () => {
       path.join(task.dir, 'TASK.md'),
       fs
         .readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')
-        .replace('| Harness done-level fixture | Yes | Passed | Harness result. |', `| \`hadara task finalize --task ${task.id} --execute --auto --json\` | Yes | Not Run | TBD |`),
+        .replace('| Harness done-level fixture | Yes | Passed | Harness result. |', `| \`hadara task close --task ${task.id} --json\` | Yes | Not Run | TBD |`),
       'utf8'
     );
     writeHandoffDone(task.dir);

@@ -42,7 +42,7 @@ describe('command surface drift helpers (FD-011)', () => {
       extractRegistryTopLevelVerbs([
         'hadara docs mark --path <path>',
         'hadara docs register --path <path>',
-        'hadara task finalize --task <task-id>',
+        'hadara task close --task <task-id>',
         'not-a-hadara-pattern'
       ])
     ).toEqual(['docs', 'task']);

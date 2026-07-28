@@ -11,7 +11,7 @@ export interface HelpCommandInput {
   args: string[];
 }
 
-const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'close', 'finalize'];
+const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'close'];
 
 export function handleHelpCommand(input: HelpCommandInput): boolean {
   const topic = input.args[1];
@@ -100,7 +100,7 @@ export function renderLifecycleHelp(): string {
     }
   }
 
-  lines.push('', '`task close` is the public close transaction. Use `task finalize` only for compatibility or low-level debugging of the underlying finish/ready/close/audit plan.');
+  lines.push('', '`task close` is the public close transaction. Use `task status --detail full` and `task close --dry-run` for diagnostics.');
 
   lines.push(
     '',

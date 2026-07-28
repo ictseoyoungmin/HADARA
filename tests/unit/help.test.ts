@@ -94,7 +94,6 @@ describe('registry-backed help', () => {
     const output = renderFamilyHelp('capsule-lifecycle');
 
     expect(output).toContain('task.create');
-    expect(output).toContain('task.finalize');
     expect(output).toContain('task.close');
     expect(output).not.toContain('release.publish');
     expect(output).not.toContain('dashboard.serve');

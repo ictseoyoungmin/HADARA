@@ -93,7 +93,7 @@ hadara validation run --task T-0001 --check "Smoke test" -- npm test
 hadara evidence add-command --task T-0001 --summary "Smoke test passed" --result passed --category validation --json
 ```
 
-Close with the reviewed finalize flow:
+Close with the guarded close flow:
 
 ```bash
 hadara task close --task T-0001 --json
@@ -191,7 +191,7 @@ hadara task status --task T-XXXX --json
 hadara context pack --task T-XXXX --json
 ```
 
-Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task audit-close`, `task complete`, and `task lifecycle` are no longer public routes. `task close` is the 0.5 public close transaction; use `task close --json` for guarded execution, `task close --dry-run --json` or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task close` and compatibility `task finalize`.
+Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task audit-close`, `task complete`, `task lifecycle`, and `task finalize` are no longer public routes. `task close` is the 0.5 public close transaction; use `task close --json` for guarded execution, `task close --dry-run --json` or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task close`.
 
 Important boundaries:
 
@@ -199,7 +199,6 @@ Important boundaries:
 |---|---|
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. `--detail full` includes done-level diagnostics and `state.closeState`. |
 | `task close` | Default agent close path. Executes the guarded proof-last transaction by default; `--dry-run` previews and `--execute --plan-hash <hash>` executes a reviewed plan. |
-| `task finalize` | Compatibility/debug route for the underlying finish/ready/close/audit plan. Not the primary user-facing close path. |
 | `task finish` / `task ready` / `task audit-close` / `task complete` / `task lifecycle` | Fully removed public routes; use `task status` and `task close`. |
 
 Before executing `task close`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning task close.

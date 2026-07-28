@@ -49,7 +49,6 @@ describe('task workflow command semantics docs', () => {
       'task status',
       'evidence add-command',
       'task lifecycle',
-      'task finalize',
       'task ready',
       'task finish',
       'task close',
@@ -106,6 +105,7 @@ describe('task workflow command semantics docs', () => {
     expect(contract).toContain('| `task status --json` | `hadara.task.status.summary.v1` | Compact adaptive lifecycle ingress with focused reads/edits and one next action.');
     expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.status.summary.v1` | Read-only compact selected-task cockpit with focused reads/edits.');
     expect(contract).toContain('| `task close --task T-XXXX --json` | `hadara.task.close.summary.v1` | Compact result of the default proof-last close transaction.');
+    expect(contract).not.toContain('| `task finalize --task T-XXXX --json` | `hadara.task.finalize.v1` |');
   });
 
   it('registers task workflow command guidance as required reading', () => {

@@ -1,36 +1,40 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 359,
+  "rev": 361,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0716",
-    "title": "Close Replay and Validation Trust Hardening"
+    "id": "T-0717",
+    "title": "Remove Task Finalize Compatibility Surface"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Continue trust hardening for explicit reviewed finalize replay and the remaining journal transaction residual called out in `RF-1`.",
-    "reason": "Public `task close` is safe again, but explicit reviewed finalize still prefers safe refusal over replaying a persisted reviewed write-set across long review gaps.",
+    "title": "Decide whether to clean historical release/history documents that still mention past `task finalize` behavior.",
+    "reason": "Current/public routing is fixed, but historical notes and closed historical capsules still describe the older surface.",
     "references": [
       {
-        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+        "path": "`tasks/T-0717-remove-task-finalize-compatibility-surface/TASK.md`",
         "required": true
       },
       {
-        "path": "`tasks/T-0716-close-replay-and-validation-trust-hardening/TASK.md`",
+        "path": "`docs/RELEASE_NOTES.md`",
+        "required": true
+      },
+      {
+        "path": "`docs/RELEASE_READINESS.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0716",
-      "path": "tasks/T-0716-close-replay-and-validation-trust-hardening/HANDOFF.md"
+      "workId": "T-0717",
+      "path": "tasks/T-0717-remove-task-finalize-compatibility-surface/HANDOFF.md"
     }
   },
   "currentKnownProblems": [
