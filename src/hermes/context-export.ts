@@ -53,8 +53,7 @@ export function buildHadaraContextContent(projectRoot: string): string {
     'docs/MCP_BRIDGE_CONTRACT.md',
     'docs/MCP_EVIDENCE_ATTACH_CONTRACT.md',
     'docs/ARCHITECTURE.md',
-    'docs/SECURITY_MODEL.md',
-    'docs/TEST_STRATEGY.md'
+    'docs/SECURITY_MODEL.md'
   ];
 
   const sections = sourceFiles.map((relativePath) => {

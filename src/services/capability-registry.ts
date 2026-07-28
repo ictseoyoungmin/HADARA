@@ -554,10 +554,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     risk: 'medium',
     actor: 'agent-worker',
     status: 'stable',
-    schemaVersion: 'hadara.task.close.v2',
+    schemaVersion: 'hadara.task.close.v3',
     docs: TASK_DOCS,
-    implementationFiles: ['src/cli/task.ts', 'src/task/task-close-transaction.ts', 'src/task/task-finalize.ts', 'src/task/task-close.ts'],
-    testFiles: ['tests/unit/task-close.test.ts', 'tests/unit/task-finalize.test.ts'],
+    implementationFiles: ['src/cli/task.ts', 'src/task/close/execute.ts', 'src/task/close/plan.ts', 'src/task/close/proof.ts'],
+    testFiles: ['tests/unit/task-close.test.ts', 'tests/unit/task-close.test.ts'],
     examples: [
       example('Close a clean task', 'hadara task close --task T-0001 --json', 'For ordinary task completion with a compact summary; the CLI reviews, verifies, writes, appends proof, and audits internally.'),
       example('Preview close readiness', 'hadara task close --task T-0001 --dry-run --json', 'When a human or automation wants the close plan without writes.'),
@@ -585,7 +585,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.closeSource.v1',
     docs: TASK_DOCS,
-    implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
+    implementationFiles: ['src/cli/task.ts', 'src/task/close/proof.ts'],
     testFiles: ['tests/unit/task-close-source.test.ts'],
     examples: [example('Inspect close source', 'hadara task close-source --task T-0001 --json', 'When reviewing close-source drift boundaries.')],
     related: ['task.close', 'status'],
@@ -1069,7 +1069,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'docs.add',
-    command: 'hadara docs add <architecture|decisions|roadmap|security-model|test-strategy|agent-guide> [--execute --before-hash <hash>] [--json]',
+    command: 'hadara docs add <architecture|decisions|roadmap|security-model|agent-guide> [--execute --before-hash <hash>] [--json]',
     summary: 'Create an optional project-owned docs file and register it in .hadara/docs-registry.json.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1595,7 +1595,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.featureSmoke.v1',
     implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/feature-smoke.ts'],
     testFiles: ['tests/unit/feature-smoke.test.ts'],
-    docs: ['docs/TEST_STRATEGY.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Run core smoke', 'hadara smoke run --profile core --json', 'When validating reduced CLI feature coverage.')],
     related: ['smoke.clean-checkout', 'smoke.package'],
     conflictsWith: []
@@ -1619,7 +1619,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.cleanCheckoutSmoke.v1',
     implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/clean-checkout-smoke.ts', 'tools/dev-surface/smoke-evidence.ts'],
     testFiles: ['tests/unit/clean-checkout-smoke.test.ts'],
-    docs: ['docs/TEST_STRATEGY.md'],
+    docs: ['docs/RELEASE_READINESS.md'],
     examples: [example('Run clean checkout smoke', 'hadara smoke clean-checkout --execute --json', 'Before release hardening or package validation.')],
     related: ['smoke.run', 'smoke.package'],
     conflictsWith: []
@@ -1643,7 +1643,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.packageSmoke.v1',
     implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/package-smoke.ts', 'tools/dev-surface/smoke-evidence.ts'],
     testFiles: ['tests/unit/package-smoke-dry-run.test.ts', 'tests/unit/package-smoke-schema.test.ts'],
-    docs: ['docs/TEST_STRATEGY.md'],
+    docs: ['docs/RELEASE_READINESS.md'],
     examples: [
       example('Preview package smoke', 'hadara smoke package --dry-run --json', 'Before executing isolated package smoke validation.'),
       example('Execute package smoke with explicit roots', 'hadara smoke package --execute --source-root . --evidence-root . --smoke-project-root /tmp/hadara-package-smoke-consumer --task T-XXXX --attach-evidence --json', 'When release evidence and disposable consumer execution roots must be explicit.')

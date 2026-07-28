@@ -50,7 +50,7 @@ done
 # immediately before the destructive dist replace so any existence/content
 # transition in workspace dist during that window is not silently overwritten.
 if [[ -f "$WORKSPACE/dist/cli/main.js" ]]; then
-  DIST_BEFORE_STATE="sha256:$(sha256sum "$WORKSPACE/dist/cli/main.js" | cut -d' ' -f1)"
+  DIST_BEFORE_STATE="sha256:$(sha256sum "$WORKSPACE/dist/cli/main.js" | sed "s/ .*//")"
 else
   DIST_BEFORE_STATE="missing"
 fi
@@ -122,6 +122,12 @@ run_full_check() {
   fi
 }
 
+sync_dist_workspace() {
+  rm -rf "$HADARA_WORKSPACE/dist"
+  mkdir -p "$HADARA_WORKSPACE/dist"
+  cp -R dist/. "$HADARA_WORKSPACE/dist/"
+}
+
 mkdir -p "$HADARA_TMP_WORKDIR"
 HADARA_TMP_WORKDIR="$(mktemp -d "$HADARA_TMP_WORKDIR/run.XXXXXX")"
 trap '"'"'rm -rf "$HADARA_TMP_WORKDIR"'"'"' EXIT
@@ -139,7 +145,7 @@ else
 fi
 if [[ "$HADARA_CHECK_ONLY" != "1" ]]; then
   if [[ -f "$HADARA_WORKSPACE/dist/cli/main.js" ]]; then
-    DIST_CURRENT_STATE="sha256:$(sha256sum "$HADARA_WORKSPACE/dist/cli/main.js" | cut -d' ' -f1)"
+    DIST_CURRENT_STATE="sha256:$(sha256sum "$HADARA_WORKSPACE/dist/cli/main.js" | sed "s/ .*//")"
   else
     DIST_CURRENT_STATE="missing"
   fi
@@ -147,7 +153,7 @@ if [[ "$HADARA_CHECK_ONLY" != "1" ]]; then
     echo "error: workspace dist/cli/main.js changed after this run started; refusing to overwrite it. Rerun the sync." >&2
     exit 1
   fi
-  run_step "sync dist to mounted workspace" bash -lc '"'"'rm -rf "$HADARA_WORKSPACE/dist" && mkdir -p "$HADARA_WORKSPACE/dist" && cp -R dist/. "$HADARA_WORKSPACE/dist/"'"'"'
+  run_step "sync dist to mounted workspace" sync_dist_workspace
 fi
 if [[ "$HADARA_RUN_SMOKE" == "1" ]]; then
   # shellcheck disable=SC2086

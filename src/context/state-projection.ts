@@ -115,7 +115,7 @@ function closeProofIssues(stateSources: StateSource[]): StateConsistencyIssue[] 
       ? `Latest close proof is ${closed}, but latest completed task is ${latest}.`
       : `No close proof state source was extracted for latest completed task ${latest}.`,
     evidenceSourcePaths(stateSources, latest),
-    `Run task ready/close/audit-close for ${latest}, or include current evidence extraction before relying on close-proof state.`
+    `Run task close for ${latest}, or include current evidence extraction before relying on close-proof state.`
   )];
 }
 

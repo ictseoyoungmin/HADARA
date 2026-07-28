@@ -5,10 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/task-close';
-import { createTaskCloseTransactionReport } from '../../src/task/task-close-transaction';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/close';
+import { createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createTaskFinalizeReport } from '../../src/task/task-finalize';
+import { createTaskClosePlanReport } from '../../src/task/close';
 import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 
 const roots: string[] = [];
@@ -41,7 +41,7 @@ describe('task close report', () => {
     const report = createTaskCloseTransactionReport(root, task.id);
 
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.close.v2',
+      schemaVersion: 'hadara.task.close.v3',
       command: 'task.close',
       ok: true,
       mode: 'execute',
@@ -52,7 +52,7 @@ describe('task close report', () => {
       planStatus: 'satisfied',
       readOnly: false,
       transaction: {
-        strategy: 'finalize-auto',
+        strategy: 'close-auto',
         internalReview: true,
         proofLast: true,
         stalePlanGuard: true
@@ -62,9 +62,9 @@ describe('task close report', () => {
         idempotentNoop: false
       },
       source: {
-        finalize: {
-          schemaVersion: 'hadara.task.finalize.v1',
-          command: 'task.finalize',
+        closePlan: {
+          schemaVersion: 'hadara.task.close_plan.v1',
+          command: 'task.close-plan',
           ok: true,
           state: 'closed-valid'
         }
@@ -81,14 +81,14 @@ describe('task close report', () => {
       pendingSteps: []
     });
     expect(report.transaction.operation?.planHash).toBe(report.transaction.planHash);
-    expect(report.source.finalize.execution?.requestedPlanHash).toBe(report.transaction.planHash);
+    expect(report.source.closePlan.execution?.requestedPlanHash).toBe(report.transaction.planHash);
     expect(fs.existsSync(path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`))).toBe(false);
-    expect(report.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(report.writeSummary.executedSteps).toEqual(['bookkeeping', 'ready', 'close', 'audit-close']);
     expect(report.primaryNextAction).toBeUndefined();
     expect(report.nextActions).toEqual([]);
     expect(report.operatorGuidance).toContain('do not run task status');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('returns blocked recovery without lifecycle-owned writes when public close cannot proceed', () => {
@@ -100,7 +100,7 @@ describe('task close report', () => {
 
     expect(snapshotFiles(root)).toEqual(before);
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.close.v2',
+      schemaVersion: 'hadara.task.close.v3',
       command: 'task.close',
       ok: false,
       mode: 'dry-run',
@@ -116,13 +116,13 @@ describe('task close report', () => {
       }
     });
     expect(report.recovery?.action.writeBoundary).not.toBe('read-only');
-    expect(report.recovery?.action.command).not.toContain('task finalize');
-    expect(report.nextActions.map((action) => action.command ?? '').join('\n')).not.toContain('task finalize');
-    expect(report.source.finalize.mode).toBe('dry-run');
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(report.recovery?.action.command).not.toContain('task close');
+    expect(report.nextActions.map((action) => action.command ?? '').join('\n')).not.toContain('task close');
+    expect(report.source.closePlan.mode).toBe('dry-run');
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
-  it('does not expose finish-owned Draft bookkeeping as a full-status blocker', () => {
+  it('does not expose bookkeeping-owned Draft bookkeeping as a full-status blocker', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close status bookkeeping');
     completeTask(root, task.id, task.dir);
@@ -156,7 +156,7 @@ describe('task close report', () => {
     const report = createTaskCloseTransactionReport(root, task.id, { lockTimeoutMs: 25 });
 
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.close.v2',
+      schemaVersion: 'hadara.task.close.v3',
       command: 'task.close',
       ok: false,
       mode: 'execute-refused',
@@ -182,7 +182,7 @@ describe('task close report', () => {
     expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toBe(beforeTask);
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toBe(beforeBoard);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe(beforeEvidence);
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('reclaims stale transaction locks with dead owners before retrying close', () => {
@@ -211,7 +211,7 @@ describe('task close report', () => {
       })
     );
     expect(report.closeState).toBe('closed-valid');
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('does not reclaim a fresh metadata gap while another process is acquiring a lock', () => {
@@ -228,7 +228,7 @@ describe('task close report', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT' }));
     expect(report.transaction.locks).not.toContainEqual(expect.objectContaining({ name: 'task-board', staleReclaimed: true }));
     expect(fs.existsSync(lockDir)).toBe(true);
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('reclaims old invalid metadata through the stale-lock path', () => {
@@ -253,7 +253,7 @@ describe('task close report', () => {
         staleReason: 'metadata-invalid'
       })
     );
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('does not reclaim a live-owner lock only because it is old', () => {
@@ -276,7 +276,7 @@ describe('task close report', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_TRANSACTION_LOCK_TIMEOUT' }));
     expect(report.transaction.locks).not.toContainEqual(expect.objectContaining({ name: 'task-board', staleReclaimed: true }));
     expect(fs.existsSync(lockDir)).toBe(true);
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('leaves a recreated lock in place when release cannot prove token ownership', () => {
@@ -294,7 +294,7 @@ describe('task close report', () => {
 
     const report = createTaskCloseTransactionReport(root, task.id, {
       onProgress(event) {
-        if (replaced || event.step !== 'finish' || event.phase !== 'executed') return;
+        if (replaced || event.step !== 'bookkeeping' || event.phase !== 'executed') return;
         replaced = true;
         fs.rmSync(lockDir, { recursive: true, force: true });
         fs.mkdirSync(lockDir, { recursive: true });
@@ -305,7 +305,7 @@ describe('task close report', () => {
     expect(replaced).toBe(true);
     expect(fs.existsSync(lockDir)).toBe(true);
     expect(fs.existsSync(path.join(lockDir, 'lock.json'))).toBe(false);
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('keeps the explicit reviewed plan hash on both the operation marker and the execute refusal report', () => {
@@ -313,7 +313,7 @@ describe('task close report', () => {
     const task = createTaskCapsule(root, 'Close transaction reviewed hash');
     completeTask(root, task.id, task.dir);
     markStateDocsCurrent(root, task.id);
-    const review = createTaskFinalizeReport(root, task.id);
+    const review = createTaskClosePlanReport(root, task.id);
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(
       boardPath,
@@ -331,15 +331,15 @@ describe('task close report', () => {
       ok: false,
       mode: 'execute-refused',
       transaction: {
-        strategy: 'finalize-reviewed-plan',
+        strategy: 'close-reviewed-plan',
         internalReview: false
       }
     });
     expect(report.transaction.planHash).toBe(review.planHash);
     expect(report.transaction.operation?.planHash).toBe(review.planHash);
-    expect(report.source.finalize.execution?.requestedPlanHash).toBe(review.planHash);
-    expect(report.source.finalize.execution?.planHashMatched).toBe(false);
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(report.source.closePlan.execution?.requestedPlanHash).toBe(review.planHash);
+    expect(report.source.closePlan.execution?.planHashMatched).toBe(false);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('keeps the shared reviewed hash across the public auto-close minute-boundary refusal', () => {
@@ -379,16 +379,16 @@ describe('task close report', () => {
         ok: false,
         mode: 'execute-refused',
         transaction: {
-          strategy: 'finalize-auto',
+          strategy: 'close-auto',
           internalReview: true
         }
       });
       expect(reviewedPlanHash).toMatch(/^sha256:[a-f0-9]{64}$/);
       expect(report.transaction.planHash).toBe(reviewedPlanHash);
       expect(report.transaction.operation?.planHash).toBe(reviewedPlanHash);
-      expect(report.source.finalize.execution?.requestedPlanHash).toBe(reviewedPlanHash);
-      expect(report.source.finalize.execution?.planHashMatched).toBe(false);
-      expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+      expect(report.source.closePlan.execution?.requestedPlanHash).toBe(reviewedPlanHash);
+      expect(report.source.closePlan.execution?.planHashMatched).toBe(false);
+      expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
     } finally {
       vi.useRealTimers();
     }
@@ -408,7 +408,7 @@ describe('task close report', () => {
 
     const report = createTaskCloseTransactionReport(root, task.id, {
       onProgress(event) {
-        if (event.step !== 'finish' || event.phase !== 'executed' || mutated) return;
+        if (event.step !== 'bookkeeping' || event.phase !== 'executed' || mutated) return;
         mutated = true;
         fs.writeFileSync(path.join(task.dir, 'TASK.md'), fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'), 'utf8');
       }
@@ -422,7 +422,7 @@ describe('task close report', () => {
       taskId: task.id,
       phase: 'recovery-required',
       persisted: true,
-      completedSteps: ['ready', 'close', 'finish'],
+      completedSteps: ['ready', 'close', 'bookkeeping'],
       pendingSteps: ['audit-close'],
       mutationSummary: {
         executedWrites: 2,
@@ -431,17 +431,19 @@ describe('task close report', () => {
       }
     });
     expect(report.transaction.operation?.stepJournal).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'finish', status: 'executed', mutated: true }),
-      expect.objectContaining({ id: 'ready', status: 'satisfied', mutated: false }),
-      expect.objectContaining({ id: 'close', status: 'executed', mutated: true, writeOutcome: 'appended' }),
-      expect.objectContaining({ id: 'audit-close', status: 'blocked', mutated: false })
+      expect.objectContaining({ step: 'bookkeeping', phase: 'intent', status: 'start', mutated: false }),
+      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'executed', mutated: true }),
+      expect.objectContaining({ step: 'ready', phase: 'outcome', status: 'satisfied', mutated: false }),
+      expect.objectContaining({ step: 'close', phase: 'outcome', status: 'executed', mutated: true, writeOutcome: 'appended' }),
+      expect.objectContaining({ step: 'audit-close', phase: 'outcome', status: 'blocked', mutated: false })
     ]));
+    expect(report.transaction.operation?.attempts).toHaveLength(1);
     expect(fs.existsSync(operationPath)).toBe(true);
     const persisted = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
     expect(persisted).toMatchObject({
       taskId: task.id,
       phase: 'recovery-required',
-      completedSteps: ['ready', 'close', 'finish'],
+      completedSteps: ['ready', 'close', 'bookkeeping'],
       mutationSummary: {
         executedWrites: 2,
         closeProofAppended: true,
@@ -449,7 +451,7 @@ describe('task close report', () => {
       }
     });
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('recovers a persisted partial operation by rerunning the same public close command after repair', () => {
@@ -467,7 +469,7 @@ describe('task close report', () => {
 
     const partial = createTaskCloseTransactionReport(root, task.id, {
       onProgress(event) {
-        if (event.step !== 'finish' || event.phase !== 'executed' || mutated) return;
+        if (event.step !== 'bookkeeping' || event.phase !== 'executed' || mutated) return;
         mutated = true;
         fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'), 'utf8');
       }
@@ -504,7 +506,7 @@ describe('task close report', () => {
       .filter(Boolean)
       .map((line) => JSON.parse(line));
     expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(2);
-    expect(validateSchema('hadara.task.close.v2', recovered).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
   it('does not count an execute-time duplicate close proof as a mutating write', () => {
@@ -534,7 +536,7 @@ describe('task close report', () => {
         idempotentNoop: true
       }
     });
-    expect(report.source.finalize.execution?.executedSteps).toEqual(
+    expect(report.source.closePlan.execution?.executedSteps).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'close', status: 'executed', writeOutcome: 'existing-noop' })
       ])
@@ -544,17 +546,17 @@ describe('task close report', () => {
       closeProofAppended: false,
       idempotentNoop: true
     });
-    expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
-  it('journals proof-first recovery when close proof is appended before finish later fails', () => {
+  it('journals proof-first recovery when close proof is appended before bookkeeping later fails', () => {
     const root = tempProject();
-    const task = createTaskCapsule(root, 'Close transaction proof before finish failure');
+    const task = createTaskCapsule(root, 'Close transaction proof before bookkeeping failure');
     completeTask(root, task.id, task.dir);
     markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
-      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction proof before finish failure | Done |`, `| ${task.id} | Close transaction proof before finish failure | Draft |`),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction proof before bookkeeping failure | Done |`, `| ${task.id} | Close transaction proof before bookkeeping failure | Draft |`),
       'utf8'
     );
     const taskPath = path.join(task.dir, 'TASK.md');
@@ -585,9 +587,10 @@ describe('task close report', () => {
       }
     });
     expect(partial.transaction.operation?.stepJournal).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'ready', status: 'satisfied', mutated: false }),
-      expect.objectContaining({ id: 'close', status: 'executed', mutated: true, writeOutcome: 'appended' }),
-      expect.objectContaining({ id: 'finish', status: 'executed', mutated: true })
+      expect.objectContaining({ step: 'ready', phase: 'outcome', status: 'satisfied', mutated: false }),
+      expect.objectContaining({ step: 'close', phase: 'intent', status: 'start', mutated: false }),
+      expect.objectContaining({ step: 'close', phase: 'outcome', status: 'executed', mutated: true, writeOutcome: 'appended' }),
+      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'executed', mutated: true })
     ]));
     expect(fs.existsSync(operationPath)).toBe(true);
 
@@ -609,8 +612,37 @@ describe('task close report', () => {
         }
       }
     });
+    expect(recovered.transaction.operation?.attempts?.length).toBeGreaterThanOrEqual(1);
     expect(fs.existsSync(operationPath)).toBe(false);
-    expect(validateSchema('hadara.task.close.v2', recovered).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
+  it('rejects malformed operation journal entries through the close schema', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close schema negative fixture');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', {
+      ...report,
+      transaction: {
+        ...report.transaction,
+        operation: report.transaction.operation ? {
+          ...report.transaction.operation,
+          stepJournal: [{
+            seq: 1,
+            step: 'bookkeeping',
+            phase: 'intent',
+            status: 'not-real',
+            writeBoundary: 'read-only',
+            mutated: false,
+            at: report.generatedAt
+          }]
+        } : report.transaction.operation
+      }
+    }).ok).toBe(false);
   });
 
   it('treats public close retry on an already closed capsule as an idempotent no-op', () => {
@@ -635,11 +667,11 @@ describe('task close report', () => {
         idempotentNoop: true
       }
     });
-    expect(retry.writeSummary.executedSteps).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(retry.writeSummary.executedSteps).toEqual(['bookkeeping', 'ready', 'close', 'audit-close']);
     expect(retry.primaryNextAction).toBeUndefined();
     expect(retry.nextActions).toEqual([]);
     expect(afterRetry).toBe(afterFirst);
-    expect(validateSchema('hadara.task.close.v2', retry).ok).toBe(true);
+    expect(validateSchema('hadara.task.close.v3', retry).ok).toBe(true);
   });
 
   it('prints compact task close JSON by default and keeps the v2 transaction behind --detail full', () => {
@@ -687,12 +719,12 @@ describe('task close report', () => {
       console.log = originalLog;
     }
     const full = JSON.parse(output.join('\n'));
-    expect(full.schemaVersion).toBe('hadara.task.close.v2');
-    expect(full.source.finalize.schemaVersion).toBe('hadara.task.finalize.v1');
-    expect(validateSchema('hadara.task.close.v2', full).ok).toBe(true);
+    expect(full.schemaVersion).toBe('hadara.task.close.v3');
+    expect(full.source.closePlan.schemaVersion).toBe('hadara.task.close_plan.v1');
+    expect(validateSchema('hadara.task.close.v3', full).ok).toBe(true);
   });
 
-  it('creates a read-only close plan with loop-boundary next actions for a completed task', () => {
+  it('creates a read-only closePlan with loop-boundary next actions for a completed task', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close ready task');
     completeTask(root, task.id, task.dir);
@@ -1126,7 +1158,7 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| Created | TBD |', '| Created | 2026-06-02 |')
       .replace('| Updated | TBD |', '| Updated | 2026-06-02 |')
       .replace(/\nDraft\n/, '\nDone\n')
-      .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise task close planning. | Fixture verifies close readiness. |')
+      .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise task closening. | Fixture verifies close readiness. |')
       .replace('| TBD | TBD |', '| Complete fixture documents. | Needed for done-level validation. |')
       .replace('| TBD | TBD |', '| Broad workflow mutation. | Outside fixture scope. |')
       .replace(/\| \d{4}-\d{2}-\d{2} \| Draft \| Initial task scaffold\. \|/, '| 2026-06-02 | Done | Fixture complete. |'),
@@ -1134,12 +1166,12 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
   );
   updateTaskBoardDone(root, taskId);
   fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Complete fixture. | Done | Fixture. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/TASK_BOARD.md | Fixture. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture is complete. | Test | Low. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| Read-only close plan. | Test | No writes. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/task/task-close.ts | Add | Close plan. | Done |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/TASK_BOARD.md | Fixture. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture is complete. | Test | Low. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| Read-only closePlan. | Test | No writes. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/task/close/proof.ts | Add | Close plan. | Done |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), `# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Fixture complete. | Met | ${validation.evidence.id} |\n`, 'utf8');
   fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Fixture | Exercise close. | Yes | Passed | Evidence. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture. | Not Run | Not applicable. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use fixture. | Accepted | Test close plan. | Test. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use fixture. | Accepted | Test closePlan. | Test. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n', 'utf8');
 }
 

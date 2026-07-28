@@ -7,7 +7,7 @@ import { validateSchema } from '../../src/core/schema';
 import { createOpsStatusReport } from '../../src/services/operations-status-service';
 import { createAllProtocolConsistencyReport } from '../../src/services/protocol-consistency';
 import { createStateProjectionReport } from '../../src/services/state-projection';
-import { createTaskCloseSourceReport } from '../../src/task/task-close';
+import { createTaskCloseSourceReport } from '../../src/task/close';
 import { createTaskCapsule, TaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];

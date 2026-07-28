@@ -58,7 +58,7 @@ describe('workbench next actions', () => {
 
     expect(actions).toEqual([
       expect.objectContaining({
-        id: 'review-finalize-plan',
+        id: 'review-close-plan',
         command: 'hadara task close --task T-0172 --dry-run --json',
         executeCommand: 'hadara task close --task T-0172 --execute --plan-hash <planHash> --json',
         loopBoundary: true
@@ -142,7 +142,7 @@ describe('workbench next actions', () => {
 
     expect(actions).toContainEqual(
       expect.objectContaining({
-        id: 'review-finalize-plan',
+        id: 'review-close-plan',
         command: 'hadara task close --task T-0172 --dry-run --json',
         executeCommand: 'hadara task close --task T-0172 --execute --plan-hash <planHash> --json'
       })
@@ -167,7 +167,7 @@ describe('workbench next actions', () => {
       issues: []
     });
 
-    expect(actions[0]).toMatchObject({ id: 'review-finalize-plan' });
+    expect(actions[0]).toMatchObject({ id: 'review-close-plan' });
     expect(Object.prototype.hasOwnProperty.call(actions[0], 'loopBoundary')).toBe(false);
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
@@ -204,7 +204,7 @@ describe('workbench next actions', () => {
       issues: []
     });
 
-    expect(actions.map((action) => action.id)).toEqual(['review-finalize-repair-plan']);
+    expect(actions.map((action) => action.id)).toEqual(['review-close-plan-repair']);
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
@@ -232,7 +232,7 @@ describe('workbench next actions', () => {
     });
 
     expect(actions[0]).toMatchObject({
-      id: 'finalize-auto-finish-bookkeeping',
+      id: 'close-auto-bookkeeping',
       kind: 'command',
       command: 'hadara task close --task T-0001 --json',
       loopBoundary: true

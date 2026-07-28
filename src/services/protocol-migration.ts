@@ -295,7 +295,7 @@ function planTaskStatusHistoryMarkers(projectRoot: string, relativePath: string,
   }
   const replaced = wrapContiguousTable(current, '| Time | Status | Reason | Evidence |', 'task-status-history', {
     schema: 'hadara.managedSection.v1',
-    owner: 'task.finish',
+    owner: 'task.close',
     kind: 'markdown-table',
     mode: 'update-row',
     version: 1,

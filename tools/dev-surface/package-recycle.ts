@@ -576,7 +576,7 @@ function pushTaskCloseSmokeStep(
   });
   const reportStep = commandStep(step.id, step.label, step.command, result);
   const parsed = parseJsonObject(result.stdout);
-  if (!parsed || parsed.schemaVersion !== 'hadara.task.close.v2' || parsed.mode !== 'dry-run') {
+  if (!parsed || parsed.schemaVersion !== 'hadara.task.close.v3' || parsed.mode !== 'dry-run') {
     failStep(reportStep, result.timedOut ? `${step.label} timed out.` : `${step.label} failed or returned no task close dry-run JSON report.`);
     input.issues.push({
       severity: 'error',

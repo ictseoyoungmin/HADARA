@@ -11,7 +11,7 @@ import {
   readProjectCurrentState
 } from '../../src/services/project-current-state';
 import { createTaskCreateReport } from '../../src/task/task-create';
-import { createTaskFinishReport } from '../../src/task/task-finish';
+import { createCloseBookkeepingReport } from '../../src/task/close';
 import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
 
 const roots: string[] = [];
@@ -34,7 +34,7 @@ describe('continuationFromTaskHandoffStep (docx section 1.1/9 promotion helper)'
 
   it('returns null for a self-close step so task-close reminders do not become project continuation', () => {
     expect(continuationFromTaskHandoffStep({
-      step: 'Finalize shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.',
+      step: 'ClosePlan shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.',
       reason: 'The implementation and focused validation are complete; the remaining work is proof-last capsule close.',
       requiredReading: 'docs/TASK_WORKFLOW_COMMANDS.md',
       sourceTaskId: 'T-0691',
@@ -117,7 +117,8 @@ describe('continuation schema validation', () => {
     expect(validateSchema('hadara.projectCurrentState.v1', { ...state, continuation: null }).ok).toBe(true);
     expect(validateSchema('hadara.projectCurrentState.v1', {
       ...state,
-      continuation: { disposition: 'actionable', kind: 'task-handoff', title: 'Publish 0.5.0 stable' }
+      continuation: { disposition: 'actionable', kind: 'task-handoff', title: 'Publish 0.5.0 stable' },
+      continuations: [{ disposition: 'actionable', kind: 'task-handoff', title: 'Publish 0.5.0 stable' }]
     }).ok).toBe(true);
   });
 
@@ -155,6 +156,7 @@ describe('continuation selection guidance', () => {
       sourceTaskId: completed.taskId!,
       sourceCapsulePath: completed.task!.capsule
     });
+    state.continuations = [state.continuation];
     fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
     expect(readProjectCurrentState(root).state?.continuation).toMatchObject({ disposition: 'actionable' });
 
@@ -191,6 +193,7 @@ describe('continuation write path never clears based on absence', () => {
     })!;
     expect(completeProjectCurrentTask(root, { id: second.taskId!, title: 'Second continuation write fixture' }, continuation)).toEqual([]);
     expect(readProjectCurrentState(root).state?.continuation).toEqual(continuation);
+    expect(readProjectCurrentState(root).state?.continuations).toEqual([continuation]);
   });
 
   it('planCompletedProjectCurrentStateWrites leaves an existing continuation untouched when called without one', () => {
@@ -212,6 +215,7 @@ describe('continuation write path never clears based on absence', () => {
     for (const write of plan.writes) {
       if (write.path !== '.hadara/state/current.json') continue;
       expect(JSON.parse(write.after).continuation).toEqual(continuation);
+      expect(JSON.parse(write.after).continuations).toEqual([continuation]);
     }
   });
 
@@ -250,7 +254,42 @@ describe('continuation write path never clears based on absence', () => {
     for (const write of plan.writes) {
       if (write.path !== '.hadara/state/current.json') continue;
       expect(JSON.parse(write.after).continuation).toBeNull();
+      expect(JSON.parse(write.after).continuations).toEqual([]);
     }
+  });
+
+  it('preserves independent continuation backlog entries while replacing same-task entries', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+
+    const first = createTaskCreateReport(root, 'Archived init authority fixture');
+    const firstContinuation = continuationFromTaskHandoffStep({
+      step: 'Restore archived Init v1 frozen-spec authority routing',
+      reason: 'Historical archive authority is still unresolved.',
+      requiredReading: 'docs/PROJECT_STATE.md',
+      sourceTaskId: first.taskId!,
+      sourceCapsulePath: first.task!.capsule
+    })!;
+    completeProjectCurrentTask(root, { id: first.taskId!, title: 'Archived init authority fixture' }, firstContinuation);
+
+    const second = createTaskCreateReport(root, 'Close journal fixture');
+    const secondContinuation = continuationFromTaskHandoffStep({
+      step: 'Review close journal hardening follow-up',
+      reason: 'Retry semantics still need review.',
+      requiredReading: 'docs/TASK_WORKFLOW_COMMANDS.md',
+      sourceTaskId: second.taskId!,
+      sourceCapsulePath: second.task!.capsule
+    })!;
+    completeProjectCurrentTask(root, { id: second.taskId!, title: 'Close journal fixture' }, secondContinuation);
+
+    const state = readProjectCurrentState(root).state!;
+    expect(state.continuation).toEqual(secondContinuation);
+    expect(state.continuations).toEqual([secondContinuation, firstContinuation]);
+
+    expect(completeProjectCurrentTask(root, { id: second.taskId!, title: 'Close journal fixture' })).toEqual([]);
+    const after = readProjectCurrentState(root).state!;
+    expect(after.continuation).toEqual(firstContinuation);
+    expect(after.continuations).toEqual([firstContinuation]);
   });
 });
 
@@ -266,7 +305,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const executed = createTaskFinishReport(root, created.taskId!, 'execute');
+    const executed = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(executed.ok).toBe(true);
 
     const continuation = readProjectCurrentState(root).state?.continuation;
@@ -287,7 +326,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     state.continuation = {
       disposition: 'waiting-for-operator',
       kind: 'task-handoff',
-      title: 'Finalize shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.',
+      title: 'ClosePlan shared-state prose and run `hadara task close --task T-0691 --json` once the close-source docs are reviewed.',
       reason: 'Fixture stale continuation.',
       createCommandAllowed: false,
       source: { type: 'work-handoff', workId: created.taskId!, path: `${created.task!.capsule}/HANDOFF.md` }
@@ -297,16 +336,16 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     const handoffPath = path.join(root, created.task!.capsule, 'HANDOFF.md');
     const handoff = fs.readFileSync(handoffPath, 'utf8').replace(
       '| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| TBD | TBD | TBD | TBD | TBD |',
-      `| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| Finalize shared-state prose and run \`hadara task close --task ${created.taskId!} --json\` once the close-source docs are reviewed. | waiting-for-operator | no | The implementation and focused validation are complete; the remaining work is proof-last capsule close. | docs/TASK_WORKFLOW_COMMANDS.md |`
+      `| Step | Disposition | Create Task | Reason | Required Reading |\n|---|---|---|---|---|\n| ClosePlan shared-state prose and run \`hadara task close --task ${created.taskId!} --json\` once the close-source docs are reviewed. | waiting-for-operator | no | The implementation and focused validation are complete; the remaining work is proof-last capsule close. | docs/TASK_WORKFLOW_COMMANDS.md |`
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const executed = createTaskFinishReport(root, created.taskId!, 'execute');
+    const executed = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(executed.ok).toBe(true);
     expect(readProjectCurrentState(root).state?.continuation).toBeNull();
   });
 
-  it('blocks task finish when structured handoff disposition is malformed', () => {
+  it('blocks task bookkeeping when structured handoff disposition is malformed', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });
     const created = createTaskCreateReport(root, 'Malformed continuation fixture');
@@ -317,14 +356,14 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_DISPOSITION_INVALID'
     }));
   });
 
-  it('blocks task finish when structured handoff create-task value is malformed', () => {
+  it('blocks task bookkeeping when structured handoff create-task value is malformed', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });
     const created = createTaskCreateReport(root, 'Malformed create task fixture');
@@ -335,14 +374,14 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_CREATE_TASK_INVALID'
     }));
   });
 
-  it('blocks task finish when structured handoff disposition and create-task conflict', () => {
+  it('blocks task bookkeeping when structured handoff disposition and create-task conflict', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });
     const created = createTaskCreateReport(root, 'Conflicting continuation fixture');
@@ -353,14 +392,14 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT'
     }));
   });
 
-  it('blocks task finish when actionable structured handoff disables task creation', () => {
+  it('blocks task bookkeeping when actionable structured handoff disables task creation', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });
     const created = createTaskCreateReport(root, 'Actionable no-create fixture');
@@ -371,7 +410,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createTaskFinishReport(root, created.taskId!, 'execute');
+    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT'
@@ -392,12 +431,12 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
       ),
       'utf8'
     );
-    expect(createTaskFinishReport(root, first.taskId!, 'execute').ok).toBe(true);
+    expect(createCloseBookkeepingReport(root, first.taskId!, 'execute').ok).toBe(true);
     const afterFirst = readProjectCurrentState(root).state?.continuation;
     expect(afterFirst?.title).toBe('Publish 0.5.0 stable');
 
     const second = createTaskCreateReport(root, 'Placeholder next step fixture');
-    expect(createTaskFinishReport(root, second.taskId!, 'execute').ok).toBe(true);
+    expect(createCloseBookkeepingReport(root, second.taskId!, 'execute').ok).toBe(true);
     const afterSecond = readProjectCurrentState(root).state?.continuation;
     expect(afterSecond).toEqual(afterFirst);
   });

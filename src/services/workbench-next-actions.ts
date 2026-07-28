@@ -1,4 +1,4 @@
-import { TaskCloseIssue, TaskCloseNextAction } from '../task/task-close';
+import { TaskCloseIssue, TaskCloseNextAction } from '../task/close';
 
 export interface WorkbenchNextAction {
   id: string;
@@ -48,7 +48,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
 
   if (!input.closed && input.authoringStatus === 'current' && input.evidenceRecords > 0 && !input.closePlanOk && hasOnlyFinishBookkeepingBlockers(input.issues)) {
     upsert(actions, {
-      id: 'finalize-auto-finish-bookkeeping',
+      id: 'close-auto-bookkeeping',
       kind: 'command',
       required: true,
       priority: 'now',
@@ -74,7 +74,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
 
   if (!input.closed && input.closeEvidenceFound) {
     upsert(actions, {
-      id: 'review-finalize-repair-plan',
+      id: 'review-close-plan-repair',
       kind: 'command',
       required: true,
       priority: 'now',
@@ -88,7 +88,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
 
   if (!input.closeEvidenceFound && input.closePlanOk) {
     upsert(actions, {
-      id: 'review-finalize-plan',
+      id: 'review-close-plan',
       kind: 'command',
       required: true,
       priority: 'now',
@@ -191,7 +191,7 @@ function isIssueForTask(issue: TaskCloseIssue, taskId: string): boolean {
 function fromCloseAction(taskId: string, action: TaskCloseNextAction): WorkbenchNextAction {
   if (action.id === 'append-close-evidence') {
     return createWorkbenchNextAction({
-      id: 'review-finalize-plan',
+      id: 'review-close-plan',
       kind: 'command',
       required: action.required,
       priority: action.required ? 'now' : 'soon',

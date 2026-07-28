@@ -121,7 +121,7 @@ describe('context slice report', () => {
     const root = tempProject();
     const block = managedSectionBlock('task-board', {
       schema: 'hadara.managedSection.v1',
-      owner: 'task.finish',
+      owner: 'task.close',
       kind: 'markdown-table',
       mode: 'replace',
       version: 1

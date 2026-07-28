@@ -68,21 +68,21 @@ try {
   manualDocumentEdits.push(...authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, profile }));
   completedStages.push('author-capsule');
 
-  dropoutPoint = 'finalize-review';
+  dropoutPoint = 'close-review';
   const review = measurePrimary(
-    'finalize-review',
-    'task.finalize',
-    ['task', 'finalize', '--task', taskId, '--project', projectRoot, '--json'],
-    (result) => result.summary?.executeSupported === true && result.primaryNextAction?.id === 'finalize-execute-reviewed-plan'
+    'close-review',
+    'task.close',
+    ['task', 'close', '--task', taskId, '--project', projectRoot, '--dry-run', '--json'],
+    (result) => result.planHash && result.primaryNextAction?.id === 'append-close-evidence'
   );
-  completedStages.push('finalize-review');
+  completedStages.push('close-review');
 
-  dropoutPoint = 'finalize-execute';
-  const execution = measurePrimary('finalize-execute', 'task.finalize', [
-    'task', 'finalize', '--task', taskId, '--execute', '--auto', '--project', projectRoot, '--json'
+  dropoutPoint = 'close-execute';
+  const execution = measurePrimary('close-execute', 'task.close', [
+    'task', 'close', '--task', taskId, '--execute', '--plan-hash', review.planHash, '--project', projectRoot, '--json'
   ]);
-  recordRecommendation('finalize-review', review, 'task.finalize');
-  completedStages.push('finalize-execute');
+  recordRecommendation('close-review', review, 'task.close');
+  completedStages.push('close-execute');
 
   dropoutPoint = 'currentness-probe';
   const docsDoctor = invokeCli('docs-doctor', 'measurement-probe', ['docs', 'doctor', '--project', projectRoot, '--json']);
@@ -116,7 +116,7 @@ function buildReport({ execution, docsDoctor, error }) {
     projectRoot,
     taskId,
     budget: {
-      uniquePrimaryCommandIds: ['task.status', 'task.create', 'validation.run', 'task.finalize'],
+      uniquePrimaryCommandIds: ['task.status', 'task.create', 'validation.run', 'task.close'],
       maxInvocations: 6,
       actualInvocations: primaryMeasurements.length,
       totalTargetMs,
@@ -262,7 +262,7 @@ function commandIdFrom(command) {
   if (/\btask create\b/.test(command)) return 'task.create';
   if (/\btask status\b/.test(command)) return 'task.status';
   if (/\bvalidation run\b/.test(command)) return 'validation.run';
-  if (/\btask finalize\b/.test(command)) return 'task.finalize';
+  if (/\btask close\b/.test(command)) return 'task.close';
   return 'unknown';
 }
 
@@ -291,7 +291,7 @@ function authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, pro
 
 | Boundary | Items |
 |---|---|
-| In | Status, create, validation, finalize review, finalize execute. |
+| In | Status, create, validation, close review, close execute. |
 | Out | Product implementation and retained artifacts. |
 
 ## Plan
@@ -300,14 +300,14 @@ function authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, pro
 |---|---|---|
 | 1 | Inspect and create one capsule. | Done |
 | 2 | Record validation evidence. | Done |
-| 3 | Review and execute finalize. | Done |
+| 3 | Review and execute task close. | Done |
 
 ## Acceptance
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | The six-invocation route is usable through finalize readiness. | Met | ${evidenceId} | measurement harness |
-| AC-2 | The capsule is authored for guarded closed-valid execution. | Met | ${evidenceId} | finalize review |
+| AC-1 | The six-invocation route is usable through close readiness. | Met | ${evidenceId} | measurement harness |
+| AC-2 | The capsule is authored for guarded closed-valid execution. | Met | ${evidenceId} | close review |
 
 ## Validation
 
@@ -338,7 +338,7 @@ function authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, pro
 | Date | State | Note |
 |---|---|---|
 | ${date} | Draft | Initial task scaffold. |
-| ${date} | Done | Primary workflow measurement prepared for finalize. |
+| ${date} | Done | Primary workflow measurement prepared for task close. |
 `;
   fs.writeFileSync(path.join(capsuleRoot, 'TASK.md'), task);
   fs.writeFileSync(path.join(capsuleRoot, 'HANDOFF.md'), `# Handoff

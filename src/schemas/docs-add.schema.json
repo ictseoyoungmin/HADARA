@@ -13,7 +13,7 @@
     "mode": { "type": "string", "enum": ["dry-run", "execute"] },
     "type": {
       "oneOf": [
-        { "type": "string", "enum": ["architecture", "decisions", "roadmap", "security-model", "test-strategy", "agent-guide"] },
+        { "type": "string", "enum": ["architecture", "decisions", "roadmap", "security-model", "agent-guide"] },
         { "type": "null" }
       ]
     },

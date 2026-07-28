@@ -551,7 +551,7 @@ function sampleGraphReport(options: { includeCode?: boolean } = {}): ContextGrap
   ];
   const edges: ContextGraphEdge[] = [
     edge('REFERENCES_DOC', `task:${taskId}`, 'doc:docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md', 'Active task references the C3 spec.', 'explicit'),
-    edge('DESCRIBES_COMMAND', 'doc:docs/IMPLEMENTATION_SOP.md', 'command:task.ready', 'SOP describes task.ready.', 'explicit'),
+    edge('DESCRIBES_COMMAND', 'doc:docs/IMPLEMENTATION_SOP.md', 'command:task.close', 'SOP describes task.close.', 'explicit'),
     edge('HAS_EVIDENCE', `task:${taskId}`, `ev:${taskId}:aaaaaaaaaaaaaaaaaaaaaaaa`, 'Task has validation evidence.', 'explicit'),
     edge('HAS_KNOWN_PROBLEM', 'doc:docs/AGENT_HANDOFF.md', 'known-problem:fixture', 'Handoff records known problem.', 'explicit'),
     ...(includeCode ? [
@@ -711,9 +711,9 @@ function documentNode(path: string, input: { requiredReading: boolean; status: s
 
 function commandNode(): ContextGraphNode {
   return {
-    id: 'command:task.ready',
+    id: 'command:task.close',
     type: 'Command',
-    label: 'task.ready',
+    label: 'task.close',
     source: {
       path: 'src/services/capability-registry.ts',
       extractor: 'extractCommandRegistry',

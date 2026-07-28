@@ -81,5 +81,4 @@ Schema: `hadara.docs.registry.v1`
 | `docs/archive/retired-2026-07-26/specs/0.5/state-first/RFC.md` | spec | historical | never-default | no | hadara-docs |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
-| `docs/TEST_STRATEGY.md` | test-strategy | reference | debugging | no | hadara-docs |
 <!-- hadara:managed:end doc-registry-summary -->

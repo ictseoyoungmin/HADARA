@@ -66,14 +66,11 @@ import stateProjectionSchemaJson from '../schemas/state-projection.schema.json';
 import statusBaselinePromoteSchemaJson from '../schemas/status-baseline-promote.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
-import taskCloseV2SchemaJson from '../schemas/task-close-v2.schema.json';
+import taskCloseV3SchemaJson from '../schemas/task-close-v3.schema.json';
 import taskContextSchemaJson from '../schemas/task-context.schema.json';
 import taskCreateSchemaJson from '../schemas/task-create.schema.json';
-import taskFinalizeSchemaJson from '../schemas/task-finalize.schema.json';
-import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
 import taskSelectionStatusSchemaJson from '../schemas/task-selection-status.schema.json';
 import taskSelectionSchemaJson from '../schemas/task-selection.schema.json';
-import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskStatusV2SchemaJson from '../schemas/task-status-v2.schema.json';
 import taskStatusSchemaJson from '../schemas/task-status.schema.json';
 import taskWorkbenchSchemaJson from '../schemas/task-workbench.schema.json';
@@ -187,14 +184,11 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.status.baseline.promote.v1': statusBaselinePromoteSchemaJson as JsonObject,
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
-  'hadara.task.close.v2': taskCloseV2SchemaJson as JsonObject,
+  'hadara.task.close.v3': taskCloseV3SchemaJson as JsonObject,
   'hadara.taskContext.v1': taskContextSchemaJson as JsonObject,
   'hadara.task.create.v1': taskCreateSchemaJson as JsonObject,
-  'hadara.task.finalize.v1': taskFinalizeSchemaJson as JsonObject,
-  'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
   'hadara.taskSelection.status.v2': taskSelectionStatusSchemaJson as JsonObject,
   'hadara.task.selection.v1': taskSelectionSchemaJson as JsonObject,
-  'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.status.v2': taskStatusV2SchemaJson as JsonObject,
   'hadara.task.status.v1': taskStatusSchemaJson as JsonObject,
   'hadara.task.workbench.v1': taskWorkbenchSchemaJson as JsonObject,

@@ -55,7 +55,7 @@ describe('Phase 7.2 lifecycle guide', () => {
     expect(output).toMatch(/4 close\s+hadara task close/);
     expect(output).not.toContain('hadara handoff update');
     expect(output).not.toContain('task lifecycle --task T-XXXX --json');
-    expect(output).not.toContain('task finish --task T-XXXX --execute --json');
+    expect(output).toContain('task close --task T-XXXX --json');
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).toContain('Diagnostics when blocked:');
     expect(output).toContain('harness.validate');

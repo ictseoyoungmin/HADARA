@@ -7,8 +7,7 @@ import {
   createArchitectureDoc,
   createDecisionsDoc,
   createRoadmapDoc,
-  createSecurityModelDoc,
-  createTestStrategyDoc
+  createSecurityModelDoc
 } from '../init/templates';
 import {
   DOCS_REGISTRY_PATH,
@@ -21,7 +20,7 @@ import {
   type ReadWhen
 } from './docs-registry';
 
-export type DocsAddType = 'architecture' | 'decisions' | 'roadmap' | 'security-model' | 'test-strategy' | 'agent-guide';
+export type DocsAddType = 'architecture' | 'decisions' | 'roadmap' | 'security-model' | 'agent-guide';
 
 export interface DocsAddReport {
   schemaVersion: 'hadara.docs.add.v1';
@@ -89,16 +88,6 @@ const DEFINITIONS: Record<DocsAddType, DocsAddDefinition> = {
     readWhen: ['only-when-linked'],
     requiredReading: false,
     content: () => createSecurityModelDoc()
-  },
-  'test-strategy': {
-    type: 'test-strategy',
-    path: 'docs/TEST_STRATEGY.md',
-    title: 'TEST_STRATEGY',
-    kind: 'test-strategy',
-    status: 'reference',
-    readWhen: ['only-when-linked'],
-    requiredReading: false,
-    content: () => createTestStrategyDoc()
   },
   'agent-guide': {
     type: 'agent-guide',

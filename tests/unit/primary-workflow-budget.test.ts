@@ -32,7 +32,7 @@ describe('primary workflow budget', () => {
     expect(source).toContain('hadara.primaryWorkflow.measurement.v2');
     expect(source).toContain("maxInvocations: 6");
     expect(source).toContain("finalState === 'closed-valid'");
-    for (const step of ['inspect-empty', 'create', 'inspect-task', 'validate', 'finalize-review', 'finalize-execute']) {
+    for (const step of ['inspect-empty', 'create', 'inspect-task', 'validate', 'close-review', 'close-execute']) {
       expect(source).toContain(`'${step}'`);
     }
     for (const metric of ['installationToFirstCapsule', 'firstCorrectFile', 'cliCallsToCleanClose', 'manualDocumentEdits', 'staleReferences', 'profileDropout', 'recommendationBehavior']) {
@@ -40,6 +40,8 @@ describe('primary workflow budget', () => {
     }
     expect(source).toContain('generated-instruction-following-simulation');
     expect(source).toContain('PRIMARY_WORKFLOW_DROPOUT');
+    expect(source).toContain("'task', 'close'");
+    expect(source).toContain("uniquePrimaryCommandIds: ['task.status', 'task.create', 'validation.run', 'task.close']");
   });
 
   it('documents all seven metrics and installed-package completion boundary', () => {

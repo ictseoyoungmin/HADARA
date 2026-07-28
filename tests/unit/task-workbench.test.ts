@@ -634,7 +634,7 @@ describe('task workbench status report', () => {
     expect(report.nextActions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: 'review-finalize-repair-plan',
+          id: 'review-close-plan-repair',
           command: `hadara task close --task ${task.id} --dry-run --json`
         })
       ])

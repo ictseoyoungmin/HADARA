@@ -4,15 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { createCommandPortfolioAuditReport } from '../../src/services/lifecycle-guide';
 
 const CONFUSABLE_PAIRS = [
-  ['task.ready', 'harness.validate'],
-  ['task.complete', 'task.finish'],
   ['task.close', 'task.audit-close'],
   ['task.status', 'task.close'],
-  ['release.gate', 'task.ready']
+  ['release.gate', 'task.close']
 ];
 
 describe('Phase 7.2 command portfolio audit', () => {
-  it('records at least five confusable command decisions', () => {
+  it('records current confusable command decisions', () => {
     const report = createCommandPortfolioAuditReport();
 
     expect(report).toMatchObject({

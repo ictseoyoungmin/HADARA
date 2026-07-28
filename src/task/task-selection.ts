@@ -18,15 +18,16 @@ export interface TaskSelectionReport {
   recommendations: TaskSelectionRecommendation[];
   backlog?: TaskSelectionBacklogItem[];
   sources: {
-    currentState: {
-      path: string;
-      authority: 'compatibility-checkpoint';
-      present: boolean;
-      activeTask: string | null;
-      nextWork: ProjectCurrentState['nextWork'] | null;
-      nextOperatorIntent: string | null;
-      continuation: ProjectContinuation | null;
-    };
+      currentState: {
+        path: string;
+        authority: 'compatibility-checkpoint';
+        present: boolean;
+        activeTask: string | null;
+        nextWork: ProjectCurrentState['nextWork'] | null;
+        nextOperatorIntent: string | null;
+        continuation: ProjectContinuation | null;
+        continuations: ProjectContinuation[];
+      };
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
     agentHandoff: { path: string; present: boolean; activeNext: string | null; nextRecommendedStep?: string | null };
@@ -135,7 +136,8 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
         activeTask: currentState.state?.activeTask?.id ?? null,
         nextWork: currentState.state?.nextWork ?? null,
         nextOperatorIntent: currentState.state?.nextOperatorIntent ?? null,
-        continuation: currentState.state?.continuation ?? null
+        continuation: currentState.state?.continuation ?? null,
+        continuations: currentState.state?.continuations ?? []
       },
       developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', present: slices.present, rows: slices.rows.length },
       taskBoard: { path: 'docs/TASK_BOARD.md', present: board.present, rows: board.rows.length },

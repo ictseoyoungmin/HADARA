@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createTaskFinishReport } from '../../src/task/task-finish';
+import { createCloseBookkeepingReport } from '../../src/task/close';
 import { normalizeCloseSummary, parseTaskBoard, renderTaskTargets } from '../../src/task/task-board';
 
 const roots: string[] = [];
@@ -48,7 +48,7 @@ describe('Init v1 Task Board', () => {
     fs.writeFileSync(taskPath, taskContent, 'utf8');
     expect(taskContent).not.toContain('| Targets | project |');
 
-    const report = createTaskFinishReport(root, task.id, 'execute');
+    const report = createCloseBookkeepingReport(root, task.id, 'execute');
     const row = parseTaskBoard(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).rows[0];
 
     expect(report.ok).toBe(true);
@@ -66,7 +66,7 @@ describe('Init v1 Task Board', () => {
     expect(renderTaskTargets([])).toBe('project');
   });
 
-  it('preserves an operator-added extra column on a v1 Board during finish', () => {
+  it('preserves an operator-added extra column on a v1 Board during bookkeeping', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(
@@ -85,7 +85,7 @@ describe('Init v1 Task Board', () => {
       'utf8'
     );
 
-    const report = createTaskFinishReport(root, task.id, 'execute');
+    const report = createCloseBookkeepingReport(root, task.id, 'execute');
 
     expect(report.ok).toBe(true);
     const rewrittenRow = fs.readFileSync(boardPath, 'utf8').split(/\r?\n/).find((line) => line.startsWith(`| ${task.id} |`));
@@ -111,7 +111,7 @@ describe('Init v1 Task Board', () => {
     expect(createdRow).toBe(`| ${task.id} | V1 extra column create | Draft | project | tasks/${path.basename(task.dir)} | - | |`);
   });
 
-  it('preserves legacy Notes and extra cells during finish', () => {
+  it('preserves legacy Notes and extra cells during bookkeeping', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(
@@ -130,7 +130,7 @@ describe('Init v1 Task Board', () => {
       'utf8'
     );
 
-    const report = createTaskFinishReport(root, task.id, 'execute');
+    const report = createCloseBookkeepingReport(root, task.id, 'execute');
 
     expect(report.ok).toBe(true);
     expect(fs.readFileSync(boardPath, 'utf8')).toContain('| Keep this | reviewer |');

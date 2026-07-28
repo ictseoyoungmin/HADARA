@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
 import { appendEvidence } from '../../src/evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, executeTaskCloseEvidence } from '../../src/task/task-close';
+import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, executeTaskCloseEvidence } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { assertSchema } from '../../src/core/schema';
 
@@ -119,7 +119,7 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Met | Fixture. | docs/TASK_BOARD.md |')
       .replace('| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Met | Fixture. | docs/TASK_BOARD.md |')
       .replace('| TBD | Yes | Not Run | TBD |', '| Fixture | Yes | Passed | Fixture. |')
-      .replace('| N/A | TBD |', '| src/task/task-close.ts | Fixture. |')
+      .replace('| N/A | TBD |', '| src/task/close/proof.ts | Fixture. |')
       .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Deferred | docs/TASK_BOARD.md |'),
     'utf8'
   );

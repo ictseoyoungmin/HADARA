@@ -76,7 +76,6 @@ describe('init profiles', () => {
       'docs/TASK_WORKFLOW_COMMANDS.md',
       'docs/DOC_REGISTRY.md',
       'docs/DEVELOPMENT_SLICES.md',
-      'docs/TEST_STRATEGY.md',
       'docs/SECURITY_MODEL.md',
       'docs/REFACTOR_LOG.md',
       'HERMES.md',
@@ -160,7 +159,7 @@ describe('init profiles', () => {
     expect(agents).toContain('Current human or reviewer instructions override persisted `Next Recommended Step`');
     expect(agents).toContain('Report it and stop; do not run `task status` merely to confirm close');
     expect(agents).not.toContain('hadara task lifecycle --task T-XXXX --json');
-    expect(agents).not.toContain('hadara task finalize --task T-XXXX --json');
+    expect(agents).toContain('A successful `task close` result with `closed-valid` is terminal');
     expect(agents).not.toContain('hadara context pack --task T-XXXX --json');
     expect(agents).not.toContain('## Default Agent Loop');
 

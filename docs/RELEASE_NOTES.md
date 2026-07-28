@@ -116,7 +116,7 @@ Highlights:
 - Cleans up fresh-project onboarding:
   - stale bootstrap next-work is retired after the first close;
   - generated docs explain that project-owned `docs/` files should stay current as work changes their subject;
-  - optional documents are added with `hadara docs add <architecture|decisions|roadmap|security-model|test-strategy|agent-guide>` instead of expanding init profiles.
+  - optional documents are added with `hadara docs add <architecture|decisions|roadmap|security-model|agent-guide>` instead of expanding init profiles.
 - Serializes task id allocation and managed Task Board writes so external agents may request task creation concurrently while HADARA applies the actual write safely.
 - Splits HADARA-dev Docker helper behavior:
   - `npm run dev:docker-sync-build` is a fast minimal build/dist-refresh path with stage timings;
@@ -147,7 +147,7 @@ Highlights:
 
 - Validates the published rc.0 package through multi-scenario installed-package dogfood, including delegated toy projects and a larger Quant Battle Arena planning/development scenario.
 - Serializes task creation allocation and managed Task Board writes so multiple external agents can request capsules in parallel while HADARA applies the actual id allocation and board write safely.
-- Improves first-user onboarding docs by keeping init scaffolds minimal and adding `hadara docs add <architecture|decisions|roadmap|security-model|test-strategy|agent-guide>` for optional project-owned docs.
+- Improves first-user onboarding docs by keeping init scaffolds minimal and adding `hadara docs add <architecture|decisions|roadmap|security-model|agent-guide>` for optional project-owned docs.
 - Updates generated workflow/AGENTS guidance so agents must keep generated/project-owned `docs/` files current when a task changes their subject, while still allowing direct Markdown authoring plus docs-registry registration.
 - Splits HADARA-dev Docker helper behavior:
   - `npm run dev:docker-sync-build` now uses a fast minimal build workspace, refreshes `dist`, and prints stage timings.

@@ -139,8 +139,7 @@ function hadaraCommand(command: string): string {
 function normalizeUserCommand(command: string): string {
   return command
     .replace(/^node dist\/cli\/main\.js\s+/, 'hadara ')
-    .replace(/^dist\/cli\/main\.js\s+/, 'hadara ')
-    .replace(/^hadara task ready --task ([^\s]+) --level done --json$/, 'hadara task status --task $1 --detail full --json');
+    .replace(/^dist\/cli\/main\.js\s+/, 'hadara ');
 }
 
 export function buildSessionStartReport(input: BuildSessionStartReportOptions): SessionStartReport {

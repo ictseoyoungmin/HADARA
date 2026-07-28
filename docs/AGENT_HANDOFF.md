@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0719 Journal Task Close Transaction Writes | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0721 Harden Close Journal And Measurement Continuations | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0715 is closed-valid. The follow-up hardening gaps after T-0713/T-0714 are now fixed: dist-sync refuses delete/create transitions, unreadable init descendant subtrees fail closed, task-local and shared HANDOFF evidence refs are linted for real existence, T-0713's fake evidence ids are repaired, and new rows on extended v1 Task Boards preserve the extra header width. Keep T-0712 RF-1 live in continuation context: the archived Init v1 frozen-spec authority question is still unresolved for the remaining Init v1 capsules and should stay visible in current routing.
+T-0721 completed the requested task-close refactor. Current `task close` internals live under `src/task/close/`, the public close transaction schema is `hadara.task.close.v3`, legacy finish/finalize/ready source files, schemas, and dedicated tests are removed, and current `docs/TEST_STRATEGY.md` source/test references are gone. Final validation passed with source typecheck, build, full unit, and focused close/docs cleanup tests. Keep T-0721 RF-1 visible: `proof.ts` still owns proof/audit/source implementation behind the requested facade files, and deeper physical extraction should be a separate behavior-preserving task only if needed.
 
 ## Previous Handoff
 

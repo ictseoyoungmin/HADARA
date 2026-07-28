@@ -86,7 +86,7 @@ describe('Phase 7.3 docs registry', () => {
       expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'])
     );
     expect(readRegistry(standard).documents.map((doc) => doc.path)).not.toEqual(
-      expect.arrayContaining(['docs/DEVELOPMENT_SLICES.md', 'docs/TEST_STRATEGY.md', 'docs/SECURITY_MODEL.md'])
+      expect.arrayContaining(['docs/DEVELOPMENT_SLICES.md', 'docs/SECURITY_MODEL.md'])
     );
     expect(readRegistry(governed).documents.map((doc) => doc.path)).toEqual(
       expect.arrayContaining(['docs/AGENT_HANDOFF.md'])

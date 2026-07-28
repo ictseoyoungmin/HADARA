@@ -29,9 +29,9 @@ describe('task workflow command semantics docs', () => {
       expect(readme).toContain(command);
     }
 
-    expect(workflow).toContain('The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013)');
-    expect(hadaraWorkflow).toContain('Standalone low-level lifecycle command surfaces');
-    expect(readme).toContain('Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013)');
+    expect(workflow).toContain('`task close --json` is the ordinary guarded close transaction.');
+    expect(hadaraWorkflow).toContain('Use `task close --json` for the ordinary guarded close path.');
+    expect(readme).toContain('Use `task close --task T-XXXX --json` for the default proof-last close transaction.');
 
     for (const doc of [workflow, hadaraWorkflow, readme]) {
       expect(doc.indexOf('hadara task close --task T-XXXX --dry-run --json')).toBeLessThan(doc.indexOf('hadara task close --task T-XXXX --execute --plan-hash'));
@@ -45,30 +45,23 @@ describe('task workflow command semantics docs', () => {
     const contract = read('docs/CLI_JSON_CONTRACT.md');
 
     for (const command of [
-      'task next',
       'task status',
       'evidence add-command',
-      'task lifecycle',
-      'task ready',
-      'task finish',
       'task close',
-      'task audit-close',
     ]) {
       expect(workflow).toContain(command);
       expect(contract).toContain(command);
     }
 
     expect(workflow).toContain('| `hadara task status --json` | Select or inspect work through compact focused reads/edits. `--detail full` exposes the complete v2 report. | Read-only report. | No. |');
-    expect(workflow).toContain('`task next` has been fully removed from public routing; use `task status --json` for next-work selection');
+    expect(workflow).toContain('`task status` is the operator cockpit for next-work selection and selected-task guidance.');
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Fast phase-aware operator cockpit for one task. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. |');
-    expect(workflow).toContain('| `hadara task finish ...` | Removed from public routing; use `task close --task T-XXXX --json` for the guarded finish/close path. | Not routed. | No. |');
-    expect(workflow).toContain('| `hadara task ready ...` | Removed from public routing; readiness lives in `task close --dry-run` and `task status --detail full`. | Not routed. | No. |');
     expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --plan-hash <hash> --json` | Execute a human-reviewed close plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through bounded task/status/evidence write boundaries. |');
-    expect(workflow).toContain('Audit-contract migration note');
-    expect(contractRemovedNote(read('docs/CLI_JSON_CONTRACT.md'))).toBe(true);
+    expect(contract).toContain('hadara.task.close.v3');
+    expect(contract).toContain('source.closePlan');
     expect(workflow).toContain('`task status` is an operator cockpit; `ok: true` means report generation succeeded.');
-    expect(workflow).toContain('`handoff suggest` is fully removed from public routing.');
+    expect(workflow).toContain('No public lifecycle step command is required for ordinary close.');
     expect(workflow).toContain('In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof');
     expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task close --json`.');
     expect(workflow).toContain('Make those edits before task close');
@@ -105,7 +98,7 @@ describe('task workflow command semantics docs', () => {
     expect(contract).toContain('| `task status --json` | `hadara.task.status.summary.v1` | Compact adaptive lifecycle ingress with focused reads/edits and one next action.');
     expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.status.summary.v1` | Read-only compact selected-task cockpit with focused reads/edits.');
     expect(contract).toContain('| `task close --task T-XXXX --json` | `hadara.task.close.summary.v1` | Compact result of the default proof-last close transaction.');
-    expect(contract).not.toContain('| `task finalize --task T-XXXX --json` | `hadara.task.finalize.v1` |');
+    expect(contract).toContain('| `task close --task T-XXXX --json` | `hadara.task.close.summary.v1` | Compact result of the default proof-last close transaction.');
   });
 
   it('registers task workflow command guidance as required reading', () => {
@@ -143,7 +136,3 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');
   });
 });
-
-function contractRemovedNote(contract: string): boolean {
-  return contract.includes('do not have a stable JSON response contract') && contract.includes('state.closeState');
-}

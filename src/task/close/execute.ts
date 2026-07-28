@@ -1,12 +1,12 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { HadaraActorContext } from '../core/actor-context';
-import type { HadaraNextAction } from '../core/next-action';
-import { ensureDir } from '../core/fs';
-import { startMonotonicTimer } from '../core/timing';
-import { createReviewedTaskFinalizePlan, createTaskFinalizeReport, didFinalizeExecutedStepMutate, formatTaskFinalizeReport, type TaskFinalizeExecutedStep, type TaskFinalizeOptions, type TaskFinalizeProgressEvent, type TaskFinalizeReport, type TaskFinalizeStepId } from './task-finalize';
-import { defaultTaskLifecycleActor } from './lifecycle-next-actions';
+import type { HadaraActorContext } from '../../core/actor-context';
+import type { HadaraNextAction } from '../../core/next-action';
+import { ensureDir } from '../../core/fs';
+import { startMonotonicTimer } from '../../core/timing';
+import { createReviewedTaskClosePlan, createTaskClosePlanReport, didClosePlanExecutedStepMutate, formatTaskClosePlanReport, type TaskClosePlanExecutedStep, type TaskClosePlanOptions, type TaskClosePlanProgressEvent, type TaskClosePlanReport, type TaskClosePlanStepId } from './plan';
+import { defaultTaskLifecycleActor } from '../lifecycle-next-actions';
 
 export type TaskCloseTransactionMode = 'dry-run' | 'execute' | 'execute-refused';
 
@@ -14,9 +14,9 @@ export interface TaskCloseTransactionOptions {
   dryRun?: boolean;
   planHash?: string;
   actor?: HadaraActorContext;
-  onProgress?: (event: TaskFinalizeProgressEvent) => void;
+  onProgress?: (event: TaskClosePlanProgressEvent) => void;
   lockTimeoutMs?: number;
-  onAutoReview?: (review: TaskFinalizeReport) => void;
+  onAutoReview?: (review: TaskClosePlanReport) => void;
 }
 
 const TASK_CLOSE_LOCK_STALE_MS = 5 * 60 * 1000;
@@ -50,6 +50,7 @@ export interface TaskCloseOperationState {
     closeProofAppended: boolean;
     idempotentNoop: boolean;
   };
+  attempts?: TaskCloseOperationAttempt[];
   path: string;
   persisted: boolean;
   resumedFromOperation?: boolean;
@@ -57,29 +58,45 @@ export interface TaskCloseOperationState {
   updatedAt: string;
 }
 
+export interface TaskCloseOperationAttempt {
+  attemptNumber: number;
+  startedAt: string;
+  completedAt?: string;
+  phase: TaskCloseOperationPhase | 'applying';
+  stepJournal: TaskCloseOperationStepJournalEntry[];
+  mutationSummary: {
+    executedWrites: number;
+    closeProofAppended: boolean;
+    idempotentNoop: boolean;
+  };
+}
+
 export interface TaskCloseOperationStepJournalEntry {
-  id: TaskFinalizeStepId;
-  status: 'executed' | 'satisfied' | 'blocked' | 'skipped';
+  seq: number;
+  step: TaskClosePlanStepId;
+  phase: 'intent' | 'outcome';
+  status: 'start' | 'executed' | 'satisfied' | 'blocked' | 'skipped';
   writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
   writeOutcome?: 'appended' | 'existing-noop' | 'blocked';
   mutated: boolean;
+  at: string;
 }
 
 export interface TaskCloseTransactionReport {
-  schemaVersion: 'hadara.task.close.v2';
+  schemaVersion: 'hadara.task.close.v3';
   command: 'task.close';
   ok: boolean;
   mode: TaskCloseTransactionMode;
   taskId: string;
   generatedAt: string;
   actor: HadaraActorContext;
-  closeState: TaskFinalizeReport['state'];
-  planStatus: TaskFinalizeReport['planStatus'];
+  closeState: TaskClosePlanReport['state'];
+  planStatus: TaskClosePlanReport['planStatus'];
   terminal: boolean;
   operatorGuidance: string;
   readOnly: boolean;
   transaction: {
-    strategy: 'finalize-auto' | 'finalize-reviewed-plan' | 'review-only';
+    strategy: 'close-auto' | 'close-reviewed-plan' | 'review-only';
     internalReview: boolean;
     planHash?: string;
     proofLast: true;
@@ -103,10 +120,10 @@ export interface TaskCloseTransactionReport {
   primaryNextAction?: HadaraNextAction;
   nextActions: HadaraNextAction[];
   source: {
-    finalize: TaskFinalizeReport;
+    closePlan: TaskClosePlanReport;
   };
   diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
-  issues: TaskFinalizeReport['issues'];
+  issues: TaskClosePlanReport['issues'];
 }
 
 export function createTaskCloseTransactionReport(
@@ -117,7 +134,7 @@ export function createTaskCloseTransactionReport(
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const run = (): TaskCloseTransactionReport => {
     if (options.dryRun) {
-      return fromFinalizeReport(projectRoot, taskId, createTaskFinalizeReport(projectRoot, taskId, { actor }), {
+      return fromClosePlanReport(projectRoot, taskId, createTaskClosePlanReport(projectRoot, taskId, { actor }), {
         mode: 'dry-run',
         strategy: 'review-only',
         internalReview: false
@@ -125,39 +142,39 @@ export function createTaskCloseTransactionReport(
     }
 
     let operation: TaskCloseOperationState;
-    const progressWrapper = (event: TaskFinalizeProgressEvent): void => {
-      if (event.phase === 'executed' || event.phase === 'satisfied' || event.phase === 'blocked') {
+    const progressWrapper = (event: TaskClosePlanProgressEvent): void => {
+      if (event.step !== 'refresh') {
         operation = persistCloseOperation(projectRoot, updateCloseOperationFromProgress(operation, event));
       }
       options.onProgress?.(event);
     };
-    const finalizeOptions: TaskFinalizeOptions = {
+    const closePlanOptions: TaskClosePlanOptions = {
       executeRequested: true,
       actor,
       recordReadinessEvidence: true,
       onProgress: progressWrapper,
       onAutoReview: options.onAutoReview
     };
-    const strategy = options.planHash ? 'finalize-reviewed-plan' : 'finalize-auto';
-    const reviewedPlan = options.planHash ? undefined : createReviewedTaskFinalizePlan(projectRoot, taskId, actor);
+    const strategy = options.planHash ? 'close-reviewed-plan' : 'close-auto';
+    const reviewedPlan = options.planHash ? undefined : createReviewedTaskClosePlan(projectRoot, taskId, actor);
     if (options.planHash) {
-      finalizeOptions.planHash = options.planHash;
+      closePlanOptions.planHash = options.planHash;
     } else {
-      finalizeOptions.auto = true;
-      finalizeOptions.reviewedPlan = reviewedPlan;
+      closePlanOptions.auto = true;
+      closePlanOptions.reviewedPlan = reviewedPlan;
     }
     const operationPlanHash = options.planHash ?? reviewedPlan?.planHash;
     operation = createCloseOperation(projectRoot, taskId, operationPlanHash ?? hashObject({ taskId, phase: 'applying' }), 'applying');
     operation = persistCloseOperation(projectRoot, operation);
-    const finalize = createTaskFinalizeReport(projectRoot, taskId, finalizeOptions);
-    const updatedOperation = updateCloseOperationFromFinalize(projectRoot, operation, finalize);
-    if (finalize.ok || countMutatingExecutedSteps(finalize.execution?.executedSteps ?? []) === 0) {
+    const closePlan = createTaskClosePlanReport(projectRoot, taskId, closePlanOptions);
+    const updatedOperation = updateCloseOperationFromClosePlan(projectRoot, operation, closePlan);
+    if (closePlan.ok || countMutatingExecutedSteps(closePlan.execution?.executedSteps ?? []) === 0) {
       removeCloseOperation(projectRoot, operation.path);
     }
-    const report = fromFinalizeReport(projectRoot, taskId, finalize, {
-      mode: finalize.mode === 'execute-refused' ? 'execute-refused' : finalize.readOnly ? 'dry-run' : 'execute',
+    const report = fromClosePlanReport(projectRoot, taskId, closePlan, {
+      mode: closePlan.mode === 'execute-refused' ? 'execute-refused' : closePlan.readOnly ? 'dry-run' : 'execute',
       strategy,
-      internalReview: strategy === 'finalize-auto',
+      internalReview: strategy === 'close-auto',
       operation: updatedOperation
     });
     return report;
@@ -190,14 +207,14 @@ export function formatTaskCloseTransactionReport(
     lines.push('', 'Issues:');
     for (const issue of report.issues) lines.push(`- [${issue.severity}] ${issue.code}: ${issue.message}`);
   }
-  if (options.detail === 'full') lines.push('', 'Finalize source:', formatTaskFinalizeReport(report.source.finalize));
+  if (options.detail === 'full') lines.push('', 'Close plan source:', formatTaskClosePlanReport(report.source.closePlan));
   return lines.join('\n');
 }
 
-function fromFinalizeReport(
+function fromClosePlanReport(
   projectRoot: string,
   taskId: string,
-  finalize: TaskFinalizeReport,
+  closePlan: TaskClosePlanReport,
   options: {
     mode: TaskCloseTransactionMode;
     strategy: TaskCloseTransactionReport['transaction']['strategy'];
@@ -206,33 +223,33 @@ function fromFinalizeReport(
     operation?: TaskCloseOperationState;
   }
 ): TaskCloseTransactionReport {
-  const executedSteps = finalize.execution?.executedSteps ?? [];
+  const executedSteps = closePlan.execution?.executedSteps ?? [];
   const executedWrites = countMutatingExecutedSteps(executedSteps);
   const closeProofAppended = executedSteps.some(
     (step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended'
   );
-  const idempotentNoop = finalize.ok && finalize.state === 'closed-valid' && executedWrites === 0 && finalize.pendingWrites.length === 0;
-  const recoveryAction = finalize.ok ? undefined : normalizeCloseNextAction(taskId, finalize.primaryNextAction ?? finalize.nextActions.find((action) => action.required));
-  const transactionPlanHash = finalize.execution?.requestedPlanHash ?? finalize.planHash ?? hashObject({ taskId, state: finalize.state, issues: finalize.issues });
-  const nextActions = finalize.ok
+  const idempotentNoop = closePlan.ok && closePlan.state === 'closed-valid' && executedWrites === 0 && closePlan.pendingWrites.length === 0;
+  const recoveryAction = closePlan.ok ? undefined : normalizeCloseNextAction(taskId, closePlan.primaryNextAction ?? closePlan.nextActions.find((action) => action.required));
+  const transactionPlanHash = closePlan.execution?.requestedPlanHash ?? closePlan.planHash ?? hashObject({ taskId, state: closePlan.state, issues: closePlan.issues });
+  const nextActions = closePlan.ok
     ? []
-    : finalize.nextActions.map((action) => normalizeCloseNextAction(taskId, action) ?? action);
+    : closePlan.nextActions.map((action) => normalizeCloseNextAction(taskId, action) ?? action);
 
   return {
-    schemaVersion: 'hadara.task.close.v2',
+    schemaVersion: 'hadara.task.close.v3',
     command: 'task.close',
-    ok: finalize.ok,
+    ok: closePlan.ok,
     mode: options.mode,
     taskId,
-    generatedAt: finalize.generatedAt,
-    actor: finalize.actor,
-    closeState: finalize.state,
-    planStatus: finalize.planStatus,
-    terminal: finalize.ok && finalize.state === 'closed-valid',
-    operatorGuidance: finalize.ok && finalize.state === 'closed-valid'
+    generatedAt: closePlan.generatedAt,
+    actor: closePlan.actor,
+    closeState: closePlan.state,
+    planStatus: closePlan.planStatus,
+    terminal: closePlan.ok && closePlan.state === 'closed-valid',
+    operatorGuidance: closePlan.ok && closePlan.state === 'closed-valid'
       ? 'Close is complete. Report closed-valid and stop; do not run task status to reconfirm or discover follow-up work unless the current human/reviewer instruction explicitly requires continuation.'
       : 'Resolve the reported blocker or recovery action before treating this capsule as closed.',
-    readOnly: finalize.readOnly,
+    readOnly: closePlan.readOnly,
     transaction: {
       strategy: options.strategy,
       internalReview: options.internalReview,
@@ -244,17 +261,17 @@ function fromFinalizeReport(
       ...(options.operation ? { operation: normalizeOperationForReport(projectRoot, options.operation) } : {})
     },
     writeSummary: {
-      plannedWrites: finalize.pendingWrites.length,
+      plannedWrites: closePlan.pendingWrites.length,
       executedWrites,
       executedSteps: executedSteps.map((step) => step.id),
-      ...(finalize.execution?.stoppedAt ? { stoppedAt: finalize.execution.stoppedAt } : {}),
+      ...(closePlan.execution?.stoppedAt ? { stoppedAt: closePlan.execution.stoppedAt } : {}),
       closeProofAppended,
       idempotentNoop
     },
     ...(recoveryAction ? { recovery: { required: true, action: recoveryAction }, primaryNextAction: recoveryAction } : {}),
     nextActions,
-    source: { finalize },
-    issues: finalize.issues
+    source: { closePlan },
+    issues: closePlan.issues
   };
 }
 
@@ -375,10 +392,10 @@ function createTaskCloseLockBlockedReport(
   locks: TaskCloseTransactionLockDiagnostics[]
 ): TaskCloseTransactionReport {
   const actor = defaultTaskLifecycleActor();
-  const fallback = createTaskFinalizeReport(projectRoot, taskId, { actor });
-  const report = fromFinalizeReport(projectRoot, taskId, fallback, {
+  const fallback = createTaskClosePlanReport(projectRoot, taskId, { actor });
+  const report = fromClosePlanReport(projectRoot, taskId, fallback, {
     mode: 'execute-refused',
-    strategy: 'finalize-auto',
+    strategy: 'close-auto',
     internalReview: true,
     locks
   });
@@ -402,7 +419,7 @@ function createTaskCloseLockBlockedReport(
         id: 'task-close-lock-retry',
         required: true,
         command: `hadara task close --task ${taskId} --json`,
-        summary: `Task close could not acquire the ${error.lockName} lock. Retry after the active close operation finishes, or inspect stale local lock metadata if no close is running.`,
+        summary: `Task close could not acquire the ${error.lockName} lock. Retry after the active close operation bookkeepinges, or inspect stale local lock metadata if no close is running.`,
         writeBoundary: 'task-close-transaction',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -413,7 +430,7 @@ function createTaskCloseLockBlockedReport(
       id: 'task-close-lock-retry',
       required: true,
       command: `hadara task close --task ${taskId} --json`,
-      summary: `Task close could not acquire the ${error.lockName} lock. Retry after the active close operation finishes, or inspect stale local lock metadata if no close is running.`,
+      summary: `Task close could not acquire the ${error.lockName} lock. Retry after the active close operation bookkeepinges, or inspect stale local lock metadata if no close is running.`,
       writeBoundary: 'task-close-transaction',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
@@ -500,6 +517,18 @@ function createCloseOperation(projectRoot: string, taskId: string, planHash: str
   const reusePrevious = previous?.planHash === planHash;
   const operationId = hashObject({ taskId, planHash }).replace(/^sha256:/, '');
   const now = new Date().toISOString();
+  const previousAttempts = reusePrevious ? previous.attempts ?? [] : [];
+  const nextAttempt: TaskCloseOperationAttempt = {
+    attemptNumber: previousAttempts.length + 1,
+    startedAt: now,
+    phase: 'applying',
+    stepJournal: [],
+    mutationSummary: {
+      executedWrites: 0,
+      closeProofAppended: false,
+      idempotentNoop: false
+    }
+  };
   return {
     operationId: reusePrevious ? previous.operationId : operationId,
     taskId,
@@ -507,7 +536,10 @@ function createCloseOperation(projectRoot: string, taskId: string, planHash: str
     phase,
     planHash,
     completedSteps: reusePrevious ? previous.completedSteps : [],
-    pendingSteps: reusePrevious ? previous.pendingSteps : ['finish', 'ready', 'close', 'audit-close'],
+    pendingSteps: reusePrevious ? previous.pendingSteps : ['bookkeeping', 'ready', 'close', 'audit-close'],
+    stepJournal: [],
+    mutationSummary: nextAttempt.mutationSummary,
+    attempts: [...previousAttempts, nextAttempt],
     path: toPortablePath(path.join('.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`)),
     persisted: false,
     ...(reusePrevious ? { resumedFromOperation: true } : {}),
@@ -535,43 +567,47 @@ function persistCloseOperation(projectRoot: string, operation: TaskCloseOperatio
   return persisted;
 }
 
-function updateCloseOperationFromFinalize(projectRoot: string, operation: TaskCloseOperationState, finalize: TaskFinalizeReport): TaskCloseOperationState {
-  const completedSteps = (finalize.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' || step.status === 'satisfied').map((step) => step.id);
-  const allSteps: TaskFinalizeStepId[] = ['finish', 'ready', 'close', 'audit-close'];
+function updateCloseOperationFromClosePlan(projectRoot: string, operation: TaskCloseOperationState, closePlan: TaskClosePlanReport): TaskCloseOperationState {
+  const completedSteps = (closePlan.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' || step.status === 'satisfied').map((step) => step.id);
+  const allSteps: TaskClosePlanStepId[] = ['bookkeeping', 'ready', 'close', 'audit-close'];
   const pendingSteps = allSteps.filter((step) => !completedSteps.includes(step));
-  const stepJournal = createOperationStepJournal(finalize.execution?.executedSteps ?? []);
-  const executedWrites = countMutatingExecutedSteps(finalize.execution?.executedSteps ?? []);
-  const closeProofAppended = (finalize.execution?.executedSteps ?? []).some(
-    (step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended'
-  );
-  const idempotentNoop = finalize.ok && finalize.state === 'closed-valid' && executedWrites === 0 && finalize.pendingWrites.length === 0;
-  const phase: TaskCloseOperationPhase = finalize.ok ? 'closed-valid' : executedWrites > 0 ? 'recovery-required' : 'blocked';
+  const attempts = syncOperationAttemptsFromClosePlan(operation.attempts ?? [], closePlan);
+  const activeAttempt = attempts.at(-1);
+  const executedWrites = activeAttempt?.mutationSummary.executedWrites ?? 0;
+  const closeProofAppended = activeAttempt?.mutationSummary.closeProofAppended ?? false;
+  const idempotentNoop = closePlan.ok && closePlan.state === 'closed-valid' && executedWrites === 0 && closePlan.pendingWrites.length === 0;
+  const phase: TaskCloseOperationPhase = closePlan.ok ? 'closed-valid' : executedWrites > 0 ? 'recovery-required' : 'blocked';
   const updated = {
     ...operation,
     phase,
     completedSteps,
     pendingSteps,
-    stepJournal,
+    stepJournal: activeAttempt?.stepJournal ?? [],
     mutationSummary: {
       executedWrites,
       closeProofAppended,
       idempotentNoop
     },
-    persisted: executedWrites > 0 && !finalize.ok,
+    attempts: activeAttempt
+      ? [...attempts.slice(0, -1), { ...activeAttempt, completedAt: new Date().toISOString(), phase, mutationSummary: { ...activeAttempt.mutationSummary, idempotentNoop } }]
+      : attempts,
+    persisted: executedWrites > 0 && !closePlan.ok,
     updatedAt: new Date().toISOString()
   };
   if (updated.persisted) return persistCloseOperation(projectRoot, updated);
   return updated;
 }
 
-function updateCloseOperationFromProgress(operation: TaskCloseOperationState, event: TaskFinalizeProgressEvent): TaskCloseOperationState {
-  const allSteps: TaskFinalizeStepId[] = ['finish', 'ready', 'close', 'audit-close'];
+function updateCloseOperationFromProgress(operation: TaskCloseOperationState, event: TaskClosePlanProgressEvent): TaskCloseOperationState {
+  const allSteps: TaskClosePlanStepId[] = ['bookkeeping', 'ready', 'close', 'audit-close'];
   const completed = new Set(operation.completedSteps);
   if (event.phase === 'executed' || event.phase === 'satisfied') completed.add(event.step);
   const completedSteps = allSteps.filter((step) => completed.has(step));
-  const stepJournal = mergeProgressIntoStepJournal(operation.stepJournal ?? [], event);
-  const executedWrites = stepJournal.filter((step) => step.mutated).length;
-  const closeProofAppended = stepJournal.some((step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended');
+  const attempts = appendProgressToOperationAttempts(operation.attempts ?? [], event);
+  const activeAttempt = attempts.at(-1);
+  const stepJournal = activeAttempt?.stepJournal ?? [];
+  const executedWrites = activeAttempt?.mutationSummary.executedWrites ?? 0;
+  const closeProofAppended = activeAttempt?.mutationSummary.closeProofAppended ?? false;
   return {
     ...operation,
     phase: event.phase === 'blocked' ? (executedWrites > 0 ? 'recovery-required' : 'blocked') : 'applying',
@@ -581,42 +617,127 @@ function updateCloseOperationFromProgress(operation: TaskCloseOperationState, ev
     mutationSummary: {
       executedWrites,
       closeProofAppended,
-      idempotentNoop: executedWrites === 0 && event.phase !== 'blocked'
+      idempotentNoop: executedWrites === 0 && event.phase !== 'blocked' && stepJournal.some((entry) => entry.phase === 'outcome')
     },
+    attempts,
     persisted: true,
     updatedAt: new Date().toISOString()
   };
 }
 
-function countMutatingExecutedSteps(steps: TaskFinalizeExecutedStep[]): number {
-  return steps.filter((step) => didFinalizeExecutedStepMutate(step)).length;
+function countMutatingExecutedSteps(steps: TaskClosePlanExecutedStep[]): number {
+  return steps.filter((step) => didClosePlanExecutedStepMutate(step)).length;
 }
 
-function createOperationStepJournal(steps: TaskFinalizeExecutedStep[]): TaskCloseOperationStepJournalEntry[] {
-  return steps.map((step) => ({
-    id: step.id,
+function createOperationStepJournal(steps: TaskClosePlanExecutedStep[]): TaskCloseOperationStepJournalEntry[] {
+  const now = new Date().toISOString();
+  return steps.map((step, index) => ({
+    seq: index + 1,
+    step: step.id,
+    phase: 'outcome',
     status: step.status,
     writeBoundary: step.writeBoundary,
     ...(step.writeOutcome ? { writeOutcome: step.writeOutcome } : {}),
-    mutated: didFinalizeExecutedStepMutate(step)
+    mutated: didClosePlanExecutedStepMutate(step),
+    at: now
   }));
 }
 
-function mergeProgressIntoStepJournal(
-  current: TaskCloseOperationStepJournalEntry[],
-  event: TaskFinalizeProgressEvent
+function appendProgressToOperationAttempts(
+  attempts: TaskCloseOperationAttempt[],
+  event: TaskClosePlanProgressEvent
+): TaskCloseOperationAttempt[] {
+  if (event.step === 'refresh') return attempts;
+  const current = attempts.at(-1);
+  if (!current) return attempts;
+  const phase: TaskCloseOperationStepJournalEntry['phase'] = event.phase === 'start' ? 'intent' : 'outcome';
+  const nextStepJournal = [
+    ...current.stepJournal,
+    {
+      seq: current.stepJournal.length + 1,
+      step: event.step,
+      phase,
+      status: event.phase,
+      writeBoundary: event.writeBoundary ?? 'read-only',
+      ...(event.writeOutcome ? { writeOutcome: event.writeOutcome } : {}),
+      mutated: event.mutated ?? false,
+      at: new Date().toISOString()
+    }
+  ];
+  const mutationSummary = summarizeAttemptJournal(nextStepJournal, event.phase === 'blocked');
+  const updatedCurrent: TaskCloseOperationAttempt = {
+    ...current,
+    phase: event.phase === 'blocked' ? (mutationSummary.executedWrites > 0 ? 'recovery-required' : 'blocked') : 'applying',
+    stepJournal: nextStepJournal,
+    mutationSummary
+  };
+  return [...attempts.slice(0, -1), updatedCurrent];
+}
+
+function summarizeAttemptJournal(
+  journal: TaskCloseOperationStepJournalEntry[],
+  blocked = false
+): TaskCloseOperationAttempt['mutationSummary'] {
+  const latestOutcomes = new Map<TaskClosePlanStepId, TaskCloseOperationStepJournalEntry>();
+  for (const entry of journal) {
+    if (entry.phase !== 'outcome') continue;
+    latestOutcomes.set(entry.step, entry);
+  }
+  const outcomes = [...latestOutcomes.values()];
+  const executedWrites = outcomes.filter((entry) => entry.mutated).length;
+  return {
+    executedWrites,
+    closeProofAppended: outcomes.some((entry) => entry.step === 'close' && entry.status === 'executed' && entry.writeOutcome === 'appended'),
+    idempotentNoop: !blocked && executedWrites === 0 && outcomes.length > 0
+  };
+}
+
+function syncOperationAttemptsFromClosePlan(
+  attempts: TaskCloseOperationAttempt[],
+  closePlan: TaskClosePlanReport
+): TaskCloseOperationAttempt[] {
+  const current = attempts.at(-1);
+  if (!current) return attempts;
+  const syncedJournal = syncOutcomeEntries(current.stepJournal, closePlan.execution?.executedSteps ?? []);
+  const updatedCurrent: TaskCloseOperationAttempt = {
+    ...current,
+    phase: closePlan.ok ? 'closed-valid' : summarizeAttemptJournal(syncedJournal).executedWrites > 0 ? 'recovery-required' : 'blocked',
+    stepJournal: syncedJournal,
+    mutationSummary: {
+      ...summarizeAttemptJournal(syncedJournal, !closePlan.ok),
+      idempotentNoop: closePlan.ok && closePlan.state === 'closed-valid' && countMutatingExecutedSteps(closePlan.execution?.executedSteps ?? []) === 0 && closePlan.pendingWrites.length === 0
+    }
+  };
+  return [...attempts.slice(0, -1), updatedCurrent];
+}
+
+function syncOutcomeEntries(
+  journal: TaskCloseOperationStepJournalEntry[],
+  steps: TaskClosePlanExecutedStep[]
 ): TaskCloseOperationStepJournalEntry[] {
-  if (event.step === 'refresh' || (event.phase !== 'executed' && event.phase !== 'satisfied' && event.phase !== 'blocked')) return current;
-  const next = current.filter((entry) => entry.id !== event.step);
-  next.push({
-    id: event.step,
-    status: event.phase,
-    writeBoundary: event.writeBoundary ?? 'read-only',
-    ...(event.writeOutcome ? { writeOutcome: event.writeOutcome } : {}),
-    mutated: event.mutated ?? false
-  });
-  const order: TaskFinalizeStepId[] = ['finish', 'ready', 'close', 'audit-close'];
-  return next.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  const next = [...journal];
+  for (const step of steps) {
+    const hasOutcome = next.some((entry) =>
+      entry.step === step.id &&
+      entry.phase === 'outcome' &&
+      entry.status === step.status &&
+      entry.writeBoundary === step.writeBoundary &&
+      entry.writeOutcome === step.writeOutcome &&
+      entry.mutated === didClosePlanExecutedStepMutate(step)
+    );
+    if (hasOutcome) continue;
+    next.push({
+      seq: next.length + 1,
+      step: step.id,
+      phase: 'outcome',
+      status: step.status,
+      writeBoundary: step.writeBoundary,
+      ...(step.writeOutcome ? { writeOutcome: step.writeOutcome } : {}),
+      mutated: didClosePlanExecutedStepMutate(step),
+      at: new Date().toISOString()
+    });
+  }
+  return next;
 }
 
 function removeCloseOperation(projectRoot: string, portablePath: string): void {
@@ -636,7 +757,7 @@ function normalizeOperationForReport(projectRoot: string, operation: TaskCloseOp
 }
 
 function isTaskCloseReport(value: unknown): value is TaskCloseTransactionReport {
-  return Boolean(value && typeof value === 'object' && (value as TaskCloseTransactionReport).schemaVersion === 'hadara.task.close.v2');
+  return Boolean(value && typeof value === 'object' && (value as TaskCloseTransactionReport).schemaVersion === 'hadara.task.close.v3');
 }
 
 function toPortablePath(value: string): string {
@@ -656,15 +777,15 @@ function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | und
   if (!action) return undefined;
   if (!action.command) return action;
   let command = action.command;
-  command = command.replace(`hadara task finalize --task ${taskId} --execute --auto --json`, `hadara task close --task ${taskId} --json`);
-  command = command.replace(`hadara task finalize --task ${taskId} --json`, `hadara task close --task ${taskId} --dry-run --json`);
-  command = command.replace(`hadara task finalize --task ${taskId} --execute --plan-hash`, `hadara task close --task ${taskId} --execute --plan-hash`);
+  command = command.replace(`hadara task close --task ${taskId} --execute --auto --json`, `hadara task close --task ${taskId} --json`);
+  command = command.replace(`hadara task close --task ${taskId} --json`, `hadara task close --task ${taskId} --dry-run --json`);
+  command = command.replace(`hadara task close --task ${taskId} --execute --plan-hash`, `hadara task close --task ${taskId} --execute --plan-hash`);
   const publicCloseWrite = /\bhadara\s+task\s+close\b/.test(command) && command.includes(taskId) && !command.includes('--dry-run');
   if (command === action.command && (!publicCloseWrite || action.writeBoundary === 'task-close-transaction')) return action;
   return {
     ...action,
     command,
-    summary: action.summary.replace(/\bfinalize\b/gi, 'task close'),
+    summary: action.summary.replace(/\bclosePlan\b/gi, 'task close'),
     ...(publicCloseWrite ? { writeBoundary: 'task-close-transaction' as const } : {})
   };
 }

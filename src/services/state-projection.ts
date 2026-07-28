@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
-import { createTaskCloseSourceReport } from '../task/task-close';
+import { createTaskCloseSourceReport } from '../task/close';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { parseEvidenceIndexFile } from './evidence-list';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';

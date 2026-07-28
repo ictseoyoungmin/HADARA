@@ -21,7 +21,7 @@ describe('Phase 7.4 managed sections', () => {
   it('parses valid markers and metadata', () => {
     const content = `# Doc\n\n${managedSectionBlock('task-board', {
       schema: 'hadara.managedSection.v1',
-      owner: 'task.finish',
+      owner: 'task.close',
       kind: 'markdown-table',
       mode: 'update-row',
       version: 1
@@ -33,7 +33,7 @@ describe('Phase 7.4 managed sections', () => {
     expect(parsed.sections).toHaveLength(1);
     expect(parsed.sections[0]).toMatchObject({
       id: 'task-board',
-      metadata: { owner: 'task.finish', kind: 'markdown-table', mode: 'update-row' },
+      metadata: { owner: 'task.close', kind: 'markdown-table', mode: 'update-row' },
       startLine: 3
     });
     expect(parsed.sections[0].sectionBeforeHash).toMatch(/^sha256:[a-f0-9]{64}$/);

@@ -29,6 +29,10 @@
         { "type": "null" }
       ]
     },
+    "continuations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/continuation" }
+    },
     "currentKnownProblems": {
       "type": "array",
       "items": {

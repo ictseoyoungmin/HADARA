@@ -16,7 +16,6 @@ export type DocumentKind =
   | 'workflow-guide'
   | 'architecture'
   | 'decision-log'
-  | 'test-strategy'
   | 'security-model'
   | 'roadmap'
   | 'release'
@@ -243,7 +242,6 @@ const VALID_KINDS: DocumentKind[] = [
   'workflow-guide',
   'architecture',
   'decision-log',
-  'test-strategy',
   'security-model',
   'roadmap',
   'release',

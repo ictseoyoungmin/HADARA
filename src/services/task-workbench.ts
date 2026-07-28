@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { withInvocationFsMemo } from '../core/invocation-fs-memo';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
-import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
-import { isTaskFinishResolvableBlocker } from '../task/task-finalize';
+import { createTaskCloseReport, TaskCloseIssue } from '../task/close';
+import { isCloseBookkeepingResolvableBlocker } from '../task/close';
 import { findTaskCapsule } from '../task/task-capsule';
 import { summarizeTask } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
@@ -22,8 +22,8 @@ type TaskStatusLoopPhase =
   | 'author-task'
   | 'implement'
   | 'validate-evidence'
-  | 'finalize-dry-run'
-  | 'finalize-execute'
+  | 'close-plan-dry-run'
+  | 'close-plan-execute'
   | 'closed-valid'
   | 'blocked';
 
@@ -291,7 +291,7 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
   const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, task.capsule, task.title);
   const useFullChecks = detail === 'full';
   const closePlan = useFullChecks ? createTaskCloseReport(projectRoot, taskId, 'dry-run') : null;
-  const closePlanIssues = closePlan?.issues.filter((issue) => !isTaskFinishResolvableBlocker(issue.code)) ?? [];
+  const closePlanIssues = closePlan?.issues.filter((issue) => !isCloseBookkeepingResolvableBlocker(issue.code)) ?? [];
   const docsDoctor = useFullChecks ? createDocsProtocolConsistencyReport(projectRoot, now) : null;
   const profileDoctor = useFullChecks ? createProfileProtocolConsistencyReport(projectRoot, now) : null;
   const currentReady = closePlan !== null && !closePlanIssues.some((issue) => issue.severity === 'error');
@@ -543,7 +543,7 @@ function buildFastWorkbenchNextActions(input: {
   if (input.closeEvidenceFound) {
     return [
       {
-        id: 'review-finalize-repair-plan',
+        id: 'review-close-plan-repair',
         kind: 'command',
         required: true,
         priority: 'now',
@@ -583,7 +583,7 @@ function buildFastWorkbenchNextActions(input: {
   }
   return [
     {
-      id: 'review-finalize-plan',
+      id: 'review-close-plan',
       kind: 'command',
       required: true,
       priority: 'now',
@@ -845,7 +845,7 @@ function buildTaskStatusLoopGuidance(
   }
   if (!input.closePlanEvaluated) {
     return {
-      phase: 'finalize-dry-run',
+      phase: 'close-plan-dry-run',
       summary: 'Fast task status skipped close-grade checks; review task close dry-run for ready, close, and audit planning.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       primaryNextAction,
@@ -854,7 +854,7 @@ function buildTaskStatusLoopGuidance(
   }
   if (input.closePlanOk) {
     return {
-      phase: input.taskStatus === 'Done' && input.taskBoardStatus === 'Done' ? 'finalize-execute' : 'finalize-dry-run',
+      phase: input.taskStatus === 'Done' && input.taskBoardStatus === 'Done' ? 'close-plan-execute' : 'close-plan-dry-run',
       summary: 'The close preflight is ready; run task close, or review task close dry-run output when an explicit plan hash is required.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       primaryNextAction,

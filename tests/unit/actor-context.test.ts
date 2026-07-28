@@ -58,14 +58,14 @@ describe('Phase 6 multi-agent command context contract', () => {
         generatedAt: '2026-06-05T00:00:00.000Z',
         affectedFiles: ['docs/AGENT_HANDOFF.md'],
         beforeHash: 'sha256:abc',
-        idempotencyKey: 'task-finish:T-0253'
+        idempotencyKey: 'task-close-bookkeeping:T-0253'
       })
     ).toEqual({
-      planId: 'plan_5eca49062c946701',
+      planId: 'plan_f0fdb914728c9a25',
       generatedAt: '2026-06-05T00:00:00.000Z',
       affectedFiles: ['docs/AGENT_HANDOFF.md'],
       beforeHash: 'sha256:abc',
-      idempotencyKey: 'task-finish:T-0253',
+      idempotencyKey: 'task-close-bookkeeping:T-0253',
       reviewed: false
     });
   });
@@ -73,7 +73,7 @@ describe('Phase 6 multi-agent command context contract', () => {
   it('defines next actions with actor-role and stale-plan metadata', () => {
     const nextAction: HadaraNextAction = {
       id: 'finish-first',
-      command: 'hadara task finish --task T-0253 --json',
+      command: 'hadara task close --task T-0253 --json',
       summary: 'Preview finish writes before done-level readiness.',
       required: true,
       writeBoundary: 'task-local',

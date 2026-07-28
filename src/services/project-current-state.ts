@@ -78,6 +78,7 @@ export interface ProjectCurrentState {
    * Absent/null must never be read as terminal; it means no continuation was declared.
    */
   continuation: ProjectContinuation | null;
+  continuations: ProjectContinuation[];
   currentKnownProblems: ProjectKnownProblem[];
   validationBaseline: {
     summary: string;
@@ -155,6 +156,7 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
     },
     nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
     continuation: null,
+    continuations: [],
     currentKnownProblems: [],
     validationBaseline: {
       summary: 'No validation baseline has been recorded yet.',
@@ -179,6 +181,7 @@ function canonicalProjectCurrentState(state: ProjectCurrentState): ProjectCurren
     nextWork: state.nextWork,
     nextOperatorIntent: state.nextOperatorIntent,
     continuation: state.continuation,
+    continuations: state.continuations,
     currentKnownProblems: state.currentKnownProblems,
     validationBaseline: state.validationBaseline
   };
@@ -238,7 +241,8 @@ function normalizeProjectCurrentState(value: unknown): unknown {
   return {
     ...state,
     latestCompletedTaskBasis: state.latestCompletedTaskBasis ?? 'highest-done-task-id',
-    continuation: state.continuation ?? null,
+    continuations: normalizeContinuations(state.continuations, state.continuation),
+    continuation: primaryContinuationFromBacklog(normalizeContinuations(state.continuations, state.continuation)),
     ...(state.nextWork === undefined && typeof state.nextOperatorIntent === 'string'
       ? { nextWork: nextWorkFromLegacyIntent(state.nextOperatorIntent) }
       : state.nextWork && typeof state.nextWork === 'object' && !('origin' in state.nextWork)
@@ -426,7 +430,10 @@ export function planCompletedProjectCurrentStateWrites(
   const continuationWrite = resolveCompletedTaskContinuationWrite(read.state, task, continuation);
   const continuationChanged =
     Object.prototype.hasOwnProperty.call(continuationWrite, 'continuation') &&
-    JSON.stringify(continuationWrite.continuation) !== JSON.stringify(read.state.continuation);
+    (
+      JSON.stringify(continuationWrite.continuation) !== JSON.stringify(read.state.continuation) ||
+      JSON.stringify(continuationWrite.continuations ?? read.state.continuations) !== JSON.stringify(read.state.continuations)
+    );
   if (
     read.state.latestCompletedTask?.id === latestCompletedTask.id &&
     read.state.activeTask?.id !== task.id &&
@@ -658,6 +665,7 @@ function validateProjectCurrentState(value: unknown): ProjectCurrentStateIssue[]
   if (!validNextWork(state.nextWork)) return issue('nextWork must be null or { title, state, operatorGuidance, createCommandAllowed }.');
   if (typeof state.nextOperatorIntent !== 'string' || !state.nextOperatorIntent.trim()) return issue('nextOperatorIntent must be a non-empty string.');
   if (!validContinuation(state.continuation)) return issue('continuation must be null or { disposition, kind, title, ... }.');
+  if (!Array.isArray(state.continuations) || !state.continuations.every(validContinuation)) return issue('continuations must be an array of valid continuation entries.');
   if (!Array.isArray(state.currentKnownProblems) || !state.currentKnownProblems.every(validProblem)) return issue('currentKnownProblems contains an invalid entry.');
   if (!state.validationBaseline || typeof state.validationBaseline.summary !== 'string' || !Array.isArray(state.validationBaseline.evidence) || !state.validationBaseline.evidence.every((item) => typeof item === 'string')) return issue('validationBaseline must contain summary and evidence strings.');
   return [];
@@ -776,13 +784,55 @@ export function continuationFromTaskHandoffStep(input: {
 }
 
 function resolveCompletedTaskContinuationWrite(
-  current: Pick<ProjectCurrentState, 'continuation'>,
+  current: Pick<ProjectCurrentState, 'continuation' | 'continuations'>,
   task: ProjectCurrentTaskRef,
   continuation?: ProjectContinuation | null
-): Partial<Pick<ProjectCurrentState, 'continuation'>> {
-  if (continuation !== undefined) return { continuation };
-  if (current.continuation?.source?.workId === task.id) return { continuation: null };
+): Partial<Pick<ProjectCurrentState, 'continuation' | 'continuations'>> {
+  const existing = normalizeContinuations(current.continuations, current.continuation);
+  const filtered = existing.filter((entry) => entry.source?.workId !== task.id);
+  if (continuation !== undefined) {
+    const merged = continuation ? [continuation, ...filtered] : filtered;
+    return {
+      continuation: primaryContinuationFromBacklog(merged),
+      continuations: dedupeContinuations(merged)
+    };
+  }
+  if (filtered.length !== existing.length || current.continuation?.source?.workId === task.id) {
+    return {
+      continuation: primaryContinuationFromBacklog(filtered),
+      continuations: dedupeContinuations(filtered)
+    };
+  }
   return {};
+}
+
+function normalizeContinuations(
+  continuations: ProjectContinuation[] | undefined,
+  continuation: ProjectContinuation | null | undefined
+): ProjectContinuation[] {
+  const backlog = Array.isArray(continuations) ? continuations.filter(validContinuation) as ProjectContinuation[] : [];
+  if (backlog.length === 0 && continuation) return [continuation];
+  if (!continuation) return dedupeContinuations(backlog);
+  return dedupeContinuations([continuation, ...backlog]);
+}
+
+function dedupeContinuations(entries: ProjectContinuation[]): ProjectContinuation[] {
+  const seen = new Set<string>();
+  const next: ProjectContinuation[] = [];
+  for (const entry of entries) {
+    const key = JSON.stringify(entry);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    next.push(entry);
+  }
+  return next;
+}
+
+function primaryContinuationFromBacklog(entries: ProjectContinuation[]): ProjectContinuation | null {
+  return entries.find((entry) => entry.disposition === 'actionable' || entry.disposition === 'waiting-for-operator')
+    ?? entries.find((entry) => entry.disposition === 'blocked' || entry.disposition === 'unresolved')
+    ?? entries[0]
+    ?? null;
 }
 
 function normalizeContinuationDisposition(value: string | undefined): ProjectContinuationDisposition | null {

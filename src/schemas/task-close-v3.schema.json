@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "hadara.task.close.v2",
-  "x-hadara-schema-id": "hadara.task.close.v2",
+  "$id": "hadara.task.close.v3",
+  "x-hadara-schema-id": "hadara.task.close.v3",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "required": ["schemaVersion", "command", "ok", "mode", "taskId", "generatedAt", "actor", "closeState", "planStatus", "readOnly", "transaction", "writeSummary", "source", "nextActions", "issues"],
   "properties": {
-    "schemaVersion": { "const": "hadara.task.close.v2" },
+    "schemaVersion": { "const": "hadara.task.close.v3" },
     "command": { "const": "task.close" },
     "ok": { "type": "boolean" },
     "mode": { "enum": ["dry-run", "execute", "execute-refused"] },
@@ -20,10 +20,10 @@
     "readOnly": { "type": "boolean" },
     "transaction": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": ["strategy", "internalReview", "planHash", "proofLast", "stalePlanGuard"],
       "properties": {
-        "strategy": { "enum": ["finalize-auto", "finalize-reviewed-plan", "review-only"] },
+        "strategy": { "enum": ["close-auto", "close-reviewed-plan", "review-only"] },
         "internalReview": { "type": "boolean" },
         "planHash": { "type": "string" },
         "proofLast": { "const": true },
@@ -57,7 +57,7 @@
         },
         "operation": {
           "type": "object",
-          "additionalProperties": true,
+          "additionalProperties": false,
           "required": ["operationId", "taskId", "idempotencyKey", "phase", "planHash", "completedSteps", "pendingSteps", "path", "persisted", "createdAt", "updatedAt"],
           "properties": {
             "operationId": { "type": "string" },
@@ -67,8 +67,51 @@
             "planHash": { "type": "string" },
             "completedSteps": { "type": "array", "items": { "type": "string" } },
             "pendingSteps": { "type": "array", "items": { "type": "string" } },
+            "stepJournal": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/operationJournalEntry" }
+            },
+            "mutationSummary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["executedWrites", "closeProofAppended", "idempotentNoop"],
+              "properties": {
+                "executedWrites": { "type": "number" },
+                "closeProofAppended": { "type": "boolean" },
+                "idempotentNoop": { "type": "boolean" }
+              }
+            },
+            "attempts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["attemptNumber", "startedAt", "phase", "stepJournal", "mutationSummary"],
+                "properties": {
+                  "attemptNumber": { "type": "integer", "minimum": 1 },
+                  "startedAt": { "type": "string" },
+                  "completedAt": { "type": "string" },
+                  "phase": { "enum": ["preflight", "applying", "closed-valid", "blocked", "recovery-required"] },
+                  "stepJournal": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/operationJournalEntry" }
+                  },
+                  "mutationSummary": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["executedWrites", "closeProofAppended", "idempotentNoop"],
+                    "properties": {
+                      "executedWrites": { "type": "number" },
+                      "closeProofAppended": { "type": "boolean" },
+                      "idempotentNoop": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            },
             "path": { "type": "string" },
             "persisted": { "type": "boolean" },
+            "resumedFromOperation": { "type": "boolean" },
             "createdAt": { "type": "string" },
             "updatedAt": { "type": "string" }
           }
@@ -79,7 +122,7 @@
       "type": "object",
       "additionalProperties": true,
       "required": ["plannedWrites", "executedWrites", "executedSteps", "closeProofAppended", "idempotentNoop"],
-      "properties": {
+  "properties": {
         "plannedWrites": { "type": "number" },
         "executedWrites": { "type": "number" },
         "executedSteps": { "type": "array", "items": { "type": "string" } },
@@ -102,9 +145,9 @@
     "source": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["finalize"],
+      "required": ["closePlan"],
       "properties": {
-        "finalize": { "type": "object", "additionalProperties": true }
+        "closePlan": { "type": "object", "additionalProperties": true }
       }
     },
     "diagnostics": {
@@ -134,6 +177,23 @@
           "fixHint": { "type": "string" },
           "example": { "type": "string" }
         }
+      }
+    }
+  },
+  "$defs": {
+    "operationJournalEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "step", "phase", "status", "writeBoundary", "mutated", "at"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1 },
+        "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
+        "phase": { "enum": ["intent", "outcome"] },
+        "status": { "enum": ["start", "executed", "satisfied", "blocked", "skipped"] },
+        "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
+        "writeOutcome": { "enum": ["appended", "existing-noop", "blocked"] },
+        "mutated": { "type": "boolean" },
+        "at": { "type": "string" }
       }
     }
   }

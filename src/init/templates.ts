@@ -167,7 +167,6 @@ hadara docs add architecture --json
 hadara docs add decisions --json
 hadara docs add roadmap --json
 hadara docs add security-model --json
-hadara docs add test-strategy --json
 hadara docs add agent-guide --json
 \`\`\`
 
@@ -252,7 +251,7 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 Use the explicit \`--plan-hash\` form only when a reviewed dry-run plan needs to cross a human or external automation boundary. The ordinary path is \`task close --json\`; it still performs the dry-run, folds in the current plan hash internally, and aborts if the close-source world changes before the write.
 
-Low-level lifecycle command surfaces (\`task finish\`, \`task ready\`, \`task audit-close\`, \`task complete\`, \`task lifecycle\`, and \`task finalize\`) were removed from public routing. Use \`task status --task T-XXXX --detail full --json\` for diagnostics and \`task close\` for close execution.
+\`task close\` is the public close transaction. Use \`task status --task T-XXXX --detail full --json\` for diagnostics.
 
 Do not hand-edit lifecycle-owned status fields to force closure. \`TASK.md\` Identity \`Status\` and \`docs/TASK_BOARD.md\` Status are updated by \`task create\` and \`task close\`. Before close, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let close move the lifecycle status to Done.
 
@@ -506,7 +505,7 @@ ${handoffRow}| Workflow | \`docs/HADARA_WORKFLOW.md\` | Generic HADARA lifecycle
 export function createTaskBoardDoc(): string {
   const taskBoardTable = managedSectionBlock('task-board', {
     schema: 'hadara.managedSection.v1',
-    owner: 'task.finish',
+    owner: 'task.close',
     kind: 'markdown-table',
     mode: 'update-row',
     version: 1,
@@ -633,58 +632,9 @@ export function createSecurityModelDoc(): string {
 
 | Check Type | Add To | When Required |
 |---|---|---|
-| Security smoke | \`docs/TEST_STRATEGY.md\` | The project has documented security boundaries. |
-| Secret scan | \`docs/TEST_STRATEGY.md\` | The project handles credentials, tokens, private logs, or environment dumps. |
+| Security smoke | Task Capsule evidence | The project has documented security boundaries. |
+| Secret scan | Task Capsule evidence | The project handles credentials, tokens, private logs, or environment dumps. |
 | Permission review | Task Capsule evidence | A change modifies write, delete, publish, or deploy behavior. |
-`;
-}
-
-export function createTestStrategyDoc(): string {
-  return `# TEST_STRATEGY
-
-## Current Validation Environment
-
-| Field | Value |
-|---|---|
-| Primary Environment | TBD |
-| Package Manager | TBD |
-| Runtime | TBD |
-| Notes | Describe normal validation constraints for this project. |
-
-## Suites
-
-| Suite | Command | Purpose | Required For Done |
-|---|---|---|---|
-| Unit | TBD | Fast checks for local logic. | TBD |
-| Integration | TBD | Cross-module or external-boundary checks when they exist. | TBD |
-| Full | TBD | The strongest routine validation command for task completion. | TBD |
-
-## Required Session Checks
-
-| Step | Check | Evidence Location |
-|---|---|---|
-| 1 | Run the relevant suite from the table above. | Task Capsule \`EVIDENCE.md\` |
-| 2 | Record meaningful evidence in the Task Capsule. | Task Capsule \`EVIDENCE.md\` and \`evidence.jsonl\` |
-| 3 | Finalize Task Capsule docs and tracked state docs before close. | Task Capsule docs and tracked state docs |
-| 4 | Run \`hadara task status --task <task-id> --json\` when you need a compact phase check or next action. | Task Capsule docs and evidence |
-| 5 | Run \`hadara task close --task <task-id> --json\` for the ordinary guarded close path; use a reviewed \`--plan-hash\` only for external review flows. | Task Capsule close evidence |
-| 6 | Use \`hadara task status --task <task-id> --detail full --json\` when debugging readiness or close-proof blockers. | Task Capsule evidence |
-
-## Diagnostic Checks
-
-| Check | Command | When To Use |
-|---|---|---|
-| Task Capsule format | \`hadara harness validate --task <task-id> --level done --json\` | \`task close --dry-run\` or \`task status --detail full\` reports done-level validation failures. |
-| Evidence index | \`hadara evidence lint --task <task-id> --json\` | Evidence files were touched manually by mistake or evidence drift is suspected. |
-
-## Special-Case Checks
-
-| Check Type | Add Only When |
-|---|---|
-| Security smoke | The project has documented security boundaries or secret-handling behavior. |
-| Release smoke | The project has documented release or package behavior. |
-| Install smoke | The project has documented installer or deployment behavior. |
-| Integration smoke | The project has documented external integration surfaces. |
 `;
 }
 
@@ -786,7 +736,7 @@ hadara task close --task T-XXXX --dry-run --json
 hadara task close --task T-XXXX --json
 \`\`\`
 
-\`task finish\`, \`task ready\`, \`task audit-close\`, \`task complete\`, \`task lifecycle\`, and \`task finalize\` are no longer the agent-facing cycle. \`task close\` owns the bounded finish/readiness/close/audit sequence.
+\`task close\` owns the bounded close sequence. \`task status --task T-XXXX --detail full --json\` owns diagnostics.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
@@ -878,7 +828,7 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Pr
 | \`task next\` / \`task show\` | Fully removed public commands | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Fully removed public command | Prefer \`task status --task T-XXXX --json\`. |
 | \`task close\` | Executes by default; \`--dry-run\` is read-only; reviewed execute uses \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence and close proof against the virtual post-finish state when needed, commits lifecycle-owned Done bookkeeping, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
-| \`task finish\` / \`task ready\` / \`task audit-close\` | Fully removed public commands | Use \`task status --detail full\` for diagnostics and \`task close\` for close execution. |
+| Legacy lifecycle step commands | Removed from public guidance | Use \`task status --detail full\` for diagnostics and \`task close\` for close execution. |
 | \`task complete\` | Fully removed public command | Prefer \`task status\` and \`task close\` for current agent flows. |
 
 ## Non-Overlap Rules

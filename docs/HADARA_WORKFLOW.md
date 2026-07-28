@@ -121,7 +121,6 @@ hadara docs add architecture --json
 hadara docs add decisions --json
 hadara docs add roadmap --json
 hadara docs add security-model --json
-hadara docs add test-strategy --json
 hadara docs add agent-guide --json
 ```
 
@@ -249,7 +248,7 @@ hadara task close --task T-XXXX --execute --plan-hash sha256:... --json
 
 Use `task close --json` for the ordinary guarded close path. Use the explicit `--plan-hash` form only when a reviewed dry-run plan crosses a human or external automation boundary.
 
-Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task audit-close`, `task complete`, and `task lifecycle`) were removed from public routing. Use `hadara task close --task T-XXXX --dry-run --json` for the step-level dry-run report, `hadara task close --task T-XXXX --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed close runs also completes by rerunning task close.
+Use `task close --json` for the ordinary guarded close path. Use `hadara task close --task T-XXXX --dry-run --json` for a no-write close plan, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed close runs also completes by rerunning task close.
 
 Do not hand-edit lifecycle-owned status fields to force closure. `TASK.md` Identity `Status` and `docs/TASK_BOARD.md` Status are updated by `task create` and `task close`. Before task close, keep prose tables such as Plan, Acceptance, Validation, Changes, Risks, and History current; let task close move the lifecycle status to Done.
 

@@ -40,7 +40,7 @@ describe('runtime schema validation', () => {
       validateSchema('hadara.next_action.v1', {
         schemaVersion: 'hadara.next_action.v1',
         id: 'finish-first',
-        command: 'hadara task finish --task T-0253 --json',
+        command: 'hadara task close --task T-0253 --json',
         summary: 'Preview finish writes before done-level readiness.',
         required: true,
         writeBoundary: 'task-local',

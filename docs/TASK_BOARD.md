@@ -124,7 +124,7 @@
 | T-0121 | Done-level Capsule Scaffold Guard | Done | tasks/T-0121-done-level-capsule-scaffold-guard | Adds done-level harness validation for scaffold/default capsule Markdown leftovers. |
 | T-0122 | Remote CI Release Observation | Done | tasks/T-0122-remote-ci-release-observation | Observed GitHub Actions CI run #109 on main and added documented remote CI observation to release-gate readiness. |
 | T-0123 | Operational Debt High Severity Mitigation | Done | tasks/T-0123-operational-debt-high-severity-mitigation | Mitigates OD-0003/OD-0008 based on implemented protocol and done-level validation safeguards; strict release gate now passes when readiness docs pass. |
-| T-0124 | Clean Checkout Package Smoke Planning | Done | tasks/T-0124-clean-checkout-package-smoke-planning | Strengthens clean-checkout package smoke planning markers in TEST_STRATEGY and the read-only release gate. |
+| T-0124 | Clean Checkout Package Smoke Planning | Done | tasks/T-0124-clean-checkout-package-smoke-planning | Strengthens clean-checkout package smoke planning markers in release readiness docs and the read-only release gate. |
 | T-0125 | Executable Package Smoke Artifact Boundary Design | Done | tasks/T-0125-executable-package-smoke-artifact-boundary-design | Defines future executable package-smoke workspace/artifact/evidence boundaries and strengthens the read-only release gate. |
 | T-0126 | Package Smoke Command Surface Design | Done | tasks/T-0126-package-smoke-command-surface-design | Defines `hadara package smoke` command-surface semantics and strengthens the read-only release gate. |
 | T-0127 | Package Metadata Release Readiness | Done | tasks/T-0127-package-metadata-release-readiness | Records package name/version/private/files/license/publish-target decisions and strengthens the read-only release gate. |
@@ -720,3 +720,5 @@
 | T-0717 | Remove Task Finalize Compatibility Surface | Done | tasks/T-0717-remove-task-finalize-compatibility-surface | |
 | T-0718 | Share Reviewed Finalize Plan In Task Close | Done | tasks/T-0718-share-reviewed-finalize-plan-in-task-close | |
 | T-0719 | Journal Task Close Transaction Writes | Done | tasks/T-0719-journal-task-close-transaction-writes | |
+| T-0720 | Update Primary Workflow Measurement For Task Close | Done | tasks/T-0720-update-primary-workflow-measurement-for-task-close | |
+| T-0721 | Harden Close Journal And Measurement Continuations | Done | tasks/T-0721-harden-close-journal-and-measurement-continuations | |

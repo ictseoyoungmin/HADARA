@@ -17,7 +17,7 @@ import {
 import { createStateProjectionReport } from '../../src/services/state-projection';
 import { createOpsStatusReport } from '../../src/services/operations-status-service';
 import { createTaskCreateReport } from '../../src/task/task-create';
-import { createTaskFinishReport } from '../../src/task/task-finish';
+import { createCloseBookkeepingReport } from '../../src/task/close';
 
 function tempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-current-state-'));
@@ -127,7 +127,7 @@ describe('project current-state canon', () => {
     }).issues).toContainEqual(expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_BASELINE_EVIDENCE_NOT_PASSED' }));
   });
 
-  it('synchronizes active and latest task facts through create and finish without a new command', () => {
+  it('synchronizes active and latest task facts through create and bookkeeping without a new command', () => {
     const root = tempRoot();
     initProject(root, 'governed', { silent: true });
 
@@ -147,7 +147,7 @@ describe('project current-state canon', () => {
       }
     });
 
-    const dryRun = createTaskFinishReport(root, created.taskId!, 'dry-run');
+    const dryRun = createCloseBookkeepingReport(root, created.taskId!, 'dry-run');
     expect(dryRun.writes.map((write) => write.field)).toEqual(expect.arrayContaining([
       'task-status',
       'task-board-row',
@@ -155,7 +155,7 @@ describe('project current-state canon', () => {
       'project-state-projection',
       'handoff-projection'
     ]));
-    const executed = createTaskFinishReport(root, created.taskId!, 'execute');
+    const executed = createCloseBookkeepingReport(root, created.taskId!, 'execute');
     expect(executed.ok).toBe(true);
     const completed = readProjectCurrentState(root).state!;
     expect(completed.latestCompletedTask).toEqual({ id: created.taskId, title: 'Canon lifecycle fixture' });

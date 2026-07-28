@@ -141,7 +141,6 @@ export function createDocsProtocolConsistencyReport(projectRoot: string, now = n
   checkProjectHandoffEvidenceRefs(projectRoot, checkedDocs, issues);
   checkDevelopmentSlicesConsistency(projectRoot, tasks, checkedDocs, issues);
   checkDecisionsConsistency(projectRoot, checkedDocs, issues);
-  checkTestStrategyConsistency(projectRoot, checkedDocs, issues);
   checkWorkflowScaffoldStructure(projectRoot, checkedDocs, issues);
 
   return buildReport(projectRoot, now, issues, checkedDocs, undefined, null, undefined, {
@@ -604,42 +603,6 @@ function checkDecisionsConsistency(projectRoot: string, checkedDocs: Set<string>
         message: `Accepted project decision ${row[0]} has no evidence link.`,
         expected: 'non-empty evidence cell',
         actual: evidence || 'empty'
-      });
-    }
-  }
-}
-
-function checkTestStrategyConsistency(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
-  const testStrategyPath = path.join(projectRoot, 'docs', 'TEST_STRATEGY.md');
-  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
-  const relativePath = 'docs/TEST_STRATEGY.md';
-  checkedDocs.add(relativePath);
-  if (!fs.existsSync(testStrategyPath)) return;
-
-  const content = fs.readFileSync(testStrategyPath, 'utf8');
-  const envSection = readMarkdownSection(content, '## Current Validation Environment');
-  if (!/Docker/i.test(envSection) || !/primary validation path/i.test(envSection)) {
-    pushIssue(issues, {
-      code: 'TEST_STRATEGY_VALIDATION_BASELINE_STALE',
-      severity: 'warning',
-      area: 'validation',
-      path: relativePath,
-      message: 'docs/TEST_STRATEGY.md Current Validation Environment does not clearly identify Docker as the primary validation path.',
-      expected: 'Docker primary validation baseline',
-      actual: envSection.trim().split(/\r?\n/)[0] || 'missing Current Validation Environment section'
-    });
-  }
-  if (fs.existsSync(handoffPath)) {
-    const handoff = fs.readFileSync(handoffPath, 'utf8');
-    if (/Validation Baseline/i.test(handoff) && /Docker/i.test(handoff) && !/Docker/i.test(envSection)) {
-      pushIssue(issues, {
-        code: 'TEST_STRATEGY_HANDOFF_BASELINE_DRIFT',
-        severity: 'warning',
-        area: 'validation',
-        path: relativePath,
-        message: 'docs/AGENT_HANDOFF.md records a Docker validation baseline but TEST_STRATEGY does not.',
-        expected: 'TEST_STRATEGY mirrors Docker baseline',
-        actual: 'Docker missing from TEST_STRATEGY validation environment'
       });
     }
   }

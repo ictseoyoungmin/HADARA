@@ -1663,9 +1663,9 @@ function scaffoldExample(fileName: string): string {
     'TASK.md': '| AC-1 | Scope is implemented. | Yes | Met | ev:T-0001:abc123 | Required | TBD |',
     'PLAN.md': '| 1 | Implement focused fix. | Done | evidence id or summary |',
     'CONTEXT.md': '| docs/TASK_BOARD.md | Task Board source of truth. | Read |',
-    'FILES.md': '| src/task/task-close.ts | Modify | Add hints. | Done |',
+    'FILES.md': '| src/task/close/proof.ts | Modify | Add hints. | Done |',
     'ACCEPTANCE.md': '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
-    'TESTS.md': '| npm run test:focused -- tests/unit/task-ready.test.ts | Validate hints. | Yes | Passed | evidence id |',
+    'TESTS.md': '| npm run test:focused -- tests/unit/task-close.test.ts | Validate hints. | Yes | Passed | evidence id |',
     'RISKS.md': '| Consumer rejects additive fields. | Medium | Low | Keep fields optional. | Mitigated |',
     'DECISIONS.md': '| D-1 | Add additive hints only. | Accepted | Preserve issue-code compatibility. | Tests. |',
     'EVIDENCE.md': '| 2026-06-12T00:00:00.000Z | command-log | Focused tests passed. | passed | public | evidence.jsonl |'

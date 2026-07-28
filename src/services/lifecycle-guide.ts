@@ -95,20 +95,20 @@ export interface PortfolioAuditReport {
 export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
     decision: 'Task status is the default lifecycle cockpit.',
-    commands: ['task.status', 'task.ready', 'harness.validate'],
+    commands: ['task.status', 'harness.validate'],
     rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces are no longer public routes.',
     evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },
   {
     decision: 'Task close is the default agent close path.',
-    commands: ['task.close', 'task.complete', 'task.finish'],
+    commands: ['task.close'],
     rule: '`task close --task T-XXXX --json` is the ordinary guarded close path.',
     evidence: '0.5.0 close transaction route.'
   },
   {
     decision: 'Close composes finish, readiness, proof append, and audit.',
     commands: ['task.close', 'task.audit-close'],
-    rule: '`task close` preserves the proof boundaries internally: finish bookkeeping, done readiness, close evidence append, and post-close audit.',
+    rule: '`task close` preserves the proof boundaries internally: close bookkeeping, done-level readiness checks, close evidence append, and post-close audit.',
     evidence: '0.5.0 close-first lifecycle default.'
   },
   {
@@ -125,7 +125,7 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   },
   {
     decision: 'Release and dev validation are not ordinary capsule lifecycle steps.',
-    commands: ['release.gate', 'task.close', 'task.ready', 'dev.docker-check'],
+    commands: ['release.gate', 'task.close', 'dev.docker-check'],
     rule: 'Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help.',
     evidence: 'Phase 7.2 advanced family boundary.'
   }

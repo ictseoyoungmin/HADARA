@@ -1,19 +1,19 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidenceWithResult, CloseEvidenceSnapshot } from '../evidence/evidence';
-import { normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
-import { findUnexplainedBlockedEvidence, findUnresolvedFailedEvidence } from '../evidence/semantics';
-import { createEvidenceLintReport, EvidenceLintReport, readTaskDocs, readValidPersistedEvidenceRecords } from '../services/evidence-lint';
-import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
-import type { RemediationHint } from '../harness/validate';
-import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
-import type { HadaraActorContext } from '../core/actor-context';
-import { parseTaskBoard } from './task-board';
-import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
-import { analyzeAcceptanceReadiness } from './acceptance';
-import { findTaskCapsule } from './task-capsule';
-import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
+import { appendEvidenceWithResult, CloseEvidenceSnapshot } from '../../evidence/evidence';
+import { normalizeEvidenceRecordsWithSourceLines } from '../../evidence/normalizer';
+import { findUnexplainedBlockedEvidence, findUnresolvedFailedEvidence } from '../../evidence/semantics';
+import { createEvidenceLintReport, EvidenceLintReport, readTaskDocs, readValidPersistedEvidenceRecords } from '../../services/evidence-lint';
+import { createHarnessValidateReport, HarnessValidateResult } from '../../services/harness-service';
+import type { RemediationHint } from '../../harness/validate';
+import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../../services/protocol-consistency';
+import type { HadaraActorContext } from '../../core/actor-context';
+import { parseTaskBoard } from '../task-board';
+import { parseMarkdownRows, readMarkdownSection } from '../../services/markdown-table';
+import { analyzeAcceptanceReadiness } from '../acceptance';
+import { findTaskCapsule } from '../task-capsule';
+import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
 
 export type TaskCloseMode = 'dry-run' | 'execute';
 

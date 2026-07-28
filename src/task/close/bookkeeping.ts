@@ -1,27 +1,27 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
-import type { HadaraActorContext } from '../core/actor-context';
-import { formatLocalMinuteTimestamp } from '../core/local-time';
-import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
-import { continuationFromTaskHandoffStep, planCompletedProjectCurrentStateWrites } from '../services/project-current-state';
-import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
-import { findTaskCapsule, TaskCapsule } from './task-capsule';
+import type { HadaraActorContext } from '../../core/actor-context';
+import { formatLocalMinuteTimestamp } from '../../core/local-time';
+import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../../services/markdown-table';
+import { continuationFromTaskHandoffStep, planCompletedProjectCurrentStateWrites } from '../../services/project-current-state';
+import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
+import { findTaskCapsule, TaskCapsule } from '../task-capsule';
 import {
   defaultTaskBoard,
   formatTaskBoardRow,
   normalizeCloseSummary,
   parseTaskBoard,
   type TaskBoardSchema
-} from './task-board';
+} from '../task-board';
 
-export type TaskFinishMode = 'dry-run' | 'execute';
+export type CloseBookkeepingMode = 'dry-run' | 'execute';
 
-export interface TaskFinishReport {
-  schemaVersion: 'hadara.task.finish.v1';
-  command: 'task.finish';
+export interface CloseBookkeepingReport {
+  schemaVersion: 'hadara.task.close_bookkeeping.v1';
+  command: 'task.close-bookkeeping';
   ok: boolean;
-  mode: TaskFinishMode;
+  mode: CloseBookkeepingMode;
   taskId: string;
   projectRoot: string;
   actor: HadaraActorContext;
@@ -41,17 +41,17 @@ export interface TaskFinishReport {
     advisoryOnly: number;
     stateDocsPending: number;
   };
-  writes: TaskFinishWrite[];
-  advisories: TaskFinishAdvisory[];
-  stateDocs: TaskFinishStateDoc[];
-  nextActions: TaskFinishNextAction[];
-  primaryNextAction?: TaskFinishNextAction;
-  issues: TaskFinishIssue[];
+  writes: CloseBookkeepingWrite[];
+  advisories: CloseBookkeepingAdvisory[];
+  stateDocs: CloseBookkeepingStateDoc[];
+  nextActions: CloseBookkeepingNextAction[];
+  primaryNextAction?: CloseBookkeepingNextAction;
+  issues: CloseBookkeepingIssue[];
 }
 
-export type TaskFinishNextAction = TaskLifecycleNextAction;
+export type CloseBookkeepingNextAction = TaskLifecycleNextAction;
 
-export interface TaskFinishWrite {
+export interface CloseBookkeepingWrite {
   path: string;
   action: 'update' | 'insert';
   field: 'task-status' | 'task-handoff-identity' | 'task-board-row' | 'current-state' | 'project-state-projection' | 'handoff-projection';
@@ -64,14 +64,14 @@ export interface TaskFinishWrite {
   contentAfter?: string;
 }
 
-export interface TaskFinishAdvisory {
+export interface CloseBookkeepingAdvisory {
   path: string;
   reason: string;
   mode: 'dry-run-only';
   state?: 'current' | 'pending' | 'missing';
 }
 
-export interface TaskFinishStateDoc {
+export interface CloseBookkeepingStateDoc {
   path: 'docs/DEVELOPMENT_SLICES.md' | 'docs/PROJECT_STATE.md' | 'docs/AGENT_HANDOFF.md';
   present: boolean;
   mentionsTask: boolean;
@@ -80,25 +80,25 @@ export interface TaskFinishStateDoc {
   recommendation: string;
 }
 
-export interface TaskFinishIssue {
+export interface CloseBookkeepingIssue {
   severity: 'error' | 'warning';
   code: string;
   message: string;
   path?: string;
 }
 
-export interface TaskFinishOptions {
+export interface CloseBookkeepingOptions {
   actor?: HadaraActorContext;
 }
 
-export function createTaskFinishReport(projectRoot: string, taskId: string, mode: TaskFinishMode, options: TaskFinishOptions = {}): TaskFinishReport {
+export function createCloseBookkeepingReport(projectRoot: string, taskId: string, mode: CloseBookkeepingMode, options: CloseBookkeepingOptions = {}): CloseBookkeepingReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const task = findTaskCapsule(projectRoot, taskId);
-  const issues: TaskFinishIssue[] = [];
+  const issues: CloseBookkeepingIssue[] = [];
   if (!task) {
     return {
-      schemaVersion: 'hadara.task.finish.v1',
-      command: 'task.finish',
+      schemaVersion: 'hadara.task.close_bookkeeping.v1',
+      command: 'task.close-bookkeeping',
       ok: false,
       mode,
       taskId,
@@ -124,7 +124,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const handoffNextStep = readTaskHandoffNextStep(task);
   const handoffContinuationIssue = handoffTableIssue ? null : validateStructuredHandoffContinuation(handoffNextStep);
   if (handoffContinuationIssue) issues.push(handoffContinuationIssue);
-  const promotedContinuation = handoffNextStep && !handoffContinuationIssue
+  const handoffContinuation = handoffNextStep && !handoffContinuationIssue
     ? continuationFromTaskHandoffStep({
         step: handoffNextStep.step,
         reason: handoffNextStep.reason,
@@ -133,8 +133,9 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
         createTask: handoffNextStep.createTask,
         sourceTaskId: task.id,
         sourceCapsulePath: capsule
-      }) ?? undefined
+      })
     : undefined;
+  const promotedContinuation = handoffContinuation?.disposition === 'terminal' ? null : handoffContinuation ?? undefined;
   const currentStatePlan = planCompletedProjectCurrentStateWrites(projectRoot, { id: task.id, title: task.title }, promotedContinuation);
   issues.push(...currentStatePlan.issues.map((issue) => ({
     severity: issue.severity,
@@ -145,7 +146,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const stateSpecs = stateDocSpecs(projectRoot);
   const applicableStatePaths = new Set(stateSpecs.map((spec) => spec.path));
   const currentStateWrites = currentStatePlan.writes.filter((write) =>
-    !write.path.startsWith('docs/') || applicableStatePaths.has(write.path as TaskFinishStateDoc['path'])
+    !write.path.startsWith('docs/') || applicableStatePaths.has(write.path as CloseBookkeepingStateDoc['path'])
   );
   for (const write of currentStateWrites) {
     writes.push({
@@ -168,13 +169,13 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const projectedPaths = new Set(currentStateWrites.map((write) => write.path));
   const stateDocs = createStateDocAdvisories(projectRoot, task, stateSpecs, projectedPaths);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
-    applyTaskFinishWrites(projectRoot, writes, issues);
+    applyCloseBookkeepingWrites(projectRoot, writes, issues);
   }
-  const nextActions = createFinishNextActions(taskId, mode, writes, stateDocs, issues);
+  const nextActions = createBookkeepingNextActions(taskId, mode, writes, stateDocs, issues);
 
   return {
-    schemaVersion: 'hadara.task.finish.v1',
-    command: 'task.finish',
+    schemaVersion: 'hadara.task.close_bookkeeping.v1',
+    command: 'task.close-bookkeeping',
     ok: !issues.some((issue) => issue.severity === 'error'),
     mode,
     taskId,
@@ -205,15 +206,15 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   };
 }
 
-export function executeReviewedTaskFinishPlan(projectRoot: string, finishPlan: TaskFinishReport): TaskFinishReport {
-  const writes = finishPlan.writes.map((write) => ({ ...write, applied: false }));
-  const issues = [...finishPlan.issues];
+export function executeReviewedCloseBookkeepingPlan(projectRoot: string, bookkeepingPlan: CloseBookkeepingReport): CloseBookkeepingReport {
+  const writes = bookkeepingPlan.writes.map((write) => ({ ...write, applied: false }));
+  const issues = [...bookkeepingPlan.issues];
   if (!issues.some((issue) => issue.severity === 'error')) {
-    applyTaskFinishWrites(projectRoot, writes, issues);
+    applyCloseBookkeepingWrites(projectRoot, writes, issues);
   }
-  const nextActions = createFinishNextActions(finishPlan.taskId, 'execute', writes, finishPlan.stateDocs, issues);
+  const nextActions = createBookkeepingNextActions(bookkeepingPlan.taskId, 'execute', writes, bookkeepingPlan.stateDocs, issues);
   return {
-    ...finishPlan,
+    ...bookkeepingPlan,
     mode: 'execute',
     ok: !issues.some((issue) => issue.severity === 'error'),
     writes,
@@ -221,21 +222,21 @@ export function executeReviewedTaskFinishPlan(projectRoot: string, finishPlan: T
     ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues,
     summary: {
-      ...finishPlan.summary,
+      ...bookkeepingPlan.summary,
       plannedWrites: writes.length,
       appliedWrites: writes.filter((write) => write.applied).length
     }
   };
 }
 
-function createFinishNextActions(taskId: string, mode: TaskFinishMode, writes: TaskFinishWrite[], stateDocs: TaskFinishStateDoc[], issues: TaskFinishIssue[]): TaskFinishNextAction[] {
+function createBookkeepingNextActions(taskId: string, mode: CloseBookkeepingMode, writes: CloseBookkeepingWrite[], stateDocs: CloseBookkeepingStateDoc[], issues: CloseBookkeepingIssue[]): CloseBookkeepingNextAction[] {
   if (issues.some((issue) => issue.severity === 'error')) {
     return [
       createTaskLifecycleNextAction({
-        id: 'resolve-finish-blockers',
+        id: 'resolve-bookkeeping-blockers',
         kind: 'review',
         required: true,
-        message: 'Resolve finish blockers before applying task status bookkeeping.',
+        message: 'Resolve bookkeeping blockers before applying task status bookkeeping.',
         writeBoundary: 'read-only',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -246,7 +247,7 @@ function createFinishNextActions(taskId: string, mode: TaskFinishMode, writes: T
   if (mode === 'dry-run' && writes.length > 0) {
     return [
       createTaskLifecycleNextAction({
-        id: 'execute-finish',
+        id: 'execute-bookkeeping',
         required: true,
         command: `hadara task close --task ${taskId} --json`,
         message: 'Apply bounded task status and Task Board bookkeeping through guarded task close.',
@@ -286,8 +287,8 @@ function createFinishNextActions(taskId: string, mode: TaskFinishMode, writes: T
   ];
 }
 
-export function formatTaskFinishReport(report: TaskFinishReport): string {
-  const lines = [`[HADARA] task finish ${report.taskId}: ${report.ok ? report.mode : 'blocked'}`];
+export function formatCloseBookkeepingReport(report: CloseBookkeepingReport): string {
+  const lines = [`[HADARA] task bookkeeping ${report.taskId}: ${report.ok ? report.mode : 'blocked'}`];
   lines.push(`planned=${report.summary.plannedWrites} applied=${report.summary.appliedWrites} advisory=${report.summary.advisoryOnly}`);
   for (const write of report.writes) {
     lines.push(`${write.applied ? 'APPLIED' : 'PLANNED'}\t${write.field}\t${write.path}`);
@@ -308,21 +309,21 @@ function planWrites(
   taskStatus: string,
   statusHistoryStatus: string | null,
   board: TaskBoardProjection,
-  issues: TaskFinishIssue[]
-): TaskFinishWrite[] {
-  const writes: TaskFinishWrite[] = [];
-  const finishTimestamp = formatLocalMinuteTimestamp();
-  const finishRequired = taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done');
-  if (finishRequired) {
+  issues: CloseBookkeepingIssue[]
+): CloseBookkeepingWrite[] {
+  const writes: CloseBookkeepingWrite[] = [];
+  const bookkeepingTimestamp = formatLocalMinuteTimestamp();
+  const bookkeepingRequired = taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done');
+  if (bookkeepingRequired) {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
-    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done', finishTimestamp));
+    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done', bookkeepingTimestamp));
     const nextStatusHistoryStatus = latestStatusHistoryStatus(nextTaskContent);
     if (nextTaskContent === taskContent || (statusHistoryStatus !== null && nextStatusHistoryStatus !== 'Done')) {
       issues.push({
         severity: 'error',
-        code: 'TASK_FINISH_TASK_STATUS_REPLACE_FAILED',
-        message: 'TASK.md does not contain the expected metadata/status/history frames for bounded finish sync.',
+        code: 'TASK_CLOSE_BOOKKEEPING_TASK_STATUS_REPLACE_FAILED',
+        message: 'TASK.md does not contain the expected metadata/status/history frames for bounded bookkeeping sync.',
         path: toPortablePath(path.relative(projectRoot, taskPath))
       });
     } else {
@@ -344,9 +345,9 @@ function planWrites(
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (fs.existsSync(handoffPath)) {
     const handoffContent = fs.readFileSync(handoffPath, 'utf8');
-    const shouldSyncHandoff = finishRequired || /^## Identity\s*$/m.test(handoffContent);
+    const shouldSyncHandoff = bookkeepingRequired || /^## Identity\s*$/m.test(handoffContent);
     const nextHandoffContent = shouldSyncHandoff
-      ? normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, finishTimestamp))
+      ? normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, bookkeepingTimestamp))
       : normalizeAtomicTextDocument(handoffContent);
     if (nextHandoffContent !== normalizeAtomicTextDocument(handoffContent)) {
       writes.push({
@@ -368,7 +369,7 @@ function planWrites(
     issues.push({
       severity: 'error',
       code: 'TASK_BOARD_TABLE_FRAME_MISSING',
-      message: 'docs/TASK_BOARD.md is missing the canonical table frame; refusing bounded finish sync.',
+      message: 'docs/TASK_BOARD.md is missing the canonical table frame; refusing bounded bookkeeping sync.',
       path: 'docs/TASK_BOARD.md'
     });
     return writes;
@@ -397,7 +398,7 @@ function planWrites(
     issues.push({
       severity: 'error',
       code: 'TASK_BOARD_ROW_DUPLICATE',
-      message: `docs/TASK_BOARD.md contains multiple rows for ${task.id}; refusing bounded finish sync.`,
+      message: `docs/TASK_BOARD.md contains multiple rows for ${task.id}; refusing bounded bookkeeping sync.`,
       path: 'docs/TASK_BOARD.md'
     });
     return writes;
@@ -410,7 +411,7 @@ function planWrites(
     if (afterContent === beforeContent) {
       issues.push({
         severity: 'error',
-        code: 'TASK_FINISH_TASK_BOARD_REPLACE_FAILED',
+        code: 'TASK_CLOSE_BOOKKEEPING_TASK_BOARD_REPLACE_FAILED',
         message: `docs/TASK_BOARD.md row for ${task.id} could not be replaced safely.`,
         path: 'docs/TASK_BOARD.md'
       });
@@ -432,15 +433,15 @@ function planWrites(
   return writes;
 }
 
-export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWrite[], issues: TaskFinishIssue[]): void {
-  const prepared: Array<{ write: TaskFinishWrite; absolutePath: string; tmpPath: string; existed: boolean; original: string }> = [];
+export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBookkeepingWrite[], issues: CloseBookkeepingIssue[]): void {
+  const prepared: Array<{ write: CloseBookkeepingWrite; absolutePath: string; tmpPath: string; existed: boolean; original: string }> = [];
   const committed: typeof prepared = [];
   try {
     for (const write of writes) {
       const absolutePath = path.resolve(projectRoot, write.path);
       const relative = path.relative(projectRoot, absolutePath);
       if (relative.startsWith('..') || path.isAbsolute(relative)) {
-        issues.push({ severity: 'error', code: 'TASK_FINISH_PATH_OUTSIDE_PROJECT', message: `Refusing to write outside project: ${write.path}`, path: write.path });
+        issues.push({ severity: 'error', code: 'TASK_CLOSE_BOOKKEEPING_PATH_OUTSIDE_PROJECT', message: `Refusing to write outside project: ${write.path}`, path: write.path });
         continue;
       }
 
@@ -449,8 +450,8 @@ export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWri
       if (existed !== write.expectedBeforeExists || hashContent(current) !== write.expectedBeforeHash) {
         issues.push({
           severity: 'error',
-          code: 'TASK_FINISH_WRITE_CONFLICT',
-          message: `${write.path} changed after finish planning; rerun dry-run before executing.`,
+          code: 'TASK_CLOSE_BOOKKEEPING_WRITE_CONFLICT',
+          message: `${write.path} changed after bookkeeping planning; rerun dry-run before executing.`,
           path: write.path
         });
         continue;
@@ -460,8 +461,8 @@ export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWri
       if (next === current) {
         issues.push({
           severity: 'error',
-          code: 'TASK_FINISH_NOOP_WRITE',
-          message: `${write.path} did not change after applying planned finish write.`,
+          code: 'TASK_CLOSE_BOOKKEEPING_NOOP_WRITE',
+          message: `${write.path} did not change after applying planned bookkeeping write.`,
           path: write.path
         });
         continue;
@@ -469,7 +470,7 @@ export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWri
       if (hashContent(next) !== write.afterHash) {
         issues.push({
           severity: 'error',
-          code: 'TASK_FINISH_AFTER_HASH_MISMATCH',
+          code: 'TASK_CLOSE_BOOKKEEPING_AFTER_HASH_MISMATCH',
           message: `${write.path} planned after hash does not match generated content.`,
           path: write.path
         });
@@ -477,7 +478,7 @@ export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWri
       }
 
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
-      const tmpPath = path.join(path.dirname(absolutePath), `.hadara-task-finish-${process.pid}-${Date.now()}-${prepared.length}-${path.basename(absolutePath)}.tmp`);
+      const tmpPath = path.join(path.dirname(absolutePath), `.hadara-task-close-bookkeeping-${process.pid}-${Date.now()}-${prepared.length}-${path.basename(absolutePath)}.tmp`);
       fs.writeFileSync(tmpPath, next, { encoding: 'utf8', flag: 'wx' });
       prepared.push({ write, absolutePath, tmpPath, existed, original: current });
     }
@@ -498,13 +499,13 @@ export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWri
         else if (fs.existsSync(item.absolutePath)) fs.rmSync(item.absolutePath, { force: true });
         item.write.applied = false;
       } catch {
-        issues.push({ severity: 'warning', code: 'TASK_FINISH_ROLLBACK_INCOMPLETE', message: `Rollback failed for ${item.write.path}.`, path: item.write.path });
+        issues.push({ severity: 'warning', code: 'TASK_CLOSE_BOOKKEEPING_ROLLBACK_INCOMPLETE', message: `Rollback failed for ${item.write.path}.`, path: item.write.path });
       }
     }
     issues.push({
       severity: 'error',
-      code: 'TASK_FINISH_ATOMIC_WRITE_FAILED',
-      message: `Atomic task finish write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
+      code: 'TASK_CLOSE_BOOKKEEPING_ATOMIC_WRITE_FAILED',
+      message: `Atomic task bookkeeping write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
     });
   }
 }
@@ -512,16 +513,16 @@ export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWri
 function createStateDocAdvisories(
   projectRoot: string,
   task: TaskCapsule,
-  specs: Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }>,
+  specs: Array<{ path: CloseBookkeepingStateDoc['path']; reason: string; recommendation: string }>,
   projectedPaths: Set<string>
-): TaskFinishStateDoc[] {
+): CloseBookkeepingStateDoc[] {
   return specs
     .map((spec) => stateDoc(projectRoot, task, spec.path, spec.reason, spec.recommendation, projectedPaths.has(spec.path)))
     .filter((doc) => doc.path !== 'docs/DEVELOPMENT_SLICES.md' || doc.mentionsTask);
 }
 
-function stateDocSpecs(projectRoot: string): Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }> {
-  const specs: Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }> = [
+function stateDocSpecs(projectRoot: string): Array<{ path: CloseBookkeepingStateDoc['path']; reason: string; recommendation: string }> {
+  const specs: Array<{ path: CloseBookkeepingStateDoc['path']; reason: string; recommendation: string }> = [
     { path: 'docs/DEVELOPMENT_SLICES.md', reason: 'Slice completion evidence still requires operator-authored summary.', recommendation: 'Add or update a Development Slices row with Done evidence for this task.' },
     { path: 'docs/PROJECT_STATE.md', reason: 'Latest completed/current task prose remains operator-authored.', recommendation: 'Update Project State current phase/status text if this task changes project capability state.' },
     { path: 'docs/AGENT_HANDOFF.md', reason: 'Next-session handoff remains operator-authored.', recommendation: 'Update Agent Handoff latest completed task, validation baseline, known problems, and next recommended step.' }
@@ -548,11 +549,11 @@ function readRegisteredDocPaths(registryPath: string): Set<string> {
 function stateDoc(
   projectRoot: string,
   task: TaskCapsule,
-  relativePath: TaskFinishStateDoc['path'],
+  relativePath: CloseBookkeepingStateDoc['path'],
   baseReason: string,
   recommendation: string,
   projected: boolean
-): TaskFinishStateDoc {
+): CloseBookkeepingStateDoc {
   const absolutePath = path.join(projectRoot, relativePath);
   if (!fs.existsSync(absolutePath)) {
     return {
@@ -572,7 +573,7 @@ function stateDoc(
       present: true,
       mentionsTask,
       state: 'current',
-      reason: `${baseReason} The registered managed checkpoint is projected by this finish transaction.`,
+      reason: `${baseReason} The registered managed checkpoint is projected by this bookkeeping transaction.`,
       recommendation
     };
   }
@@ -649,7 +650,7 @@ function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured:
   };
 }
 
-function validateHandoffNextStepTable(task: TaskCapsule): TaskFinishIssue | null {
+function validateHandoffNextStepTable(task: TaskCapsule): CloseBookkeepingIssue | null {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
   const section = readMarkdownSection(fs.readFileSync(handoffPath, 'utf8'), '## Next Recommended Step');
@@ -681,7 +682,7 @@ function validateHandoffNextStepTable(task: TaskCapsule): TaskFinishIssue | null
 
 function validateStructuredHandoffContinuation(
   handoffNextStep: { structured: boolean; disposition?: string; createTask?: string } | null
-): TaskFinishIssue | null {
+): CloseBookkeepingIssue | null {
   if (!handoffNextStep?.structured) return null;
   const disposition = (handoffNextStep.disposition ?? '').trim().toLowerCase().replace(/[_\s]+/g, '-');
   if (disposition && disposition !== 'tbd' && !['actionable', 'waiting-for-operator', 'blocked', 'terminal', 'unresolved'].includes(disposition)) {
@@ -800,7 +801,7 @@ function readStatusTableValue(content: string): string | null {
   return match?.[1]?.trim() || null;
 }
 
-function nextWriteContent(current: string, write: TaskFinishWrite): string {
+function nextWriteContent(current: string, write: CloseBookkeepingWrite): string {
   if (write.contentAfter !== undefined) return write.contentAfter;
   if (write.field === 'task-status') return normalizeAtomicTextDocument(replaceTaskStatus(current, write.after));
   if (write.action === 'insert') return normalizeAtomicTextDocument(appendTaskBoardRow(current || defaultTaskBoard(), write.after));
@@ -813,7 +814,7 @@ function normalizeAtomicTextDocument(content: string): string {
   return `${content.replace(/[ \t\r\n]+$/, '')}\n`;
 }
 
-function missingFileBaseline(write: TaskFinishWrite): string {
+function missingFileBaseline(write: CloseBookkeepingWrite): string {
   if (write.field === 'task-board-row' && write.action === 'insert') return defaultTaskBoard();
   return '';
 }
@@ -835,7 +836,7 @@ function appendStatusHistoryDone(content: string): string {
   const end = start + section.length;
   const prefix = content.slice(0, start);
   const suffix = content.slice(end);
-  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Finished task capsule. | \`hadara task close\` |`;
+  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Bookkeepinged task capsule. | \`hadara task close\` |`;
   const managedEnd = '<!-- hadara:managed:end task-status-history -->';
   const managedEndIndex = section.indexOf(managedEnd);
   if (managedEndIndex >= 0) {

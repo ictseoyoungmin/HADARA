@@ -1,5 +1,5 @@
-import { createTaskCloseSourceReport } from '../task/task-close';
-import { createTaskCloseTransactionReport, formatTaskCloseTransactionReport, type TaskCloseTransactionReport } from '../task/task-close-transaction';
+import { createTaskCloseSourceReport } from '../task/close';
+import { createTaskCloseTransactionReport, formatTaskCloseTransactionReport, type TaskCloseTransactionReport } from '../task/close';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport, type TaskStatusSelectionReport, type TaskWorkbenchReport } from '../services/task-workbench';
 import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';

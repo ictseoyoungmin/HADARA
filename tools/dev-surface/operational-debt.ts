@@ -243,7 +243,6 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
   const architecture = readOptionalText(path.join(projectRoot, 'docs', 'ARCHITECTURE.md'));
   const tuiDesign = readOptionalText(path.join(projectRoot, 'docs', 'design', 'TUI_DESIGN_NOTES.md'));
-  const testStrategy = readOptionalText(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'));
   const releaseReadiness = readOptionalText(path.join(projectRoot, 'docs', 'RELEASE_READINESS.md'));
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
   const licenseText = readOptionalText(path.join(projectRoot, 'LICENSE'));
@@ -254,10 +253,10 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkPackageScripts(packageJson, mode),
     checkNodePolicy(packageJson, ciWorkflow, mode),
     checkCiWorkflow(ciWorkflow, mode),
-    checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
-    checkPackageSmokeArtifactBoundary(testStrategy, mode),
-    checkPackageSmokeCommandSurface(testStrategy, mode),
-    checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, releaseReadiness, validationHistory, mode),
+    checkCleanCheckoutPolicy(v1Schemas, developmentSlices, releaseReadiness, mode),
+    checkPackageSmokeArtifactBoundary(releaseReadiness, mode),
+    checkPackageSmokeCommandSurface(releaseReadiness, mode),
+    checkPackageMetadataReadiness(packageJson, licenseText, releaseReadiness, validationHistory, mode),
     checkReleaseWorkflowTargetDecision(releaseReadiness, mode),
     checkInstallerSurfaceAndSchema(releaseReadiness, mode),
     checkInstallMatrixSmokePlan(releaseReadiness, mode),
@@ -266,7 +265,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkReleaseArtifactEvidence(evidence, mode),
     checkInstallMatrixSmokeEvidence(),
     checkGeneratedArtifactPolicy(architecture, developmentSlices, tuiDesign, mode),
-    checkRemoteCiObservation(testStrategy, validationHistory, mode)
+    checkRemoteCiObservation(releaseReadiness, validationHistory, mode)
   ];
   const issues = checks
     .filter((check) => check.status !== 'passed')
@@ -348,17 +347,17 @@ function checkCiWorkflow(ciWorkflow: string | null, mode: ReleaseGateReport['mod
 function checkCleanCheckoutPolicy(
   v1Schemas: string | null,
   developmentSlices: string | null,
-  testStrategy: string | null,
+  releaseReadiness: string | null,
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
-  const strictGateCommandDocumented = includesAny(testStrategy, [
+  const strictGateCommandDocumented = includesAny(releaseReadiness, [
     'node --import tsx tools/dev-surfaces.ts release gate --mode strict --json',
     'node dist/cli/main.js release gate --mode strict --json'
   ]);
   const ok =
     includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'status --json']) &&
     includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']) &&
-    includesAll(testStrategy, [
+    includesAll(releaseReadiness, [
       'Clean Checkout Package Smoke Plan',
       'npm ci',
       'npm run build',
@@ -377,8 +376,8 @@ function checkCleanCheckoutPolicy(
   };
 }
 
-function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const ok = includesAll(testStrategy, [
+function checkPackageSmokeArtifactBoundary(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(releaseReadiness, [
     'Executable Package Smoke Artifact Boundary',
     'Allowed workspace',
     '/tmp/hadara-package-smoke/<run-id>',
@@ -399,33 +398,33 @@ function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: Re
   };
 }
 
-function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const dryRunCommandDocumented = includesAny(testStrategy, [
+function checkPackageSmokeCommandSurface(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const dryRunCommandDocumented = includesAny(releaseReadiness, [
     'node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json',
     'hadara smoke package --dry-run --json'
   ]);
-  const taskCommandDocumented = includesAny(testStrategy, [
+  const taskCommandDocumented = includesAny(releaseReadiness, [
     'node --import tsx tools/dev-surfaces.ts smoke package --task <task-id> --json',
     'hadara smoke package --task <task-id> --json'
   ]);
-  const workspaceCommandDocumented = includesAny(testStrategy, [
+  const workspaceCommandDocumented = includesAny(releaseReadiness, [
     'node --import tsx tools/dev-surfaces.ts smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json',
     'hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json'
   ]);
-  const keepTempCommandDocumented = includesAny(testStrategy, [
+  const keepTempCommandDocumented = includesAny(releaseReadiness, [
     'node --import tsx tools/dev-surfaces.ts smoke package --keep-temp --json',
     'hadara smoke package --keep-temp --json'
   ]);
-  const releaseSmokeWarningDocumented = includesAny(testStrategy, [
+  const releaseSmokeWarningDocumented = includesAny(releaseReadiness, [
     'Do not use `release smoke` as the primary command surface',
     'Do not use `hadara release smoke` as the primary command surface'
   ]);
-  const noReleaseGateExecutionDocumented = includesAny(testStrategy, [
+  const noReleaseGateExecutionDocumented = includesAny(releaseReadiness, [
     'The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`',
     'The release gate must not call `hadara smoke package`'
   ]);
   const ok =
-    includesAll(testStrategy, [
+    includesAll(releaseReadiness, [
       'Package Smoke Command Surface',
       '`--timeout <seconds>`',
       '`--attach-evidence`',
@@ -438,7 +437,7 @@ function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: Rele
     keepTempCommandDocumented &&
     releaseSmokeWarningDocumented &&
     noReleaseGateExecutionDocumented &&
-    hasVersionedHadaraTarballExample(testStrategy);
+    hasVersionedHadaraTarballExample(releaseReadiness);
   return {
     code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
     name: 'Package smoke command surface',
@@ -452,7 +451,6 @@ function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: Rele
 function checkPackageMetadataReadiness(
   packageJson: Record<string, unknown> | null,
   licenseText: string | null,
-  testStrategy: string | null,
   releaseReadiness: string | null,
   validationHistory: string | null,
   mode: ReleaseGateReport['mode']
@@ -495,7 +493,7 @@ function checkPackageMetadataReadiness(
     'T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only',
     'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`'
   ];
-  const docsOk = includesAll(testStrategy, metadataMarkers) || includesAll(releaseReadiness, metadataMarkers);
+  const docsOk = includesAll(releaseReadiness, metadataMarkers);
   const ok = (bootstrapMetadataOk || publishablePackageMetadataOk) && docsOk;
   return {
     code: 'PACKAGE_METADATA_RELEASE_READINESS',
@@ -719,12 +717,12 @@ function checkGeneratedArtifactPolicy(
 }
 
 function checkRemoteCiObservation(
-  testStrategy: string | null,
+  releaseReadiness: string | null,
   validationHistory: string | null,
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
   const ok =
-    includesAll(testStrategy, ['Remote CI observation', 'local Docker validation remains the primary reproducible check']) &&
+    includesAll(releaseReadiness, ['Remote CI observation', 'local Docker validation remains the primary reproducible check']) &&
     includesAll(validationHistory, ['GitHub Actions CI run', 'actions/runs/']);
   return {
     code: 'REMOTE_CI_OBSERVATION',

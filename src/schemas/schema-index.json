@@ -47,7 +47,7 @@
       "id": "hadara.closeSource.v1",
       "path": "src/schemas/close-source.schema.json",
       "status": "fixture",
-      "owner": "task/task-close",
+      "owner": "task/close",
       "notes": "Documents normalized 0.4 close-source payloads and source units for task close/audit proof boundaries."
     },
     {
@@ -345,18 +345,11 @@
       "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
     },
     {
-      "id": "hadara.task.close.v2",
-      "path": "src/schemas/task-close-v2.schema.json",
+      "id": "hadara.task.close.v3",
+      "path": "src/schemas/task-close-v3.schema.json",
       "status": "fixture",
       "owner": "task/close-transaction",
       "notes": "Documents the public 0.5 task close transaction report with one-call close, recovery, write summary, and proof-last metadata."
-    },
-    {
-      "id": "hadara.task.finalize.v1",
-      "path": "src/schemas/task-finalize.schema.json",
-      "status": "fixture",
-      "owner": "task/finalize",
-      "notes": "Documents read-only finalize dry-run plans with plan hashes, lifecycle steps, write boundaries, and execute refusal metadata."
     },
     {
       "id": "hadara.taskContext.v1",
@@ -378,20 +371,6 @@
       "status": "fixture",
       "owner": "task/close",
       "notes": "Documents read-only audit reports for previously appended task close evidence."
-    },
-    {
-      "id": "hadara.task.ready.v1",
-      "path": "src/schemas/task-ready.schema.json",
-      "status": "fixture",
-      "owner": "task/ready",
-      "notes": "Documents read-only task readiness preflight reports before close."
-    },
-    {
-      "id": "hadara.task.finish.v1",
-      "path": "src/schemas/task-finish.schema.json",
-      "status": "fixture",
-      "owner": "task/finish",
-      "notes": "Documents dry-run-first bounded Task Capsule finish/status sync reports."
     },
     {
       "id": "hadara.task.selection.v1",

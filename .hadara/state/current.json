@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 365,
+  "rev": 373,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0719",
-    "title": "Journal Task Close Transaction Writes"
+    "id": "T-0721",
+    "title": "Harden Close Journal And Measurement Continuations"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,29 +14,57 @@
   "continuation": {
     "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Decide whether to pursue a true cross-file close transaction that atomically unifies proof append, finish/projection writes, and final audit state.",
-    "reason": "Recovery markers are now honest, but the transaction still relies on replay/recovery rather than a single atomic commit across every close-owned write.",
+    "title": "Decide whether to harden the measurement script against the known child-process EPERM environment limit or keep that as an external environment caveat.",
+    "reason": "The stale finalize regression is fixed, but direct `measure:primary-workflow` execution still cannot complete in this tool environment because nested CLI spawn hits the known EPERM failure before init.",
     "references": [
       {
-        "path": "`tasks/T-0719-journal-task-close-transaction-writes/TASK.md`",
+        "path": "`tasks/T-0720-update-primary-workflow-measurement-for-task-close/TASK.md`",
         "required": true
       },
       {
-        "path": "`src/task/task-close-transaction.ts`",
+        "path": "`scripts/primary-workflow-measurement.mjs`",
         "required": true
       },
       {
-        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
+        "path": "`docs/PROJECT_STATE.md`",
         "required": true
       }
     ],
     "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0719",
-      "path": "tasks/T-0719-journal-task-close-transaction-writes/HANDOFF.md"
+      "workId": "T-0720",
+      "path": "tasks/T-0720-update-primary-workflow-measurement-for-task-close/HANDOFF.md"
     }
   },
+  "continuations": [
+    {
+      "disposition": "waiting-for-operator",
+      "kind": "task-handoff",
+      "title": "Decide whether to harden the measurement script against the known child-process EPERM environment limit or keep that as an external environment caveat.",
+      "reason": "The stale finalize regression is fixed, but direct `measure:primary-workflow` execution still cannot complete in this tool environment because nested CLI spawn hits the known EPERM failure before init.",
+      "references": [
+        {
+          "path": "`tasks/T-0720-update-primary-workflow-measurement-for-task-close/TASK.md`",
+          "required": true
+        },
+        {
+          "path": "`scripts/primary-workflow-measurement.mjs`",
+          "required": true
+        },
+        {
+          "path": "`docs/PROJECT_STATE.md`",
+          "required": true
+        }
+      ],
+      "createCommandAllowed": false,
+      "source": {
+        "type": "work-handoff",
+        "workId": "T-0720",
+        "path": "tasks/T-0720-update-primary-workflow-measurement-for-task-close/HANDOFF.md"
+      }
+    }
+  ],
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",

@@ -116,10 +116,10 @@ export function createTaskSelectionStatusV2Report(
       },
       {
         id: 'continuation',
-        state: continuation ? 'evaluated' : 'not-evaluated',
+        state: taskSelection.sources.currentState.continuations.length > 0 ? 'evaluated' : 'not-evaluated',
         health: 'ok',
-        summary: continuation
-          ? `Structured current-state continuation found: disposition=${continuation.disposition}.`
+        summary: taskSelection.sources.currentState.continuations.length > 0
+          ? `Structured current-state continuation backlog found: ${taskSelection.sources.currentState.continuations.length} item(s), primary disposition=${continuation?.disposition ?? 'none'}.`
           : 'No structured current-state continuation was found.'
       }
     ],

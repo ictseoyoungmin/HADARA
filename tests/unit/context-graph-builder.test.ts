@@ -100,7 +100,7 @@ describe('context graph builder', () => {
     ]);
     expect(context.doNotReadByDefault.map((item) => item.id)).toEqual(['doc:docs/OLD_STATE.md']);
     expect(context.relatedEvidence.map((item) => item.id)).toEqual(['ev:T-0002:aaaaaaaaaaaaaaaaaaaaaaaa']);
-    expect(context.relatedCommands.map((item) => item.id)).toEqual(['command:task.ready']);
+    expect(context.relatedCommands.map((item) => item.id)).toEqual(['command:task.close']);
     expect(context.knownProblems.map((item) => item.id)).toEqual(['known-problem:fixture']);
     expect(context.validationSuggestions).not.toContain('npm run test:focused -- tests/unit/context-graph-builder.test.ts');
     expect(context.validationSuggestions).toContain(`hadara task status --task ${taskId} --detail full --json`);
@@ -435,10 +435,10 @@ function fixtureExtractionResult(): GraphExtractionResult {
     }, {
       id: 'edge:DESCRIBES_COMMAND:fixture',
       from: 'doc:docs/TASK_WORKFLOW_COMMANDS.md',
-      to: 'command:task.ready',
+      to: 'command:task.close',
       type: 'DESCRIBES_COMMAND',
       confidence: 'explicit',
-      reason: 'docs/TASK_WORKFLOW_COMMANDS.md documents command task.ready.',
+      reason: 'docs/TASK_WORKFLOW_COMMANDS.md documents command task.close.',
       source
     }],
     stateSources: stateSources(),
@@ -498,9 +498,9 @@ function evidenceNode(): ContextGraphNode {
 
 function commandNode(): ContextGraphNode {
   return {
-    id: 'command:task.ready',
+    id: 'command:task.close',
     type: 'Command',
-    label: 'task.ready',
+    label: 'task.close',
     status: 'stable',
     kind: 'task',
     source: {

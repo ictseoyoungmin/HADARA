@@ -793,7 +793,7 @@ function writeReleaseReadinessFiles(root: string): void {
     'utf8'
   );
   fs.writeFileSync(
-    path.join(root, 'docs', 'TEST_STRATEGY.md'),
+    path.join(root, 'docs', 'RELEASE_READINESS.md'),
     [
       'Clean Checkout Package Smoke Plan',
       'npm ci',
@@ -823,33 +823,8 @@ function writeReleaseReadinessFiles(root: string): void {
       '`--private-logs`',
       'Package smoke must not be callable from MCP by default',
       'The release gate must not call `hadara smoke package`',
-      'Package Metadata Release Readiness',
-      'Package name decision: `hadara`',
-      'npm registry observation:',
-      'Current version is `0.1.0-rc.0`',
-      'Current package is `private: false`',
-      'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
-      'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
-      'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-      'Release-candidate metadata mode: version `0.x.y-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
-      'Scoped fallback decision: do not silently switch names',
-      'Version policy:',
-      'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
-      'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
-      'Do not add `files` entries for missing installer or portable paths in T-0127',
-      'MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist',
-      'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
-      'Installed CLI verification must use `hadara doctor --json`',
-      'T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only',
-      'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`',
       'Remote CI observation',
-      'local Docker validation remains the primary reproducible check'
-    ].join('\n'),
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'RELEASE_READINESS.md'),
-    [
+      'local Docker validation remains the primary reproducible check',
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation:',

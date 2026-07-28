@@ -264,7 +264,6 @@ describe('Docs protocol consistency report', () => {
       '# DECISIONS\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Keep drift fixture. | Accepted | Needed. | TBD |\n',
       'utf8'
     );
-    fs.writeFileSync(path.join(root, 'docs', 'TEST_STRATEGY.md'), '# TEST_STRATEGY\n\n## Current Validation Environment\n\nHost checks only.\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '# HADARA_WORKFLOW\n\n## Read Authority Rules\n\nNo table.\n', 'utf8');
     const task = createTaskCapsule(root, 'Expanded drift');
 
@@ -277,7 +276,6 @@ describe('Docs protocol consistency report', () => {
         'PROJECT_HANDOFF_ACTIVE_TASK_STALE',
         'DEVELOPMENT_SLICE_STATUS_DRIFT',
         'DECISION_EVIDENCE_MISSING',
-        'TEST_STRATEGY_VALIDATION_BASELINE_STALE',
         'WORKFLOW_SCAFFOLD_SECTION_MISSING',
         'WORKFLOW_READ_AUTHORITY_TABLE_MISSING'
       ])
