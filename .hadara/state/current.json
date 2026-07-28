@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 385,
+  "rev": 387,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0727",
-    "title": "Complete Close Transaction Fault Matrix"
+    "id": "T-0728",
+    "title": "Deterministic Close Recovery Contract"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,8 +14,8 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Run installed-package task-close transaction dogfood for clean, blocked, race/retry, and recovery paths.",
-    "reason": "User requested all rc2 task-close work within four capsules; T-0726 should be the fourth and final capsule, focused on installed dogfood proof and residual-risk reporting.",
+    "title": "Continue with deterministic partial-write reconciliation and `bookkeeping` domain removal.",
+    "reason": "T-0728 persisted the write-set/proof intent and fail-closed marker behavior; the remaining spec gap is prefix/non-prefix reconciliation and replacing the legacy bookkeeping report/domain with generic close writes.",
     "references": [
       {
         "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
@@ -29,11 +29,33 @@
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0725",
-      "path": "tasks/T-0725-add-close-fault-hooks/HANDOFF.md"
+      "workId": "T-0728",
+      "path": "tasks/T-0728-deterministic-close-recovery-contract/HANDOFF.md"
     }
   },
   "continuations": [
+    {
+      "disposition": "actionable",
+      "kind": "task-handoff",
+      "title": "Continue with deterministic partial-write reconciliation and `bookkeeping` domain removal.",
+      "reason": "T-0728 persisted the write-set/proof intent and fail-closed marker behavior; the remaining spec gap is prefix/non-prefix reconciliation and replacing the legacy bookkeeping report/domain with generic close writes.",
+      "references": [
+        {
+          "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
+          "required": true
+        },
+        {
+          "path": "docs/TASK_WORKFLOW_COMMANDS.md",
+          "required": true
+        }
+      ],
+      "createCommandAllowed": true,
+      "source": {
+        "type": "work-handoff",
+        "workId": "T-0728",
+        "path": "tasks/T-0728-deterministic-close-recovery-contract/HANDOFF.md"
+      }
+    },
     {
       "disposition": "actionable",
       "kind": "task-handoff",

@@ -728,3 +728,4 @@
 | T-0725 | Add Close Fault Hooks | Done | tasks/T-0725-add-close-fault-hooks | |
 | T-0726 | Dogfood Close Transaction Package | Done | tasks/T-0726-dogfood-close-transaction-package | |
 | T-0727 | Complete Close Transaction Fault Matrix | Done | tasks/T-0727-complete-close-transaction-fault-matrix | |
+| T-0728 | Deterministic Close Recovery Contract | Done | tasks/T-0728-deterministic-close-recovery-contract | |

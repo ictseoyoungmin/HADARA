@@ -388,6 +388,81 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
+  it('persists guarded write intent and reports actual target file writes separately from mutation steps', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction write intent');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| Status | Done |', '| Status | Draft |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction write intent | Done |`, `| ${task.id} | Close transaction write intent | Draft |`),
+      'utf8'
+    );
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+    const expectedWrites = report.transaction.operation?.expectedWrites ?? [];
+    const targetWrites = expectedWrites.filter((write) => write.writeBoundary === 'task-local');
+
+    expect(report.ok).toBe(true);
+    expect(report.transaction.operation).toMatchObject({
+      intendedFinalState: 'closed-valid',
+      closeSourceHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      writeSetHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/)
+    });
+    expect(expectedWrites).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        step: 'bookkeeping',
+        path: 'docs/TASK_BOARD.md',
+        expectedBeforeExists: true,
+        expectedBeforeHash: expect.stringMatching(/^sha256:/),
+        afterHash: expect.stringMatching(/^sha256:/)
+      })
+    ]));
+    expect(targetWrites.length).toBeGreaterThan(1);
+    expect(report.writeSummary.executedMutationSteps).toBeLessThan(targetWrites.length);
+    expect(report.writeSummary.executedFileWrites).toBe(targetWrites.length);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('fails closed with zero writes when a close operation marker is malformed', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction malformed marker');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+    fs.mkdirSync(path.dirname(operationPath), { recursive: true });
+    fs.writeFileSync(operationPath, '{not-json', 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      readOnly: true,
+      closeState: 'blocked',
+      writeSummary: {
+        executedWrites: 0,
+        executedFileWrites: 0,
+        evidenceAppends: 0,
+        closeProofAppended: false
+      },
+      recovery: {
+        required: true
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_OPERATION_MARKER_MALFORMED' }));
+    expect(report.primaryNextAction?.writeBoundary).toBe('read-only');
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
   it('keeps the shared reviewed hash across the public auto-close minute-boundary refusal', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-28T13:59:59.000+09:00'));
@@ -762,6 +837,41 @@ describe('task close report', () => {
     });
     expect(closeProofCount(task.dir)).toBe(1);
     expect(recordsAfterRecovery.split(/\n/).filter((line) => line.includes('"task-close-plan-readiness"'))).toHaveLength(1);
+    expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
+  it('persists durable proof-pending intent before close proof append', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction durable proof pending');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterProofIntent() {
+          throw new Error('fault after proof intent');
+        }
+      }
+    })).toThrow('fault after proof intent');
+
+    expect(closeProofCount(task.dir)).toBe(0);
+    const persisted = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
+    expect(persisted).toMatchObject({
+      taskId: task.id,
+      phase: 'proof-pending',
+      finalSourceHash: expect.stringMatching(/^sha256:/),
+      proof: {
+        idempotencyKey: expect.stringContaining(`close:${task.id}:`),
+        outcome: 'pending'
+      }
+    });
+
+    const recovered = createTaskCloseTransactionReport(root, task.id);
+
+    expect(recovered.ok).toBe(true);
+    expect(closeProofCount(task.dir)).toBe(1);
+    expect(fs.existsSync(operationPath)).toBe(false);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 

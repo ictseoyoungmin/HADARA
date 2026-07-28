@@ -116,6 +116,7 @@ export interface TaskClosePlanExecutedStep {
   reportHash: string;
   summary: string;
   writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
+  fileWrites?: number;
   writeOutcome?: 'appended' | 'existing-noop' | 'blocked';
 }
 
@@ -127,6 +128,7 @@ export interface TaskClosePlanProgressEvent {
   writeBoundary?: TaskClosePlanExecutedStep['writeBoundary'];
   writeOutcome?: TaskClosePlanExecutedStep['writeOutcome'];
   mutated?: boolean;
+  fileWrites?: number;
 }
 
 export interface TaskClosePlanOptions {
@@ -162,7 +164,7 @@ export interface TaskClosePlanFaultHooks {
   afterWritesPersisted?: () => void;
   beforeFinalVerification?: () => void;
   afterFinalVerification?: () => void;
-  afterProofIntent?: () => void;
+  afterProofIntent?: (closeReport: TaskCloseReport) => void;
   afterReadinessEvidenceAppend?: () => void;
 }
 
@@ -615,19 +617,15 @@ function executeTaskClosePlan(
   const closeStep = steps.find((step) => step.id === 'close');
   let readinessEvidence: TaskClosePlanReadinessEvidence | undefined;
   if (!closeAlreadyExecuted && closeStep?.status === 'required') {
-    if (recordReadinessEvidence) {
-      readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, reports.close);
-      faultHooks?.afterReadinessEvidenceAppend?.();
-      emitClosePlanProgress(onProgress, 'refresh', 'start', 'Recomputing close plan state after readiness evidence.');
-      reports = createClosePlanReports(projectRoot, taskId, actor);
-      steps = createSteps(taskId, reports);
-      emitClosePlanProgress(onProgress, 'refresh', 'satisfied', 'ClosePlan state refreshed after readiness evidence.', true);
-    }
     emitClosePlanProgress(onProgress, closeStep.id, 'start', closeStep.summary);
     faultHooks?.beforeFinalVerification?.();
     const closeReport = createTaskCloseReport(projectRoot, taskId, 'execute', { actor });
     faultHooks?.afterFinalVerification?.();
-    if (closeReport.ok) faultHooks?.afterProofIntent?.();
+    if (closeReport.ok) faultHooks?.afterProofIntent?.(closeReport);
+    if (closeReport.ok && recordReadinessEvidence) {
+      readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, closeReport);
+      faultHooks?.afterReadinessEvidenceAppend?.();
+    }
     if (closeReport.ok) executeTaskCloseEvidence(projectRoot, closeReport);
     executedSteps.push(
       createExecutedStep(
@@ -1151,6 +1149,7 @@ function createExecutedStep(
   status: TaskClosePlanExecutedStep['status'],
   writeOutcome?: TaskClosePlanExecutedStep['writeOutcome']
 ): TaskClosePlanExecutedStep {
+  const fileWrites = countExecutedTargetFileWrites(step, report, status);
   return {
     id: step.id,
     status,
@@ -1159,8 +1158,19 @@ function createExecutedStep(
     reportHash: hashReport(report),
     summary: step.summary,
     writeBoundary: step.writeBoundary,
+    ...(fileWrites > 0 ? { fileWrites } : {}),
     ...(writeOutcome ? { writeOutcome } : {})
   };
+}
+
+function countExecutedTargetFileWrites(step: TaskClosePlanStep, report: unknown, status: TaskClosePlanExecutedStep['status']): number {
+  if (status !== 'executed' || step.writeBoundary !== 'task-local') return 0;
+  if (isCloseBookkeepingReport(report)) return report.writes.filter((write) => write.applied).length;
+  return step.expectedWritePaths.length;
+}
+
+function isCloseBookkeepingReport(value: unknown): value is CloseBookkeepingReport {
+  return Boolean(value && typeof value === 'object' && (value as CloseBookkeepingReport).schemaVersion === 'hadara.task.close_bookkeeping.v1');
 }
 
 export function didClosePlanExecutedStepMutate(step: TaskClosePlanExecutedStep): boolean {
@@ -1175,7 +1185,8 @@ function emitClosePlanStepProgress(
   emitClosePlanProgress(onProgress, executedStep.id, executedStep.status, executedStep.summary, executedStep.ok, {
     writeBoundary: executedStep.writeBoundary,
     ...(executedStep.writeOutcome ? { writeOutcome: executedStep.writeOutcome } : {}),
-    mutated: didClosePlanExecutedStepMutate(executedStep)
+    mutated: didClosePlanExecutedStepMutate(executedStep),
+    ...(executedStep.fileWrites ? { fileWrites: executedStep.fileWrites } : {})
   });
 }
 

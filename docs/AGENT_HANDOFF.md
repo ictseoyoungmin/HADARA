@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0727 Complete Close Transaction Fault Matrix | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0728 Deterministic Close Recovery Contract | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0727 implemented the remaining rc2 close transaction hardening after T-0726 installed-package dogfood: `Residual` risk-state tokens are accepted, non-public close fault hooks now cover the remaining spec seams, guarded bookkeeping writes fsync temp files and parent directories, focused fault tests passed, full check passed, and stale fixed-count/fixed-size capsule guidance was removed. Close and commit this capsule, then stop unless a new human instruction asks for another task.
+T-0728 addressed the next P1 close-transaction gap after T-0727: operation markers now persist close source hash, write set hash, expected guarded writes, intended final state, final source/proof intent, and stricter phases including durable `proof-pending`; malformed markers fail closed with zero lifecycle/evidence writes; `executedFileWrites` counts actual task-local target files separately from mutating transaction steps; and task-close v3 schema/tests cover the new contract. Focused close/schema tests, TypeScript build, and full check passed. Next capsule should use the persisted write descriptors to implement prefix/non-prefix partial-write reconciliation and then remove or rename the remaining legacy `bookkeeping` domain/report surface.
 
 ## Previous Handoff
 

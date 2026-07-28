@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0727 Complete Close Transaction Fault Matrix |
+| Latest Completed Task | T-0728 Deterministic Close Recovery Contract |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -71,6 +71,8 @@ T-0723 enforces the rc2 physical proof-last ordering for required-bookkeeping ta
 T-0724 exposes close marker persistence counts and rc2 write-summary aliases in the public v3 task-close transaction report. Clean close reports zero progress persistence writes and marker content writes within the rc2 budget, while preserving compatibility fields. Focused close tests, schema/workflow docs tests, TypeScript build, and full check passed. Remaining rc2 transaction work should focus on proof-pending/partial recovery fault injection, blocked-preflight marker tightening, and installed-package dogfood.
 
 T-0725 adds internal task-close fault hooks and recovery tests for interruption after close proof append and before terminal cleanup. Retrying both scenarios returns `closed-valid`, cleans the local operation marker, and does not duplicate close proof. T-0726 completed installed-package close transaction dogfood for governed init, task create, blocked close, clean close, and identical retry after fixing done-level harness validation to parse Init v1 Task Board rows through the shared parser. T-0727 completes remaining rc2 fault-matrix hardening: `Residual` risk-state token acceptance, broader internal fault hooks, guarded write fsync boundaries, lock/write/proof-pending tests, and stale fixed-capsule guidance cleanup. Focused tests, TypeScript build, and full check passed.
+
+T-0728 strengthens the deterministic close recovery contract after reviewer P1 feedback: operation markers now persist close source hash, write set hash, expected guarded writes, intended final state, final source/proof intent, and stricter phases including `proof-pending`; malformed markers fail closed with zero lifecycle/evidence writes; `executedFileWrites` counts task-local target files separately from mutating transaction steps; and task-close v3 schema/tests cover the new contract. Focused close/schema tests, TypeScript build, and full check passed. Remaining close transaction work should focus on prefix/non-prefix partial-write reconciliation and removing the legacy `bookkeeping` domain naming/report surface.
 
 | Stage | State | Purpose |
 |---|---|---|

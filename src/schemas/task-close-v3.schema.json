@@ -4,7 +4,7 @@
   "x-hadara-schema-id": "hadara.task.close.v3",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "command", "ok", "mode", "taskId", "generatedAt", "actor", "closeState", "planStatus", "readOnly", "transaction", "writeSummary", "source", "nextActions", "issues"],
+  "required": ["schemaVersion", "command", "ok", "mode", "taskId", "generatedAt", "actor", "closeState", "planStatus", "terminal", "operatorGuidance", "readOnly", "transaction", "writeSummary", "source", "nextActions", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.task.close.v3" },
     "command": { "const": "task.close" },
@@ -21,7 +21,7 @@
     "transaction": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["strategy", "internalReview", "planHash", "proofLast", "stalePlanGuard", "markerPersistence"],
+      "required": ["strategy", "internalReview", "planHash", "proofLast", "stalePlanGuard", "lockOrder", "locks", "markerPersistence"],
       "properties": {
         "strategy": { "enum": ["close-auto", "close-reviewed-plan", "review-only"] },
         "internalReview": { "type": "boolean" },
@@ -71,13 +71,20 @@
         "operation": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["operationId", "taskId", "idempotencyKey", "phase", "planHash", "completedSteps", "pendingSteps", "path", "persisted", "createdAt", "updatedAt"],
+          "required": ["operationId", "taskId", "idempotencyKey", "intendedFinalState", "phase", "closeSourceHash", "planHash", "writeSetHash", "expectedWrites", "completedSteps", "pendingSteps", "path", "persisted", "createdAt", "updatedAt"],
           "properties": {
             "operationId": { "type": "string" },
             "taskId": { "type": "string" },
             "idempotencyKey": { "type": "string" },
-            "phase": { "enum": ["preflight", "applying", "closed-valid", "blocked", "recovery-required"] },
+            "intendedFinalState": { "const": "closed-valid" },
+            "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
+            "closeSourceHash": { "type": "string" },
             "planHash": { "type": "string" },
+            "writeSetHash": { "type": "string" },
+            "expectedWrites": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/expectedWrite" }
+            },
             "completedSteps": { "type": "array", "items": { "type": "string" } },
             "pendingSteps": { "type": "array", "items": { "type": "string" } },
             "stepJournal": {
@@ -89,7 +96,13 @@
               "additionalProperties": false,
               "required": ["executedWrites", "closeProofAppended", "idempotentNoop"],
               "properties": {
-                "executedWrites": { "type": "number" },
+                "executedWrites": { "type": "integer", "minimum": 0 },
+                "plannedMutationSteps": { "type": "integer", "minimum": 0 },
+                "executedMutationSteps": { "type": "integer", "minimum": 0 },
+                "plannedFileWrites": { "type": "integer", "minimum": 0 },
+                "executedFileWrites": { "type": "integer", "minimum": 0 },
+                "evidenceAppends": { "type": "integer", "minimum": 0 },
+                "recoveredWrites": { "type": "integer", "minimum": 0 },
                 "closeProofAppended": { "type": "boolean" },
                 "idempotentNoop": { "type": "boolean" }
               }
@@ -104,7 +117,7 @@
                   "attemptNumber": { "type": "integer", "minimum": 1 },
                   "startedAt": { "type": "string" },
                   "completedAt": { "type": "string" },
-                  "phase": { "enum": ["preflight", "applying", "closed-valid", "blocked", "recovery-required"] },
+                  "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
                   "stepJournal": {
                     "type": "array",
                     "items": { "$ref": "#/$defs/operationJournalEntry" }
@@ -114,7 +127,13 @@
                     "additionalProperties": false,
                     "required": ["executedWrites", "closeProofAppended", "idempotentNoop"],
                     "properties": {
-                      "executedWrites": { "type": "number" },
+                      "executedWrites": { "type": "integer", "minimum": 0 },
+                      "plannedMutationSteps": { "type": "integer", "minimum": 0 },
+                      "executedMutationSteps": { "type": "integer", "minimum": 0 },
+                      "plannedFileWrites": { "type": "integer", "minimum": 0 },
+                      "executedFileWrites": { "type": "integer", "minimum": 0 },
+                      "evidenceAppends": { "type": "integer", "minimum": 0 },
+                      "recoveredWrites": { "type": "integer", "minimum": 0 },
                       "closeProofAppended": { "type": "boolean" },
                       "idempotentNoop": { "type": "boolean" }
                     }
@@ -125,6 +144,16 @@
             "path": { "type": "string" },
             "persisted": { "type": "boolean" },
             "resumedFromOperation": { "type": "boolean" },
+            "finalSourceHash": { "type": "string" },
+            "proof": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["idempotencyKey", "outcome"],
+              "properties": {
+                "idempotencyKey": { "type": "string" },
+                "outcome": { "enum": ["pending", "appended", "existing-noop"] }
+              }
+            },
             "createdAt": { "type": "string" },
             "updatedAt": { "type": "string" }
           }
@@ -199,6 +228,21 @@
     }
   },
   "$defs": {
+    "expectedWrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "path", "writeBoundary"],
+      "properties": {
+        "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
+        "path": { "type": "string" },
+        "writeBoundary": { "enum": ["task-local", "evidence-append"] },
+        "action": { "enum": ["update", "insert"] },
+        "field": { "enum": ["task-status", "task-handoff-identity", "task-board-row", "current-state", "project-state-projection", "handoff-projection"] },
+        "expectedBeforeExists": { "type": "boolean" },
+        "expectedBeforeHash": { "type": "string" },
+        "afterHash": { "type": "string" }
+      }
+    },
     "operationJournalEntry": {
       "type": "object",
       "additionalProperties": false,
@@ -211,6 +255,7 @@
         "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
         "writeOutcome": { "enum": ["appended", "existing-noop", "blocked"] },
         "mutated": { "type": "boolean" },
+        "fileWrites": { "type": "integer", "minimum": 0 },
         "at": { "type": "string" }
       }
     }
