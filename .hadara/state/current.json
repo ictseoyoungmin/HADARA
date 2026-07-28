@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 351,
+  "rev": 353,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0713",
-    "title": "Task Close Atomicity and Evidence Integrity Hardening"
+    "id": "T-0714",
+    "title": "Task Close Proof-Last Refactor"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,27 +14,27 @@
   "continuation": {
     "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Consider a full journal-before-write close transaction (mirroring Init v1 apply) to close the remaining narrow race window between the virtual preflight and the real finish/close-evidence writes.",
-    "reason": "Flagged in RF-1; materially larger scope than this capsule, worth a deliberate decision rather than folding in unprompted.",
+    "title": "Decide whether to stop at proof-last semantics or continue to a journaled close transaction that makes proof append and lifecycle-owned `Done` writes recover as one reviewed unit.",
+    "reason": "The current refactor fixes the user-reported ordering problem but still leaves a narrower recovery case when finish bookkeeping fails after proof append.",
     "references": [
       {
-        "path": "`.hadara/context/HADARA_CONTEXT.md`",
+        "path": "`tasks/T-0714-task-close-proof-last-refactor/TASK.md`",
         "required": true
       },
       {
-        "path": "`src/task/task-close-transaction.ts`",
+        "path": "`src/task/task-finalize.ts`",
         "required": true
       },
       {
-        "path": "`docs/TASK_BOARD.md`",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       }
     ],
     "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0713",
-      "path": "tasks/T-0713-task-close-atomicity-and-evidence-integrity-hardening/HANDOFF.md"
+      "workId": "T-0714",
+      "path": "tasks/T-0714-task-close-proof-last-refactor/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

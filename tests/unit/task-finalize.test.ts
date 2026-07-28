@@ -38,24 +38,22 @@ describe('task finalize dry-run plan', () => {
       readOnly: true,
       mode: 'dry-run',
       taskId: task.id,
-      planStatus: 'executable-with-deferred-checks',
-      deferredChecks: ['ready', 'close', 'audit-close'],
-      partialExecutionRisk: true,
+      planStatus: 'blocked',
+      deferredChecks: [],
+      partialExecutionRisk: false,
       summary: {
         steps: 4,
-        required: 1,
-        blocked: 0,
+        required: 0,
+        blocked: 1,
         executeSupported: true,
-        deferredChecks: ['ready', 'close', 'audit-close'],
-        partialExecutionRisk: true,
-        evaluatedReports: ['finish'],
-        skippedReports: ['ready', 'close', 'audit-close']
+        evaluatedReports: ['finish', 'ready'],
+        skippedReports: ['close', 'audit-close']
       },
       primaryNextAction: {
-        id: 'finalize-execute-reviewed-plan',
-        command: `hadara task finalize --task ${task.id} --execute --auto --json`,
-        writeBoundary: 'task-local',
-        summary: 'Apply bounded finish bookkeeping. Then finalize will re-evaluate ready, close, audit-close and may stop if blockers appear.'
+        id: 'finalize-record-passed-evidence',
+        command: `hadara evidence add-command --task ${task.id} --summary "Focused validation passed." --result passed --category validation --json`,
+        writeBoundary: 'evidence-append',
+        summary: 'Record substantive passed validation evidence before rerunning readiness.'
       },
       authoringGuidance: {
         readOnly: true,
@@ -67,14 +65,11 @@ describe('task finalize dry-run plan', () => {
     expect(report.planHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(second.planHash).toBe(report.planHash);
     expect(report.steps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
-    expect(report.steps.find((step) => step.id === 'ready')).toMatchObject({ status: 'pending', sourceReport: 'hadara.task.ready.v1' });
-    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_FINALIZE_DEFERRED_CHECKS', severity: 'info' })]));
+    expect(report.steps.find((step) => step.id === 'ready')).toMatchObject({ status: 'blocked', sourceReport: 'hadara.task.ready.v1' });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_FINALIZE_EVIDENCE_QUALITY_HINT', severity: 'info' })]));
     expect(report.primaryNextAction).not.toHaveProperty('message');
     expect(report.steps.find((step) => step.id === 'finish')).toMatchObject({
-      status: 'required',
-      mode: 'execute',
-      writeBoundary: 'task-local',
-      expectedWritePaths: expect.arrayContaining([`tasks/${task.id}-finalize-draft/TASK.md`, 'docs/TASK_BOARD.md'])
+      status: 'pending'
     });
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
@@ -601,7 +596,7 @@ describe('task finalize --auto (FD-010)', () => {
     expect(identitySection.match(/\| Field \| Value \|/g)).toHaveLength(1);
     expect(identitySection).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
     expect(snapshotFiles(root)['docs/TASK_BOARD.md']).toContain(`| ${task.id} | Finalize auto first capsule | Done |`);
-    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['ready', 'close', 'finish', 'audit-close']);
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 

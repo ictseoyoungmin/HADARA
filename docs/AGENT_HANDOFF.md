@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0713 Task Close Atomicity and Evidence Integrity Hardening | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0714 Task Close Proof-Last Refactor | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0711 adds controlled automatic failure classification to validation and repo-local Docker reports: started non-zero checks are `assertion`, deadlines are `timeout`, and launch/preparation failures are `environment-setup`; low-level diagnostics and private-log boundaries remain intact. Full validation passed 142 public files/1108 tests and 16 HADARA-dev files/132 tests, plus a built CLI three-class smoke. Next define the live docs set and archive all other current docs, then run the completion audit.
+T-0714 is closed-valid. The guarded close path now computes readiness and close proof from the virtual post-finish capsule state, appends proof before real TASK.md / Task Board `Done` bookkeeping, and still audits last. Focused regressions passed across `task-finalize`, `task-close`, harness validation, and init template docs (`ev:T-0714:ff578bcf6ac446a0b06b0b9f`). Residual scope is unchanged: this is proof-last refactoring, not a full journaled atomic close transaction.
 
 ## Previous Handoff
 

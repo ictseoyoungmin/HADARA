@@ -714,3 +714,4 @@
 | T-0711 | Automatic Validation Failure Classification | Done | tasks/T-0711-automatic-validation-failure-classification | |
 | T-0712 | Live Documentation Set and Archive | Done | tasks/T-0712-live-documentation-set-and-archive | |
 | T-0713 | Task Close Atomicity and Evidence Integrity Hardening | Done | tasks/T-0713-task-close-atomicity-and-evidence-integrity-hardening | |
+| T-0714 | Task Close Proof-Last Refactor | Done | tasks/T-0714-task-close-proof-last-refactor | |

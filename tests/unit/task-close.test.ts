@@ -328,22 +328,22 @@ describe('task close report', () => {
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     expect(report.ok).toBe(false);
     expect(report.writeSummary.executedWrites).toBeGreaterThan(0);
-    expect(report.writeSummary.closeProofAppended).toBe(false);
+    expect(report.writeSummary.closeProofAppended).toBe(true);
     expect(report.transaction.operation).toMatchObject({
       taskId: task.id,
       phase: 'recovery-required',
       persisted: true,
-      completedSteps: ['finish'],
-      pendingSteps: ['ready', 'close', 'audit-close']
+      completedSteps: ['ready', 'close', 'finish'],
+      pendingSteps: ['audit-close']
     });
     expect(fs.existsSync(operationPath)).toBe(true);
     const persisted = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
     expect(persisted).toMatchObject({
       taskId: task.id,
       phase: 'recovery-required',
-      completedSteps: ['finish']
+      completedSteps: ['ready', 'close', 'finish']
     });
-    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).not.toContain('Task close validation');
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('Task close validation');
     expect(validateSchema('hadara.task.close.v2', report).ok).toBe(true);
   });
 
@@ -398,7 +398,7 @@ describe('task close report', () => {
       .split(/\n/)
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(1);
+    expect(records.filter((record) => (record.tags ?? []).includes('close-proof'))).toHaveLength(2);
     expect(validateSchema('hadara.task.close.v2', recovered).ok).toBe(true);
   });
 
