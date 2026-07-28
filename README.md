@@ -75,7 +75,7 @@ Profiles:
 
 ## First Capsule
 
-Lifecycle walkthrough: [Lifecycle Quickstart](docs/LIFECYCLE_QUICKSTART.md).
+Lifecycle walkthrough: [Task Workflow Commands](docs/TASK_WORKFLOW_COMMANDS.md).
 
 Use a Task Capsule for each focused change:
 

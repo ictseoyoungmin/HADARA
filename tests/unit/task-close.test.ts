@@ -32,7 +32,7 @@ afterEach(() => {
 });
 
 describe('task close report', () => {
-  it('closes a clean capsule through the public v2 transaction without an exposed plan hash', () => {
+  it('closes a clean capsule through the public v3 transaction without an exposed plan hash', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction clean');
     completeTask(root, task.id, task.dir);
@@ -674,7 +674,7 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', retry).ok).toBe(true);
   });
 
-  it('prints compact task close JSON by default and keeps the v2 transaction behind --detail full', () => {
+  it('prints compact task close JSON by default and keeps the v3 transaction behind --detail full', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI close transaction');
     completeTask(root, task.id, task.dir);

@@ -59,7 +59,6 @@ Schema: `hadara.docs.registry.v1`
 | `docs/HADARA_WORKFLOW.md` | workflow-guide | canonical | session-start | yes | hadara-docs |
 | `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | handoff | historical | never-default | no | hadara-docs |
 | `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | project-state | historical | never-default | no | hadara-docs |
-| `docs/LIFECYCLE_QUICKSTART.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
 | `docs/archive/retired-2026-07-26/PRIMARY_WORKFLOW_BUDGET.md` | implementation-guide | historical | never-default | no | hadara-docs |
 | `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |
 | `docs/archive/retired-2026-07-26/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` | release | historical | never-default | no | hadara-docs |

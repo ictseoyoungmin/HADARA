@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0721 Harden Close Journal And Measurement Continuations |
+| Latest Completed Task | T-0722 Clean Close Naming And Registry Remnants |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |
@@ -93,8 +93,6 @@ T-0711 adds controlled automatic failure classification. `validation run` and re
 | Pre-P1 project state snapshot | `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | Full pre-compaction project narrative through T-0557. |
 | Pre-P1 handoff snapshot | `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | Full pre-compaction handoff, known-problem, and validation tables. |
 | Documentation archive map | `docs/archive/README.md` | Completed specs, historical logs, and old-to-new path mapping. |
-| Completed task handoff history | `docs/HANDOFF_HISTORY.md` | Older completed-task summaries. |
-| Validation history | `docs/VALIDATION_HISTORY.md` | Older accumulated validation observations. |
 | Task queue | `docs/TASK_BOARD.md` | Status and capsule path for every task. |
 | Development sequence | `docs/DEVELOPMENT_SLICES.md` | Slice ordering and done evidence. |
 | Per-task proof | `tasks/T-*/evidence.jsonl` | Canonical task evidence. |

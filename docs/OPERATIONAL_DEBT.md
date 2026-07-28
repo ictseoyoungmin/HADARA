@@ -49,7 +49,7 @@ Read-only surfaces:
 - `node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json` is the default current release gate. Open high-severity debt would emit a warning check and `ok: true`.
 - `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt would emit an error check and `ok: false`; with OD-0003 and OD-0008 mitigated, strict mode can pass when all other documented readiness checks pass.
 
-Both release-gate modes are read-only reports. They do not execute release, packaging, deployment, shell, provider, or remote CI actions. Remote CI readiness is represented by documented observation evidence in `docs/VALIDATION_HISTORY.md`; the release gate checks for that record without calling GitHub.
+Both release-gate modes are read-only reports. They do not execute release, packaging, deployment, shell, provider, or remote CI actions. Remote CI readiness is represented by documented observation evidence; the release gate checks for that record without calling GitHub.
 
 ## V1.0 Follow-Up
 

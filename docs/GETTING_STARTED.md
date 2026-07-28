@@ -80,4 +80,4 @@ hadara task close --task T-0001 --execute --plan-hash sha256:... --json
 
 Use `task close --json` for ordinary clean work. Use the explicit plan hash when a separate human or automation boundary reviews the dry-run.
 
-For more detail, see `docs/LIFECYCLE_QUICKSTART.md`.
+For more detail, see `docs/TASK_WORKFLOW_COMMANDS.md`.

@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0721 Harden Close Journal And Measurement Continuations | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0722 Clean Close Naming And Registry Remnants | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0721 completed the requested task-close refactor. Current `task close` internals live under `src/task/close/`, the public close transaction schema is `hadara.task.close.v3`, legacy finish/finalize/ready source files, schemas, and dedicated tests are removed, and current `docs/TEST_STRATEGY.md` source/test references are gone. Final validation passed with source typecheck, build, full unit, and focused close/docs cleanup tests. Keep T-0721 RF-1 visible: `proof.ts` still owns proof/audit/source implementation behind the requested facade files, and deeper physical extraction should be a separate behavior-preserving task only if needed.
+T-0722 completed the requested P3 cleanup after T-0721. Current close output no longer exposes mechanical phrases such as duplicated bookkeeping wording or malformed retry text, v3 task-close tests no longer describe themselves as v2, and deleted docs are removed from the current docs registry projections. Docs doctor reports no missing registered documents. Reviewer P1/P2 findings in the same attachment remain separate work if selected next.
 
 ## Previous Handoff
 
@@ -54,7 +54,5 @@ T-0698 adopts and maps the complete eight-capsule Init v1 program. T-0699 implem
 | Pre-P1 handoff snapshot | `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | Full handoff tables and historical known problems before compact ownership. |
 | Pre-P1 project state snapshot | `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | Full project narrative through T-0557. |
 | Documentation archive map | `docs/archive/README.md` | Locate completed specs and historical logs without default-reading them. |
-| Completed task history | `docs/HANDOFF_HISTORY.md` | Older completed-task details. |
-| Validation history | `docs/VALIDATION_HISTORY.md` | Older validation observations. |
 | Work queue | `docs/TASK_BOARD.md` | Current status and capsule paths. |
 | Task evidence | `tasks/T-*/evidence.jsonl` | Canonical per-task evidence. |

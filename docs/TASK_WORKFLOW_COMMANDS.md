@@ -10,7 +10,7 @@ hadara help command task.close
 hadara commands --json
 ```
 
-The authoritative command inventory is `src/services/capability-registry.ts`. `docs/COMMAND_SURFACE.md` documents the family, requiredness, and write-boundary taxonomy; `docs/archive/retired-2026-07-26/LIFECYCLE_GUIDE.md` documents the primary lifecycle path and non-substitute diagnostics; `tools list` remains a compatibility projection from that same registry.
+The authoritative command inventory is `src/services/capability-registry.ts`. `docs/archive/retired-2026-07-26/LIFECYCLE_GUIDE.md` keeps historical lifecycle guidance; `tools list` remains a compatibility projection from the same registry.
 
 ## Required Reading Tier
 

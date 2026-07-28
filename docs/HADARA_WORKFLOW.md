@@ -108,7 +108,7 @@ A project-local install does not remove or shadow any `hadara` already earlier o
 | `docs/PROJECT_STATE.md` | Product identity, current release, phase, current problems, or validation baseline changes. |
 | `docs/TASK_BOARD.md` | Task status changes. Prefer HADARA lifecycle commands when possible. |
 | `docs/AGENT_HANDOFF.md` | The governed profile uses this for compact continuation guidance; update it before stopping when active/latest work, risks, or next-step guidance changes. |
-| Optional project docs | Architecture, decisions, roadmap, security, test strategy, or agent guidance changes after those docs have been added. |
+| Optional project docs | Architecture, decisions, roadmap, security, or agent guidance changes after those docs have been added. |
 
 Do not leave generated docs in scaffold form after the first real capability exists. If a generated or registered doc is no longer useful, update its registry state with `hadara docs update`, `hadara docs archive`, `hadara docs supersede`, or `hadara docs unregister` instead of silently ignoring it.
 
@@ -359,7 +359,7 @@ Agents should use `task close --json` for ordinary clean capsules; it performs t
 | Record direct validation result | `hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence list --task T-XXXX --json` | Durable id discovery. |
-| Add optional project doc | `hadara docs add <type> --json` | Dry-run-first creator/registrar for architecture, decisions, roadmap, security model, test strategy, and agent guide docs. |
+| Add optional project doc | `hadara docs add <type> --json` | Dry-run-first creator/registrar for architecture, decisions, roadmap, security model, and agent guide docs. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |
 | Close ordinary work | `hadara task close --task T-XXXX --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | `hadara task close --task T-XXXX --dry-run --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |

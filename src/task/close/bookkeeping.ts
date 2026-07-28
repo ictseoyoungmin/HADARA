@@ -836,7 +836,7 @@ function appendStatusHistoryDone(content: string): string {
   const end = start + section.length;
   const prefix = content.slice(0, start);
   const suffix = content.slice(end);
-  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Bookkeepinged task capsule. | \`hadara task close\` |`;
+  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Closed task capsule. | \`hadara task close\` |`;
   const managedEnd = '<!-- hadara:managed:end task-status-history -->';
   const managedEndIndex = section.indexOf(managedEnd);
   if (managedEndIndex >= 0) {

@@ -309,7 +309,7 @@ export function createReviewedTaskClosePlan(
 function createAutoClosePlanPreflightBlockers(projectRoot: string, taskId: string, actor: HadaraActorContext): TaskClosePlanIssue[] {
   const bookkeepingPlan = createCloseBookkeepingReport(projectRoot, taskId, 'dry-run', { actor });
   if (!bookkeepingPlan.ok) return bookkeepingPlan.issues.map(closeBookkeepingIssueToClosePlanIssue);
-  const tempRoot = createVirtualBookkeepingedProjectRoot(projectRoot, taskId, bookkeepingPlan);
+  const tempRoot = createVirtualBookkeptProjectRoot(projectRoot, taskId, bookkeepingPlan);
   try {
     const closePlan = createTaskCloseReport(tempRoot, taskId, 'dry-run', { actor });
     return closePlan.issues
@@ -341,7 +341,7 @@ function isDryRunPreflightBlocker(issue: TaskClosePlanIssue): boolean {
   return issue.code.includes('INVALID_TOKEN') || issue.code === 'HARNESS_TASK_PLAN_STATUS_DRIFT';
 }
 
-function createVirtualBookkeepingedProjectRoot(projectRoot: string, taskId: string, bookkeepingPlan: CloseBookkeepingReport): string {
+function createVirtualBookkeptProjectRoot(projectRoot: string, taskId: string, bookkeepingPlan: CloseBookkeepingReport): string {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-closePlan-preflight-'));
   const task = bookkeepingPlan.task;
   if (!task) return tempRoot;
@@ -865,7 +865,7 @@ function createVirtualCloseReports(
   actor: HadaraActorContext,
   bookkeepingPlan: CloseBookkeepingReport
 ): VirtualCloseReports {
-  const tempRoot = createVirtualBookkeepingedProjectRoot(projectRoot, taskId, bookkeepingPlan);
+  const tempRoot = createVirtualBookkeptProjectRoot(projectRoot, taskId, bookkeepingPlan);
   try {
     const close = createTaskCloseReport(tempRoot, taskId, 'dry-run', { actor });
     const ready = createCloseReadinessReport(taskId, close);
@@ -930,7 +930,7 @@ function createSteps(taskId: string, reports: ClosePlanReports): TaskClosePlanSt
     {
       id: 'bookkeeping',
       status: bookkeepingStatus,
-      summary: bookkeepingStatus === 'required' ? 'Apply bounded bookkeeping bookkeeping.' : bookkeepingStatus === 'satisfied' ? 'Bookkeeping bookkeeping is current.' : 'Bookkeeping blockers must be resolved.',
+      summary: bookkeepingStatus === 'required' ? 'Apply bounded close bookkeeping.' : bookkeepingStatus === 'satisfied' ? 'Close bookkeeping is current.' : 'Bookkeeping blockers must be resolved.',
       command: bookkeepingStatus === 'required' ? `hadara task close --task ${taskId} --execute --auto --json` : `hadara task status --task ${taskId} --detail full --json`,
       mode: bookkeepingStatus === 'required' ? 'execute' : 'dry-run',
       writeBoundary: bookkeepingStatus === 'required' ? 'task-local' : 'read-only',

@@ -1711,28 +1711,6 @@
       "supersedes": []
     },
     {
-      "path": "docs/LIFECYCLE_QUICKSTART.md",
-      "title": "Lifecycle Quickstart",
-      "owner": "hadara-docs",
-      "kind": "workflow-guide",
-      "status": "active",
-      "scope": "project",
-      "profiles": [
-        "governed"
-      ],
-      "readWhen": [
-        "only-when-linked"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [
-        "docs.register"
-      ],
-      "managedSections": [],
-      "closeSourceRole": "task-dependent",
-      "supersedes": []
-    },
-    {
       "path": "docs/archive/retired-2026-07-26/PRIMARY_WORKFLOW_BUDGET.md",
       "title": "Primary Workflow Budget",
       "owner": "hadara-docs",
@@ -2337,32 +2315,6 @@
       "updatedByCommands": [],
       "managedSections": [],
       "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init",
-      "origin": {
-        "type": "hadara-scaffold",
-        "generator": "hadara init"
-      }
-    },
-    {
-      "path": "docs/TEST_STRATEGY.md",
-      "title": "TEST_STRATEGY",
-      "owner": "hadara-docs",
-      "kind": "test-strategy",
-      "status": "reference",
-      "scope": "project",
-      "profiles": [
-        "standard",
-        "governed"
-      ],
-      "readWhen": [
-        "debugging"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "hadara init",
       "origin": {

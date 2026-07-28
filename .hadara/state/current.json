@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 373,
+  "rev": 375,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0721",
-    "title": "Harden Close Journal And Measurement Continuations"
+    "id": "T-0722",
+    "title": "Clean Close Naming And Registry Remnants"
   },
   "activeTask": null,
   "nextWork": null,
