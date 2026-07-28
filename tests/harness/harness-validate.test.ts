@@ -785,6 +785,40 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('rejects done-level handoff rows with missing evidence ids', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Missing handoff evidence');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'HANDOFF.md'),
+      fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')
+        .replace('Harness result.', `ev:${task.id}:missingevidenceref000001`),
+      'utf8'
+    );
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'HANDOFF_EVIDENCE_REF_MISSING',
+        path: `tasks/${task.id}-missing-handoff-evidence/HANDOFF.md`,
+        heading: 'Last Completed'
+      })
+    );
+  });
+
   it('blocks done-level validation for note-only evidence', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Weak done evidence');

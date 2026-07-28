@@ -104,6 +104,8 @@ export interface DevDockerCheckOptions {
   lowResource?: boolean;
 }
 
+type DistState = 'missing' | `sha256:${string}`;
+
 export interface DevDockerCommandRunner {
   run(command: string, args: string[], env: Record<string, string>): DevDockerCommandResult;
 }
@@ -158,8 +160,8 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
     distSyncExecuted: false
   };
   const issues: DevDockerCheckIssue[] = [];
-  const beforeHash = syncDist ? hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
-  const syncGuard = evaluateDistSyncGuard(syncDist, beforeHash, reviewedBeforeHash, allowMissingBeforeHash, issues);
+  const beforeState = syncDist ? readDistState(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
+  const syncGuard = evaluateDistSyncGuard(syncDist, beforeState, reviewedBeforeHash, allowMissingBeforeHash, issues);
   const steps: DevDockerCheckStep[] = [];
   let failureClass: DevDockerFailureClass = 'none';
 
@@ -174,8 +176,8 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       // beforeHash was reviewed before the long install/test/build steps ran;
       // recheck it immediately before the destructive rm+copy so a workspace
       // dist changed during that window is not silently overwritten.
-      const immediateHash = hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js'));
-      if (immediateHash !== undefined && immediateHash !== reviewedBeforeHash) {
+      const immediateState = readDistState(path.join(projectRoot, 'dist', 'cli', 'main.js'));
+      if (immediateState !== syncGuard.expectedState) {
         steps.push({ id: step.id, status: 'skipped', summary: 'Skipped because workspace dist changed after the reviewed before-hash was captured.' });
         issues.push({
           severity: 'error',
@@ -214,7 +216,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
     }
   }
 
-  const afterHash = syncDist ? hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
+  const afterState = syncDist ? readDistState(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
   execution.outputMutation = execution.distSyncExecuted;
   const ok = issues.every((issue) => issue.severity !== 'error');
   const evidenceSummary = buildEvidenceSummary(ok, mode, focusedTests, syncDist, execution);
@@ -222,15 +224,15 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
     requested: syncDist,
     executed: execution.distSyncExecuted,
     conflictDetected: syncDist && !syncGuard.allowed,
-    beforeHashAvailable: beforeHash !== undefined,
-    outputChanged: beforeHash !== afterHash,
+    beforeHashAvailable: beforeState !== undefined && beforeState !== 'missing',
+    outputChanged: beforeState !== afterState,
     requiresBeforeHash: syncDist,
     allowMissingBeforeHash
   };
-  if (beforeHash) distSyncReport.beforeHash = beforeHash;
-  if (afterHash) distSyncReport.afterHash = afterHash;
+  if (beforeState && beforeState !== 'missing') distSyncReport.beforeHash = beforeState;
+  if (afterState && afterState !== 'missing') distSyncReport.afterHash = afterState;
   if (reviewedBeforeHash) distSyncReport.reviewedBeforeHash = reviewedBeforeHash;
-  if (syncDist && reviewedBeforeHash) distSyncReport.beforeHashMatched = beforeHash === reviewedBeforeHash;
+  if (syncDist && reviewedBeforeHash) distSyncReport.beforeHashMatched = beforeState === reviewedBeforeHash;
   return {
     schemaVersion: 'hadara.dev.docker_check.v1',
     command: 'dev.dockerCheck',
@@ -386,21 +388,31 @@ function normalizeFocusedTests(values: string[]): string[] {
   return tests;
 }
 
-function hashFile(filePath: string): string | undefined {
+function hashFile(filePath: string): `sha256:${string}` | undefined {
   if (!fs.existsSync(filePath)) return undefined;
   return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')}`;
 }
 
-function evaluateDistSyncGuard(syncDist: boolean, beforeHash: string | undefined, reviewedBeforeHash: string | undefined, allowMissingBeforeHash: boolean, issues: DevDockerCheckIssue[]): { allowed: boolean } {
+function readDistState(filePath: string): DistState {
+  return hashFile(filePath) ?? 'missing';
+}
+
+function evaluateDistSyncGuard(
+  syncDist: boolean,
+  beforeState: DistState | undefined,
+  reviewedBeforeHash: string | undefined,
+  allowMissingBeforeHash: boolean,
+  issues: DevDockerCheckIssue[]
+): { allowed: boolean; expectedState?: DistState } {
   if (!syncDist) return { allowed: false };
-  if (!beforeHash) {
-    if (allowMissingBeforeHash) return { allowed: true };
+  if (!beforeState || beforeState === 'missing') {
+    if (allowMissingBeforeHash) return { allowed: true, expectedState: 'missing' };
     issues.push({
       severity: 'error',
       code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
       message: 'dist sync requires --before-hash <current dist hash> unless --allow-missing-before-hash is explicitly set for a first-time sync.'
     });
-    return { allowed: false };
+    return { allowed: false, expectedState: 'missing' };
   }
   if (!reviewedBeforeHash) {
     issues.push({
@@ -408,17 +420,17 @@ function evaluateDistSyncGuard(syncDist: boolean, beforeHash: string | undefined
       code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
       message: 'dist sync requires --before-hash <current dist hash>.'
     });
-    return { allowed: false };
+    return { allowed: false, expectedState: beforeState };
   }
-  if (beforeHash !== reviewedBeforeHash) {
+  if (beforeState !== reviewedBeforeHash) {
     issues.push({
       severity: 'error',
       code: 'HADARA_DIST_SYNC_BEFORE_HASH_MISMATCH',
       message: 'dist sync before-hash does not match the current workspace dist hash.'
     });
-    return { allowed: false };
+    return { allowed: false, expectedState: beforeState };
   }
-  return { allowed: true };
+  return { allowed: true, expectedState: beforeState };
 }
 
 function normalizeOptionalString(value: string | undefined): string | undefined {

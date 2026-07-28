@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isAffirmativeInitConfirmation } from '../../src/cli/init';
 import { assertSchema } from '../../src/core/schema';
 import { createInitPlanningResult } from '../../src/init/planner';
@@ -327,6 +327,22 @@ describe('Init v1 safe apply transaction', () => {
     const truncatedScanRoot = tempProject();
     for (let index = 0; index < 10006; index += 1) fs.mkdirSync(path.join(truncatedScanRoot, `dir-${index}`));
     expect(validateInitPaths(truncatedScanRoot, ['AGENTS.md'])).toContainEqual(expect.objectContaining({ code: 'INIT_NESTED_PROJECT_SCAN_INCOMPLETE' }));
+
+    const unreadableRoot = tempProject();
+    const unreadableDir = path.join(unreadableRoot, 'restricted');
+    fs.mkdirSync(unreadableDir);
+    const originalReaddirSync = fs.readdirSync.bind(fs);
+    const readdirSpy = vi.spyOn(fs, 'readdirSync').mockImplementation((target: any, options?: any) => {
+      if (target === unreadableDir && options?.withFileTypes) {
+        throw new Error('EACCES');
+      }
+      return originalReaddirSync(target, options as any);
+    });
+    try {
+      expect(validateInitPaths(unreadableRoot, ['AGENTS.md'])).toContainEqual(expect.objectContaining({ code: 'INIT_NESTED_PROJECT_SCAN_INCOMPLETE' }));
+    } finally {
+      readdirSpy.mockRestore();
+    }
 
     const caseRoot = tempProject();
     fs.mkdirSync(path.join(caseRoot, 'docs'));

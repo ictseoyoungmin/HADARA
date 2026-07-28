@@ -88,6 +88,7 @@ const DONE_STATUSES = new Set(['done']);
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
 const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md'];
 const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
+const EVIDENCE_REF_PATTERN = /\bev:T-\d{4}:[A-Za-z0-9]+\b/g;
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
   const task = findTaskCapsule(projectRoot, taskId);
@@ -137,6 +138,7 @@ export function createDocsProtocolConsistencyReport(projectRoot: string, now = n
   checkTaskBoardAgainstCapsules(projectRoot, tasks, taskBoardRows, issues);
   checkProjectStateConsistency(projectRoot, activeTaskId, latestDoneTask, checkedDocs, issues);
   checkProjectHandoffConsistency(projectRoot, activeTaskId, latestDoneTask, checkedDocs, issues);
+  checkProjectHandoffEvidenceRefs(projectRoot, checkedDocs, issues);
   checkDevelopmentSlicesConsistency(projectRoot, tasks, checkedDocs, issues);
   checkDecisionsConsistency(projectRoot, checkedDocs, issues);
   checkTestStrategyConsistency(projectRoot, checkedDocs, issues);
@@ -901,6 +903,26 @@ function checkProjectHandoff(
   }
 }
 
+function checkProjectHandoffEvidenceRefs(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
+  checkedDocs.add(toPortablePath(path.relative(projectRoot, handoffPath)));
+  if (!fs.existsSync(handoffPath)) return;
+  const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
+  const refs = extractEvidenceRefs(fs.readFileSync(handoffPath, 'utf8'));
+  const missingRefs = refs.filter((ref) => !protocolEvidenceRefExists(projectRoot, ref));
+  for (const ref of missingRefs) {
+    pushIssue(issues, {
+      code: 'PROJECT_HANDOFF_EVIDENCE_REF_MISSING',
+      severity: 'warning',
+      area: 'handoff',
+      path: relativePath,
+      message: `docs/AGENT_HANDOFF.md references missing evidence id ${ref}.`,
+      expected: 'reference an evidence id that exists in the referenced task evidence.jsonl',
+      actual: ref
+    });
+  }
+}
+
 function checkScaffoldPlaceholders(projectRoot: string, task: TaskCapsule, taskLooksDone: boolean, issues: ProtocolConsistencyIssue[]): void {
   if (!taskLooksDone) return;
   const legacySidecarComplete = ['PLAN.md', 'ACCEPTANCE.md', 'TESTS.md', 'FILES.md'].every((fileName) => fs.existsSync(path.join(task.dir, fileName)));
@@ -941,6 +963,20 @@ function parseMetadataStatus(content: string): string | null {
     if ((cells[0] ?? '').toLowerCase() === 'status') return cells[1] ?? '';
   }
   return null;
+}
+
+function extractEvidenceRefs(content: string): string[] {
+  return Array.from(new Set(content.match(EVIDENCE_REF_PATTERN) ?? []));
+}
+
+function protocolEvidenceRefExists(projectRoot: string, ref: string): boolean {
+  const taskId = /\bev:(T-\d{4}):/.exec(ref)?.[1];
+  if (!taskId) return false;
+  const task = findTaskCapsule(projectRoot, taskId);
+  if (!task) return false;
+  const evidencePath = path.join(task.dir, 'evidence.jsonl');
+  if (!fs.existsSync(evidencePath)) return false;
+  return fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/).some((line) => line.includes(`"id":"${ref}"`) || line.includes(`"id": "${ref}"`));
 }
 
 interface TaskBoardRow {

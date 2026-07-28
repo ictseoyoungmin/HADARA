@@ -47,9 +47,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Captured before the long install/build steps run below; rechecked
-# immediately before the destructive dist replace so a workspace dist
-# changed during that window is not silently overwritten.
-DIST_BEFORE_HASH="$(sha256sum "$WORKSPACE/dist/cli/main.js" 2>/dev/null | cut -d' ' -f1 || true)"
+# immediately before the destructive dist replace so any existence/content
+# transition in workspace dist during that window is not silently overwritten.
+if [[ -f "$WORKSPACE/dist/cli/main.js" ]]; then
+  DIST_BEFORE_STATE="sha256:$(sha256sum "$WORKSPACE/dist/cli/main.js" | cut -d' ' -f1)"
+else
+  DIST_BEFORE_STATE="missing"
+fi
 
 docker exec \
   -e HADARA_WORKSPACE="$WORKSPACE" \
@@ -60,7 +64,7 @@ docker exec \
   -e HADARA_TEST_SERIAL="$HADARA_TEST_SERIAL" \
   -e HADARA_DEV_NODE_OPTIONS="$HADARA_DEV_NODE_OPTIONS" \
   -e HADARA_NPM_JOBS="$HADARA_NPM_JOBS" \
-  -e HADARA_DIST_BEFORE_HASH="$DIST_BEFORE_HASH" \
+  -e HADARA_DIST_BEFORE_STATE="$DIST_BEFORE_STATE" \
   "$CONTAINER" bash -lc '
 set -euo pipefail
 
@@ -134,8 +138,12 @@ else
   run_step "npm run build" npm run build
 fi
 if [[ "$HADARA_CHECK_ONLY" != "1" ]]; then
-  DIST_CURRENT_HASH="$(sha256sum "$HADARA_WORKSPACE/dist/cli/main.js" 2>/dev/null | cut -d'"'"' '"'"' -f1 || true)"
-  if [[ -n "$HADARA_DIST_BEFORE_HASH" && "$DIST_CURRENT_HASH" != "$HADARA_DIST_BEFORE_HASH" ]]; then
+  if [[ -f "$HADARA_WORKSPACE/dist/cli/main.js" ]]; then
+    DIST_CURRENT_STATE="sha256:$(sha256sum "$HADARA_WORKSPACE/dist/cli/main.js" | cut -d' ' -f1)"
+  else
+    DIST_CURRENT_STATE="missing"
+  fi
+  if [[ "$DIST_CURRENT_STATE" != "$HADARA_DIST_BEFORE_STATE" ]]; then
     echo "error: workspace dist/cli/main.js changed after this run started; refusing to overwrite it. Rerun the sync." >&2
     exit 1
   fi

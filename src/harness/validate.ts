@@ -65,6 +65,7 @@ const TASK_STATUS_TOKENS = new Set<string>(vocab.TASK_STATUS_TOKENS.map((token) 
 const ACCEPTANCE_DISPOSITIONS_REQUIRING_REFERENCE = new Set(['Deferred', 'Accepted Risk', 'Not Applicable', 'Superseded']);
 const ACCEPTANCE_DECISIONS_REQUIRING_REFERENCE = new Set(['Follow-up', 'Accepted Risk', 'Not Applicable', 'Superseded']);
 const STALE_PENDING_CLOSE_PATTERN = /\b(?:done\s+pending\s+lifecycle\s+close|pending\s+lifecycle\s+close)\b/i;
+const EVIDENCE_REF_PATTERN = /\bev:T-\d{4}:[A-Za-z0-9]+\b/g;
 const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
   'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
   'TASK_DONE_WITH_FAILED_EVIDENCE',
@@ -1272,6 +1273,25 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
       }
     });
   }
+  const missingEvidenceRefs = extractEvidenceRefs(lastCompleted).filter((ref) => !evidenceRefExists(projectRoot, ref));
+  if (missingEvidenceRefs.length > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'HANDOFF_EVIDENCE_REF_MISSING',
+      message: `Done-level validation requires HANDOFF.md evidence references to exist; missing ${missingEvidenceRefs.length} reference(s): ${missingEvidenceRefs.join(', ')}.`,
+      path: relativePath,
+      heading: 'Last Completed',
+      fixHint: 'Replace stale HANDOFF.md evidence ids with durable ids that exist in the referenced task evidence.jsonl, or remove the stale reference.',
+      example: '| Implemented routing cleanup. | ev:T-0002:abc123def4567890abc12345 |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Last Completed',
+        requiredChange: 'Replace stale HANDOFF.md evidence references with durable ids that currently exist.',
+        example: '| Implemented routing cleanup. | ev:T-0002:abc123def4567890abc12345 |',
+        blocking: true
+      }
+    });
+  }
 }
 
 function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
@@ -1400,6 +1420,21 @@ function isTaskStatusToken(value: string): boolean {
 
 function normalizeFieldName(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function extractEvidenceRefs(content: string): string[] {
+  return Array.from(new Set(content.match(EVIDENCE_REF_PATTERN) ?? []));
+}
+
+function evidenceRefExists(projectRoot: string, ref: string): boolean {
+  const taskMatch = /\bev:(T-\d{4}):/.exec(ref);
+  const taskId = taskMatch?.[1];
+  if (!taskId) return false;
+  const task = findTaskCapsule(projectRoot, taskId);
+  if (!task) return false;
+  const evidencePath = path.join(task.dir, 'evidence.jsonl');
+  if (!fs.existsSync(evidencePath)) return false;
+  return fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/).some((line) => line.includes(`"id":"${ref}"`) || line.includes(`"id": "${ref}"`));
 }
 
 function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {

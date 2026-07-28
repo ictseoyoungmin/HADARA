@@ -246,6 +246,10 @@ function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   const current = fs.readFileSync(taskBoard, 'utf8');
   if (current.includes(`| ${task.id} |`)) throw new TaskCapsuleCreateCollisionError(1);
   const managed = validateTaskBoardWriteMode(current);
+  const parsedBoard = parseTaskBoard(current);
+  const existingCells = managed.schema === 'v1' && parsedBoard.columnCount > 6
+    ? Array.from({ length: parsedBoard.columnCount }, () => '')
+    : [];
   const line = `${formatTaskBoardRow(managed.schema, {
     id: task.id,
     title: task.title,
@@ -253,7 +257,7 @@ function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
     targets: renderTaskTargets(task.targets),
     capsule: path.relative(projectRoot, task.dir),
     result: '-'
-  })}\n`;
+  }, existingCells)}\n`;
   if (managed.mode === 'managed') {
     const marker = '<!-- hadara:managed:end task-board -->';
     fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');

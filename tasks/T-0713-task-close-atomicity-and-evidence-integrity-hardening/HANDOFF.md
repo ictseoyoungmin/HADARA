@@ -14,7 +14,7 @@
 
 | Item | Evidence |
 |---|---|
-| Fixed close-atomicity ordering (Done written last), evidence resolution reuse, validation attempt identity, init nested-project scan fail-open, Task Board column preservation, and Docker dist-sync TOCTOU; re-closed T-0711 which had gone `closed-stale`. | `ev:T-0713:c3a9d0e1f2a34b5c8d6e7f01`, `ev:T-0713:full-check` |
+| Fixed close-atomicity preflight hardening, evidence resolution reuse, validation attempt identity, init nested-project scan fail-open, Task Board column preservation, and Docker dist-sync TOCTOU; re-closed T-0711 which had gone `closed-stale`. | `ev:T-0713:281f60216d504530a9742fe9`, `ev:T-0713:a95861c52b1d4fd2b72c70ca` |
 
 ## Next Recommended Step
 

@@ -84,6 +84,7 @@ function findDescendantProject(root: string): { found: string | null; incomplete
     .filter((entry) => entry.isDirectory() && !SKIP_DESCENDANTS.has(entry.name))
     .map((entry) => path.join(root, entry.name));
   let inspected = 0;
+  let unreadableDescendant = false;
   while (queue.length > 0 && inspected < DESCENDANT_SCAN_LIMIT) {
     const directory = queue.shift()!;
     inspected += 1;
@@ -97,14 +98,14 @@ function findDescendantProject(root: string): { found: string | null; incomplete
         }
       }
     } catch {
-      // Unreadable descendants are not write targets; target-specific checks still fail closed.
+      unreadableDescendant = true;
     }
   }
   // Hitting the cap with directories still queued means the tree was not
   // fully inspected. Reporting "no nested project" here would be an
   // unverified guess, not a fact; fail closed instead of proceeding as if
   // the scan had completed.
-  return { found: null, incomplete: queue.length > 0 };
+  return { found: null, incomplete: unreadableDescendant || queue.length > 0 };
 }
 
 function issue(code: string, issuePath: string, message: string): InitIssue {

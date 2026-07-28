@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0714 Task Close Proof-Last Refactor | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0715 Post Proof-Last Hardening Followups | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0714 is closed-valid. The guarded close path now computes readiness and close proof from the virtual post-finish capsule state, appends proof before real TASK.md / Task Board `Done` bookkeeping, and still audits last. Focused regressions passed across `task-finalize`, `task-close`, harness validation, and init template docs (`ev:T-0714:ff578bcf6ac446a0b06b0b9f`). Residual scope is unchanged: this is proof-last refactoring, not a full journaled atomic close transaction.
+T-0715 is closed-valid. The follow-up hardening gaps after T-0713/T-0714 are now fixed: dist-sync refuses delete/create transitions, unreadable init descendant subtrees fail closed, task-local and shared HANDOFF evidence refs are linted for real existence, T-0713's fake evidence ids are repaired, and new rows on extended v1 Task Boards preserve the extra header width. Keep T-0712 RF-1 live in continuation context: the archived Init v1 frozen-spec authority question is still unresolved for the remaining Init v1 capsules and should stay visible in current routing.
 
 ## Previous Handoff
 

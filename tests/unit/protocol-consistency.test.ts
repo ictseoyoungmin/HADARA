@@ -165,6 +165,31 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
+  it('reports missing evidence ids referenced by docs/AGENT_HANDOFF.md', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Docs handoff evidence');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      `# AGENT_HANDOFF\n\n## Current Handoff\n\nLatest check: ev:${task.id}:missinghandoffevidence0001\n`,
+      'utf8'
+    );
+
+    const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'PROJECT_HANDOFF_EVIDENCE_REF_MISSING',
+          severity: 'warning',
+          path: 'docs/AGENT_HANDOFF.md',
+          actual: `ev:${task.id}:missinghandoffevidence0001`
+        })
+      ])
+    );
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
+  });
+
   it('reports project docs, Task Board, handoff, and required-reading drift', () => {
     const root = tempProject();
     const doneTask = createTaskCapsule(root, 'Finished docs task');

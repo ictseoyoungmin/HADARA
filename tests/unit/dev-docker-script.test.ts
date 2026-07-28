@@ -39,6 +39,10 @@ describe('Docker dev sync-build script', () => {
     expect(content).toContain('run_step "copy minimal build workspace"');
     expect(content).toContain('rm -rf "$HADARA_WORKSPACE/dist"');
     expect(content).toContain('cp -R dist/. "$HADARA_WORKSPACE/dist/"');
+    expect(content).toContain('DIST_BEFORE_STATE="missing"');
+    expect(content).toContain('HADARA_DIST_BEFORE_STATE');
+    expect(content).toContain('DIST_CURRENT_STATE="missing"');
+    expect(content).toContain('if [[ "$DIST_CURRENT_STATE" != "$HADARA_DIST_BEFORE_STATE" ]]');
     expect(content).toContain('version --verbose --json');
     expect(content).toContain('built CLI smoke');
   });

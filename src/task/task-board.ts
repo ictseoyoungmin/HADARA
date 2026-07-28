@@ -16,6 +16,7 @@ export interface TaskBoardRow {
 export interface ParsedTaskBoard {
   schema: TaskBoardSchema;
   tableFramePresent: boolean;
+  columnCount: number;
   rows: TaskBoardRow[];
 }
 
@@ -31,6 +32,7 @@ export function parseTaskBoard(content: string): ParsedTaskBoard {
     : { targets: -1, capsule: 3, result: -1 };
   return {
     schema,
+    columnCount: header?.length ?? 0,
     tableFramePresent: schema !== 'unknown' && lines.some(isSeparatorRow),
     rows: lines
       .filter((line) => /^\|\s*T-\d{4}\s*\|/.test(line))

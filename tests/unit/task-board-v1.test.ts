@@ -93,6 +93,24 @@ describe('Init v1 Task Board', () => {
     expect(rewrittenRow).toContain('| Done |');
   });
 
+  it('creates a new v1 task row with blank cells for operator-added extra columns', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '# Task Board\n\n| ID | Title | Status | Targets | Capsule | Result | Owner |\n|---|---|---|---|---|---|---|\n',
+      'utf8'
+    );
+
+    const task = createTaskCapsule(root, 'V1 extra column create');
+    const createdRow = fs
+      .readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')
+      .split(/\r?\n/)
+      .find((line) => line.startsWith(`| ${task.id} |`));
+
+    expect(createdRow).toBe(`| ${task.id} | V1 extra column create | Draft | project | tasks/${path.basename(task.dir)} | - | |`);
+  });
+
   it('preserves legacy Notes and extra cells during finish', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });

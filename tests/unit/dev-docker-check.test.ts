@@ -235,6 +235,63 @@ describe('dev docker-check report', () => {
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
 
+  it('blocks dist sync when workspace dist is deleted after the reviewed before-hash but before the sync step runs', () => {
+    const root = tempProject();
+    const beforeHash = hashDist(root);
+    const runner: DevDockerCommandRunner = {
+      run(_command, args) {
+        const script = args.at(-1) ?? '';
+        if (classifyScript(script) === 'npm-ci') {
+          fs.rmSync(path.join(root, 'dist', 'cli', 'main.js'), { force: true });
+        }
+        return { ok: true, exitCode: 0 };
+      }
+    };
+
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      syncDist: true,
+      distBeforeHash: beforeHash,
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, runner);
+
+    expect(report.ok).toBe(false);
+    expect(report.execution.distSyncExecuted).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HADARA_DIST_SYNC_BEFORE_HASH_STALE' }));
+    expect(fs.existsSync(path.join(root, 'dist', 'cli', 'main.js'))).toBe(false);
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
+  it('blocks first-time dist sync when workspace dist appears after the run starts', () => {
+    const root = tempProject();
+    fs.rmSync(path.join(root, 'dist'), { recursive: true, force: true });
+    const runner: DevDockerCommandRunner = {
+      run(_command, args) {
+        const script = args.at(-1) ?? '';
+        if (classifyScript(script) === 'npm-ci') {
+          fs.mkdirSync(path.join(root, 'dist', 'cli'), { recursive: true });
+          fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), 'appeared\n', 'utf8');
+        }
+        return { ok: true, exitCode: 0 };
+      }
+    };
+
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      syncDist: true,
+      allowMissingBeforeHash: true,
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, runner);
+
+    expect(report.ok).toBe(false);
+    expect(report.execution.distSyncExecuted).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HADARA_DIST_SYNC_BEFORE_HASH_STALE' }));
+    expect(fs.readFileSync(path.join(root, 'dist', 'cli', 'main.js'), 'utf8')).toBe('appeared\n');
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
   it('allows first-time dist sync only with an explicit missing-before-hash escape hatch', () => {
     const root = tempProject();
     fs.rmSync(path.join(root, 'dist'), { recursive: true, force: true });
