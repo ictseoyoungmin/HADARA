@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 393,
+  "rev": 394,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0731",
-    "title": "Close Operation Reconciliation Hardening"
+    "id": "T-0732",
+    "title": "Close operation reconciliation follow-up hardening"
   },
   "activeTask": null,
   "nextWork": null,

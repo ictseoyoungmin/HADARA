@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import type { HadaraActorContext } from '../../core/actor-context';
 import { formatLocalMinuteTimestamp } from '../../core/local-time';
+import { isInside } from '../../core/paths';
 import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../../services/markdown-table';
 import { continuationFromTaskHandoffStep, planCompletedProjectCurrentStateWrites } from '../../services/project-current-state';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
@@ -444,8 +445,7 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
   try {
     for (const write of writes) {
       const absolutePath = path.resolve(projectRoot, write.path);
-      const relative = path.relative(projectRoot, absolutePath);
-      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      if (!isInside(projectRoot, absolutePath)) {
         issues.push({ severity: 'error', code: 'TASK_CLOSE_BOOKKEEPING_PATH_OUTSIDE_PROJECT', message: `Refusing to write outside project: ${write.path}`, path: write.path });
         continue;
       }

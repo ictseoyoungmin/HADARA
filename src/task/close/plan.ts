@@ -838,7 +838,13 @@ function createClosePlanReports(projectRoot: string, taskId: string, actor: Hada
   const bookkeeping = createCloseBookkeepingReport(projectRoot, taskId, 'dry-run', { actor });
   const bookkeepingStatus = getBookkeepingStatus(bookkeeping);
   if (bookkeepingStatus === 'blocked') return { bookkeeping };
-  if (bookkeepingStatus === 'required' && bookkeeping.status.taskStatus !== 'Done') {
+  // Any pending bookkeeping write (not just an undone TASK.md status) means the real
+  // project root does not yet reflect the fully-bookkept state: e.g. a prefix-partial
+  // recovery can leave TASK.md already Done while Task Board/HANDOFF writes are still
+  // pending. Validating against the real root in that case would compute a close-source
+  // hash from stale content. Matching the execute path (which always uses the virtual
+  // snapshot whenever bookkeeping is required), use it here too.
+  if (bookkeepingStatus === 'required') {
     return { bookkeeping, ...createVirtualCloseReports(projectRoot, taskId, actor, bookkeeping) };
   }
 

@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
 import { ensureDir } from '../../core/fs';
+import { isInside } from '../../core/paths';
 import { startMonotonicTimer } from '../../core/timing';
 import { createReviewedTaskClosePlan, createTaskClosePlanReport, didClosePlanExecutedStepMutate, formatTaskClosePlanReport, type ReviewedTaskClosePlan, type TaskClosePlanExecutedStep, type TaskClosePlanOptions, type TaskClosePlanProgressEvent, type TaskClosePlanReport, type TaskClosePlanStepId } from './plan';
 import { defaultTaskLifecycleActor } from '../lifecycle-next-actions';
@@ -321,7 +322,9 @@ export function createTaskCloseTransactionReport(
     options.faultHooks?.afterOperationPrepared?.();
     const closePlan = createTaskClosePlanReport(projectRoot, taskId, closePlanOptions);
     let updatedOperation = updateCloseOperationFromClosePlan(operation, closePlan);
-    if (updatedOperation.persisted) updatedOperation = persistOperation(updatedOperation);
+    // Durably persist the terminal operation state (including closed-valid) before any
+    // marker cleanup, so a crash between these two steps still leaves an authoritative record.
+    if (updatedOperation.persisted || closePlan.ok) updatedOperation = persistOperation(updatedOperation);
     if (closePlan.ok || countMutatingExecutedSteps(closePlan.execution?.executedSteps ?? []) === 0) {
       options.faultHooks?.beforeTerminalCleanup?.();
       const cleanup = removeCloseOperation(projectRoot, operation.path);
@@ -452,16 +455,17 @@ function fromClosePlanReport(
 function createRecoveryReport(
   operation: TaskCloseOperationState | undefined,
   action: HadaraNextAction,
-  reconciliation?: CloseOperationMarkerReconciliation
+  reconciliation?: CloseOperationMarkerReconciliation,
+  resumable = true
 ): NonNullable<TaskCloseTransactionReport['recovery']> {
   const completedWrites = reconciliation?.completedWrites ?? recoveryWritesFromOperation(operation, 'after');
   const pendingWrites = reconciliation?.pendingWrites ?? recoveryWritesFromOperation(operation, 'before');
-  const conflictingWrites = reconciliation?.conflictingWrites ?? recoveryWritesFromOperation(operation, 'conflict');
+  const conflictingWrites = reconciliation?.conflictingWrites ?? [];
   return {
     required: true,
     ...(operation?.operationId ? { operationId: operation.operationId } : {}),
     ...(operation?.phase ? { phase: operation.phase } : {}),
-    resumable: conflictingWrites.length === 0,
+    resumable,
     completedWrites,
     pendingWrites,
     conflictingWrites,
@@ -806,6 +810,10 @@ function validateCloseOperationMarkerShape(state: Partial<TaskCloseOperationStat
   for (const field of stringFields) {
     if (typeof state[field] !== 'string') return `missing string field ${field}`;
   }
+  const hashFields: Array<keyof TaskCloseOperationState> = ['closeSourceHash', 'planHash', 'writeSetHash'];
+  for (const field of hashFields) {
+    if (!isSha256Hash(state[field])) return `${field} must be a sha256 hash`;
+  }
   if (state.planFingerprint !== undefined && typeof state.planFingerprint !== 'string') return 'planFingerprint must be a string';
   if (state.intendedFinalState !== 'closed-valid') return 'intendedFinalState must be closed-valid';
   if (!isCloseOperationPhase(state.phase)) return 'phase is not a known close operation phase';
@@ -833,7 +841,7 @@ function validateCloseOperationMarkerShape(state: Partial<TaskCloseOperationStat
   }
   if (typeof state.persisted !== 'boolean') return 'persisted must be a boolean';
   if (state.resumedFromOperation !== undefined && typeof state.resumedFromOperation !== 'boolean') return 'resumedFromOperation must be a boolean';
-  if (state.finalSourceHash !== undefined && typeof state.finalSourceHash !== 'string') return 'finalSourceHash must be a string';
+  if (state.finalSourceHash !== undefined && !isSha256Hash(state.finalSourceHash)) return 'finalSourceHash must be a sha256 hash';
   if (state.proof) {
     const proofUnknown = unknownKeys(state.proof, ['idempotencyKey', 'outcome']);
     if (proofUnknown.length > 0) return `proof unknown property ${proofUnknown[0]}`;
@@ -956,6 +964,12 @@ function isNonNegativeInteger(value: unknown): value is number {
   return Number.isInteger(value) && Number(value) >= 0;
 }
 
+const SHA256_HASH_PATTERN = /^sha256:[a-f0-9]{64}$/;
+
+function isSha256Hash(value: unknown): value is string {
+  return typeof value === 'string' && SHA256_HASH_PATTERN.test(value);
+}
+
 function isCloseOperationPhase(value: unknown): value is TaskCloseOperationPhase {
   return ['planned', 'applying', 'verifying', 'proof-pending', 'closed-valid', 'blocked', 'recovery-required'].includes(String(value));
 }
@@ -1006,7 +1020,7 @@ function createCloseOperationMarkerBlockedReport(
       closeProofAppended: false,
       idempotentNoop: false
     },
-    recovery: createRecoveryReport(reconciliation?.operation, action, reconciliation),
+    recovery: createRecoveryReport(reconciliation?.operation, action, reconciliation, false),
     primaryNextAction: action,
     nextActions: [],
     issues: [issue]
@@ -1082,6 +1096,26 @@ function reconcileCloseOperationMarker(
   if (canReuseCloseOperation(previous, planHash, basis)) {
     return { ...base, resumeKind: 'reuse', preservePreviousIdentity: true };
   }
+  // Close-source drift must fail closed before any phase-specific resume decision,
+  // including proof-pending; otherwise a proof-pending retry can skip drift detection.
+  if (previous.closeSourceHash !== basis.closeSourceHash) {
+    return {
+      ...base,
+      issue: createOperationRecoveryIssue(taskId, previous, 'close source hash changed')
+    };
+  }
+  // The regenerated write set must exactly match the still-pending portion of the persisted
+  // write set before resuming. Bookkeeping's plan is diff-based, so already-applied task-local
+  // writes legitimately drop out of the regenerated plan; comparing against the full original
+  // writeSetHash would reject every legitimate prefix-partial/all-after resume. Comparing
+  // against the pending remainder still fails closed if the executor would run a different
+  // plan than the one recorded (tampering, code drift, or a stale/mismatched marker).
+  if (hashObject(pendingExpectedWrites(previous.expectedWrites, writeState.completedWrites)) !== basis.writeSetHash) {
+    return {
+      ...base,
+      issue: createOperationRecoveryIssue(taskId, previous, 'expected write set changed')
+    };
+  }
   if (previous.phase === 'proof-pending') {
     if (writeState.kind === 'all-after' || writeState.kind === 'none') {
       return { ...base, resumeKind: 'proof-pending', startPhase: 'proof-pending', preservePreviousIdentity: true };
@@ -1089,12 +1123,6 @@ function reconcileCloseOperationMarker(
     return {
       ...base,
       issue: createOperationRecoveryIssue(taskId, previous, 'proof-pending writes are not fully applied')
-    };
-  }
-  if (previous.closeSourceHash !== basis.closeSourceHash) {
-    return {
-      ...base,
-      issue: createOperationRecoveryIssue(taskId, previous, 'close source hash changed')
     };
   }
   if (writeState.kind === 'all-before') {
@@ -1125,6 +1153,11 @@ function createOperationRecoveryIssue(
     fixHint: 'Inspect the marker, expected writes, and close-source files before retrying a write-capable close transaction.',
     example: `hadara task close --task ${taskId} --dry-run --json`
   };
+}
+
+function pendingExpectedWrites(expectedWrites: TaskCloseExpectedWrite[], completedWrites: TaskCloseRecoveryWrite[]): TaskCloseExpectedWrite[] {
+  const completedSequences = new Set(completedWrites.map((write) => write.sequence));
+  return expectedWrites.filter((_, index) => !completedSequences.has(index + 1));
 }
 
 function reconcileExpectedTaskLocalWrites(
@@ -1187,8 +1220,7 @@ function classifyTaskLocalExpectedWriteStatus(
   write: TaskCloseExpectedWrite
 ): 'before' | 'after' | 'conflict' | 'missing-conflict' {
   const absolutePath = path.resolve(projectRoot, write.path);
-  const relative = path.relative(projectRoot, absolutePath);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) return 'conflict';
+  if (!isInside(projectRoot, absolutePath)) return 'conflict';
   const exists = fs.existsSync(absolutePath);
   if (!exists && write.expectedBeforeExists) return 'missing-conflict';
   const content = exists ? fs.readFileSync(absolutePath, 'utf8') : '';
@@ -1224,6 +1256,7 @@ function createCloseOperation(
   const now = new Date().toISOString();
   const previousAttempts = previousState?.attempts ?? [];
   const plannedFileWrites = expectedWrites.filter((write) => write.writeBoundary === 'task-local').length;
+  const recoveredWrites = reusePrevious ? reconciliation?.completedWrites.length ?? 0 : 0;
   const nextAttempt: TaskCloseOperationAttempt = {
     attemptNumber: previousAttempts.length + 1,
     startedAt: now,
@@ -1236,7 +1269,7 @@ function createCloseOperation(
       plannedFileWrites,
       executedFileWrites: 0,
       evidenceAppends: 0,
-      recoveredWrites: 0,
+      recoveredWrites,
       closeProofAppended: false,
       idempotentNoop: false
     }
@@ -1411,7 +1444,7 @@ function updateCloseOperationFromClosePlan(operation: TaskCloseOperationState, c
       plannedFileWrites: closePlan.pendingWrites.filter((write) => write.writeBoundary === 'task-local').reduce((count, write) => count + write.paths.length, 0),
       executedFileWrites,
       evidenceAppends: (closeProofAppended ? 1 : 0) + (closePlan.readinessEvidence?.jsonlAppended ? 1 : 0),
-      recoveredWrites: 0,
+      recoveredWrites: activeAttempt?.mutationSummary.recoveredWrites ?? 0,
       closeProofAppended,
       idempotentNoop
     },
@@ -1514,7 +1547,7 @@ function appendProgressToOperationAttempts(
       at: new Date().toISOString()
     }
   ];
-  const mutationSummary = summarizeAttemptJournal(nextStepJournal, event.phase === 'blocked');
+  const mutationSummary = { ...summarizeAttemptJournal(nextStepJournal, event.phase === 'blocked'), recoveredWrites: current.mutationSummary.recoveredWrites };
   const updatedCurrent: TaskCloseOperationAttempt = {
     ...current,
     phase: event.phase === 'blocked' ? (mutationSummary.executedWrites > 0 ? 'recovery-required' : 'blocked') : 'applying',
@@ -1561,6 +1594,7 @@ function syncOperationAttemptsFromClosePlan(
     stepJournal: syncedJournal,
     mutationSummary: {
       ...summarizeAttemptJournal(syncedJournal, !closePlan.ok),
+      recoveredWrites: current.mutationSummary.recoveredWrites,
       idempotentNoop: closePlan.ok && closePlan.state === 'closed-valid' && countMutatingExecutedSteps(closePlan.execution?.executedSteps ?? []) === 0 && closePlan.pendingWrites.length === 0
     }
   };

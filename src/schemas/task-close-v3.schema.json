@@ -78,10 +78,10 @@
             "idempotencyKey": { "type": "string" },
             "intendedFinalState": { "const": "closed-valid" },
             "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
-            "closeSourceHash": { "type": "string" },
+            "closeSourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
             "planFingerprint": { "type": "string" },
-            "planHash": { "type": "string" },
-            "writeSetHash": { "type": "string" },
+            "planHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+            "writeSetHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
             "expectedWrites": {
               "type": "array",
               "items": { "$ref": "#/$defs/expectedWrite" }
@@ -145,7 +145,7 @@
             "path": { "type": "string" },
             "persisted": { "type": "boolean" },
             "resumedFromOperation": { "type": "boolean" },
-            "finalSourceHash": { "type": "string" },
+            "finalSourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
             "proof": {
               "type": "object",
               "additionalProperties": false,

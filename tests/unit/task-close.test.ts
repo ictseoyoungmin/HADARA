@@ -10,6 +10,7 @@ import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvid
 import { createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskClosePlanReport } from '../../src/task/close';
+import { createCloseBookkeepingReport } from '../../src/task/close';
 import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 
 const roots: string[] = [];
@@ -518,7 +519,7 @@ describe('task close report', () => {
       mode: 'execute-refused',
       recovery: {
         required: true,
-        resumable: true
+        resumable: false
       }
     });
     expect(report.issues).toContainEqual(expect.objectContaining({
@@ -749,7 +750,7 @@ describe('task close report', () => {
         required: true,
         operationId: partial.transaction.operation?.operationId,
         phase: 'recovery-required',
-        resumable: true
+        resumable: false
       }
     });
     expect(recovered.issues).toContainEqual(expect.objectContaining({
@@ -767,12 +768,26 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
-  it('resumes a prefix-partial marker after reconciling actual task-local file hashes', () => {
+  it('resumes a prefix-partial marker by finishing the remaining real bookkeeping write with correct content', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction prefix resume');
     completeTask(root, task.id, task.dir);
     markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    // Revert both TASK.md status and the Task Board row to Draft so bookkeeping has two
+    // real, independent task-local writes pending (mirrors the "minute boundary" fixture).
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').split(/\r?\n/).map((line: string) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line)).join('\n'),
+      'utf8'
+    );
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    // Learn the real bookkeeping plan (paths + exact after-content) before touching anything.
+    const bookkeepingPlan = createCloseBookkeepingReport(root, task.id, 'dry-run');
+    expect(bookkeepingPlan.writes.filter((write) => write.field === 'task-status' || write.field === 'task-board-row')).toHaveLength(2);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
       faultHooks: {
@@ -783,53 +798,23 @@ describe('task close report', () => {
     })).toThrow('stop after operation marker');
 
     const marker = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
-    const firstPath = path.join(task.dir, 'prefix-a.txt');
-    const secondPath = path.join(task.dir, 'prefix-b.txt');
-    fs.writeFileSync(firstPath, 'after-a\n', 'utf8');
-    fs.writeFileSync(secondPath, 'before-b\n', 'utf8');
-    marker.phase = 'recovery-required';
-    marker.expectedWrites = [
-      {
-        step: 'bookkeeping',
-        path: path.relative(root, firstPath).split(path.sep).join('/'),
-        writeBoundary: 'task-local',
-        action: 'update',
-        field: 'task-status',
-        expectedBeforeExists: true,
-        expectedBeforeHash: hashText('before-a\n'),
-        afterHash: hashText('after-a\n')
-      },
-      {
-        step: 'bookkeeping',
-        path: path.relative(root, secondPath).split(path.sep).join('/'),
-        writeBoundary: 'task-local',
-        action: 'update',
-        field: 'task-status',
-        expectedBeforeExists: true,
-        expectedBeforeHash: hashText('before-b\n'),
-        afterHash: hashText('after-b\n')
-      }
-    ];
-    marker.writeSetHash = hashText(JSON.stringify(marker.expectedWrites));
-    marker.mutationSummary = {
-      executedWrites: 1,
-      plannedMutationSteps: 2,
-      executedMutationSteps: 1,
-      plannedFileWrites: 2,
-      executedFileWrites: 1,
-      evidenceAppends: 0,
-      recoveredWrites: 0,
-      closeProofAppended: false,
-      idempotentNoop: false
-    };
-    marker.attempts = [{
-      attemptNumber: 1,
-      startedAt: marker.createdAt,
-      phase: 'recovery-required',
-      stepJournal: [],
-      mutationSummary: marker.mutationSummary
-    }];
-    fs.writeFileSync(operationPath, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
+    const taskLocalWrites = marker.expectedWrites.filter((write: { writeBoundary: string }) => write.writeBoundary === 'task-local');
+    expect(taskLocalWrites.length).toBeGreaterThanOrEqual(2);
+
+    // Simulate a crash that renamed every task-local write except the last one into place
+    // before the process died: pre-apply their real after-content in order, leaving only
+    // the last write (still "before") for the resumed attempt to actually perform. Applying
+    // a strict prefix (rather than an arbitrary entry) avoids the TASK.md/HANDOFF.md sync
+    // coupling in bookkeeping's own diff (HANDOFF.md's resync is gated on TASK.md still
+    // needing bookkeeping), so every already-applied write also independently re-diffs to
+    // "no change" on resume, matching what a real atomic-rename-order crash would leave.
+    const alreadyAppliedWrites = taskLocalWrites.slice(0, -1);
+    for (const write of alreadyAppliedWrites) {
+      const realWrite = bookkeepingPlan.writes.find((candidate) => candidate.path === write.path && candidate.field === write.field);
+      expect(realWrite?.contentAfter).toBeTruthy();
+      fs.writeFileSync(path.join(root, write.path), realWrite!.contentAfter!, 'utf8');
+      expect(hashText(fs.readFileSync(path.join(root, write.path), 'utf8'))).toBe(write.afterHash);
+    }
 
     const recovered = createTaskCloseTransactionReport(root, task.id);
 
@@ -841,9 +826,102 @@ describe('task close report', () => {
       persisted: false
     });
     expect(recovered.transaction.operation?.expectedWrites).toEqual(marker.expectedWrites);
+    expect(recovered.transaction.operation?.mutationSummary?.recoveredWrites).toBe(alreadyAppliedWrites.length);
+    // Every task-local write, including the ones NOT pre-applied, must land with the exact
+    // expected content — this is the actual pending-write execution the reviewer flagged.
+    for (const write of taskLocalWrites) {
+      expect(hashText(fs.readFileSync(path.join(root, write.path), 'utf8'))).toBe(write.afterHash);
+    }
     expect(fs.existsSync(operationPath)).toBe(false);
     expect(closeProofCount(task.dir)).toBe(1);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
+  });
+
+  it('fails closed when the regenerated write set no longer matches the persisted pending writes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction write set drift');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').split(/\r?\n/).map((line: string) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line)).join('\n'),
+      'utf8'
+    );
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterOperationPrepared() {
+          throw new Error('stop after operation marker');
+        }
+      }
+    })).toThrow('stop after operation marker');
+
+    // Corrupt the persisted marker's still-pending write set without touching the close
+    // source (closeSourceHash stays valid), simulating tampering or a code-drift mismatch
+    // between what was recorded and what would actually be regenerated on resume.
+    const marker = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
+    const pendingIndex = marker.expectedWrites.findIndex((write: { writeBoundary: string }) => write.writeBoundary === 'task-local');
+    marker.expectedWrites[pendingIndex].afterHash = hashText('tampered-after-content\n');
+    // Keep writeSetHash internally consistent with the tampered expectedWrites so the
+    // fast reuse path (which only compares stored hashes) doesn't mask the mismatch;
+    // the fix under test recomputes the write set from the current filesystem instead
+    // of trusting the stored hash.
+    marker.writeSetHash = hashText(JSON.stringify(marker.expectedWrites));
+    fs.writeFileSync(operationPath, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({ ok: false, mode: 'execute-refused', readOnly: true });
+    expect(report.recovery?.resumable).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
+      message: expect.stringContaining('expected write set changed')
+    }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('fails closed when a proof-pending marker retries after close-source drift instead of skipping drift detection', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction proof-pending drift');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+    const taskPath = path.join(task.dir, 'TASK.md');
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterProofIntent() {
+          throw new Error('stop before proof append');
+        }
+      }
+    })).toThrow('stop before proof append');
+    expect(fs.existsSync(operationPath)).toBe(true);
+    const marker = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
+    expect(marker.phase).toBe('proof-pending');
+    expect(closeProofCount(task.dir)).toBe(0);
+
+    // Drift the close source (TASK.md content) after the proof-pending marker was recorded.
+    fs.appendFileSync(taskPath, '\n<!-- close-source drift after proof-pending -->\n', 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({ ok: false, mode: 'execute-refused', readOnly: true });
+    expect(report.recovery?.resumable).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
+      message: expect.stringContaining('close source hash changed')
+    }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
   it('stops before a guarded write without lifecycle mutation or close proof', () => {
@@ -904,7 +982,10 @@ describe('task close report', () => {
 
     expect(writes).toBe(1);
     expect(report.ok).toBe(false);
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HARNESS_TASK_BOARD_STATUS_NOT_DONE' }));
+    expect(report.transaction.operation?.phase).toBe('blocked');
+    expect(report.transaction.operation?.stepJournal).toContainEqual(
+      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'blocked', mutated: false })
+    );
     expect(closeProofCount(task.dir)).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
@@ -940,7 +1021,10 @@ describe('task close report', () => {
         closeProofAppended: false
       }
     });
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HARNESS_TASK_BOARD_STATUS_NOT_DONE' }));
+    expect(report.transaction.operation?.phase).toBe('blocked');
+    expect(report.transaction.operation?.stepJournal).toContainEqual(
+      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'blocked', mutated: false })
+    );
     expect(closeProofCount(task.dir)).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
@@ -1178,28 +1262,24 @@ describe('task close report', () => {
     ]));
     expect(fs.existsSync(operationPath)).toBe(true);
 
+    // Restoring TASK.md to exactly the content the marker's close-source hash was
+    // computed from is a genuine no-op from the close basis's point of view: bookkeeping
+    // and close proof already succeeded for real, and audit now sees matching content.
+    // This must resolve as a legitimate idempotent success, not a permanent block.
     fs.writeFileSync(taskPath, originalTask, 'utf8');
     const recovered = createTaskCloseTransactionReport(root, task.id);
 
     expect(recovered).toMatchObject({
-      ok: false,
-      closeState: 'blocked',
+      ok: true,
+      closeState: 'closed-valid',
       writeSummary: {
         executedWrites: 0,
         closeProofAppended: false,
-        idempotentNoop: false
-      },
-      recovery: {
-        required: true,
-        phase: 'recovery-required',
-        resumable: true
+        idempotentNoop: true
       }
     });
-    expect(recovered.issues).toContainEqual(expect.objectContaining({
-      code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
-      message: expect.stringContaining('close source hash changed')
-    }));
-    expect(fs.existsSync(operationPath)).toBe(true);
+    expect(fs.existsSync(operationPath)).toBe(false);
+    expect(closeProofCount(task.dir)).toBe(1);
     expect(validateSchema('hadara.task.close.v3', recovered).ok).toBe(true);
   });
 
