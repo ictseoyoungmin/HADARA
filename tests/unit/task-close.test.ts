@@ -55,9 +55,15 @@ describe('task close report', () => {
         strategy: 'close-auto',
         internalReview: true,
         proofLast: true,
-        stalePlanGuard: true
+        stalePlanGuard: true,
+        markerPersistence: {
+          cleanupWrites: 1,
+          progressWrites: 0
+        }
       },
       writeSummary: {
+        executedMutationSteps: 1,
+        evidenceAppends: 2,
         closeProofAppended: true,
         idempotentNoop: false
       },
@@ -71,6 +77,8 @@ describe('task close report', () => {
       }
     });
     expect(report.transaction.planHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.transaction.markerPersistence.contentWrites).toBeLessThanOrEqual(4);
+    expect(report.transaction.markerPersistence.cleanupWrites).toBeLessThanOrEqual(1);
     expect(report.transaction.lockOrder).toEqual(['project-lifecycle', 'task-board', 'task-scoped', 'evidence-append']);
     expect(report.transaction.locks.map((lock) => lock.name)).toEqual(['project-lifecycle', 'task-board', 'task-scoped']);
     expect(report.transaction.locks.every((lock) => lock.path.startsWith('.hadara/local/locks/'))).toBe(true);
@@ -108,6 +116,8 @@ describe('task close report', () => {
       readOnly: true,
       writeSummary: {
         executedWrites: 0,
+        executedMutationSteps: 0,
+        evidenceAppends: 0,
         executedSteps: [],
         closeProofAppended: false
       },
@@ -116,6 +126,7 @@ describe('task close report', () => {
       }
     });
     expect(report.recovery?.action.writeBoundary).not.toBe('read-only');
+    expect(report.transaction.markerPersistence).toMatchObject({ contentWrites: 1, cleanupWrites: 1, progressWrites: 0 });
     expect(report.recovery?.action.command).not.toContain('task close');
     expect(report.nextActions.map((action) => action.command ?? '').join('\n')).not.toContain('task close');
     expect(report.source.closePlan.mode).toBe('dry-run');
@@ -531,10 +542,13 @@ describe('task close report', () => {
       closeState: 'closed-valid',
       writeSummary: {
         executedWrites: 0,
+        executedMutationSteps: 0,
+        evidenceAppends: 1,
         closeProofAppended: false,
         idempotentNoop: true
       }
     });
+    expect(report.transaction.markerPersistence).toMatchObject({ progressWrites: 0 });
     expect(report.source.closePlan.execution?.executedSteps).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'close', status: 'executed', writeOutcome: 'existing-noop' })

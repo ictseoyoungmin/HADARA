@@ -21,7 +21,7 @@
     "transaction": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["strategy", "internalReview", "planHash", "proofLast", "stalePlanGuard"],
+      "required": ["strategy", "internalReview", "planHash", "proofLast", "stalePlanGuard", "markerPersistence"],
       "properties": {
         "strategy": { "enum": ["close-auto", "close-reviewed-plan", "review-only"] },
         "internalReview": { "type": "boolean" },
@@ -53,6 +53,19 @@
               "contended": { "type": "boolean" },
               "timeoutMs": { "type": "number" }
             }
+          }
+        },
+        "markerPersistence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contentWrites", "cleanupWrites", "progressWrites", "fileFsyncs", "directoryFsyncs", "unchangedSkips"],
+          "properties": {
+            "contentWrites": { "type": "integer", "minimum": 0 },
+            "cleanupWrites": { "type": "integer", "minimum": 0 },
+            "progressWrites": { "type": "integer", "minimum": 0 },
+            "fileFsyncs": { "type": "integer", "minimum": 0 },
+            "directoryFsyncs": { "type": "integer", "minimum": 0 },
+            "unchangedSkips": { "type": "integer", "minimum": 0 }
           }
         },
         "operation": {
@@ -121,10 +134,15 @@
     "writeSummary": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["plannedWrites", "executedWrites", "executedSteps", "closeProofAppended", "idempotentNoop"],
+      "required": ["plannedWrites", "executedWrites", "plannedMutationSteps", "executedMutationSteps", "plannedFileWrites", "executedFileWrites", "evidenceAppends", "executedSteps", "closeProofAppended", "idempotentNoop"],
   "properties": {
-        "plannedWrites": { "type": "number" },
-        "executedWrites": { "type": "number" },
+        "plannedWrites": { "type": "integer", "minimum": 0 },
+        "executedWrites": { "type": "integer", "minimum": 0 },
+        "plannedMutationSteps": { "type": "integer", "minimum": 0 },
+        "executedMutationSteps": { "type": "integer", "minimum": 0 },
+        "plannedFileWrites": { "type": "integer", "minimum": 0 },
+        "executedFileWrites": { "type": "integer", "minimum": 0 },
+        "evidenceAppends": { "type": "integer", "minimum": 0 },
         "executedSteps": { "type": "array", "items": { "type": "string" } },
         "stoppedAt": { "type": "string" },
         "closeProofAppended": { "type": "boolean" },

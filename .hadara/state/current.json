@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 377,
+  "rev": 379,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0723",
-    "title": "Enforce Close Proof Last"
+    "id": "T-0724",
+    "title": "Expose Close Marker Counts"
   },
   "activeTask": null,
   "nextWork": null,
@@ -14,26 +14,56 @@
   "continuation": {
     "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Continue rc2 task-close transaction hardening against the remaining fault matrix, especially durable marker persistence counts and installed-package dogfood.",
-    "reason": "T-0723 fixed the immediate proof-last ordering violation but did not claim the entire rc2 fault matrix.",
+    "title": "Add close fault injection for proof-pending and partial recovery paths.",
+    "reason": "T-0723/T-0724 covered proof-last ordering and marker count reporting, but the rc2 fault matrix still needs direct recovery/fault coverage.",
     "references": [
       {
         "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
         "required": true
       },
       {
-        "path": "docs/TASK_WORKFLOW_COMMANDS.md",
+        "path": "src/task/close/execute.ts",
+        "required": true
+      },
+      {
+        "path": "tests/unit/task-close.test.ts",
         "required": true
       }
     ],
     "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0723",
-      "path": "tasks/T-0723-enforce-close-proof-last/HANDOFF.md"
+      "workId": "T-0724",
+      "path": "tasks/T-0724-expose-close-marker-counts/HANDOFF.md"
     }
   },
   "continuations": [
+    {
+      "disposition": "actionable",
+      "kind": "task-handoff",
+      "title": "Add close fault injection for proof-pending and partial recovery paths.",
+      "reason": "T-0723/T-0724 covered proof-last ordering and marker count reporting, but the rc2 fault matrix still needs direct recovery/fault coverage.",
+      "references": [
+        {
+          "path": "docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md",
+          "required": true
+        },
+        {
+          "path": "src/task/close/execute.ts",
+          "required": true
+        },
+        {
+          "path": "tests/unit/task-close.test.ts",
+          "required": true
+        }
+      ],
+      "createCommandAllowed": true,
+      "source": {
+        "type": "work-handoff",
+        "workId": "T-0724",
+        "path": "tasks/T-0724-expose-close-marker-counts/HANDOFF.md"
+      }
+    },
     {
       "disposition": "actionable",
       "kind": "task-handoff",

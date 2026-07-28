@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0723 Enforce Close Proof Last | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0724 Expose Close Marker Counts | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0723 enforced the rc2 physical proof-last ordering for required-bookkeeping closes. The required-bookkeeping path no longer appends close proof against a virtual post-bookkeeping snapshot before lifecycle writes; it writes bookkeeping first, refreshes actual close state, then appends proof only if the real final source still passes. Full check passed after allowing the current `docs/specs/0.5.0-rc2` spec directory in the archive-boundary test. Remaining rc2 hardening should continue with durable marker persistence counts, broader fault injection, and installed-package dogfood.
+T-0724 exposed close marker persistence counts and rc2 write-summary aliases in `hadara.task.close.v3`. Clean close now reports progress persistence writes as zero and keeps marker content writes within the rc2 budget; focused close tests, schema/workflow docs tests, TypeScript build, and full check passed. Remaining rc2 hardening should continue with proof-pending/partial recovery fault injection, blocked-preflight marker write tightening, and installed-package dogfood.
 
 ## Previous Handoff
 
