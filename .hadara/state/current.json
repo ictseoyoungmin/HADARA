@@ -1,24 +1,24 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 363,
+  "rev": 365,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0718",
-    "title": "Share Reviewed Finalize Plan In Task Close"
+    "id": "T-0719",
+    "title": "Journal Task Close Transaction Writes"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "actionable",
+    "disposition": "waiting-for-operator",
     "kind": "task-handoff",
-    "title": "Harden the remaining close transaction residuals around full journal atomicity and no-op write accounting.",
-    "reason": "This task removed marker/execute hash drift, but recovery semantics still overcount `existing-noop` writes and the full proof/write/projection transaction is not yet journal-atomic.",
+    "title": "Decide whether to pursue a true cross-file close transaction that atomically unifies proof append, finish/projection writes, and final audit state.",
+    "reason": "Recovery markers are now honest, but the transaction still relies on replay/recovery rather than a single atomic commit across every close-owned write.",
     "references": [
       {
-        "path": "`tasks/T-0718-share-reviewed-finalize-plan-in-task-close/TASK.md`",
+        "path": "`tasks/T-0719-journal-task-close-transaction-writes/TASK.md`",
         "required": true
       },
       {
@@ -30,11 +30,11 @@
         "required": true
       }
     ],
-    "createCommandAllowed": true,
+    "createCommandAllowed": false,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0718",
-      "path": "tasks/T-0718-share-reviewed-finalize-plan-in-task-close/HANDOFF.md"
+      "workId": "T-0719",
+      "path": "tasks/T-0719-journal-task-close-transaction-writes/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

@@ -8,7 +8,7 @@ This command-owned projection keeps older 0.5.x readers compatible. It is not Re
 | Field | Value |
 |---|---|
 | Current Release | 0.5.0-rc.1 |
-| Latest Completed Task | T-0718 Share Reviewed Finalize Plan In Task Close |
+| Latest Completed Task | T-0719 Journal Task Close Transaction Writes |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

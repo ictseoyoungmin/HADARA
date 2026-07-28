@@ -125,6 +125,9 @@ export interface TaskFinalizeProgressEvent {
   phase: 'start' | 'executed' | 'satisfied' | 'blocked';
   summary: string;
   ok?: boolean;
+  writeBoundary?: TaskFinalizeExecutedStep['writeBoundary'];
+  writeOutcome?: TaskFinalizeExecutedStep['writeOutcome'];
+  mutated?: boolean;
 }
 
 export interface TaskFinalizeOptions {
@@ -545,13 +548,7 @@ function executeFinalizePlan(
           virtualReadyOk ? 'satisfied' : 'blocked'
         )
       );
-      emitFinalizeProgress(
-        onProgress,
-        virtualReadyStep.id,
-        virtualReadyOk ? 'satisfied' : 'blocked',
-        virtualReadyStep.summary,
-        virtualReadyOk
-      );
+      emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
       if (!virtualReadyOk) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'ready');
     }
 
@@ -564,29 +561,27 @@ function executeFinalizePlan(
       emitFinalizeProgress(onProgress, virtualCloseStep.id, 'start', virtualCloseStep.summary);
       if (virtualReports.close?.ok) executeTaskCloseEvidence(projectRoot, virtualReports.close);
       const virtualCloseOk = virtualReports.close?.ok ?? false;
+      const virtualCloseExecutionStep = {
+        ...virtualCloseStep,
+        writeBoundary: 'evidence-append' as const
+      };
       executedSteps.push(
         createExecutedStep(
-          virtualCloseStep,
+          virtualCloseExecutionStep,
           virtualCloseOk,
           virtualReports.close,
           virtualCloseOk ? 'executed' : 'blocked',
           closeWriteOutcome(virtualReports.close, virtualCloseOk)
         )
       );
-      emitFinalizeProgress(
-        onProgress,
-        virtualCloseStep.id,
-        virtualCloseOk ? 'executed' : 'blocked',
-        virtualCloseStep.summary,
-        virtualCloseOk
-      );
+      emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
       if (!virtualCloseOk) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence);
     }
 
     emitFinalizeProgress(onProgress, finishStep.id, 'start', finishStep.summary);
     const finishReport = executeReviewedTaskFinishPlan(projectRoot, reports.finish);
     executedSteps.push(createExecutedStep(finishStep, finishReport.ok, finishReport, finishReport.ok ? 'executed' : 'blocked'));
-    emitFinalizeProgress(onProgress, finishStep.id, finishReport.ok ? 'executed' : 'blocked', finishStep.summary, finishReport.ok);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
     if (!finishReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'finish', readinessEvidence);
     emitFinalizeProgress(onProgress, 'refresh', 'start', 'Recomputing finalize state after finish.');
     reports = createFinalizeReports(projectRoot, taskId, actor);
@@ -594,7 +589,7 @@ function executeFinalizePlan(
     emitFinalizeProgress(onProgress, 'refresh', 'satisfied', 'Finalize state refreshed after finish.', true);
   } else if (finishStep?.status === 'satisfied') {
     executedSteps.push(createExecutedStep(finishStep, true, reports.finish, 'satisfied'));
-    emitFinalizeProgress(onProgress, finishStep.id, 'satisfied', finishStep.summary, true);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
   }
 
   const readyStep = steps.find((step) => step.id === 'ready');
@@ -604,12 +599,12 @@ function executeFinalizePlan(
   if (!readyAlreadyExecuted && readyStep?.status !== 'satisfied') {
     const readyReport = reports.ready;
     executedSteps.push(createExecutedStep(readyStep ?? fallbackStep(taskId, 'ready'), readyReport?.ok ?? false, readyReport, readyReport?.ok ? 'satisfied' : 'blocked'));
-    emitFinalizeProgress(onProgress, readyStep?.id ?? 'ready', readyReport?.ok ? 'satisfied' : 'blocked', readyStep?.summary ?? 'Done-level readiness check finished.', readyReport?.ok ?? false);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
     return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'ready');
   }
   if (!readyAlreadyExecuted && readyStep) {
     executedSteps.push(createExecutedStep(readyStep, true, reports.ready, 'satisfied'));
-    emitFinalizeProgress(onProgress, readyStep.id, 'satisfied', readyStep.summary, true);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
   }
 
   const closeStep = steps.find((step) => step.id === 'close');
@@ -634,7 +629,7 @@ function executeFinalizePlan(
         closeWriteOutcome(closeReport, closeReport.ok)
       )
     );
-    emitFinalizeProgress(onProgress, closeStep.id, closeReport.ok ? 'executed' : 'blocked', closeStep.summary, closeReport.ok);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
     if (!closeReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence);
     emitFinalizeProgress(onProgress, 'refresh', 'start', 'Recomputing finalize state after close evidence.');
     reports = createFinalizeReports(projectRoot, taskId, actor);
@@ -642,10 +637,10 @@ function executeFinalizePlan(
     emitFinalizeProgress(onProgress, 'refresh', 'satisfied', 'Finalize state refreshed after close evidence.', true);
   } else if (!closeAlreadyExecuted && closeStep?.status === 'satisfied') {
     executedSteps.push(createExecutedStep(closeStep, true, reports.close, 'satisfied'));
-    emitFinalizeProgress(onProgress, closeStep.id, 'satisfied', closeStep.summary, true);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
   } else if (!closeAlreadyExecuted) {
     executedSteps.push(createExecutedStep(closeStep ?? fallbackStep(taskId, 'close'), false, reports.close, 'blocked'));
-    emitFinalizeProgress(onProgress, closeStep?.id ?? 'close', 'blocked', closeStep?.summary ?? 'Close is blocked.', false);
+    emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
     return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence);
   }
 
@@ -653,7 +648,7 @@ function executeFinalizePlan(
   emitFinalizeProgress(onProgress, auditStep?.id ?? 'audit-close', 'start', auditStep?.summary ?? 'Auditing close evidence.');
   const auditReport = reports.audit;
   executedSteps.push(createExecutedStep(auditStep ?? fallbackStep(taskId, 'audit-close'), auditReport?.ok ?? false, auditReport, auditReport?.ok ? 'satisfied' : 'blocked'));
-  emitFinalizeProgress(onProgress, auditStep?.id ?? 'audit-close', auditReport?.ok ? 'satisfied' : 'blocked', auditStep?.summary ?? 'Close audit finished.', auditReport?.ok ?? false);
+  emitFinalizeStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
   return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, auditReport?.ok ? undefined : 'audit-close', readinessEvidence);
 }
 
@@ -702,9 +697,10 @@ function emitFinalizeProgress(
   step: TaskFinalizeProgressEvent['step'],
   phase: TaskFinalizeProgressEvent['phase'],
   summary: string,
-  ok?: boolean
+  ok?: boolean,
+  details: Omit<Partial<TaskFinalizeProgressEvent>, 'step' | 'phase' | 'summary' | 'ok'> = {}
 ): void {
-  onProgress?.({ step, phase, summary, ...(ok === undefined ? {} : { ok }) });
+  onProgress?.({ step, phase, summary, ...(ok === undefined ? {} : { ok }), ...details });
 }
 
 function createPostExecutionReport(
@@ -1121,6 +1117,22 @@ function createExecutedStep(
     writeBoundary: step.writeBoundary,
     ...(writeOutcome ? { writeOutcome } : {})
   };
+}
+
+export function didFinalizeExecutedStepMutate(step: TaskFinalizeExecutedStep): boolean {
+  return step.status === 'executed' && step.writeBoundary !== 'read-only' && step.writeOutcome !== 'existing-noop';
+}
+
+function emitFinalizeStepProgress(
+  onProgress: ((event: TaskFinalizeProgressEvent) => void) | undefined,
+  executedStep: TaskFinalizeExecutedStep
+): void {
+  if (executedStep.status === 'skipped') return;
+  emitFinalizeProgress(onProgress, executedStep.id, executedStep.status, executedStep.summary, executedStep.ok, {
+    writeBoundary: executedStep.writeBoundary,
+    ...(executedStep.writeOutcome ? { writeOutcome: executedStep.writeOutcome } : {}),
+    mutated: didFinalizeExecutedStepMutate(executedStep)
+  });
 }
 
 function closeWriteOutcome(closeReport: TaskCloseReport | undefined, ok: boolean): TaskFinalizeExecutedStep['writeOutcome'] {

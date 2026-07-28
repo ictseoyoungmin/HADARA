@@ -5,7 +5,7 @@ import type { HadaraActorContext } from '../core/actor-context';
 import type { HadaraNextAction } from '../core/next-action';
 import { ensureDir } from '../core/fs';
 import { startMonotonicTimer } from '../core/timing';
-import { createReviewedTaskFinalizePlan, createTaskFinalizeReport, formatTaskFinalizeReport, type TaskFinalizeOptions, type TaskFinalizeProgressEvent, type TaskFinalizeReport, type TaskFinalizeStepId } from './task-finalize';
+import { createReviewedTaskFinalizePlan, createTaskFinalizeReport, didFinalizeExecutedStepMutate, formatTaskFinalizeReport, type TaskFinalizeExecutedStep, type TaskFinalizeOptions, type TaskFinalizeProgressEvent, type TaskFinalizeReport, type TaskFinalizeStepId } from './task-finalize';
 import { defaultTaskLifecycleActor } from './lifecycle-next-actions';
 
 export type TaskCloseTransactionMode = 'dry-run' | 'execute' | 'execute-refused';
@@ -44,11 +44,25 @@ export interface TaskCloseOperationState {
   planHash: string;
   completedSteps: string[];
   pendingSteps: string[];
+  stepJournal?: TaskCloseOperationStepJournalEntry[];
+  mutationSummary?: {
+    executedWrites: number;
+    closeProofAppended: boolean;
+    idempotentNoop: boolean;
+  };
   path: string;
   persisted: boolean;
   resumedFromOperation?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TaskCloseOperationStepJournalEntry {
+  id: TaskFinalizeStepId;
+  status: 'executed' | 'satisfied' | 'blocked' | 'skipped';
+  writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
+  writeOutcome?: 'appended' | 'existing-noop' | 'blocked';
+  mutated: boolean;
 }
 
 export interface TaskCloseTransactionReport {
@@ -137,7 +151,7 @@ export function createTaskCloseTransactionReport(
     operation = persistCloseOperation(projectRoot, operation);
     const finalize = createTaskFinalizeReport(projectRoot, taskId, finalizeOptions);
     const updatedOperation = updateCloseOperationFromFinalize(projectRoot, operation, finalize);
-    if (finalize.ok || (finalize.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' && step.writeBoundary !== 'read-only').length === 0) {
+    if (finalize.ok || countMutatingExecutedSteps(finalize.execution?.executedSteps ?? []) === 0) {
       removeCloseOperation(projectRoot, operation.path);
     }
     const report = fromFinalizeReport(projectRoot, taskId, finalize, {
@@ -193,7 +207,7 @@ function fromFinalizeReport(
   }
 ): TaskCloseTransactionReport {
   const executedSteps = finalize.execution?.executedSteps ?? [];
-  const executedWrites = executedSteps.filter((step) => step.writeBoundary !== 'read-only' && step.status === 'executed').length;
+  const executedWrites = countMutatingExecutedSteps(executedSteps);
   const closeProofAppended = executedSteps.some(
     (step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended'
   );
@@ -525,13 +539,24 @@ function updateCloseOperationFromFinalize(projectRoot: string, operation: TaskCl
   const completedSteps = (finalize.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' || step.status === 'satisfied').map((step) => step.id);
   const allSteps: TaskFinalizeStepId[] = ['finish', 'ready', 'close', 'audit-close'];
   const pendingSteps = allSteps.filter((step) => !completedSteps.includes(step));
-  const executedWrites = (finalize.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' && step.writeBoundary !== 'read-only').length;
+  const stepJournal = createOperationStepJournal(finalize.execution?.executedSteps ?? []);
+  const executedWrites = countMutatingExecutedSteps(finalize.execution?.executedSteps ?? []);
+  const closeProofAppended = (finalize.execution?.executedSteps ?? []).some(
+    (step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended'
+  );
+  const idempotentNoop = finalize.ok && finalize.state === 'closed-valid' && executedWrites === 0 && finalize.pendingWrites.length === 0;
   const phase: TaskCloseOperationPhase = finalize.ok ? 'closed-valid' : executedWrites > 0 ? 'recovery-required' : 'blocked';
   const updated = {
     ...operation,
     phase,
     completedSteps,
     pendingSteps,
+    stepJournal,
+    mutationSummary: {
+      executedWrites,
+      closeProofAppended,
+      idempotentNoop
+    },
     persisted: executedWrites > 0 && !finalize.ok,
     updatedAt: new Date().toISOString()
   };
@@ -544,14 +569,54 @@ function updateCloseOperationFromProgress(operation: TaskCloseOperationState, ev
   const completed = new Set(operation.completedSteps);
   if (event.phase === 'executed' || event.phase === 'satisfied') completed.add(event.step);
   const completedSteps = allSteps.filter((step) => completed.has(step));
+  const stepJournal = mergeProgressIntoStepJournal(operation.stepJournal ?? [], event);
+  const executedWrites = stepJournal.filter((step) => step.mutated).length;
+  const closeProofAppended = stepJournal.some((step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended');
   return {
     ...operation,
-    phase: event.phase === 'blocked' ? 'recovery-required' : 'applying',
+    phase: event.phase === 'blocked' ? (executedWrites > 0 ? 'recovery-required' : 'blocked') : 'applying',
     completedSteps,
     pendingSteps: allSteps.filter((step) => !completed.has(step)),
+    stepJournal,
+    mutationSummary: {
+      executedWrites,
+      closeProofAppended,
+      idempotentNoop: executedWrites === 0 && event.phase !== 'blocked'
+    },
     persisted: true,
     updatedAt: new Date().toISOString()
   };
+}
+
+function countMutatingExecutedSteps(steps: TaskFinalizeExecutedStep[]): number {
+  return steps.filter((step) => didFinalizeExecutedStepMutate(step)).length;
+}
+
+function createOperationStepJournal(steps: TaskFinalizeExecutedStep[]): TaskCloseOperationStepJournalEntry[] {
+  return steps.map((step) => ({
+    id: step.id,
+    status: step.status,
+    writeBoundary: step.writeBoundary,
+    ...(step.writeOutcome ? { writeOutcome: step.writeOutcome } : {}),
+    mutated: didFinalizeExecutedStepMutate(step)
+  }));
+}
+
+function mergeProgressIntoStepJournal(
+  current: TaskCloseOperationStepJournalEntry[],
+  event: TaskFinalizeProgressEvent
+): TaskCloseOperationStepJournalEntry[] {
+  if (event.step === 'refresh' || (event.phase !== 'executed' && event.phase !== 'satisfied' && event.phase !== 'blocked')) return current;
+  const next = current.filter((entry) => entry.id !== event.step);
+  next.push({
+    id: event.step,
+    status: event.phase,
+    writeBoundary: event.writeBoundary ?? 'read-only',
+    ...(event.writeOutcome ? { writeOutcome: event.writeOutcome } : {}),
+    mutated: event.mutated ?? false
+  });
+  const order: TaskFinalizeStepId[] = ['finish', 'ready', 'close', 'audit-close'];
+  return next.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 }
 
 function removeCloseOperation(projectRoot: string, portablePath: string): void {
