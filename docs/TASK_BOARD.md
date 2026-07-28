@@ -716,3 +716,4 @@
 | T-0713 | Task Close Atomicity and Evidence Integrity Hardening | Done | tasks/T-0713-task-close-atomicity-and-evidence-integrity-hardening | |
 | T-0714 | Task Close Proof-Last Refactor | Done | tasks/T-0714-task-close-proof-last-refactor | |
 | T-0715 | Post Proof-Last Hardening Followups | Done | tasks/T-0715-post-proof-last-hardening-followups | |
+| T-0716 | Close Replay and Validation Trust Hardening | Done | tasks/T-0716-close-replay-and-validation-trust-hardening | |

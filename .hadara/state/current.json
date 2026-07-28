@@ -1,40 +1,36 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 355,
+  "rev": 359,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0715",
-    "title": "Post Proof-Last Hardening Followups"
+    "id": "T-0716",
+    "title": "Close Replay and Validation Trust Hardening"
   },
   "activeTask": null,
   "nextWork": null,
   "nextOperatorIntent": "No next work selected. Run `hadara task status --json` for current task-selection guidance.",
   "continuation": {
-    "disposition": "waiting-for-operator",
+    "disposition": "actionable",
     "kind": "task-handoff",
-    "title": "Decide whether to stop at these focused correctness/lint fixes or continue into a full journaled close transaction and broader Init v1 authority cleanup.",
-    "reason": "This capsule fixed the concrete follow-up bugs, but T-0714 RF-1 and T-0712 RF-1 both remain policy/design follow-ups rather than implementation accidents.",
+    "title": "Continue trust hardening for explicit reviewed finalize replay and the remaining journal transaction residual called out in `RF-1`.",
+    "reason": "Public `task close` is safe again, but explicit reviewed finalize still prefers safe refusal over replaying a persisted reviewed write-set across long review gaps.",
     "references": [
       {
-        "path": "`tasks/T-0714-task-close-proof-last-refactor/TASK.md`",
+        "path": "`docs/TASK_WORKFLOW_COMMANDS.md`",
         "required": true
       },
       {
-        "path": "`tasks/T-0712-live-documentation-set-and-archive/HANDOFF.md`",
-        "required": true
-      },
-      {
-        "path": "`docs/AGENT_HANDOFF.md`",
+        "path": "`tasks/T-0716-close-replay-and-validation-trust-hardening/TASK.md`",
         "required": true
       }
     ],
-    "createCommandAllowed": false,
+    "createCommandAllowed": true,
     "source": {
       "type": "work-handoff",
-      "workId": "T-0715",
-      "path": "tasks/T-0715-post-proof-last-hardening-followups/HANDOFF.md"
+      "workId": "T-0716",
+      "path": "tasks/T-0716-close-replay-and-validation-trust-hardening/HANDOFF.md"
     }
   },
   "currentKnownProblems": [

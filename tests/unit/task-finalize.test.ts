@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
@@ -17,6 +17,7 @@ function tempProject(): string {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
   process.exitCode = undefined;
 });
@@ -653,6 +654,46 @@ describe('task finalize --auto (FD-010)', () => {
     expect(snapshotFiles(root)[`tasks/${task.id}-finalize-auto-race/evidence.jsonl`]).not.toContain('Task close validation');
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
+
+  it('refuses auto finalize when the reviewed plan becomes stale across a minute boundary', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-28T13:59:59.000+09:00'));
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize minute boundary');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      boardPath,
+      fs
+        .readFileSync(boardPath, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+        .join('\n'),
+      'utf8'
+    );
+    const report = createTaskFinalizeReport(root, task.id, {
+      executeRequested: true,
+      auto: true,
+      onAutoReview: () => {
+        vi.setSystemTime(new Date('2026-07-28T14:00:00.000+09:00'));
+      }
+    });
+
+    expect(report).toMatchObject({ ok: false, mode: 'execute-refused', execution: { planHashMatched: false } });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_FINALIZE_PLAN_HASH_MISMATCH' })]));
+    expect(report.execution?.executedSteps ?? []).toEqual([]);
+    const taskContent = fs.readFileSync(taskPath, 'utf8');
+    expect(taskContent).toContain('| Status | Draft |');
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
 
   it('rejects --auto combined with an explicit --plan-hash without writing', () => {
     const root = tempProject();

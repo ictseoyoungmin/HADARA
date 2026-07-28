@@ -96,7 +96,8 @@
               "ok": { "type": "boolean" },
               "reportHash": { "type": "string" },
               "summary": { "type": "string" },
-              "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] }
+              "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
+              "writeOutcome": { "enum": ["appended", "existing-noop", "blocked"] }
             }
           }
         }

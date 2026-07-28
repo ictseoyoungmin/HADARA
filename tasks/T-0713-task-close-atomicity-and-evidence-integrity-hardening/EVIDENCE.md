@@ -14,6 +14,7 @@ Do not hand-edit this file.
 | ev:T-0713:a95861c52b1d4fd2b72c70ca | passed | validation | Validation "Full repository validation" passed; failureClass: none; command: npm run check; exitCode: 0; signal: null; durationMs: 31481; stdoutHash: sha256:f30d45394024a4a381c57f93d8ecbc6ceeeaa86e88ddbe5c78ceeddb9a5795fd; stderrHash: sha256:184337221e5ebbb9fe2b9a63d6c54e9e18c2f046759a71c12edff1cf97e56f8c |
 | ev:T-0713:cdb679aeff3d4525ac2dbcfd | passed | validation | Validation "Diff hygiene" passed; failureClass: none; command: git diff --check; exitCode: 0; signal: null; durationMs: 27; stdoutHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
 | ev:T-0713:051412e896234fea9c685190 | passed | validation | Task finalize done-level readiness for T-0713 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:ae31823b9bd18e61281f5e8c703a89fca687e7dd2f138bc56a2c631fcf626541 |
+| ev:T-0713:7a5c1c6d7eaa4bfe90e99b00 | passed | validation | Task finalize done-level readiness for T-0713 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:aadb146d23c16cdf2745dd82971edd28b7df49d81a5cc84149a6b35ab47e8496 |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -22,6 +23,7 @@ Do not hand-edit this file.
 | Check | Result | Evidence |
 |---|---|---|
 | close evidence | passed | ev:T-0713:7637ce5ddd044e6182067147 |
+| close evidence | passed | ev:T-0713:042df8be59ec4d9b9d73d29e |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence

@@ -192,7 +192,9 @@ function fromFinalizeReport(
 ): TaskCloseTransactionReport {
   const executedSteps = finalize.execution?.executedSteps ?? [];
   const executedWrites = executedSteps.filter((step) => step.writeBoundary !== 'read-only' && step.status === 'executed').length;
-  const closeProofAppended = executedSteps.some((step) => step.id === 'close' && step.status === 'executed' && step.ok);
+  const closeProofAppended = executedSteps.some(
+    (step) => step.id === 'close' && step.status === 'executed' && step.writeOutcome === 'appended'
+  );
   const idempotentNoop = finalize.ok && finalize.state === 'closed-valid' && executedWrites === 0 && finalize.pendingWrites.length === 0;
   const recoveryAction = finalize.ok ? undefined : normalizeCloseNextAction(taskId, finalize.primaryNextAction ?? finalize.nextActions.find((action) => action.required));
   const transactionPlanHash = finalize.execution?.requestedPlanHash ?? finalize.planHash ?? hashObject({ taskId, state: finalize.state, issues: finalize.issues });

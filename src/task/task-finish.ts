@@ -168,7 +168,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const projectedPaths = new Set(currentStateWrites.map((write) => write.path));
   const stateDocs = createStateDocAdvisories(projectRoot, task, stateSpecs, projectedPaths);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
-    applyWrites(projectRoot, writes, issues);
+    applyTaskFinishWrites(projectRoot, writes, issues);
   }
   const nextActions = createFinishNextActions(taskId, mode, writes, stateDocs, issues);
 
@@ -202,6 +202,29 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
     nextActions,
     ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues
+  };
+}
+
+export function executeReviewedTaskFinishPlan(projectRoot: string, finishPlan: TaskFinishReport): TaskFinishReport {
+  const writes = finishPlan.writes.map((write) => ({ ...write, applied: false }));
+  const issues = [...finishPlan.issues];
+  if (!issues.some((issue) => issue.severity === 'error')) {
+    applyTaskFinishWrites(projectRoot, writes, issues);
+  }
+  const nextActions = createFinishNextActions(finishPlan.taskId, 'execute', writes, finishPlan.stateDocs, issues);
+  return {
+    ...finishPlan,
+    mode: 'execute',
+    ok: !issues.some((issue) => issue.severity === 'error'),
+    writes,
+    nextActions,
+    ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
+    issues,
+    summary: {
+      ...finishPlan.summary,
+      plannedWrites: writes.length,
+      appliedWrites: writes.filter((write) => write.applied).length
+    }
   };
 }
 
@@ -409,7 +432,7 @@ function planWrites(
   return writes;
 }
 
-function applyWrites(projectRoot: string, writes: TaskFinishWrite[], issues: TaskFinishIssue[]): void {
+export function applyTaskFinishWrites(projectRoot: string, writes: TaskFinishWrite[], issues: TaskFinishIssue[]): void {
   const prepared: Array<{ write: TaskFinishWrite; absolutePath: string; tmpPath: string; existed: boolean; original: string }> = [];
   const committed: typeof prepared = [];
   try {

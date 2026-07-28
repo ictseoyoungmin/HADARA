@@ -6,7 +6,7 @@ import type { HadaraActorContext } from '../core/actor-context';
 import type { HadaraNextAction } from '../core/next-action';
 import { appendEvidenceWithResult, EvidenceAppendResult } from '../evidence/evidence';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, TaskAuditCloseReport, TaskCloseReport } from './task-close';
-import { createTaskFinishReport, TaskFinishReport } from './task-finish';
+import { createTaskFinishReport, executeReviewedTaskFinishPlan, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
 import { createTaskReadyReportFromClosePlan, TaskReadyReport } from './task-ready';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from './authoring-guidance';
@@ -117,6 +117,7 @@ export interface TaskFinalizeExecutedStep {
   reportHash: string;
   summary: string;
   writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
+  writeOutcome?: 'appended' | 'existing-noop' | 'blocked';
 }
 
 export interface TaskFinalizeProgressEvent {
@@ -168,7 +169,7 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
   const reports = createFinalizeReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
   const issues = collectIssues(taskId, reports);
-  const planHash = hashPlan(taskId, steps);
+  const planHash = hashPlan(taskId, steps, reports);
   if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash, options.onProgress, options.recordReadinessEvidence ?? false);
   const report = createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
   const finishRequired = steps.some((step) => step.id === 'finish' && step.status === 'required');
@@ -189,7 +190,7 @@ function executeAutoFinalize(
   if (options.planHash) {
     const reports = createFinalizeReports(projectRoot, taskId, actor);
     const steps = createSteps(taskId, reports);
-    const planHash = hashPlan(taskId, steps);
+    const planHash = hashPlan(taskId, steps, reports);
     return createExecuteRefusal(
       taskId,
       actor,
@@ -201,8 +202,32 @@ function executeAutoFinalize(
   }
 
   // Review pass: identical to a manual dry-run. Zero writes.
-  const review = createTaskFinalizeReport(projectRoot, taskId, { actor });
+  const reports = createFinalizeReports(projectRoot, taskId, actor);
+  const steps = createSteps(taskId, reports);
+  const issues = collectIssues(taskId, reports);
+  const planHash = hashPlan(taskId, steps, reports);
+  const review = createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
   options.onAutoReview?.(review);
+  const currentReports = createFinalizeReports(projectRoot, taskId, actor);
+  const currentSteps = createSteps(taskId, currentReports);
+  const currentIssues = collectIssues(taskId, currentReports);
+  const currentPlanHash = hashPlan(taskId, currentSteps, currentReports);
+  if (currentPlanHash !== planHash) {
+    return createExecuteRefusal(
+      taskId,
+      actor,
+      'TASK_FINALIZE_PLAN_HASH_MISMATCH',
+      'task finalize --execute refused because --auto review became stale before execution.',
+      currentPlanHash,
+      currentSteps,
+      {
+        requestedPlanHash: planHash,
+        currentPlanHash,
+        planHashMatched: false,
+        executedSteps: []
+      }
+    );
+  }
   // Board bookkeeping blockers are owned and resolved by the finish step;
   // the manual flow executes through them, so --auto must not refuse on
   // them while a required finish step is part of the reviewed plan.
@@ -219,13 +244,18 @@ function executeAutoFinalize(
   // Execute pass: recompute the plan from scratch and pass the reviewed hash
   // through the existing mismatch guard, so any close-source change between
   // the two passes aborts exactly like a stale manual --plan-hash would.
-  return createTaskFinalizeReport(projectRoot, taskId, {
-    executeRequested: true,
-    planHash: review.planHash,
-    recordReadinessEvidence: true,
+  return executeFinalizePlan(
+    projectRoot,
+    taskId,
     actor,
-    onProgress: options.onProgress
-  });
+    reports,
+    steps,
+    issues,
+    planHash,
+    planHash,
+    options.onProgress,
+    true
+  );
 }
 
 function createAutoFinalizePreflightBlockers(projectRoot: string, taskId: string, actor: HadaraActorContext): TaskFinalizeIssue[] {
@@ -510,7 +540,8 @@ function executeFinalizePlan(
           virtualCloseStep,
           virtualCloseOk,
           virtualReports.close,
-          virtualCloseOk ? 'executed' : 'blocked'
+          virtualCloseOk ? 'executed' : 'blocked',
+          closeWriteOutcome(virtualReports.close, virtualCloseOk)
         )
       );
       emitFinalizeProgress(
@@ -524,7 +555,7 @@ function executeFinalizePlan(
     }
 
     emitFinalizeProgress(onProgress, finishStep.id, 'start', finishStep.summary);
-    const finishReport = createTaskFinishReport(projectRoot, taskId, 'execute', { actor });
+    const finishReport = executeReviewedTaskFinishPlan(projectRoot, reports.finish);
     executedSteps.push(createExecutedStep(finishStep, finishReport.ok, finishReport, finishReport.ok ? 'executed' : 'blocked'));
     emitFinalizeProgress(onProgress, finishStep.id, finishReport.ok ? 'executed' : 'blocked', finishStep.summary, finishReport.ok);
     if (!finishReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'finish', readinessEvidence);
@@ -565,7 +596,15 @@ function executeFinalizePlan(
     emitFinalizeProgress(onProgress, closeStep.id, 'start', closeStep.summary);
     const closeReport = createTaskCloseReport(projectRoot, taskId, 'execute', { actor });
     if (closeReport.ok) executeTaskCloseEvidence(projectRoot, closeReport);
-    executedSteps.push(createExecutedStep(closeStep, closeReport.ok, closeReport, closeReport.ok ? 'executed' : 'blocked'));
+    executedSteps.push(
+      createExecutedStep(
+        closeStep,
+        closeReport.ok,
+        closeReport,
+        closeReport.ok ? 'executed' : 'blocked',
+        closeWriteOutcome(closeReport, closeReport.ok)
+      )
+    );
     emitFinalizeProgress(onProgress, closeStep.id, closeReport.ok ? 'executed' : 'blocked', closeStep.summary, closeReport.ok);
     if (!closeReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence);
     emitFinalizeProgress(onProgress, 'refresh', 'start', 'Recomputing finalize state after close evidence.');
@@ -1036,7 +1075,13 @@ function summarizeSteps(steps: TaskFinalizeStep[], reports?: FinalizeReports): T
   };
 }
 
-function createExecutedStep(step: TaskFinalizeStep, ok: boolean, report: unknown, status: TaskFinalizeExecutedStep['status']): TaskFinalizeExecutedStep {
+function createExecutedStep(
+  step: TaskFinalizeStep,
+  ok: boolean,
+  report: unknown,
+  status: TaskFinalizeExecutedStep['status'],
+  writeOutcome?: TaskFinalizeExecutedStep['writeOutcome']
+): TaskFinalizeExecutedStep {
   return {
     id: step.id,
     status,
@@ -1044,8 +1089,14 @@ function createExecutedStep(step: TaskFinalizeStep, ok: boolean, report: unknown
     ok,
     reportHash: hashReport(report),
     summary: step.summary,
-    writeBoundary: step.writeBoundary
+    writeBoundary: step.writeBoundary,
+    ...(writeOutcome ? { writeOutcome } : {})
   };
+}
+
+function closeWriteOutcome(closeReport: TaskCloseReport | undefined, ok: boolean): TaskFinalizeExecutedStep['writeOutcome'] {
+  if (!ok) return 'blocked';
+  return closeReport?.closeEvidence.appended ? 'appended' : 'existing-noop';
 }
 
 function hashReport(report: unknown): string {
@@ -1098,7 +1149,7 @@ function fallbackStep(taskId: string, id: TaskFinalizeStepId): TaskFinalizeStep 
   };
 }
 
-function hashPlan(taskId: string, steps: TaskFinalizeStep[]): string {
+function hashPlan(taskId: string, steps: TaskFinalizeStep[], reports?: FinalizeReports): string {
   const stable = {
     taskId,
     steps: steps.map((step) => ({
@@ -1110,7 +1161,65 @@ function hashPlan(taskId: string, steps: TaskFinalizeStep[]): string {
       expectedWritePaths: step.expectedWritePaths,
       alreadySatisfied: step.alreadySatisfied,
       sourceReport: step.sourceReport
-    }))
+    })),
+    reports: reports
+      ? {
+          finish: stableFinishPlanFingerprint(reports.finish),
+          ready: reports.ready ? stableReportFingerprint(reports.ready) : null,
+          close: reports.close ? stableReportFingerprint(reports.close) : null,
+          audit: reports.audit ? stableReportFingerprint(reports.audit) : null
+        }
+      : undefined
   };
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(stable)).digest('hex')}`;
+}
+
+function stableFinishPlanFingerprint(report: TaskFinishReport): string {
+  return hashReport({
+    schemaVersion: report.schemaVersion,
+    command: report.command,
+    ok: report.ok,
+    taskId: report.taskId,
+    task: report.task,
+    status: report.status,
+    summary: {
+      plannedWrites: report.summary.plannedWrites,
+      advisoryOnly: report.summary.advisoryOnly,
+      stateDocsPending: report.summary.stateDocsPending
+    },
+    writes: report.writes.map((write) => ({
+      path: write.path,
+      action: write.action,
+      field: write.field,
+      before: write.before,
+      expectedBeforeExists: write.expectedBeforeExists,
+      expectedBeforeHash: write.expectedBeforeHash
+    })),
+    advisories: report.advisories,
+    stateDocs: report.stateDocs,
+    issues: report.issues
+  });
+}
+
+function stableReportFingerprint(report: unknown): string {
+  return hashReport(stripVolatilePlanFields(report));
+}
+
+function stripVolatilePlanFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((entry) => stripVolatilePlanFields(entry));
+  if (!value || typeof value !== 'object') return value;
+  const output: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (
+      key === 'generatedAt'
+      || key === 'diagnostics'
+      || key === 'execution'
+      || key === 'planHash'
+      || key === 'projectRoot'
+      || key.endsWith('SourceHash')
+      || key.endsWith('ReportHash')
+    ) continue;
+    output[key] = stripVolatilePlanFields(entry);
+  }
+  return output;
 }
