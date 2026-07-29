@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
 import { appendEvidenceWithResult, EvidenceAppendResult, EvidenceTaskDirectoryError } from '../../evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeGuardedTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport, type TaskCloseProofAppendGuard } from './proof';
+import { assertTaskCloseProofAppendGuardAuthorityBeforeMutation, createTaskAuditCloseReport, createTaskCloseReport, executeGuardedTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport, type TaskCloseProofAppendGuard } from './proof';
 import { createCloseGuardedWritePlan, executeReviewedCloseGuardedWrites, CloseGuardedWritePlan } from './guardedWrites';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction } from '../lifecycle-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../authoring-guidance';
@@ -569,6 +569,27 @@ function executeTaskClosePlan(
         actor,
         'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED',
         'task close execute refused before mutation because close proof append requires a transaction operation-marker guard.',
+        currentPlanHash,
+        steps,
+        {
+          requestedPlanHash,
+          currentPlanHash,
+          planHashMatched: true,
+          executedSteps: [],
+          stoppedAt: guardedWriteStatus === 'required' ? 'guarded-writes' : 'close'
+        },
+        reports
+      );
+    }
+    try {
+      assertTaskCloseProofAppendGuardAuthorityBeforeMutation(projectRoot, taskId, proofGuard);
+    } catch (error) {
+      if (!(error instanceof TaskCloseProofAppendRevalidationError)) throw error;
+      return createExecuteRefusal(
+        taskId,
+        actor,
+        error.issue.code,
+        `task close execute refused before mutation because close proof append guard authority is invalid: ${error.issue.message}`,
         currentPlanHash,
         steps,
         {

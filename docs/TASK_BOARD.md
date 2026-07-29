@@ -740,3 +740,4 @@
 | T-0737 | Improve validation tokens and command output | Done | tasks/T-0737-improve-validation-tokens-and-command-output | |
 | T-0738 | Release blocker registry and safety hotfixes | Done | tasks/T-0738-release-blocker-registry-and-safety-hotfixes | |
 | T-0739 | Harden close guard validation output and continuation consumption | Done | tasks/T-0739-harden-close-guard-validation-output-and-continuation-consumptio | |
+| T-0740 | Harden validation argv contract and proof authority | Done | tasks/T-0740-harden-validation-argv-contract-and-proof-authority | |

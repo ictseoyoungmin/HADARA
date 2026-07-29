@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { handleValidationCommand } from '../../src/cli/validation';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createValidationRunReport } from '../../src/services/validation-run';
+import { createValidationRunReport, createValidationRunV1CompatReport } from '../../src/services/validation-run';
 
 const roots: string[] = [];
 
@@ -47,7 +47,7 @@ describe('validation run', () => {
     });
 
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.validation.run.v1',
+      schemaVersion: 'hadara.validation.run.v2',
       command: 'validation.run',
       ok: true,
       result: 'Passed',
@@ -75,7 +75,7 @@ describe('validation run', () => {
     });
     expect(report.attempt.checkKey).toMatch(/^[a-f0-9]{16}$/);
     expect(report.evidence?.tags).toContain(`validation-check:${report.attempt.checkKey}`);
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMd).not.toContain('Focused tests');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(report.evidence?.id);
@@ -118,7 +118,7 @@ describe('validation run', () => {
           code: 'EVIDENCE_APPEND_LOCK_CONTENDED'
         })
       );
-      expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+      expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
     } finally {
       fs.rmSync(lockDir, { recursive: true, force: true });
       await releaserExit;
@@ -151,7 +151,7 @@ describe('validation run', () => {
     expect(report.execution.capture.stdoutPreview).not.toContain('\u001b');
     expect(report.execution.capture.stdoutPreview).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
     expect(report.rawArgv).toBeUndefined();
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('redacts validation argv previews by default and exposes raw argv only by explicit opt-in', () => {
@@ -177,7 +177,7 @@ describe('validation run', () => {
     expect(report.rawArgv).toBeUndefined();
     expect(JSON.stringify(report)).not.toContain('actual-secret');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).not.toContain('actual-secret');
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
 
     const rawReport = createValidationRunReport(root, {
       taskId: task.id,
@@ -188,7 +188,92 @@ describe('validation run', () => {
 
     expect(rawReport.argvPreview).toContain('[REDACTED]');
     expect(rawReport.rawArgv).toEqual([process.execPath, '--token', 'actual-secret', '-e', secretScript]);
-    expect(validateSchema('hadara.validation.run.v1', rawReport).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', rawReport).ok).toBe(true);
+  });
+
+  it('redacts common secret-bearing argv option names and inline assignments', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation argv classifier');
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Sensitive argv classifier',
+      argv: [
+        'tool',
+        '--client-secret',
+        'hunter2',
+        '--access-token',
+        'plain-token',
+        '--db-password',
+        'db-pass',
+        '--github-token',
+        'github-secret',
+        '--client-secret=inline-secret'
+      ]
+    });
+
+    expect(report.argvPreview).toEqual([
+      'tool',
+      '--client-secret',
+      '[REDACTED]',
+      '--access-token',
+      '[REDACTED]',
+      '--db-password',
+      '[REDACTED]',
+      '--github-token',
+      '[REDACTED]',
+      '--client-secret=[REDACTED]'
+    ]);
+    expect(report.argvRedacted).toBe(true);
+    expect(JSON.stringify(report)).not.toContain('hunter2');
+    expect(JSON.stringify(report)).not.toContain('inline-secret');
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).not.toContain('github-secret');
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
+  });
+
+  it('bounds validation argv previews and records truncation metadata', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation argv budget');
+    const hugeScript = `process.stdout.write("ok");${'x'.repeat(64 * 1024)}`;
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Huge argv',
+      argv: [process.execPath, '-e', hugeScript]
+    });
+
+    expect(report.argvPreviewLimitBytes).toBe(16 * 1024);
+    expect(report.argvPreviewTruncated).toBe(true);
+    expect(report.argvOmittedBytes).toBeGreaterThan(0);
+    expect(report.argvPreview.join(' ')).toContain('[...argv truncated...]');
+    expect(Buffer.byteLength(report.argvPreview.join(' '), 'utf8')).toBeLessThanOrEqual(report.argvPreviewLimitBytes);
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('[...argv truncated...]');
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
+  });
+
+  it('uses v2 by default, rejects legacy raw argv in v2 schema, and keeps explicit v1 compatibility', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation schema compat');
+    const argv = [process.execPath, '-e', 'process.exit(0)'];
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Schema v2',
+      argv
+    });
+    const invalidV2 = { ...report, argv };
+    const compat = createValidationRunV1CompatReport(root, {
+      taskId: task.id,
+      check: 'Schema v1 compat',
+      argv
+    });
+
+    expect(report.schemaVersion).toBe('hadara.validation.run.v2');
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', invalidV2).ok).toBe(false);
+    expect(compat.schemaVersion).toBe('hadara.validation.run.v1');
+    expect(compat.argv).toEqual(argv);
+    expect(validateSchema('hadara.validation.run.v1', compat).ok).toBe(true);
   });
 
   it('exposes unredacted sanitized previews only when raw output is explicitly requested', () => {
@@ -210,7 +295,7 @@ describe('validation run', () => {
     });
     expect(report.execution.capture.stdoutPreview).toBe('token=super-secret');
     expect(report.execution.capture.stdoutPreview).not.toContain('\u001b');
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('uses head and tail output preview when captured output is truncated', () => {
@@ -230,7 +315,7 @@ describe('validation run', () => {
     expect(report.execution.capture.stdoutPreview).toContain('tail-끝-');
     expect(report.execution.capture.stdoutPreview).toContain('bytes omitted');
     expect(report.execution.capture.stdoutPreview).not.toContain('\uFFFD');
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('auto-resolves earlier failed attempts for the same validation check and command when a later attempt passes', () => {
@@ -252,7 +337,7 @@ describe('validation run', () => {
     expect(passed.attempt.autoResolvedEvidenceIds).toEqual([failed.evidence?.id]);
     expect(passed.evidence?.tags).toContain(`resolves:${failed.evidence?.id}`);
     expect(passed.evidence?.tags).toContain(`validation-check:${failed.attempt.checkKey}`);
-    expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', passed).ok).toBe(true);
   });
 
   it('does not auto-resolve an earlier failed attempt when a later attempt reuses the check name with a different command', () => {
@@ -293,7 +378,7 @@ describe('validation run', () => {
     expect(report).toMatchObject({ status: 'Passed', detail: expect.stringMatching(/^exit 0 in \d+ms$/), result: 'Passed' });
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMd).toContain(`| Focused tests | Yes | Passed | ${report.detail} | ${report.evidence?.id} |`);
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('matches inline-code TASK Validation check labels when updating rows', () => {
@@ -322,7 +407,7 @@ describe('validation run', () => {
       .split(/\r?\n/)
       .filter((line) => line.includes('npm test'));
     expect(validationRows).toEqual([`| npm test | Yes | Passed | ${report.detail} | ${report.evidence?.id} |`]);
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('records failed validation evidence without changing acceptance disposition', () => {
@@ -344,7 +429,7 @@ describe('validation run', () => {
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMd).toContain(`| Focused tests | Yes | Failed | ${report.detail} | ${report.evidence?.id} |`);
     expect(taskMd).toContain('| AC-1 | Scope is implemented. | Pending | TBD | TBD |');
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('records blocked validation evidence with an explanation signal', () => {
@@ -369,7 +454,7 @@ describe('validation run', () => {
     expect(report.nextActions.map((action) => action.id)).toEqual(['run-direct-command', 'record-direct-validation-result', 'record-direct-result']);
     const evidenceJsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
     expect(evidenceJsonl).toContain('blocked because validation command could not be launched');
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('records an operator-supplied direct result without spawning a child process', () => {
@@ -426,7 +511,7 @@ describe('validation run', () => {
       `| Focused tests | Yes | Passed | ${passed.detail} | ${passed.evidence?.id} |`
     );
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('from direct result');
-    expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', passed).ok).toBe(true);
   });
 
   it('classifies permission-denied launch failures separately from validation failures', () => {
@@ -487,7 +572,7 @@ describe('validation run', () => {
       })
     );
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('could not be launched (EPERM)');
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('classifies validation timeouts separately from assertions and environment setup', () => {
@@ -526,7 +611,7 @@ describe('validation run', () => {
       id: 'record-direct-validation-result',
       command: expect.stringContaining('after wrapper timeout')
     }));
-    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
   it('routes the CLI validation run command', () => {
@@ -568,7 +653,7 @@ describe('validation run', () => {
       console.log = originalLog;
     }
     const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.validation.run.v1');
+    expect(report.schemaVersion).toBe('hadara.validation.run.v2');
     expect(report.result).toBe('Passed');
     expect(report.argvHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(report.argvPreview).toEqual([process.execPath, '-e', 'process.exit(0)']);
@@ -576,6 +661,45 @@ describe('validation run', () => {
     expect(report.execution.directResult).toBe(true);
     expect(report.taskValidationRow.updated).toBe(true);
     expect(report.evidence.tags).toContain('resolves:ev:T-0000:old');
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
+  });
+
+  it('routes explicit CLI validation run v1 compatibility output', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation CLI v1 compat');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleValidationCommand({
+          args: [
+            'validation',
+            'run',
+            '--task',
+            task.id,
+            '--check',
+            'CLI compat',
+            '--compat',
+            'v1',
+            '--json',
+            '--',
+            process.execPath,
+            '-e',
+            'process.exit(0)'
+          ],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+    const report = JSON.parse(output.join('\n'));
+    expect(report.schemaVersion).toBe('hadara.validation.run.v1');
+    expect(report.argv).toEqual([process.execPath, '-e', 'process.exit(0)']);
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 

@@ -76,6 +76,7 @@ import taskStatusSchemaJson from '../schemas/task-status.schema.json';
 import taskWorkbenchSchemaJson from '../schemas/task-workbench.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
 import validationRunSchemaJson from '../schemas/validation-run.schema.json';
+import validationRunV2SchemaJson from '../schemas/validation-run-v2.schema.json';
 import writePreflightSchemaJson from '../schemas/write-preflight.schema.json';
 
 export interface SchemaValidationIssue {
@@ -194,6 +195,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.workbench.v1': taskWorkbenchSchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,
   'hadara.validation.run.v1': validationRunSchemaJson as JsonObject,
+  'hadara.validation.run.v2': validationRunV2SchemaJson as JsonObject,
   'hadara.write.preflight.v1': writePreflightSchemaJson as JsonObject
 };
 
@@ -326,6 +328,17 @@ function validateObject(value: JsonObject, schema: JsonObject, rootSchema: JsonO
   }
 
   const properties = objectProperty(schema, 'properties');
+  if (schema.additionalProperties === false) {
+    const knownProperties = new Set(properties ? Object.keys(properties) : []);
+    for (const key of Object.keys(value)) {
+      if (knownProperties.has(key)) continue;
+      issues.push({
+        path: `${valuePath}.${key}`,
+        code: 'SCHEMA_ADDITIONAL_PROPERTY',
+        message: 'is not allowed'
+      });
+    }
+  }
   if (!properties) return;
   for (const [key, propertySchema] of Object.entries(properties)) {
     if (!Object.prototype.hasOwnProperty.call(value, key)) continue;

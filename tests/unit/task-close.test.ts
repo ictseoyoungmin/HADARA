@@ -11,6 +11,7 @@ import { createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskClosePlanReport } from '../../src/task/close';
 import { createCloseGuardedWritePlan } from '../../src/task/close/guardedWrites';
+import type { TaskCloseProofAppendGuard } from '../../src/task/close/proof';
 import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 
 const roots: string[] = [];
@@ -1234,6 +1235,92 @@ describe('task close report', () => {
     expect(closeProofCount(task.dir)).toBe(0);
   });
 
+  it('refuses direct close-plan execute before guarded writes when a cached proof guard points at a missing operation marker', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan cached missing marker');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan cached missing marker | Done |`, `| ${task.id} | Close plan cached missing marker | Draft |`),
+      'utf8'
+    );
+    const dryRun = createTaskClosePlanReport(root, task.id);
+    const operation = prepareCloseOperationMarker(root, task.id, dryRun.planHash ?? '');
+    const guard = proofGuardFromMarker(operation);
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+    fs.rmSync(path.join(root, guard.markerPath), { force: true });
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash,
+      proofAppendGuard: () => guard
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_MARKER_MISSING'
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
+  it('refuses direct close-plan execute before guarded writes when a cached proof guard does not match the marker identity', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan cached mismatch marker');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan cached mismatch marker | Done |`, `| ${task.id} | Close plan cached mismatch marker | Draft |`),
+      'utf8'
+    );
+    const dryRun = createTaskClosePlanReport(root, task.id);
+    const operation = prepareCloseOperationMarker(root, task.id, dryRun.planHash ?? '');
+    const guard = proofGuardFromMarker(operation);
+    operation.planHash = 'sha256:changed';
+    fs.writeFileSync(path.join(root, guard.markerPath), `${JSON.stringify(operation, null, 2)}\n`, 'utf8');
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash,
+      proofAppendGuard: () => guard
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_MARKER_MISMATCH',
+      message: expect.stringContaining('planHash')
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
   it('stops before a guarded write without lifecycle mutation or close proof', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction before write fault');
@@ -2187,6 +2274,49 @@ function snapshotFiles(root: string): Record<string, string> {
   }
   walk(root);
   return result;
+}
+
+function prepareCloseOperationMarker(root: string, taskId: string, planHash: string): Record<string, any> {
+  const markerPath = path.join(root, '.hadara', 'local', 'task-close', `${taskId}.json`);
+  fs.mkdirSync(path.dirname(markerPath), { recursive: true });
+  const expectedWrites: any[] = [];
+  const operation = {
+    operationId: 'op-test',
+    taskId,
+    idempotencyKey: 'idem-test',
+    intendedFinalState: 'closed-valid',
+    phase: 'applying',
+    closeBasisHash: 'sha256:basis',
+    closeSourceHash: 'sha256:basis',
+    planHash,
+    writeSetHash: hashTestObject(expectedWrites),
+    expectedWrites,
+    completedSteps: [],
+    pendingSteps: [],
+    path: path.relative(root, markerPath).split(path.sep).join('/'),
+    persisted: true,
+    createdAt: '2026-07-29T00:00:00.000Z',
+    updatedAt: '2026-07-29T00:00:00.000Z'
+  };
+  fs.writeFileSync(markerPath, `${JSON.stringify(operation, null, 2)}\n`, 'utf8');
+  return operation;
+}
+
+function proofGuardFromMarker(operation: Record<string, any>): TaskCloseProofAppendGuard {
+  return {
+    markerPath: operation.path,
+    taskId: operation.taskId,
+    operationId: operation.operationId,
+    operationIdempotencyKey: operation.idempotencyKey,
+    closeBasisHash: operation.closeBasisHash,
+    planHash: operation.planHash,
+    writeSetHash: operation.writeSetHash,
+    expectedWrites: operation.expectedWrites
+  };
+}
+
+function hashTestObject(value: unknown): string {
+  return hashText(JSON.stringify(value));
 }
 
 function hashText(value: string): string {

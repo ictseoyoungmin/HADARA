@@ -1,4 +1,4 @@
-import { createValidationRunReport } from '../services/validation-run';
+import { createValidationRunReport, createValidationRunV1CompatReport } from '../services/validation-run';
 import { CliArgsError, getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
@@ -23,7 +23,8 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
   const taskId = getRequiredStringOption(optionArgs, '--task');
   const check = getRequiredStringOption(optionArgs, '--check');
   const directResult = parseDirectResult(getStringOption(optionArgs, '--direct-result'));
-  const report = createValidationRunReport(input.projectRoot, {
+  const compat = parseCompat(getStringOption(optionArgs, '--compat'));
+  const reportOptions = {
     taskId,
     check,
     argv: commandArgs,
@@ -34,7 +35,10 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     directSummary: getStringOption(optionArgs, '--direct-summary'),
     showRawOutput: getFlag(optionArgs, '--show-raw-output'),
     showRawArgv: getFlag(optionArgs, '--show-raw-argv')
-  });
+  };
+  const report = compat === 'v1'
+    ? createValidationRunV1CompatReport(input.projectRoot, reportOptions)
+    : createValidationRunReport(input.projectRoot, reportOptions);
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else {
@@ -82,6 +86,12 @@ function parseDirectResult(value: string | undefined): 'Passed' | 'Failed' | 'Bl
   if (normalized === 'failed' || normalized === 'fail') return 'Failed';
   if (normalized === 'blocked' || normalized === 'block') return 'Blocked';
   throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--direct-result must be passed, failed, or blocked');
+}
+
+function parseCompat(value: string | undefined): 'v1' | undefined {
+  if (value === undefined) return undefined;
+  if (value === 'v1') return 'v1';
+  throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--compat must be v1 when provided');
 }
 
 function blockLegacyMutation(input: ValidationCommandInput, command: string): boolean {

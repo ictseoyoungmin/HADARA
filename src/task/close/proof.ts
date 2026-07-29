@@ -721,6 +721,15 @@ export function executeGuardedTaskCloseEvidence(projectRoot: string, report: Tas
   }
 }
 
+export function assertTaskCloseProofAppendGuardAuthorityBeforeMutation(projectRoot: string, taskId: string, guard: TaskCloseProofAppendGuard): void {
+  readRequiredCloseOperationMarker(projectRoot, taskId, guard, {
+    allowedPhases: ['applying', 'verifying', 'proof-pending'],
+    proofRequired: false,
+    missingMessage: 'Task close operation marker is missing before guarded writes.',
+    malformedMessage: 'Task close operation marker is missing or malformed before guarded writes.'
+  });
+}
+
 interface PersistedTaskLocalExpectedWrite {
   path: string;
   writeBoundary: string;
@@ -777,17 +786,28 @@ function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseR
 function readRequiredCloseOperationMarker(
   projectRoot: string,
   taskId: string,
-  guard: TaskCloseProofAppendGuard
+  guard: TaskCloseProofAppendGuard,
+  options: {
+    allowedPhases: string[];
+    proofRequired: boolean;
+    missingMessage: string;
+    malformedMessage: string;
+  } = {
+    allowedPhases: ['proof-pending'],
+    proofRequired: true,
+    missingMessage: 'Task close operation marker is missing before proof append.',
+    malformedMessage: 'Task close operation marker is missing or malformed before proof append.'
+  }
 ): { expectedWrites: PersistedTaskLocalExpectedWrite[] } {
   const markerPath = path.join(projectRoot, guard.markerPath);
   if (!fs.existsSync(markerPath)) {
-    throwProofAppendGuardIssue(projectRoot, taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MISSING', 'Task close operation marker is missing before proof append.');
+    throwProofAppendGuardIssue(projectRoot, taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MISSING', options.missingMessage);
   }
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(fs.readFileSync(markerPath, 'utf8')) as Record<string, unknown>;
   } catch {
-    throwProofAppendGuardIssue(projectRoot, taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MALFORMED', 'Task close operation marker is missing or malformed before proof append.');
+    throwProofAppendGuardIssue(projectRoot, taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MALFORMED', options.malformedMessage);
   }
   const expectedWrites = parsed.expectedWrites;
   const proof = parsed.proof && typeof parsed.proof === 'object' ? parsed.proof as { idempotencyKey?: unknown; outcome?: unknown } : undefined;
@@ -798,8 +818,8 @@ function readRequiredCloseOperationMarker(
   if (parsed.closeBasisHash !== guard.closeBasisHash) mismatches.push('closeBasisHash');
   if (parsed.planHash !== guard.planHash) mismatches.push('planHash');
   if (parsed.writeSetHash !== guard.writeSetHash) mismatches.push('writeSetHash');
-  if (parsed.phase !== 'proof-pending') mismatches.push('phase');
-  if (guard.proofIdempotencyKey && proof?.idempotencyKey !== guard.proofIdempotencyKey) mismatches.push('proof.idempotencyKey');
+  if (typeof parsed.phase !== 'string' || !options.allowedPhases.includes(parsed.phase)) mismatches.push('phase');
+  if (options.proofRequired && guard.proofIdempotencyKey && proof?.idempotencyKey !== guard.proofIdempotencyKey) mismatches.push('proof.idempotencyKey');
   if (!Array.isArray(expectedWrites)) mismatches.push('expectedWrites');
   if (Array.isArray(expectedWrites)) {
     if (hashObject(expectedWrites) !== guard.writeSetHash) mismatches.push('hash(expectedWrites)');

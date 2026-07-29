@@ -573,7 +573,14 @@
       "path": "src/schemas/validation-run.schema.json",
       "status": "fixture",
       "owner": "validation/run",
-      "notes": "Documents validation command execution reports that append evidence and update TASK.md Validation rows."
+      "notes": "Compatibility schema for legacy validation command execution reports that expose raw argv."
+    },
+    {
+      "id": "hadara.validation.run.v2",
+      "path": "src/schemas/validation-run-v2.schema.json",
+      "status": "fixture",
+      "owner": "validation/run",
+      "notes": "Documents default validation command execution reports with redacted bounded argv previews and argv hashes."
     },
     {
       "id": "hadara.releaseArtifact.manifest.v1",

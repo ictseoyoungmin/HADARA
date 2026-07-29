@@ -11,9 +11,10 @@ import { parseEvidenceIndexFile, EvidenceListRecord } from './evidence-list';
 import { formatMarkdownTableRow, isSafeMarkdownTableCell } from './markdown-table';
 
 const OUTPUT_PREVIEW_LIMIT_BYTES = 16 * 1024;
+const ARGV_PREVIEW_LIMIT_BYTES = 16 * 1024;
 
 export interface ValidationRunReport {
-  schemaVersion: 'hadara.validation.run.v1';
+  schemaVersion: 'hadara.validation.run.v2';
   command: 'validation.run';
   ok: boolean;
   taskId: string;
@@ -22,6 +23,9 @@ export interface ValidationRunReport {
   argvHash: string;
   argvPreview: string[];
   argvRedacted: boolean;
+  argvPreviewLimitBytes: number;
+  argvPreviewTruncated: boolean;
+  argvOmittedBytes: number;
   rawArgv?: string[];
   execution: {
     exitCode: number | null;
@@ -101,6 +105,11 @@ export interface ValidationRunReport {
     command?: string;
   }>;
 }
+
+export type ValidationRunV1CompatReport = Omit<ValidationRunReport, 'schemaVersion' | 'rawArgv'> & {
+  schemaVersion: 'hadara.validation.run.v1';
+  argv: string[];
+};
 
 export interface ValidationRunOptions {
   taskId: string;
@@ -209,7 +218,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       };
 
   return {
-    schemaVersion: 'hadara.validation.run.v1',
+    schemaVersion: 'hadara.validation.run.v2',
     command: 'validation.run',
     ok: result === 'Passed',
     taskId: options.taskId,
@@ -218,6 +227,9 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     argvHash: argvFields.argvHash,
     argvPreview: argvFields.argvPreview,
     argvRedacted: argvFields.argvRedacted,
+    argvPreviewLimitBytes: argvFields.argvPreviewLimitBytes,
+    argvPreviewTruncated: argvFields.argvPreviewTruncated,
+    argvOmittedBytes: argvFields.argvOmittedBytes,
     ...(argvFields.rawArgv ? { rawArgv: argvFields.rawArgv } : {}),
     execution: {
       exitCode: executed.status,
@@ -258,6 +270,16 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     },
     issues,
     nextActions: createValidationRunNextActions(options, result, executionSemantics.failureKind)
+  };
+}
+
+export function createValidationRunV1CompatReport(projectRoot: string, options: ValidationRunOptions): ValidationRunV1CompatReport {
+  const report = createValidationRunReport(projectRoot, options);
+  const { rawArgv: _rawArgv, ...rest } = report;
+  return {
+    ...rest,
+    schemaVersion: 'hadara.validation.run.v1',
+    argv: options.argv
   };
 }
 
@@ -386,10 +408,16 @@ function prepareOutputPreviewText(text: string, showRawOutput: boolean): { text:
   };
 }
 
-function argvReportFields(argv: string[], showRawArgv: boolean): Pick<ValidationRunReport, 'argvHash' | 'argvPreview' | 'argvRedacted' | 'rawArgv'> {
+function argvReportFields(argv: string[], showRawArgv: boolean): Pick<ValidationRunReport, 'argvHash' | 'argvPreview' | 'argvRedacted' | 'argvPreviewLimitBytes' | 'argvPreviewTruncated' | 'argvOmittedBytes' | 'rawArgv'> {
   const prepared: Array<{ text: string; redactionFindingCount: number }> = [];
   let redactNext = false;
   for (const arg of argv) {
+    const inlineSensitive = redactSensitiveInlineArg(arg);
+    if (inlineSensitive) {
+      prepared.push({ text: inlineSensitive, redactionFindingCount: 1 });
+      redactNext = false;
+      continue;
+    }
     if (redactNext) {
       prepared.push({ text: '[REDACTED]', redactionFindingCount: 1 });
       redactNext = false;
@@ -399,16 +427,71 @@ function argvReportFields(argv: string[], showRawArgv: boolean): Pick<Validation
     prepared.push(entry);
     if (isSensitiveArgName(arg)) redactNext = true;
   }
+  const bounded = boundArgvPreview(prepared.map((entry) => entry.text), ARGV_PREVIEW_LIMIT_BYTES);
   return {
     argvHash: hashText(argv.join('\0')),
-    argvPreview: prepared.map((entry) => entry.text),
+    argvPreview: bounded.preview,
     argvRedacted: prepared.some((entry) => entry.redactionFindingCount > 0),
+    argvPreviewLimitBytes: ARGV_PREVIEW_LIMIT_BYTES,
+    argvPreviewTruncated: bounded.truncated,
+    argvOmittedBytes: bounded.omittedBytes,
     ...(showRawArgv ? { rawArgv: argv } : {})
   };
 }
 
 function isSensitiveArgName(arg: string): boolean {
-  return /^--?(?:api[-_]?key|token|password|secret|private[-_]?key|authorization)$/i.test(arg.trim());
+  const option = arg.trim();
+  if (!option.startsWith('-') || option.includes('=')) return false;
+  return isSensitiveOptionName(option);
+}
+
+function redactSensitiveInlineArg(arg: string): string | null {
+  const separator = arg.indexOf('=');
+  if (separator <= 0) return null;
+  const name = arg.slice(0, separator);
+  if (!isSensitiveOptionName(name)) return null;
+  return `${name}=[REDACTED]`;
+}
+
+function isSensitiveOptionName(name: string): boolean {
+  const normalized = name.replace(/^-+/, '').toLowerCase();
+  if (!normalized) return false;
+  const components = normalized.split(/[-_.:]/).filter(Boolean);
+  return components.some((component) =>
+    ['key', 'secret', 'token', 'password', 'credential', 'credentials', 'authorization', 'auth'].includes(component)
+  );
+}
+
+function boundArgvPreview(argvPreview: string[], limitBytes: number): { preview: string[]; truncated: boolean; omittedBytes: number } {
+  const preview: string[] = [];
+  let usedBytes = 0;
+  let omittedBytes = 0;
+  let truncated = false;
+  for (const arg of argvPreview) {
+    const separatorBytes = preview.length > 0 ? 1 : 0;
+    const argBytes = Buffer.byteLength(arg, 'utf8');
+    const remaining = limitBytes - usedBytes - separatorBytes;
+    if (remaining <= 0) {
+      omittedBytes += separatorBytes + argBytes;
+      truncated = true;
+      continue;
+    }
+    if (argBytes <= remaining) {
+      preview.push(arg);
+      usedBytes += separatorBytes + argBytes;
+      continue;
+    }
+    const marker = '[...argv truncated...]';
+    const markerBytes = Buffer.byteLength(marker, 'utf8');
+    const headLimit = Math.max(0, remaining - markerBytes);
+    const head = utf8Head(arg, headLimit);
+    const bounded = `${head}${marker}`;
+    preview.push(bounded);
+    omittedBytes += Math.max(0, argBytes - Buffer.byteLength(head, 'utf8'));
+    usedBytes += separatorBytes + Buffer.byteLength(bounded, 'utf8');
+    truncated = true;
+  }
+  return { preview, truncated, omittedBytes };
 }
 
 function stripTerminalControls(text: string): { text: string; removedCount: number } {
@@ -609,7 +692,7 @@ function shellSingleQuote(value: string): string {
 
 function failedInputReport(projectRoot: string, options: ValidationRunOptions, code: string, message: string): ValidationRunReport {
   return {
-    schemaVersion: 'hadara.validation.run.v1',
+    schemaVersion: 'hadara.validation.run.v2',
     command: 'validation.run',
     ok: false,
     taskId: options.taskId,
