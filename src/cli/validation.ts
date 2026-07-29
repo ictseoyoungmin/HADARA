@@ -31,7 +31,8 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     timeoutMs: getIntegerOption(optionArgs, '--timeout-ms', { min: 1, max: 3_600_000 }),
     updateTask: getFlag(optionArgs, '--update-task'),
     directResult,
-    directSummary: getStringOption(optionArgs, '--direct-summary')
+    directSummary: getStringOption(optionArgs, '--direct-summary'),
+    showRawOutput: getFlag(optionArgs, '--show-raw-output')
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
@@ -43,6 +44,7 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     console.log(`failureClass=${report.execution.failureClass}`);
     console.log(`stdoutHash=${report.execution.stdoutHash}`);
     console.log(`stderrHash=${report.execution.stderrHash}`);
+    console.log(`previewMode=${report.execution.capture.previewMode} redacted=${report.execution.capture.redacted} redactionFindingCount=${report.execution.capture.redactionFindingCount} omittedBytes=${report.execution.capture.omittedBytes}`);
     printChildOutput('stdout', report.execution.capture.stdoutPreview, report.execution.capture.stdoutTruncated, report.execution.capture.previewLimitBytes);
     printChildOutput('stderr', report.execution.capture.stderrPreview, report.execution.capture.stderrTruncated, report.execution.capture.previewLimitBytes);
     console.log(`[HADARA] evidence`);

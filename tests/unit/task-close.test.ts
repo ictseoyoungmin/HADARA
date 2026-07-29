@@ -1103,11 +1103,53 @@ describe('task close report', () => {
 
     expect(report).toMatchObject({
       ok: false,
-      mode: 'execute'
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'close',
+        executedSteps: []
+      }
     });
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED'
     }));
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
+  it('refuses direct close-plan execute before guarded writes when proof append guard is missing', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan guard before writes');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan guard before writes | Done |`, `| ${task.id} | Close plan guard before writes | Draft |`),
+      'utf8'
+    );
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+    const dryRun = createTaskClosePlanReport(root, task.id);
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED'
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
     expect(closeProofCount(task.dir)).toBe(0);
   });
 

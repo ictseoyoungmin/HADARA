@@ -111,9 +111,11 @@ export function createTaskSelectionStatusV2Report(
       },
       {
         id: 'continuation',
-        state: 'not-evaluated',
+        state: taskSelection.summary.source.includes('HANDOFF.md') ? 'evaluated' : 'not-evaluated',
         health: 'ok',
-        summary: 'Continuation is routed through Task Board rows and task-local Task Capsule handoffs.'
+        summary: taskSelection.summary.source.includes('HANDOFF.md')
+          ? 'Task-local HANDOFF continuation was selected after Task Board and slice work were exhausted.'
+          : 'Continuation is routed through Task Board rows and task-local Task Capsule handoffs.'
       }
     ],
     primaryNextAction,
@@ -176,6 +178,7 @@ function determinePhase(
   action: StatusNextAction | null
 ): TaskSelectionStatusV2Report['phase'] {
   if (!taskSelection.ok) return 'degraded';
+  if (recommendation?.sourceKind === 'task-handoff-continuation') return 'continuation-ready';
   if (recommendation && action) return action.kind === 'review' ? 'review-next-work' : 'select-work';
   return 'idle';
 }
@@ -249,6 +252,11 @@ function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['pr
       id: 'development-slice',
       source: 'docs/DEVELOPMENT_SLICES.md',
       description: 'Use the first open development slice only when no open Task Board row is already queued.'
+    },
+    {
+      id: 'task-handoff-continuation',
+      source: 'latest Done task HANDOFF.md',
+      description: 'When no open row or slice exists, surface structured actionable task-local HANDOFF continuation without restoring global state documents.'
     },
     {
       id: 'first-task',

@@ -16,7 +16,7 @@
     "execution": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["exitCode", "signal", "timedOut", "durationMs", "stdoutHash", "stderrHash", "failureClass"],
+      "required": ["exitCode", "signal", "timedOut", "durationMs", "stdoutHash", "stderrHash", "failureClass", "capture"],
       "properties": {
         "exitCode": { "type": ["number", "null"] },
         "signal": { "type": ["string", "null"] },
@@ -29,8 +29,8 @@
         "failureClass": { "enum": ["none", "assertion", "timeout", "environment-setup"] },
         "capture": {
           "type": "object",
-          "additionalProperties": true,
-          "required": ["mode", "stdoutBytes", "stderrBytes", "fallbackUsed"],
+          "additionalProperties": false,
+          "required": ["mode", "stdoutBytes", "stderrBytes", "stdoutPreview", "stderrPreview", "stdoutTruncated", "stderrTruncated", "previewLimitBytes", "previewMode", "redacted", "redactionFindingCount", "omittedBytes", "controlSequenceFindingCount", "controlCharactersStripped", "fallbackUsed"],
           "properties": {
             "mode": { "enum": ["file", "injected", "direct"] },
             "stdoutBytes": { "type": "number" },
@@ -40,6 +40,12 @@
             "stdoutTruncated": { "type": "boolean" },
             "stderrTruncated": { "type": "boolean" },
             "previewLimitBytes": { "type": "number" },
+            "previewMode": { "enum": ["redacted", "raw"] },
+            "redacted": { "type": "boolean" },
+            "redactionFindingCount": { "type": "number" },
+            "omittedBytes": { "type": "number" },
+            "controlSequenceFindingCount": { "type": "number" },
+            "controlCharactersStripped": { "type": "boolean" },
             "fallbackUsed": { "type": "boolean" },
             "fallbackReason": { "type": "string" }
           }

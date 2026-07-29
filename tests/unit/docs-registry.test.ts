@@ -18,7 +18,8 @@ import {
   createDocsArchiveReport,
   createDocsSupersedeReport,
   createDocsUnregisterReport,
-  createDocsRenderReport
+  createDocsRenderReport,
+  renderDocRegistryMarkdown
 } from '../../src/services/docs-registry';
 import { createDocsAddReport } from '../../src/services/docs-add';
 
@@ -60,6 +61,21 @@ afterEach(() => {
 });
 
 describe('Phase 7.3 docs registry', () => {
+  it('keeps the repository docs registry fixture parseable and aligned with its projection', () => {
+    const repoRoot = process.cwd();
+    const registry = JSON.parse(fs.readFileSync(path.join(repoRoot, DOCS_REGISTRY_PATH), 'utf8')) as DocumentRegistryFile;
+    const removedGlobalStatePaths = ['.hadara/state/current.json', 'docs/AGENT_HANDOFF.md', 'docs/PROJECT_STATE.md'];
+    const registryPaths = registry.documents.map((doc) => doc.path);
+    const projection = fs.readFileSync(path.join(repoRoot, 'docs', 'DOC_REGISTRY.md'), 'utf8');
+
+    expect(registry.schemaVersion).toBe('hadara.docs.registry.v1');
+    expect(registryPaths).not.toEqual(expect.arrayContaining(removedGlobalStatePaths));
+    expect(renderDocRegistryMarkdown(registry)).toBe(projection);
+    for (const removedPath of removedGlobalStatePaths) {
+      expect(projection).not.toContain(`\`${removedPath}\``);
+    }
+  });
+
   it('seeds fresh init registries from profile-owned docs', () => {
     const basic = tempProject();
     const standard = tempProject();

@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownRows } from '../services/markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
+import { continuationFromTaskHandoffStep } from '../services/project-current-state';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';
@@ -28,7 +29,7 @@ export interface TaskSelectionRecommendation {
   title: string;
   reason: string;
   source: string;
-  sourceKind?: 'development-slices' | 'task-board-fallback';
+  sourceKind?: 'development-slices' | 'task-board-fallback' | 'task-handoff-continuation';
   taskBoardStatus: string | null;
   taskBoardPath: string | null;
   taskCapsulePresent: boolean;
@@ -81,10 +82,12 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
   const openTaskRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
   const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows);
   const sliceRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : null;
+  const handoffContinuationRecommendation = recommendationFromLatestDoneHandoff(projectRoot, board.rows);
   const recommendation =
     inProgressRecommendation ??
     openTaskRecommendation ??
     sliceRecommendation ??
+    handoffContinuationRecommendation ??
     firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(projectRoot, board.rows, recommendation?.taskId ?? null);
@@ -165,6 +168,65 @@ function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[],
     capsule: capsule ? row.capsule : row.capsule || null,
     requiredReading: requiredReadingForProject(projectRoot),
     createCommand: capsule ? null : `hadara task create ${shellQuote(row.title)}`
+  };
+}
+
+function recommendationFromLatestDoneHandoff(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
+  for (const row of [...boardRows].reverse()) {
+    if (row.status.trim().toLowerCase() !== 'done') continue;
+    const capsule = findTaskCapsule(projectRoot, row.taskId);
+    if (!capsule) continue;
+    const handoffPath = path.join(capsule.dir, 'HANDOFF.md');
+    if (!fs.existsSync(handoffPath)) continue;
+    const nextStep = readStructuredHandoffNextStep(fs.readFileSync(handoffPath, 'utf8'));
+    if (!nextStep) continue;
+    const capsulePath = toPortablePath(path.relative(projectRoot, capsule.dir));
+    const continuation = continuationFromTaskHandoffStep({
+      ...nextStep,
+      sourceTaskId: row.taskId,
+      sourceCapsulePath: capsulePath
+    });
+    if (!continuation) continue;
+    if (continuation.disposition !== 'actionable' && continuation.disposition !== 'waiting-for-operator') continue;
+    const requiredReading = [
+      `${capsulePath}/HANDOFF.md`,
+      ...(continuation.references ?? []).map((reference) => reference.path)
+    ].filter((entry, index, all) => all.indexOf(entry) === index && fs.existsSync(path.join(projectRoot, entry)));
+    const createCommandAllowed = continuation.disposition === 'actionable' && continuation.createCommandAllowed === true;
+    return {
+      taskId: 'TBD',
+      title: continuation.title,
+      reason: `Latest Done Task Capsule HANDOFF continuation from ${capsulePath}/HANDOFF.md.`,
+      source: `${capsulePath}/HANDOFF.md`,
+      sourceKind: 'task-handoff-continuation',
+      taskBoardStatus: null,
+      taskBoardPath: 'docs/TASK_BOARD.md',
+      taskCapsulePresent: false,
+      capsule: null,
+      requiredReading,
+      createCommand: createCommandAllowed ? `hadara task create ${shellQuote(continuation.title)}` : null,
+      operatorGuidance: continuation.reason ?? 'Review task-local HANDOFF continuation before creating follow-up work.',
+      createCommandAllowed
+    };
+  }
+  return null;
+}
+
+function readStructuredHandoffNextStep(content: string): { step: string; reason: string; requiredReading: string; disposition?: string; createTask?: string } | null {
+  const rows = parseMarkdownRows(readMarkdownSection(content, '## Next Recommended Step'));
+  const header = rows[0] ?? [];
+  const data = rows.find((row, index) => index > 0 && row.some(Boolean));
+  if (!data) return null;
+  const cell = (name: string): string => {
+    const index = header.findIndex((entry) => entry.trim().toLowerCase() === name.toLowerCase());
+    return index >= 0 ? (data[index] ?? '').trim() : '';
+  };
+  return {
+    step: cell('Step') || data[0] || '',
+    reason: cell('Reason') || data[1] || '',
+    requiredReading: cell('Required Reading') || data[2] || '',
+    disposition: cell('Disposition'),
+    createTask: cell('Create Task')
   };
 }
 

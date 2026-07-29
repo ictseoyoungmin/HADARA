@@ -125,6 +125,76 @@ describe('validation run', () => {
     }
   });
 
+  it('redacts secret-like validation output and strips terminal controls by default', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation output redaction');
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Sensitive output',
+      argv: [
+        process.execPath,
+        '-e',
+        'process.stdout.write("\\u001b[31mapi_key=sk-abcdefghijklmnopqrstuvwxyz\\u001b[0m\\u0007"); process.stderr.write("Authorization: Bearer abcdefghijklmnop")'
+      ]
+    });
+
+    expect(report.execution.capture).toMatchObject({
+      previewMode: 'redacted',
+      redacted: true,
+      controlCharactersStripped: true
+    });
+    expect(report.execution.capture.redactionFindingCount).toBeGreaterThanOrEqual(2);
+    expect(report.execution.capture.controlSequenceFindingCount).toBeGreaterThanOrEqual(2);
+    expect(report.execution.capture.stdoutPreview).toContain('api_key=[REDACTED]');
+    expect(report.execution.capture.stderrPreview).toContain('Authorization: Bearer [REDACTED]');
+    expect(report.execution.capture.stdoutPreview).not.toContain('\u001b');
+    expect(report.execution.capture.stdoutPreview).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
+  it('exposes unredacted sanitized previews only when raw output is explicitly requested', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation raw output opt in');
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Raw output',
+      argv: [process.execPath, '-e', 'process.stdout.write("\\u001b[32mtoken=super-secret\\u001b[0m")'],
+      showRawOutput: true
+    });
+
+    expect(report.execution.capture).toMatchObject({
+      previewMode: 'raw',
+      redacted: false,
+      redactionFindingCount: 0,
+      controlCharactersStripped: true
+    });
+    expect(report.execution.capture.stdoutPreview).toBe('token=super-secret');
+    expect(report.execution.capture.stdoutPreview).not.toContain('\u001b');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
+  it('uses head and tail output preview when captured output is truncated', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation output truncation');
+    const output = `${'head-한글-'.repeat(1200)}\nMIDDLE\n${'tail-끝-'.repeat(1200)}`;
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Long output',
+      argv: [process.execPath, '-e', `process.stdout.write(${JSON.stringify(output)})`]
+    });
+
+    expect(report.execution.capture.stdoutTruncated).toBe(true);
+    expect(report.execution.capture.omittedBytes).toBeGreaterThan(0);
+    expect(report.execution.capture.stdoutPreview).toContain('head-한글-');
+    expect(report.execution.capture.stdoutPreview).toContain('tail-끝-');
+    expect(report.execution.capture.stdoutPreview).toContain('bytes omitted');
+    expect(report.execution.capture.stdoutPreview).not.toContain('\uFFFD');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
   it('auto-resolves earlier failed attempts for the same validation check and command when a later attempt passes', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation run attempt resolution');

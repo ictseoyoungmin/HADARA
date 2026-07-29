@@ -541,6 +541,24 @@ function executeTaskClosePlan(
   let reports = initialReports;
   let steps = initialSteps;
   let guardedWriteStatus = getGuardedWriteStatus(reports.guardedWrites);
+  if (!proofAppendGuard && closePlanExecutionMayNeedProofAppendGuard(steps, guardedWriteStatus)) {
+    return createExecuteRefusal(
+      taskId,
+      actor,
+      'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED',
+      'task close execute refused before mutation because close proof append requires a transaction operation-marker guard.',
+      currentPlanHash,
+      steps,
+      {
+        requestedPlanHash,
+        currentPlanHash,
+        planHashMatched: true,
+        executedSteps: [],
+        stoppedAt: guardedWriteStatus === 'required' ? 'guarded-writes' : 'close'
+      },
+      reports
+    );
+  }
   if (guardedWriteStatus === 'required') {
     // Verify close would succeed against a virtual post-guarded-writes snapshot
     // before writing TASK.md/Task Board Done. The
@@ -697,6 +715,11 @@ function executeTaskClosePlan(
   executedSteps.push(createExecutedStep(auditStep ?? fallbackStep(taskId, 'audit-close'), auditReport?.ok ?? false, auditReport, auditReport?.ok ? 'satisfied' : 'blocked'));
   emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
   return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, auditReport?.ok ? undefined : 'audit-close', readinessEvidence);
+}
+
+function closePlanExecutionMayNeedProofAppendGuard(steps: TaskClosePlanStep[], guardedWriteStatus: TaskClosePlanStepStatus): boolean {
+  if (guardedWriteStatus === 'required') return true;
+  return steps.some((step) => step.id === 'close' && step.status === 'required');
 }
 
 function appendTaskClosePlanReadinessEvidence(

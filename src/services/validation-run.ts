@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createRedactionReport } from '../core/redaction';
 import { startMonotonicTimer } from '../core/timing';
 import { appendEvidenceWithResult, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { findTaskCapsule } from '../task/task-capsule';
@@ -38,6 +39,12 @@ export interface ValidationRunReport {
       stdoutTruncated: boolean;
       stderrTruncated: boolean;
       previewLimitBytes: number;
+      previewMode: 'redacted' | 'raw';
+      redacted: boolean;
+      redactionFindingCount: number;
+      omittedBytes: number;
+      controlSequenceFindingCount: number;
+      controlCharactersStripped: boolean;
       fallbackUsed: boolean;
       fallbackReason?: string;
     };
@@ -101,6 +108,7 @@ export interface ValidationRunOptions {
   updateTask?: boolean;
   directResult?: ValidationRunReport['result'];
   directSummary?: string;
+  showRawOutput?: boolean;
   spawnSyncFn?: ValidationSpawnSync;
 }
 
@@ -211,7 +219,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       commandStarted: executionSemantics.commandStarted,
       failureKind: executionSemantics.failureKind,
       failureClass,
-      capture: executionCapture(executed, { direct: Boolean(directExecution), injected: injectedSpawn }),
+      capture: executionCaptureForReport(executed, { direct: Boolean(directExecution), injected: injectedSpawn }, Boolean(options.showRawOutput)),
       ...(options.directResult ? { directResult: true, directSummary: options.directSummary ?? null } : {}),
       ...(executionSemantics.error ? { error: executionSemantics.error } : {})
     },
@@ -275,7 +283,7 @@ function spawnSyncWithFileCapture(command: string, args: string[], options: Spaw
         mode: 'file',
         stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
         stderrBytes: Buffer.byteLength(stderr, 'utf8'),
-        ...outputPreviewFields(stdout, stderr),
+        ...outputPreviewFields(stdout, stderr, false),
         fallbackUsed: false
       }
     };
@@ -300,41 +308,127 @@ function executionCapture(executed: ValidationSpawnResult, modes: { direct: bool
       mode: 'direct',
       stdoutBytes: 0,
       stderrBytes: 0,
-      ...outputPreviewFields('', ''),
+      ...outputPreviewFields('', '', false),
       fallbackUsed: false
     };
   }
-  if (executed.hadaraCapture) return executed.hadaraCapture;
+  if (executed.hadaraCapture && !modes.injected) return executed.hadaraCapture;
   const stdout = executed.stdout ?? '';
   const stderr = executed.stderr ?? '';
   return {
     mode: modes.injected ? 'injected' : 'file',
     stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
     stderrBytes: Buffer.byteLength(stderr, 'utf8'),
-    ...outputPreviewFields(stdout, stderr),
+    ...outputPreviewFields(stdout, stderr, false),
     fallbackUsed: false
   };
 }
 
-function outputPreviewFields(stdout: string, stderr: string): Pick<ValidationRunReport['execution']['capture'], 'stdoutPreview' | 'stderrPreview' | 'stdoutTruncated' | 'stderrTruncated' | 'previewLimitBytes'> {
-  const stdoutPreview = boundedOutputPreview(stdout);
-  const stderrPreview = boundedOutputPreview(stderr);
+function executionCaptureForReport(executed: ValidationSpawnResult, modes: { direct: boolean; injected: boolean }, showRawOutput: boolean): ValidationRunReport['execution']['capture'] {
+  const capture = executionCapture(executed, modes);
+  if (modes.direct) return capture;
+  const stdout = executed.stdout ?? '';
+  const stderr = executed.stderr ?? '';
+  return {
+    ...capture,
+    ...outputPreviewFields(stdout, stderr, showRawOutput)
+  };
+}
+
+function outputPreviewFields(
+  stdout: string,
+  stderr: string,
+  showRawOutput: boolean
+): Pick<ValidationRunReport['execution']['capture'], 'stdoutPreview' | 'stderrPreview' | 'stdoutTruncated' | 'stderrTruncated' | 'previewLimitBytes' | 'previewMode' | 'redacted' | 'redactionFindingCount' | 'omittedBytes' | 'controlSequenceFindingCount' | 'controlCharactersStripped'> {
+  const stdoutPrepared = prepareOutputPreviewText(stdout, showRawOutput);
+  const stderrPrepared = prepareOutputPreviewText(stderr, showRawOutput);
+  const stdoutPreview = boundedOutputPreview(stdoutPrepared.text);
+  const stderrPreview = boundedOutputPreview(stderrPrepared.text);
   return {
     stdoutPreview: stdoutPreview.text,
     stderrPreview: stderrPreview.text,
     stdoutTruncated: stdoutPreview.truncated,
     stderrTruncated: stderrPreview.truncated,
-    previewLimitBytes: OUTPUT_PREVIEW_LIMIT_BYTES
+    previewLimitBytes: OUTPUT_PREVIEW_LIMIT_BYTES,
+    previewMode: showRawOutput ? 'raw' : 'redacted',
+    redacted: stdoutPrepared.redactionFindingCount + stderrPrepared.redactionFindingCount > 0,
+    redactionFindingCount: stdoutPrepared.redactionFindingCount + stderrPrepared.redactionFindingCount,
+    omittedBytes: stdoutPreview.omittedBytes + stderrPreview.omittedBytes,
+    controlSequenceFindingCount: stdoutPrepared.controlSequenceFindingCount + stderrPrepared.controlSequenceFindingCount,
+    controlCharactersStripped: stdoutPrepared.controlSequenceFindingCount + stderrPrepared.controlSequenceFindingCount > 0
   };
 }
 
-function boundedOutputPreview(text: string): { text: string; truncated: boolean } {
-  const bytes = Buffer.byteLength(text, 'utf8');
-  if (bytes <= OUTPUT_PREVIEW_LIMIT_BYTES) return { text, truncated: false };
+function prepareOutputPreviewText(text: string, showRawOutput: boolean): { text: string; redactionFindingCount: number; controlSequenceFindingCount: number } {
+  const sanitized = stripTerminalControls(text);
+  if (showRawOutput) {
+    return {
+      text: sanitized.text,
+      redactionFindingCount: 0,
+      controlSequenceFindingCount: sanitized.removedCount
+    };
+  }
+  const redaction = createRedactionReport(sanitized.text, { includeRedactedText: true });
   return {
-    text: Buffer.from(text, 'utf8').subarray(0, OUTPUT_PREVIEW_LIMIT_BYTES).toString('utf8'),
-    truncated: true
+    text: redaction.redactedText ?? sanitized.text,
+    redactionFindingCount: redaction.findings.reduce((sum, finding) => sum + finding.count, 0),
+    controlSequenceFindingCount: sanitized.removedCount
   };
+}
+
+function stripTerminalControls(text: string): { text: string; removedCount: number } {
+  let removedCount = 0;
+  const replaceWithCount = (input: string, pattern: RegExp): string => input.replace(pattern, () => {
+    removedCount += 1;
+    return '';
+  });
+  let sanitized = replaceWithCount(text, /\x1B\][\s\S]*?(?:\x07|\x1B\\)/g);
+  sanitized = replaceWithCount(sanitized, /\x1B\[[0-?]*[ -/]*[@-~]/g);
+  sanitized = replaceWithCount(sanitized, /\x1B[@-Z\\-_]/g);
+  sanitized = replaceWithCount(sanitized, /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g);
+  return { text: sanitized, removedCount };
+}
+
+function boundedOutputPreview(text: string): { text: string; truncated: boolean; omittedBytes: number } {
+  const bytes = Buffer.byteLength(text, 'utf8');
+  if (bytes <= OUTPUT_PREVIEW_LIMIT_BYTES) return { text, truncated: false, omittedBytes: 0 };
+  const markerReserveBytes = 96;
+  const headLimit = Math.floor((OUTPUT_PREVIEW_LIMIT_BYTES - markerReserveBytes) / 2);
+  const tailLimit = OUTPUT_PREVIEW_LIMIT_BYTES - markerReserveBytes - headLimit;
+  const head = utf8Head(text, headLimit);
+  const tail = utf8Tail(text, tailLimit);
+  const omittedBytes = Math.max(0, bytes - Buffer.byteLength(head, 'utf8') - Buffer.byteLength(tail, 'utf8'));
+  return {
+    text: `${head}\n[... ${omittedBytes} bytes omitted ...]\n${tail}`,
+    truncated: true,
+    omittedBytes
+  };
+}
+
+function utf8Head(text: string, maxBytes: number): string {
+  let bytes = 0;
+  let output = '';
+  for (const char of text) {
+    const charBytes = Buffer.byteLength(char, 'utf8');
+    if (bytes + charBytes > maxBytes) break;
+    output += char;
+    bytes += charBytes;
+  }
+  return output;
+}
+
+function utf8Tail(text: string, maxBytes: number): string {
+  let bytes = 0;
+  const chars: string[] = [];
+  const source = Array.from(text);
+  for (let index = source.length - 1; index >= 0; index -= 1) {
+    const char = source[index] ?? '';
+    const charBytes = Buffer.byteLength(char, 'utf8');
+    if (bytes + charBytes > maxBytes) break;
+    chars.push(char);
+    bytes += charBytes;
+  }
+  return chars.reverse().join('');
 }
 
 interface ExecutionSemantics {
@@ -501,7 +595,7 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
         mode: 'direct',
         stdoutBytes: 0,
         stderrBytes: 0,
-        ...outputPreviewFields('', ''),
+        ...outputPreviewFields('', '', false),
         fallbackUsed: false
       }
     },

@@ -30,6 +30,7 @@
         "generator": "hadara init"
       }
     },
+    {
       "path": "AGENTS.md",
       "title": "AGENTS",
       "owner": "hadara-docs",
@@ -56,6 +57,7 @@
         "generator": "hadara init"
       }
     },
+    {
       "path": "docs/ARCHITECTURE.md",
       "title": "ARCHITECTURE",
       "owner": "hadara-docs",
@@ -1682,6 +1684,7 @@
         "reason": "Archived source; consult only for historical investigation."
       }
     },
+    {
       "path": "docs/archive/retired-2026-07-26/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md",
       "title": "0.4.1-rc.0 Functional Debt",
       "owner": "hadara-docs",

@@ -6,9 +6,7 @@ Schema: `hadara.docs.registry.v1`
 | Path | Kind | Status | Read When | Required | Owner |
 |---|---|---|---|---|---|
 | `.hadara/context/HADARA_CONTEXT.md` | project-context | reference | never-default | no | hadara-docs |
-| `.hadara/state/current.json` | schema-reference | canonical | session-start | yes | hadara-docs |
 | `AGENTS.md` | protocol | canonical | session-start | yes | hadara-docs |
-| `docs/AGENT_HANDOFF.md` | handoff | canonical | session-start | yes | hadara-docs |
 | `docs/ARCHITECTURE.md` | architecture | reference | only-when-linked | no | hadara-docs |
 | `docs/archive/history/REFACTOR_LOG.md` | historical-plan | historical | never-default | no | hadara-docs |
 | `docs/archive/README.md` | historical-plan | historical | never-default | no | hadara-docs |
@@ -60,7 +58,6 @@ Schema: `hadara.docs.registry.v1`
 | `docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md` | handoff | historical | never-default | no | hadara-docs |
 | `docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md` | project-state | historical | never-default | no | hadara-docs |
 | `docs/archive/retired-2026-07-26/PRIMARY_WORKFLOW_BUDGET.md` | implementation-guide | historical | never-default | no | hadara-docs |
-| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |
 | `docs/archive/retired-2026-07-26/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` | release | historical | never-default | no | hadara-docs |
 | `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
 | `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
@@ -78,7 +75,7 @@ Schema: `hadara.docs.registry.v1`
 | `docs/archive/retired-2026-07-26/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md` | spec | historical | never-default | no | project |
 | `docs/archive/retired-2026-07-26/specs/0.5/README.md` | spec | historical | never-default | no | project |
 | `docs/archive/retired-2026-07-26/specs/0.5/state-first/RFC.md` | spec | historical | never-default | no | hadara-docs |
-| `docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md` | spec | active | only-when-linked | no | project |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
+| `docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md` | spec | active | only-when-linked | no | project |
 <!-- hadara:managed:end doc-registry-summary -->
