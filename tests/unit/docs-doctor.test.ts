@@ -68,7 +68,7 @@ describe('Phase 7.3 docs doctor', () => {
     assertSchema('hadara.docs.doctor.v1', report);
   });
 
-  it('warns when project product metadata remains placeholder after completed task history exists', () => {
+  it('does not require global project metadata after completed task history exists', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
     fs.appendFileSync(
@@ -80,11 +80,9 @@ describe('Phase 7.3 docs doctor', () => {
     const report = createDocsDoctorReport(root);
 
     expect(report.ok).toBe(true);
-    expect(report.summary.health).toBe('warning');
-    expect(report.issues).toContainEqual(expect.objectContaining({
-      severity: 'warning',
-      code: 'DOC_PROJECT_METADATA_PLACEHOLDER',
-      path: 'docs/PROJECT_STATE.md'
+    expect(report.summary.health).toBe('healthy');
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_PROJECT_METADATA_PLACEHOLDER'
     }));
     assertSchema('hadara.docs.doctor.v1', report);
   });
@@ -116,7 +114,7 @@ describe('Phase 7.3 docs doctor', () => {
   it('reports missing registered files', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
-    fs.rmSync(path.join(root, 'docs', 'PROJECT_STATE.md'));
+    fs.rmSync(path.join(root, 'docs', 'TASK_BOARD.md'));
 
     const report = createDocsDoctorReport(root, 'registry');
 
@@ -124,7 +122,7 @@ describe('Phase 7.3 docs doctor', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'DOC_REGISTERED_FILE_MISSING',
       severity: 'error',
-      path: 'docs/PROJECT_STATE.md'
+      path: 'docs/TASK_BOARD.md'
     }));
   });
 
@@ -170,25 +168,18 @@ describe('Phase 7.3 docs doctor', () => {
     }));
   });
 
-  it('reports canonical conflicts and invalid statuses', () => {
+  it('reports invalid registry statuses', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE_COPY.md'), '# PROJECT_STATE_COPY\n', 'utf8');
     mutateRegistry(root, (registry) => {
-      registry.documents.push({
-        ...registry.documents.find((doc) => doc.path === 'docs/PROJECT_STATE.md')!,
-        path: 'docs/PROJECT_STATE_COPY.md',
-        title: 'PROJECT_STATE_COPY'
-      });
-      registry.documents.find((doc) => doc.path === 'docs/TASK_BOARD.md')!.status = 'retired' as any;
+      registry.documents.find((doc) => doc.path === 'docs/HADARA_WORKFLOW.md')!.status = 'retired' as any;
     });
 
     const report = createDocsDoctorReport(root, 'registry');
 
     expect(report.ok).toBe(false);
     expect(report.issues).toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'DOC_CANONICAL_CONFLICT', severity: 'error', path: 'docs/PROJECT_STATE_COPY.md' }),
-      expect.objectContaining({ code: 'DOC_UNKNOWN_STATUS', severity: 'error', path: 'docs/TASK_BOARD.md' })
+      expect.objectContaining({ code: 'DOC_UNKNOWN_STATUS', severity: 'error', path: 'docs/HADARA_WORKFLOW.md' })
     ]));
   });
 
@@ -196,7 +187,7 @@ describe('Phase 7.3 docs doctor', () => {
     const root = tempProject();
     initProject(root, 'governed', { silent: true });
     mutateRegistry(root, (registry) => {
-      registry.documents = registry.documents.filter((doc) => doc.path !== 'docs/AGENT_HANDOFF.md');
+      registry.documents = registry.documents.filter((doc) => doc.path !== 'docs/HADARA_WORKFLOW.md');
     });
 
     const report = createDocsDoctorReport(root, 'profile');
@@ -205,7 +196,7 @@ describe('Phase 7.3 docs doctor', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'DOC_INIT_PROFILE_DRIFT',
       severity: 'warning',
-      path: 'docs/AGENT_HANDOFF.md'
+      path: 'docs/HADARA_WORKFLOW.md'
     }));
   });
 
@@ -264,23 +255,19 @@ describe('Phase 7.3 docs doctor', () => {
     assertSchema('hadara.docs.doctor.v1', report);
   });
 
-  it('reports canon-to-Markdown semantic drift with a drifted currentness verdict', () => {
+  it('does not report removed global state projection drift', () => {
     const root = tempProject();
     initProject(root, 'governed', { silent: true });
-    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-    fs.writeFileSync(projectStatePath, fs.readFileSync(projectStatePath, 'utf8').replace('| Current Release |', '| Current Release Drifted |'), 'utf8');
 
     const report = createDocsDoctorReport(root, 'links');
 
     expect(report.ok).toBe(true);
     expect(report.summary).toMatchObject({
-      health: 'warning',
-      currentnessVerdict: 'drifted',
-      semanticDriftIssues: 1
+      currentnessVerdict: 'clean',
+      semanticDriftIssues: 0
     });
-    expect(report.issues).toContainEqual(expect.objectContaining({
-      code: 'DOC_SEMANTIC_STATE_CURRENT_CANON_PROJECTION_DRIFT',
-      path: 'docs/PROJECT_STATE.md'
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_SEMANTIC_STATE_CURRENT_CANON_PROJECTION_DRIFT'
     }));
     assertSchema('hadara.docs.doctor.v1', report);
   });
@@ -304,10 +291,10 @@ describe('Phase 7.3 docs doctor', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
     fs.appendFileSync(path.join(root, 'AGENTS.md'), '\n| `docs/TASK_BOARD.md` | Local work | Local task board. |\n', 'utf8');
-    fs.appendFileSync(path.join(root, 'AGENTS.md'), '| `docs/PROJECT_STATE.md` | Local work | Local state. |\n', 'utf8');
+    fs.appendFileSync(path.join(root, 'AGENTS.md'), '| `docs/HADARA_WORKFLOW.md` | Local work | Local workflow. |\n', 'utf8');
     mutateRegistry(root, (registry) => {
       registry.documents.find((doc) => doc.path === 'docs/TASK_BOARD.md')!.status = 'superseded';
-      registry.documents.find((doc) => doc.path === 'docs/PROJECT_STATE.md')!.status = 'historical';
+      registry.documents.find((doc) => doc.path === 'docs/HADARA_WORKFLOW.md')!.status = 'historical';
     });
 
     const requiredReading = createDocsDoctorReport(root, 'required-reading');
@@ -316,13 +303,13 @@ describe('Phase 7.3 docs doctor', () => {
     expect(requiredReading.ok).toBe(true);
     expect(requiredReading.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'DOC_SUPERSEDED_REQUIRED_READING', severity: 'warning', path: 'docs/TASK_BOARD.md' }),
-      expect.objectContaining({ code: 'DOC_HISTORICAL_REQUIRED_READING', severity: 'warning', path: 'docs/PROJECT_STATE.md' })
+      expect.objectContaining({ code: 'DOC_HISTORICAL_REQUIRED_READING', severity: 'warning', path: 'docs/HADARA_WORKFLOW.md' })
     ]));
     expect(registry.ok).toBe(false);
     expect(registry.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'DOC_SUPERSEDES_MISSING_TARGET', severity: 'error', path: 'docs/TASK_BOARD.md' }),
       expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/TASK_BOARD.md' }),
-      expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/PROJECT_STATE.md' })
+      expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/HADARA_WORKFLOW.md' })
     ]));
   });
 
@@ -333,7 +320,7 @@ describe('Phase 7.3 docs doctor', () => {
     fs.mkdirSync(archivePath, { recursive: true });
     fs.writeFileSync(path.join(archivePath, 'REFACTOR_LOG.md'), '# Archived refactor log\n', 'utf8');
     mutateRegistry(root, (registry) => {
-      const reference = registry.documents.find((doc) => doc.path === 'docs/PROJECT_STATE.md')!;
+      const reference = registry.documents.find((doc) => doc.path === 'docs/TASK_BOARD.md')!;
       registry.documents.push({
         ...reference,
         path: 'docs/archive/history/REFACTOR_LOG.md',

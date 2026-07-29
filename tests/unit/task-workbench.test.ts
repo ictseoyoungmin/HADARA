@@ -203,7 +203,6 @@ describe('task workbench status report', () => {
         selectedSource: 'docs/TASK_BOARD.md',
         primaryActionId: 'inspect-recommended-task',
         precedence: expect.arrayContaining([
-          expect.objectContaining({ id: 'active-task', source: '.hadara/state/current.json' }),
           expect.objectContaining({ id: 'task-board-open', source: 'docs/TASK_BOARD.md' })
         ])
       },
@@ -435,32 +434,6 @@ describe('task workbench status report', () => {
       }
     });
     expect(validateSchema('hadara.task.status.v1', compat).ok).toBe(true);
-  });
-
-  it('opens the Markdown capsule and reports a malformed compatibility checkpoint as advisory', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Workbench active default');
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), '{not-json', 'utf8');
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    expect(handleTaskCommand({ args: ['task', 'status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-
-    const payload = JSON.parse(String(log.mock.calls[0][0]));
-    expect(payload).toMatchObject({
-      schemaVersion: 'hadara.task.status.summary.v1',
-      command: 'task.status',
-      mode: 'selected-task',
-      taskId: task.id,
-      focus: {
-        read: [`tasks/${task.id}-workbench-active-default/TASK.md`]
-      }
-    });
-    expect(payload.ok).toBe(true);
-    expect(payload.issues).toContainEqual(expect.objectContaining({
-      severity: 'warning',
-      code: 'PROJECT_CURRENT_STATE_INVALID_JSON'
-    }));
   });
 
   it('uses fast selected-task CLI status by default and full diagnostics only on request', () => {

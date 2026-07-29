@@ -148,42 +148,6 @@ describe('MCP read tools', () => {
     expect(JSON.stringify(privatePayload)).not.toContain('private.log');
   });
 
-  it('reads Task Board continuation state with bounded optional history', () => {
-    const root = tempProject();
-
-    const payload = parseToolPayload(callTool(root, 'hadara.handoff.read', { includeHistory: true, historyLimit: 1 }));
-
-    expect(payload).toMatchObject({
-      schemaVersion: 'hadara.handoff.read.v1',
-      command: 'handoff.read',
-      ok: true,
-      handoff: {
-        current: expect.stringContaining('# TASK_BOARD'),
-        history: '- Old task',
-        validationHistory: '- Old validation'
-      },
-      issues: []
-    });
-  });
-
-  it('reads task-state documents and summary variants', () => {
-    const root = tempProject();
-
-    const full = parseToolPayload(callTool(root, 'hadara.project.state.read'));
-    expect(full).toMatchObject({
-      schemaVersion: 'hadara.project.state.read.v1',
-      command: 'project.state.read',
-      ok: true,
-      taskBoard: expect.stringContaining('# TASK_BOARD'),
-      developmentSlices: expect.stringContaining('# DEVELOPMENT_SLICES'),
-      issues: []
-    });
-
-    const summary = parseToolPayload(callTool(root, 'hadara.project.state.read', { summaryOnly: true }));
-    expect(summary.summary.taskBoardTail).toContain('# TASK_BOARD');
-    expect(summary.summary.developmentSlicesTail).toContain('# DEVELOPMENT_SLICES');
-  });
-
   it('evaluates policy without executing commands', () => {
     const root = tempProject();
 

@@ -68,7 +68,7 @@ describe('registry-backed help', () => {
 
     expect(output).toContain('Controlled values:');
     expect(output).toContain('--kind:');
-    expect(output).toContain('project-context | protocol | project-state');
+    expect(output).toContain('project-context | protocol | task-board');
     expect(output).toContain('workflow-guide');
     expect(output).toContain('--status: canonical | active | reference | historical | superseded | archived');
     expect(output).toContain('--read-when: session-start | task-start | task-close');

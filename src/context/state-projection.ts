@@ -64,7 +64,7 @@ function stateSourceConsistencyIssues(stateSources: StateSource[]): StateConsist
       'STATE_LATEST_TASK_MISMATCH',
       `Latest completed task differs across state sources: ${formatCandidates(latestCandidates)}.`,
       latestCandidates.map((candidate) => candidate.path),
-      'Update PROJECT_STATE, AGENT_HANDOFF, and Task Board latest Done state so they point at the same task.'
+      'Update the Task Board Done row and task close evidence so they point at the same task.'
     ));
   }
   if (uniqueTaskIds(activeCandidates).length > 1) {
@@ -73,7 +73,7 @@ function stateSourceConsistencyIssues(stateSources: StateSource[]): StateConsist
       'STATE_ACTIVE_TASK_MISMATCH',
       `Active task differs across state sources: ${formatCandidates(activeCandidates)}.`,
       activeCandidates.map((candidate) => candidate.path),
-      'Update active task state in PROJECT_STATE, AGENT_HANDOFF, and Task Board, or clear it when no concrete task is active.'
+      'Update active task state in the Task Board and task capsule, or clear it when no concrete task is active.'
     ));
   }
   return issues;
@@ -138,9 +138,7 @@ interface TaskCandidate {
 
 function latestCompletedCandidates(stateSources: StateSource[]): TaskCandidate[] {
   return [
-    candidateFromSource(stateSources, 'task-board', 'latestDoneTask'),
-    candidateFromSource(stateSources, 'project-state', 'latestCompletedTask'),
-    candidateFromSource(stateSources, 'agent-handoff', 'latestCompletedTask')
+    candidateFromSource(stateSources, 'task-board', 'latestDoneTask')
   ].filter((candidate): candidate is TaskCandidate => Boolean(candidate?.taskId));
 }
 
@@ -149,11 +147,8 @@ function activeTaskCandidates(stateSources: StateSource[]): TaskCandidate[] {
   const activeTasks = Array.isArray(taskBoard?.extracted.activeTasks)
     ? (taskBoard?.extracted.activeTasks as unknown[]).map((value) => normalizeTaskId(String(value))).filter((value): value is string => Boolean(value))
     : [];
-  return [
-    activeTasks.length === 1 && taskBoard ? { source: taskBoard.kind, path: taskBoard.path, taskId: activeTasks[0] } : null,
-    candidateFromSource(stateSources, 'project-state', 'activeTask'),
-    candidateFromSource(stateSources, 'agent-handoff', 'activeTask')
-  ].filter((candidate): candidate is TaskCandidate => Boolean(candidate?.taskId));
+  if (activeTasks.length !== 1 || !taskBoard) return [];
+  return [{ source: taskBoard.kind, path: taskBoard.path, taskId: activeTasks[0] }];
 }
 
 function candidateFromSource(stateSources: StateSource[], kind: StateSource['kind'], field: string): TaskCandidate | null {

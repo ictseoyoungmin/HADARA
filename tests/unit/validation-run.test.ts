@@ -251,6 +251,24 @@ describe('validation run', () => {
     expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 
+  it('keeps argv preview within the byte budget when remaining space is smaller than the truncation marker', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation argv marker boundary');
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Argv marker boundary',
+      argv: ['x'.repeat(16 * 1024 - 2), 'y'.repeat(128)],
+      directResult: 'Passed'
+    });
+
+    expect(report.argvPreviewTruncated).toBe(true);
+    expect(report.argvOmittedBytes).toBeGreaterThan(0);
+    expect(Buffer.byteLength(report.argvPreview.join(' '), 'utf8')).toBeLessThanOrEqual(report.argvPreviewLimitBytes);
+    expect(report.argvPreview.join(' ')).not.toContain('[...argv truncated...]');
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
+  });
+
   it('uses v2 by default, rejects legacy raw argv in v2 schema, and keeps explicit v1 compatibility', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation schema compat');

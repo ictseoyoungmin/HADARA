@@ -19,7 +19,7 @@ This repository must be developed using the HADARA protocol.
 | Active Task Capsule docs | Every implementation session. | Capsule evidence and handoff. |
 | Project-specific specs or roadmap documents referenced by the current task | When referenced by the active task. | Task-specific constraints. |
 
-Task-local `tasks/T-*/HANDOFF.md` is compact continuation handoff for a selected capsule. Use `docs/history/` only when older completed-task, validation, or refactor history is explicitly needed.
+Task Board, Task Capsules, and task-local handoff docs own inspectable intent. Task-local `tasks/T-*/HANDOFF.md` is compact continuation handoff for a selected capsule. Use `docs/history/` only when older completed-task, validation, or refactor history is explicitly needed.
 
 ## Required Reading Tiers
 

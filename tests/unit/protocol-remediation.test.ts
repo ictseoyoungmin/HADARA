@@ -13,7 +13,6 @@ function tempProject(): string {
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\nDraft.\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'DECISIONS.md'), '# DECISIONS\n\n## D-1 Legacy\n\nKeep prose.\n', 'utf8');
   return dir;
 }
@@ -68,55 +67,22 @@ describe('protocol remediation service', () => {
     expect(content).toContain('## D-1 Legacy');
   });
 
-  it('adds and updates the exact Project State HADARA profile row', () => {
-    const root = tempProject();
-    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-
-    const createDryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'standard' });
-    const created = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'standard', beforeHash: createDryRun.summary.beforeHash ?? undefined });
-    expect(created.actions[0]).toMatchObject({ status: 'updated', path: 'docs/PROJECT_STATE.md' });
-    expect(fs.readFileSync(projectStatePath, 'utf8')).toContain('| HADARA Profile | standard |');
-
-    const updateDryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
-    const updated = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: updateDryRun.summary.beforeHash ?? undefined });
-    expect(updated.actions[0]).toMatchObject({ status: 'updated', path: 'docs/PROJECT_STATE.md' });
-    expect(fs.readFileSync(projectStatePath, 'utf8')).toContain('| HADARA Profile | governed |');
-    expect(fs.readFileSync(projectStatePath, 'utf8')).not.toContain('| HADARA Profile | standard |');
-  });
-
-  it('upserts the Project State profile inside Metadata without dropping existing rows or sections', () => {
-    const root = tempProject();
-    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-    fs.writeFileSync(
-      projectStatePath,
-      '# PROJECT_STATE\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| Owner | Team A |\n\n## Current Status\n\nStable.\n',
-      'utf8'
-    );
-
-    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
-    createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: dryRun.summary.beforeHash ?? undefined });
-
-    const content = fs.readFileSync(projectStatePath, 'utf8');
-    expect(content).toContain('| Owner | Team A |');
-    expect(content).toContain('| HADARA Profile | governed |');
-    expect(content).toContain('## Current Status');
-    expect(content.match(/\| Field \| Value \|/g)).toHaveLength(1);
-  });
-
   it('refuses execute with planned writes when before-hash is missing or stale', () => {
     const root = tempProject();
-    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-    const before = fs.readFileSync(projectStatePath, 'utf8');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    const task = createTaskCapsule(root, 'Hash guard fixture');
+    fs.writeFileSync(boardPath, fs.readFileSync(boardPath, 'utf8').replace(new RegExp(`\\| ${task.id} \\|[^\\n]+\\n`), ''), 'utf8');
+    const before = fs.readFileSync(boardPath, 'utf8');
 
-    const missingHash = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+    const missingHash = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id });
     expect(missingHash.ok).toBe(false);
     expect(missingHash.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_BEFORE_HASH_REQUIRED', severity: 'error' }));
-    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe(before);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(before);
 
-    const staleHash = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: '0'.repeat(64) });
+    const staleHash = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id, beforeHash: '0'.repeat(64) });
     expect(staleHash.ok).toBe(false);
     expect(staleHash.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_BEFORE_HASH_MISMATCH', severity: 'error' }));
-    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe(before);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(before);
     expect(validateSchema('hadara.protocol.remediation.v1', staleHash).ok).toBe(true);
   });
 
@@ -149,19 +115,21 @@ describe('protocol remediation service', () => {
 
   it('detects write conflicts before applying a planned remediation write', () => {
     const root = tempProject();
-    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    const task = createTaskCapsule(root, 'Conflict fixture');
+    fs.writeFileSync(boardPath, fs.readFileSync(boardPath, 'utf8').replace(new RegExp(`\\| ${task.id} \\|[^\\n]+\\n`), ''), 'utf8');
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'dry-run', taskId: task.id });
     const originalReadFileSync = fs.readFileSync;
-    let projectStateReads = 0;
+    let boardReads = 0;
     vi.spyOn(fs, 'readFileSync').mockImplementation((file, options) => {
-      if (String(file) === projectStatePath) {
-        projectStateReads += 1;
-        return projectStateReads === 1 ? originalReadFileSync(file, options) : '# PROJECT_STATE\n\nExternal change.\n';
+      if (String(file) === boardPath) {
+        boardReads += 1;
+        return boardReads === 1 ? originalReadFileSync(file, options) : '# TASK_BOARD\n\nExternal change.\n';
       }
       return originalReadFileSync(file, options);
     });
 
-    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: dryRun.summary.beforeHash ?? undefined });
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id, beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_WRITE_CONFLICT', severity: 'error' }));
@@ -171,19 +139,21 @@ describe('protocol remediation service', () => {
 
   it('reports atomic write failures and leaves the original file unchanged', () => {
     const root = tempProject();
-    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-    const before = fs.readFileSync(projectStatePath, 'utf8');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    const task = createTaskCapsule(root, 'Atomic fixture');
+    fs.writeFileSync(boardPath, fs.readFileSync(boardPath, 'utf8').replace(new RegExp(`\\| ${task.id} \\|[^\\n]+\\n`), ''), 'utf8');
+    const before = fs.readFileSync(boardPath, 'utf8');
     vi.spyOn(fs, 'renameSync').mockImplementation(() => {
       throw new Error('simulated rename failure');
     });
 
-    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
-    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: dryRun.summary.beforeHash ?? undefined });
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'dry-run', taskId: task.id });
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id, beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_ATOMIC_WRITE_FAILED', severity: 'error' }));
-    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe(before);
-    expect(fs.readdirSync(path.dirname(projectStatePath)).filter((entry) => entry.includes('.hadara-remediate-'))).toHaveLength(0);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(before);
+    expect(fs.readdirSync(path.dirname(boardPath)).filter((entry) => entry.includes('.hadara-remediate-'))).toHaveLength(0);
   });
 
   it('creates a missing evidence.jsonl file for an existing Task Capsule', () => {
@@ -206,10 +176,6 @@ describe('protocol remediation service', () => {
     expect(createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'dry-run' })).toMatchObject({
       ok: false,
       issues: [expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_TASK_REQUIRED' })]
-    });
-    expect(createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run' })).toMatchObject({
-      ok: false,
-      issues: [expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_PROFILE_REQUIRED' })]
     });
   });
 });

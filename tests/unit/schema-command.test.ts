@@ -18,7 +18,7 @@ describe('schema command (FD-006)', () => {
     expect(report.ok).toBe(true);
     expect(report.filter).toBeNull();
     expect(report.domains.some((entry: { domain: string }) => entry.domain === 'task.risk.state')).toBe(true);
-    expect(report.domains.some((entry: { domain: string }) => entry.domain === 'project.nextWork.state')).toBe(true);
+    expect(report.domains.some((entry: { domain: string }) => entry.domain === 'task.source.role')).toBe(true);
     expect(process.exitCode).toBeUndefined();
   });
 
@@ -34,15 +34,15 @@ describe('schema command (FD-006)', () => {
     expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Residual', 'Closed', 'Superseded', 'Rejected']);
   });
 
-  it('exposes the structured current-state next work state tokens', () => {
+  it('exposes task-local source role tokens', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    handleSchemaCommand({ args: ['schema', '--domain', 'project.nextWork.state', '--json'], jsonOutput: true });
+    handleSchemaCommand({ args: ['schema', '--domain', 'task.source.role', '--json'], jsonOutput: true });
 
     const report = JSON.parse(String(log.mock.calls[0][0]));
     expect(report.ok).toBe(true);
-    expect(report.filter).toBe('project.nextWork.state');
-    expect(report.domains[0].allowed).toEqual(['candidate', 'active', 'blocked', 'waiting-for-operator', 'none']);
+    expect(report.filter).toBe('task.source.role');
+    expect(report.domains[0].allowed).toEqual(['implementation-source', 'reference', 'constraint', 'decision', 'design', 'background']);
   });
 
   it('returns structured allowed values and nonzero exit for an unknown JSON domain', () => {

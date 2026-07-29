@@ -1321,6 +1321,89 @@ describe('task close report', () => {
     expect(closeProofCount(task.dir)).toBe(0);
   });
 
+  it('refuses direct close-plan execute before guarded writes when marker and guard are internally consistent but bound to another plan hash', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan stale bound plan hash');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan stale bound plan hash | Done |`, `| ${task.id} | Close plan stale bound plan hash | Draft |`),
+      'utf8'
+    );
+    const dryRun = createTaskClosePlanReport(root, task.id);
+    const operation = prepareCloseOperationMarker(root, task.id, 'sha256:another-reviewed-plan');
+    const guard = proofGuardFromMarker(operation);
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash,
+      proofAppendGuard: () => guard
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_PLAN_HASH_MISMATCH'
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
+  it('refuses direct close-plan execute before guarded writes when marker task-local writes are not the reviewed guarded writes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan stale bound write set');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan stale bound write set | Done |`, `| ${task.id} | Close plan stale bound write set | Draft |`),
+      'utf8'
+    );
+    const dryRun = createTaskClosePlanReport(root, task.id);
+    expect(dryRun.writes.length).toBeGreaterThan(0);
+    const operation = prepareCloseOperationMarker(root, task.id, dryRun.planHash ?? '');
+    const guard = proofGuardFromMarker(operation);
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash,
+      proofAppendGuard: () => guard
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARDED_WRITES_MISMATCH'
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
   it('stops before a guarded write without lifecycle mutation or close proof', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction before write fault');

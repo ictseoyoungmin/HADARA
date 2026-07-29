@@ -15,6 +15,7 @@ import { parseMarkdownRows, readMarkdownSection } from '../../services/markdown-
 import { analyzeAcceptanceReadiness } from '../acceptance';
 import { findTaskCapsule } from '../task-capsule';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
+import type { CloseGuardedWrite } from './guardedWrites';
 
 export type TaskCloseMode = 'dry-run' | 'execute';
 
@@ -721,21 +722,111 @@ export function executeGuardedTaskCloseEvidence(projectRoot: string, report: Tas
   }
 }
 
-export function assertTaskCloseProofAppendGuardAuthorityBeforeMutation(projectRoot: string, taskId: string, guard: TaskCloseProofAppendGuard): void {
-  readRequiredCloseOperationMarker(projectRoot, taskId, guard, {
+export function assertTaskCloseProofAppendGuardAuthorityBeforeMutation(
+  projectRoot: string,
+  taskId: string,
+  guard: TaskCloseProofAppendGuard,
+  currentPlan: {
+    planHash: string;
+    guardedWrites: CloseGuardedWrite[];
+  }
+): void {
+  const marker = readRequiredCloseOperationMarker(projectRoot, taskId, guard, {
     allowedPhases: ['applying', 'verifying', 'proof-pending'],
     proofRequired: false,
     missingMessage: 'Task close operation marker is missing before guarded writes.',
     malformedMessage: 'Task close operation marker is missing or malformed before guarded writes.'
   });
+  const markerHasAppliedTaskLocalWrites = marker.expectedWrites
+    .filter((write) => write.writeBoundary === 'task-local')
+    .some((write) => classifyPersistedTaskLocalWrite(projectRoot, write) === 'after');
+  if (!markerHasAppliedTaskLocalWrites && guard.planHash !== currentPlan.planHash) {
+    throw new TaskCloseProofAppendRevalidationError({
+      severity: 'error',
+      code: 'TASK_CLOSE_PROOF_APPEND_PLAN_HASH_MISMATCH',
+      message: `Task close proof append guard plan hash does not match the reviewed close plan for ${taskId}; refusing before mutation.`,
+      path: toPortablePath(path.relative(projectRoot, path.join(projectRoot, guard.markerPath))),
+      fixHint: 'Rerun task close so the persisted operation marker and reviewed close plan are created from the same current filesystem state.',
+      example: `hadara task close --task ${taskId} --json`
+    });
+  }
+  const reviewedTaskLocalWrites = normalizeReviewedTaskLocalWrites(currentPlan.guardedWrites);
+  const markerTaskLocalWrites = normalizePersistedPendingTaskLocalWrites(projectRoot, marker.expectedWrites);
+  const guardTaskLocalWrites = normalizePersistedPendingTaskLocalWrites(projectRoot, guard.expectedWrites);
+  if (JSON.stringify(markerTaskLocalWrites) !== JSON.stringify(reviewedTaskLocalWrites)) {
+    throw new TaskCloseProofAppendRevalidationError({
+      severity: 'error',
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARDED_WRITES_MISMATCH',
+      message: `Task close operation marker task-local expected writes do not match the reviewed guarded writes for ${taskId}; refusing before mutation.`,
+      path: toPortablePath(path.relative(projectRoot, path.join(projectRoot, guard.markerPath))),
+      fixHint: 'Rerun task close so the operation marker write set is bound to the reviewed close plan.',
+      example: `hadara task close --task ${taskId} --json`
+    });
+  }
+  if (JSON.stringify(guardTaskLocalWrites) !== JSON.stringify(reviewedTaskLocalWrites)) {
+    throw new TaskCloseProofAppendRevalidationError({
+      severity: 'error',
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARD_WRITES_MISMATCH',
+      message: `Task close proof append guard task-local expected writes do not match the reviewed guarded writes for ${taskId}; refusing before mutation.`,
+      path: toPortablePath(path.relative(projectRoot, path.join(projectRoot, guard.markerPath))),
+      fixHint: 'Rerun task close through the public transaction route so the guard is derived from the reviewed close plan.',
+      example: `hadara task close --task ${taskId} --json`
+    });
+  }
 }
 
 interface PersistedTaskLocalExpectedWrite {
   path: string;
   writeBoundary: string;
+  action?: string;
+  field?: string;
   expectedBeforeExists?: boolean;
   expectedBeforeHash?: string;
   afterHash?: string;
+}
+
+interface NormalizedTaskLocalWrite {
+  path: string;
+  action: string | null;
+  field: string | null;
+  expectedBeforeExists: boolean | null;
+  expectedBeforeHash: string | null;
+  afterHash: string | null;
+}
+
+function normalizeReviewedTaskLocalWrites(writes: CloseGuardedWrite[]): NormalizedTaskLocalWrite[] {
+  return writes.map((write) => ({
+    path: write.path,
+    action: write.action,
+    field: write.field,
+    expectedBeforeExists: write.expectedBeforeExists,
+    expectedBeforeHash: write.expectedBeforeHash,
+    afterHash: write.afterHash
+  })).sort(compareNormalizedTaskLocalWrite);
+}
+
+function normalizePersistedTaskLocalWrites(writes: PersistedTaskLocalExpectedWrite[]): NormalizedTaskLocalWrite[] {
+  return writes
+    .filter((write) => write.writeBoundary === 'task-local')
+    .map((write) => ({
+      path: write.path,
+      action: write.action ?? null,
+      field: write.field ?? null,
+      expectedBeforeExists: typeof write.expectedBeforeExists === 'boolean' ? write.expectedBeforeExists : null,
+      expectedBeforeHash: typeof write.expectedBeforeHash === 'string' ? write.expectedBeforeHash : null,
+      afterHash: typeof write.afterHash === 'string' ? write.afterHash : null
+    }))
+    .sort(compareNormalizedTaskLocalWrite);
+}
+
+function normalizePersistedPendingTaskLocalWrites(projectRoot: string, writes: PersistedTaskLocalExpectedWrite[]): NormalizedTaskLocalWrite[] {
+  return normalizePersistedTaskLocalWrites(
+    writes.filter((write) => write.writeBoundary === 'task-local' && classifyPersistedTaskLocalWrite(projectRoot, write) !== 'after')
+  );
+}
+
+function compareNormalizedTaskLocalWrite(left: NormalizedTaskLocalWrite, right: NormalizedTaskLocalWrite): number {
+  return JSON.stringify(left).localeCompare(JSON.stringify(right));
 }
 
 function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseReport, guard: TaskCloseProofAppendGuard): void {

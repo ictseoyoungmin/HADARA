@@ -866,7 +866,7 @@ function validateExpectedWriteShape(value: unknown): string | null {
   if (!['guarded-writes', 'ready', 'close', 'audit-close'].includes(String(write.step))) return 'step is invalid';
   if (typeof write.path !== 'string') return 'path must be a string';
   if (write.action !== undefined && !['update', 'insert'].includes(String(write.action))) return 'action is invalid';
-  if (write.field !== undefined && !['task-status', 'task-handoff-identity', 'task-board-row', 'current-state', 'project-state-projection', 'handoff-projection'].includes(String(write.field))) return 'field is invalid';
+  if (write.field !== undefined && !['task-status', 'task-handoff-identity', 'task-board-row'].includes(String(write.field))) return 'field is invalid';
   if (write.writeBoundary === 'task-local') {
     if (typeof write.expectedBeforeExists !== 'boolean') return 'task-local write requires expectedBeforeExists';
     if (typeof write.expectedBeforeHash !== 'string') return 'task-local write requires expectedBeforeHash';

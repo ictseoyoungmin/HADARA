@@ -4,7 +4,7 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   basic: {
     profile: 'basic',
     generatedDocsDescription: 'Agent contract, compact workflow, Task Board, registries, and task directory',
-    intendedUse: 'Small projects that need Task Capsules and evidence without shared project-state or handoff documents.',
+    intendedUse: 'Small projects that need Task Capsules and evidence without shared overview or global handoff documents.',
     specialNotes: 'Basic routes work directly from AGENTS, Task Board, and Task Capsules.',
     docs: {
       contextRouter: false,

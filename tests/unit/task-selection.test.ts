@@ -14,16 +14,12 @@ afterEach(() => {
 });
 
 describe('task selection recommendation', () => {
-  it('uses the Task Board row for active work instead of current-state guidance', () => {
+  it('uses the Task Board row for active work', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with stale handoff work.',
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
     });
     const active = createTaskCapsule(root, 'Structured Active Work');
-    writeCurrentState(root, {
-      activeTask: { id: active.id, title: active.title },
-      nextOperatorIntent: 'Continue with structured active work.'
-    });
 
     const report = createTaskSelectionReport(root);
 
@@ -65,7 +61,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('uses first-task creation when current-state next work is present but no task exists', () => {
+  it('uses first-task creation when no task exists', () => {
     const root = tempProject({
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
     });
@@ -74,16 +70,6 @@ describe('task selection recommendation', () => {
       ['# TASK_BOARD', '', '| ID | Title | Status | Capsule | Notes |', '|---|---|---|---|---|', ''].join('\n'),
       'utf8'
     );
-    writeCurrentState(root, {
-      activeTask: null,
-      nextWork: {
-        title: 'v0.4.4 external repository validation planning',
-        state: 'candidate',
-        operatorGuidance: 'Keep publication operator-controlled.',
-        createCommandAllowed: true
-      },
-      nextOperatorIntent: 'Keep publication operator-controlled; otherwise begin v0.4.4 external repository validation planning.'
-    });
 
     const report = createTaskSelectionReport(root);
 
@@ -101,7 +87,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('does not use gated current-state operator guidance for task selection', () => {
+  it('does not invent operator guidance when no task exists', () => {
     const root = tempProject({
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
     });
@@ -110,16 +96,6 @@ describe('task selection recommendation', () => {
       ['# TASK_BOARD', '', '| ID | Title | Status | Capsule | Notes |', '|---|---|---|---|---|', ''].join('\n'),
       'utf8'
     );
-    writeCurrentState(root, {
-      activeTask: null,
-      nextWork: {
-        title: 'stable publication operator checkpoint',
-        state: 'waiting-for-operator',
-        operatorGuidance: 'Do not create a task until npm and GitHub publication are complete.',
-        createCommandAllowed: false
-      },
-      nextOperatorIntent: 'Do not create a task until publication is complete.'
-    });
 
     const report = createTaskSelectionReport(root);
 
@@ -291,16 +267,6 @@ describe('task selection recommendation', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Already Closed First Task');
     updateTaskBoardStatus(root, task.id, 'Done');
-    writeCurrentState(root, {
-      activeTask: null,
-      nextWork: {
-        title: 'Create first Task Capsule',
-        state: 'candidate',
-        operatorGuidance: 'Create the first scoped task.',
-        createCommandAllowed: true
-      },
-      nextOperatorIntent: 'Create the first scoped task.'
-    });
 
     const report = createTaskSelectionReport(root);
 
@@ -311,20 +277,10 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('ignores brownfield current-state baseline after task history exists', () => {
+  it('does not recreate brownfield adoption baseline after task history exists', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Already Closed Feature Task');
     updateTaskBoardStatus(root, task.id, 'Done');
-    writeCurrentState(root, {
-      activeTask: null,
-      nextWork: {
-        title: 'Establish HADARA adoption baseline',
-        state: 'candidate',
-        operatorGuidance: 'Review existing project docs before normal feature work.',
-        createCommandAllowed: true
-      },
-      nextOperatorIntent: 'Review existing project docs before normal feature work.'
-    });
 
     const report = createTaskSelectionReport(root);
 
@@ -508,42 +464,6 @@ function tempProject(options: { handoffNextStep?: string; developmentRows?: stri
   );
   if (options.developmentRows) writeDevelopmentSlices(root, options.developmentRows);
   return root;
-}
-
-function writeCurrentState(
-  root: string,
-  overrides: {
-    activeTask: { id: string; title: string } | null;
-    nextWork?: {
-      title: string;
-      state: 'candidate' | 'active' | 'blocked' | 'waiting-for-operator' | 'none';
-      operatorGuidance: string;
-      createCommandAllowed: boolean;
-    } | null;
-    nextOperatorIntent: string;
-  }
-): void {
-  fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-  fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), JSON.stringify({
-    schemaVersion: 'hadara.projectCurrentState.v1',
-    rev: 1,
-    profile: 'governed',
-    currentRelease: '0.4.3',
-    latestCompletedTask: null,
-    activeTask: overrides.activeTask,
-    nextWork: overrides.nextWork ?? {
-      title: overrides.nextOperatorIntent.replace(/[.]+$/, ''),
-      state: 'candidate',
-      operatorGuidance: overrides.nextOperatorIntent,
-      createCommandAllowed: true
-    },
-    nextOperatorIntent: overrides.nextOperatorIntent,
-    currentKnownProblems: [],
-    validationBaseline: {
-      summary: 'Fixture validation baseline.',
-      evidence: []
-    }
-  }, null, 2), 'utf8');
 }
 
 function writeDevelopmentSlices(root: string, rows: string[]): void {

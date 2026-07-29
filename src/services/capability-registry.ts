@@ -616,7 +616,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Record direct validation result', 'hadara validation run --task T-0001 --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json', 'When the wrapper cannot launch child processes in the current tool environment but the same command was run directly.')
     ],
     related: ['evidence.add-command', 'evidence.project', 'task.close'],
-    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. Default JSON reports use hadara.validation.run.v2 with argvHash and redacted bounded argvPreview; use --compat v1 only for legacy consumers that still require raw argv. Reports expose the controlled status token separately from concise detail; result remains a deprecated compatibility alias. execution.failureClass automatically maps a started non-zero validation to assertion, a timeout to timeout, and launch/permission/command preparation failures to environment-setup while failureKind retains low-level detail. Child stdout/stderr previews and argv previews are redacted by default; use --show-raw-output or --show-raw-argv only when the content is safe to expose. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process. The evidence response includes appendLock diagnostics for task-scoped append-lock waits.',
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. Default JSON reports use hadara.validation.run.v2 with argvHash and redacted bounded argvPreview; use --compat v1 only for legacy consumers that still require raw argv. v1 compatibility is additive and carries v2 argv metadata plus raw argv, not a byte-for-byte historical projection. Reports expose the controlled status token separately from concise detail; result remains a deprecated compatibility alias. execution.failureClass automatically maps a started non-zero validation to assertion, a timeout to timeout, and launch/permission/command preparation failures to environment-setup while failureKind retains low-level detail. Child stdout/stderr previews and argv previews are redacted by default; use --show-raw-output or --show-raw-argv only when the content is safe to expose. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process. The evidence response includes appendLock diagnostics for task-scoped append-lock waits.',
     conflictsWith: []
   },
   {
@@ -1550,7 +1550,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'smoke.run',
-    command: 'hadara smoke run [--profile core|release-readiness] [--json]',
+    command: 'node --import tsx tools/dev-surfaces.ts smoke run [--profile core|release-readiness] [--json]',
     summary: 'Run reduced core feature smoke checks over service/read-model surfaces.',
     exposure: 'repo-local',
     canonical: true,
@@ -1568,13 +1568,13 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/feature-smoke.ts'],
     testFiles: ['tests/unit/feature-smoke.test.ts'],
     docs: ['docs/HADARA_WORKFLOW.md'],
-    examples: [example('Run core smoke', 'hadara smoke run --profile core --json', 'When validating reduced CLI feature coverage.')],
+    examples: [example('Run core smoke', 'node --import tsx tools/dev-surfaces.ts smoke run --profile core --json', 'When validating reduced CLI feature coverage.')],
     related: ['smoke.clean-checkout', 'smoke.package'],
     conflictsWith: []
   }),
   commandEntry({
     id: 'smoke.clean-checkout',
-    command: 'hadara smoke clean-checkout --execute [--workspace <dir>] [--task <task-id>] [--json]',
+    command: 'node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute [--workspace <dir>] [--task <task-id>] [--json]',
     summary: 'Run explicit source-checkout smoke validation in a disposable copy.',
     exposure: 'repo-local',
     canonical: true,
@@ -1592,13 +1592,13 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/clean-checkout-smoke.ts', 'tools/dev-surface/smoke-evidence.ts'],
     testFiles: ['tests/unit/clean-checkout-smoke.test.ts'],
     docs: ['docs/RELEASE_READINESS.md'],
-    examples: [example('Run clean checkout smoke', 'hadara smoke clean-checkout --execute --json', 'Before release hardening or package validation.')],
+    examples: [example('Run clean checkout smoke', 'node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --json', 'Before release hardening or package validation.')],
     related: ['smoke.run', 'smoke.package'],
     conflictsWith: []
   }),
   commandEntry({
     id: 'smoke.package',
-    command: 'hadara smoke package [--dry-run|--execute] [--from <tarball|dir>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--json]',
+    command: 'node --import tsx tools/dev-surfaces.ts smoke package [--dry-run|--execute] [--from <tarball|dir>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--json]',
     summary: 'Preview or execute reduced npm package smoke validation.',
     exposure: 'repo-local',
     canonical: true,
@@ -1617,15 +1617,15 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     testFiles: ['tests/unit/package-smoke-dry-run.test.ts', 'tests/unit/package-smoke-schema.test.ts'],
     docs: ['docs/RELEASE_READINESS.md'],
     examples: [
-      example('Preview package smoke', 'hadara smoke package --dry-run --json', 'Before executing isolated package smoke validation.'),
-      example('Execute package smoke with explicit roots', 'hadara smoke package --execute --source-root . --evidence-root . --smoke-project-root /tmp/hadara-package-smoke-consumer --task T-XXXX --attach-evidence --json', 'When release evidence and disposable consumer execution roots must be explicit.')
+      example('Preview package smoke', 'node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json', 'Before executing isolated package smoke validation.'),
+      example('Execute package smoke with explicit roots', 'node --import tsx tools/dev-surfaces.ts smoke package --execute --source-root . --evidence-root . --smoke-project-root /tmp/hadara-package-smoke-consumer --task T-XXXX --attach-evidence --json', 'When release evidence and disposable consumer execution roots must be explicit.')
     ],
     related: ['smoke.run', 'release.gate'],
     conflictsWith: [],
     notes: 'Canonical package smoke entry after package-smoke naming was consolidated into the smoke family.',
     capabilitySurfaces: [
       {
-        name: 'hadara smoke package --dry-run --json',
+        name: 'node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json',
         category: 'read',
         stable: true,
         readOnly: true,
@@ -1636,7 +1636,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         notes: 'Read-only package-smoke dry-run planner. Reports rootRoles for sourceRoot, evidenceRoot, and smokeProjectRoot.'
       },
       {
-        name: 'hadara smoke package --execute --json',
+        name: 'node --import tsx tools/dev-surfaces.ts smoke package --execute --json',
         category: 'execute',
         stable: true,
         readOnly: false,
@@ -1956,32 +1956,6 @@ export const HADARA_MCP_READ_CAPABILITIES: McpCapabilityDefinition[] = [
       }
     },
     surface: { ...DEFAULT_READ, name: 'hadara.task.read' }
-  },
-  {
-    name: 'hadara.handoff.read',
-    description: 'Read compact handoff state and historical indexes.',
-    inputSchema: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        includeHistory: { type: 'boolean', default: false },
-        historyLimit: { type: 'integer', minimum: 1, maximum: 100, default: 20 }
-      }
-    },
-    surface: { ...DEFAULT_READ, name: 'hadara.handoff.read' }
-  },
-  {
-    name: 'hadara.project.state.read',
-    description: 'Read project state and roadmap pointers.',
-    inputSchema: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        includeDocuments: { type: 'boolean', default: true },
-        summaryOnly: { type: 'boolean', default: false }
-      }
-    },
-    surface: { ...DEFAULT_READ, name: 'hadara.project.state.read' }
   },
   {
     name: 'hadara.policy.evaluate',

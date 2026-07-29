@@ -14,7 +14,7 @@
     "projectRoot": { "type": "string", "minLength": 1 },
     "fix": {
       "type": "string",
-      "enum": ["task-board-row", "decisions-table-frame", "project-state-profile", "evidence-jsonl"]
+      "enum": ["task-board-row", "decisions-table-frame", "evidence-jsonl"]
     },
     "summary": {
       "type": "object",

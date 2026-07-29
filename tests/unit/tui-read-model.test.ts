@@ -219,41 +219,8 @@ describe('TUI read-model aggregator', () => {
 
 function writeProjectDocs(root: string, activeTaskId = 'T-0001'): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, 'docs', 'PROJECT_STATE.md'),
-    '# PROJECT_STATE\n\n## Current Phase\n\n| Field | Value |\n|---|---|\n| Phase | bootstrap-development |\n| Status | initialized |\n',
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      `- ${activeTaskId} is current.`,
-      '',
-      '## Current Known Problems',
-      '',
-      '- Docker is the working validation path for now.',
-      '',
-      '## Last 3 Completed Tasks',
-      '',
-      '- T-0099 TUI Design and Development Plan: complete.',
-      '',
-      '## Next Recommended Step',
-      '',
-      '- Continue TUI read-model aggregator.',
-      '',
-      '## Validation Baseline',
-      '',
-      '- Latest full check: Docker npm run check passed',
-      '- Latest done-level validation: T-0099 ok'
-    ].join('\n'),
-    'utf8'
-  );
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), `# VALIDATION_HISTORY\n\n- Docker check passed for ${activeTaskId}.\n- harness validate passed for ${activeTaskId}.\n`, 'utf8');
 }
 
 function writeGitBranch(root: string, branch: string): void {

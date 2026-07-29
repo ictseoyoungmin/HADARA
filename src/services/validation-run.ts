@@ -483,6 +483,11 @@ function boundArgvPreview(argvPreview: string[], limitBytes: number): { preview:
     }
     const marker = '[...argv truncated...]';
     const markerBytes = Buffer.byteLength(marker, 'utf8');
+    if (remaining < markerBytes) {
+      omittedBytes += separatorBytes + argBytes;
+      truncated = true;
+      continue;
+    }
     const headLimit = Math.max(0, remaining - markerBytes);
     const head = utf8Head(arg, headLimit);
     const bounded = `${head}${marker}`;

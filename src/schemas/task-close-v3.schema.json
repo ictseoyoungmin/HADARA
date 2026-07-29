@@ -276,7 +276,7 @@
         "path": { "type": "string" },
         "writeBoundary": { "enum": ["task-local", "evidence-append"] },
         "action": { "enum": ["update", "insert"] },
-        "field": { "enum": ["task-status", "task-handoff-identity", "task-board-row", "current-state", "project-state-projection", "handoff-projection"] },
+        "field": { "enum": ["task-status", "task-handoff-identity", "task-board-row"] },
         "expectedBeforeExists": { "type": "boolean" },
         "expectedBeforeHash": { "type": "string" },
         "afterHash": { "type": "string" },

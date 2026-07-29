@@ -200,7 +200,7 @@ describe('Phase 7.5 docs mark', () => {
     expect(invalid.issues).toContainEqual(expect.objectContaining({ code: 'DOC_CLEANUP_INVALID_TRANSITION' }));
 
     const canonical = createDocsMarkReport(root, {
-      documentPath: 'docs/PROJECT_STATE.md',
+      documentPath: 'AGENTS.md',
       status: 'superseded',
       by: 'docs/specs/active.md',
       reason: 'Canonical replacement review.',

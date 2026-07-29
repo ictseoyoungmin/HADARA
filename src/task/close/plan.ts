@@ -582,7 +582,10 @@ function executeTaskClosePlan(
       );
     }
     try {
-      assertTaskCloseProofAppendGuardAuthorityBeforeMutation(projectRoot, taskId, proofGuard);
+      assertTaskCloseProofAppendGuardAuthorityBeforeMutation(projectRoot, taskId, proofGuard, {
+        planHash: currentPlanHash,
+        guardedWrites: reports.guardedWrites.writes
+      });
     } catch (error) {
       if (!(error instanceof TaskCloseProofAppendRevalidationError)) throw error;
       return createExecuteRefusal(

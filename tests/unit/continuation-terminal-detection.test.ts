@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { continuationFromTaskHandoffStep } from '../../src/services/project-current-state';
+import { continuationFromTaskHandoffStep } from '../../src/task/handoff-continuation';
 
 const BASE = { sourceTaskId: 'T-0664', sourceCapsulePath: 'tasks/T-0664-x' };
 

@@ -11,7 +11,9 @@ const roots: string[] = [];
 function tempLegacyProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-protocol-migration-'));
   roots.push(root);
+  fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile: 'governed' }), 'utf8');
   fs.writeFileSync(path.join(root, 'AGENTS.md'), '# AGENTS\n', 'utf8');
   fs.writeFileSync(
     path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
@@ -22,12 +24,11 @@ function tempLegacyProject(): string {
       '',
       '| Document | When to Read | Purpose |',
       '|---|---|---|',
-      '| `docs/PROJECT_STATE.md` | Every session | State. |',
+      '| `docs/TASK_BOARD.md` | Every session | State. |',
       ''
     ].join('\n'),
     'utf8'
   );
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | governed |\n', 'utf8');
   return root;
 }
 

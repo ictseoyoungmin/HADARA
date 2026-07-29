@@ -236,7 +236,7 @@ Use the high-level lifecycle path for ordinary work:
 ```bash
 hadara task status --task T-XXXX --json
 
-# Finalize Task Capsule docs before closing.
+# Finalize Task Capsule docs and Task Board state before closing.
 # Task Board and Task Capsule prose must be current before close.
 
 hadara task close --task T-XXXX --json

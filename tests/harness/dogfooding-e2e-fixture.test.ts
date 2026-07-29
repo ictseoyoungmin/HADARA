@@ -84,9 +84,6 @@ describe('Dogfooding E2E fixture', () => {
     expect(evidencePath).toMatch(/^artifacts\/test-log\/.+-dogfooding-fixture-report\.txt$/);
     assertGeneratedCapsuleFiles({ root, task, fixture, evidencePath: evidencePath ?? '' });
 
-    writeProjectHandoff(root, task.id, fixture);
-    expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toContain(task.id);
-
     markTaskDone(task);
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
@@ -229,16 +226,6 @@ function tempProject(): string {
     'utf8'
   );
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n\nUse HADARA protocol.\n', 'utf8');
-  fs.writeFileSync(
-    path.join(dir, 'docs', 'PROJECT_STATE.md'),
-    '# PROJECT_STATE\n\n## Current Status\n\n- Dogfooding fixture project\n',
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(dir, 'docs', 'AGENT_HANDOFF.md'),
-    '# AGENT_HANDOFF\n\n## Current State\n\n- Ready for dogfooding fixture\n',
-    'utf8'
-  );
   fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'HADARA_WORKFLOW.md'), '# HADARA_WORKFLOW\n\nAttach evidence before marking work complete.\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'ROADMAP.md'), '# ROADMAP\n\n## Current Freeze: v0.3 Operations Layer\n', 'utf8');
@@ -250,23 +237,6 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'TEST_STRATEGY.md'), '# TEST_STRATEGY\n', 'utf8');
   return dir;
-}
-
-function writeProjectHandoff(root: string, taskId: string, fixture: DogfoodingFixture): void {
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      `| Task | Summary | Next |`,
-      `|---|---|---|`,
-      `| ${taskId} | ${fixture.handoff.summary} | ${fixture.handoff.next} |`,
-      ''
-    ].join('\n'),
-    'utf8'
-  );
 }
 
 function writeTaskWorkPlan(task: TaskCapsule): void {
@@ -306,7 +276,7 @@ Replay a miniature HADARA-on-HADARA workflow.
 |---|---|---|---|
 | 1 | Read exported HADARA context. | Pending | TBD |
 | 2 | Check policy decisions without executing shell commands. | Pending | TBD |
-| 3 | Attach public evidence and update handoff. | Pending | TBD |
+| 3 | Attach public evidence and update task-local handoff. | Pending | TBD |
 | 4 | Run done-level harness validation. | Pending | TBD |
 
 ## Acceptance
@@ -316,7 +286,7 @@ Replay a miniature HADARA-on-HADARA workflow.
 | AC-1 | Context export was read. | Yes | Pending | TBD | Required | fixture |
 | AC-2 | Policy continuity was checked. | Yes | Pending | TBD | Required | fixture |
 | AC-3 | Evidence was attached. | Yes | Pending | TBD | Required | fixture |
-| AC-4 | Handoff was updated. | Yes | Pending | TBD | Required | fixture |
+| AC-4 | Task-local handoff was updated. | Yes | Pending | TBD | Required | fixture |
 | AC-5 | Done-level harness validation passed. | Yes | Pending | TBD | Required | fixture |
 
 ## Validation
@@ -329,7 +299,7 @@ Replay a miniature HADARA-on-HADARA workflow.
 
 | Path | Area | Change | Reason | Evidence |
 |---|---|---|---|---|
-| docs/AGENT_HANDOFF.md | handoff | Update fixture handoff summary. | Record workflow state. | TBD |
+| HANDOFF.md | handoff | Update fixture handoff summary. | Record workflow state. | TBD |
 | EVIDENCE.md | evidence | Attach public fixture evidence. | Prove fixture workflow. | TBD |
 
 ## Risks / Follow-ups
@@ -342,12 +312,12 @@ Replay a miniature HADARA-on-HADARA workflow.
   );
   fs.writeFileSync(
     path.join(task.dir, 'ACCEPTANCE.md'),
-    '# Acceptance Criteria\n\n- [ ] Context export was read.\n- [ ] Policy continuity was checked.\n- [ ] Evidence was attached.\n- [ ] Handoff was updated.\n- [ ] Done-level harness validation passed.\n',
+    '# Acceptance Criteria\n\n- [ ] Context export was read.\n- [ ] Policy continuity was checked.\n- [ ] Evidence was attached.\n- [ ] Task-local handoff was updated.\n- [ ] Done-level harness validation passed.\n',
     'utf8'
   );
   fs.writeFileSync(
     path.join(task.dir, 'PLAN.md'),
-    '# Plan\n\n1. Read exported HADARA context.\n2. Create a temporary Task Capsule workflow.\n3. Check policy decisions without executing shell commands.\n4. Attach public evidence and update handoff.\n5. Run done-level harness validation.\n',
+    '# Plan\n\n1. Read exported HADARA context.\n2. Create a temporary Task Capsule workflow.\n3. Check policy decisions without executing shell commands.\n4. Attach public evidence and update task-local handoff.\n5. Run done-level harness validation.\n',
     'utf8'
   );
   fs.writeFileSync(
@@ -357,7 +327,7 @@ Replay a miniature HADARA-on-HADARA workflow.
   );
   fs.writeFileSync(
     path.join(task.dir, 'FILES.md'),
-    '# Files\n\n| Path | Action | Reason |\n|---|---|---|\n| docs/AGENT_HANDOFF.md | Update | Record fixture handoff summary. |\n| EVIDENCE.md | Update | Attach public fixture evidence. |\n| evidence.jsonl | Update | Index public fixture evidence. |\n',
+    '# Files\n\n| Path | Action | Reason |\n|---|---|---|\n| HANDOFF.md | Update | Record fixture handoff summary. |\n| EVIDENCE.md | Update | Attach public fixture evidence. |\n| evidence.jsonl | Update | Index public fixture evidence. |\n',
     'utf8'
   );
   fs.writeFileSync(
@@ -447,7 +417,6 @@ function assertCompletedCapsuleFiles(input: { root: string; task: TaskCapsule; f
     artifacts: [{ path: input.evidencePath, visibility: 'public', artifactType: input.fixture.evidence.kind }]
   });
 
-  expect(fs.readFileSync(path.join(input.root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toContain(input.task.id);
   expect(fs.readFileSync(path.join(input.root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(`| ${input.task.id} | ${input.fixture.taskTitle} | Done |`);
 }
 

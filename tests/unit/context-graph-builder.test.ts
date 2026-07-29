@@ -63,8 +63,7 @@ describe('context graph builder', () => {
       Task: 2,
       Document: 3,
       Evidence: 1,
-      Command: 1,
-      KnownProblem: 1
+      Command: 1
     }));
     expect(report.summary.edgeCounts).toEqual(expect.objectContaining({
       HAS_EVIDENCE: 1,
@@ -101,7 +100,7 @@ describe('context graph builder', () => {
     expect(context.doNotReadByDefault.map((item) => item.id)).toEqual(['doc:docs/OLD_STATE.md']);
     expect(context.relatedEvidence.map((item) => item.id)).toEqual(['ev:T-0002:aaaaaaaaaaaaaaaaaaaaaaaa']);
     expect(context.relatedCommands.map((item) => item.id)).toEqual(['command:task.close']);
-    expect(context.knownProblems.map((item) => item.id)).toEqual(['known-problem:fixture']);
+    expect(context.knownProblems.map((item) => item.id)).toEqual([]);
     expect(context.validationSuggestions).not.toContain('npm run test:focused -- tests/unit/context-graph-builder.test.ts');
     expect(context.validationSuggestions).toContain(`hadara task status --task ${taskId} --detail full --json`);
     assertSchema('hadara.taskContext.v1', context);
@@ -287,7 +286,7 @@ describe('context graph builder', () => {
     }
   });
 
-  it('uses bounded stale graph-core for a known task when only state metadata changed', () => {
+  it('uses bounded stale graph-core for a known task when task-local routing changed', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-graph-stale-core-'));
     try {
       write(root, 'docs/TASK_BOARD.md', [
@@ -299,26 +298,6 @@ describe('context graph builder', () => {
         ''
       ].join('\n'));
       write(root, `tasks/${taskId}-stale-core-fixture/TASK.md`, `# ${taskId} Stale core fixture\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${taskId} |\n| Title | Stale core fixture |\n| Status | In Progress |\n`);
-      write(root, 'docs/PROJECT_STATE.md', [
-        '# PROJECT_STATE',
-        '',
-        '## Current State',
-        '',
-        '| Field | Value |',
-        '|---|---|',
-        `| Active Task | ${taskId} |`,
-        ''
-      ].join('\n'));
-      write(root, 'docs/AGENT_HANDOFF.md', [
-        '# AGENT_HANDOFF',
-        '',
-        '## Current State',
-        '',
-        '| Field | Value |',
-        '|---|---|',
-        `| Active Task | ${taskId} |`,
-        ''
-      ].join('\n'));
       initGitRepository(root);
 
       createContextCacheWarmReport({
@@ -334,26 +313,6 @@ describe('context graph builder', () => {
         `| ${taskId} | Stale core fixture | In Progress | tasks/${taskId}-stale-core-fixture | updated note |`,
         ''
       ].join('\n'));
-      write(root, 'docs/PROJECT_STATE.md', [
-        '# PROJECT_STATE',
-        '',
-        '## Current State',
-        '',
-        '| Field | Value |',
-        '|---|---|',
-        '| Active Task | None selected after T-0001. |',
-        ''
-      ].join('\n'));
-      write(root, 'docs/AGENT_HANDOFF.md', [
-        '# AGENT_HANDOFF',
-        '',
-        '## Current State',
-        '',
-        '| Field | Value |',
-        '|---|---|',
-        '| Active Task | None selected after T-0001. |',
-        ''
-      ].join('\n'));
       write(root, 'tasks/T-9999-other-task/TASK.md', '# T-9999 Other task\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | T-9999 |\n| Title | Other task |\n| Status | Draft |\n');
 
       const report = buildContextGraphReport({
@@ -366,13 +325,13 @@ describe('context graph builder', () => {
 
       expect(report.cache).toMatchObject({
         used: true,
-        hit: true,
-        mode: 'graph-core+code-index',
+        hit: false,
+        mode: 'graph-core-stale-bounded+code-index',
         sourceManifestFastPath: 'assumed-hot',
         sourceManifestFastPathReason: 'fingerprint-mismatch-metadata-only',
         sourceManifestTrust: 'assumed',
         sourceManifestFullManifestBuilt: false,
-        staleExtractorKeys: []
+        staleExtractorKeys: ['extractTaskBoard', 'extractTaskCapsules']
       });
       expect(report.taskContext?.task?.id).toBe(`task:${taskId}`);
       expect(report.stateProjection.sources.find((source) => source.kind === 'project-state')).toBeUndefined();
@@ -394,8 +353,7 @@ function fixtureExtractionResult(): GraphExtractionResult {
     documentNode('docs/TASK_WORKFLOW_COMMANDS.md', { requiredReading: false }),
     documentNode('docs/OLD_STATE.md', { requiredReading: false, status: 'superseded', kind: 'historical' }),
     evidenceNode(),
-    commandNode(),
-    knownProblemNode()
+    commandNode()
   ];
   return {
     source: {
@@ -499,21 +457,6 @@ function commandNode(): ContextGraphNode {
   };
 }
 
-function knownProblemNode(): ContextGraphNode {
-  return {
-    id: 'known-problem:fixture',
-    type: 'KnownProblem',
-    label: 'Known fixture problem',
-    status: 'open',
-    kind: 'handoff-known-problem',
-    source: {
-      path: 'docs/AGENT_HANDOFF.md',
-      extractor: 'extractAgentHandoff',
-      hash: 'sha256:handoff'
-    }
-  };
-}
-
 function stateSources(): StateSource[] {
   return [{
     id: 'state-source:task-board',
@@ -524,24 +467,6 @@ function stateSources(): StateSource[] {
       rows: 2,
       latestDoneTask: 'T-0001',
       activeTasks: ['T-0002']
-    }
-  }, {
-    id: 'state-source:project-state',
-    path: 'docs/PROJECT_STATE.md',
-    kind: 'project-state',
-    hash: 'sha256:project-state',
-    extracted: {
-      latestCompletedTask: 'T-0001',
-      activeTask: 'T-0002'
-    }
-  }, {
-    id: 'state-source:agent-handoff',
-    path: 'docs/AGENT_HANDOFF.md',
-    kind: 'agent-handoff',
-    hash: 'sha256:handoff',
-    extracted: {
-      latestCompletedTask: 'T-0001',
-      activeTask: 'T-0002'
     }
   }, {
     id: 'state-source:evidence:T-0001',
@@ -566,8 +491,6 @@ function stateSources(): StateSource[] {
 
 function createCodeGraphProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-graph-code-'));
-  write(root, 'docs/PROJECT_STATE.md', '# PROJECT_STATE\n');
-  write(root, 'docs/AGENT_HANDOFF.md', '# AGENT_HANDOFF\n');
   write(root, 'docs/RELEASE_READINESS.md', '# RELEASE_READINESS\n');
   write(root, 'package.json', '{"scripts":{"test":"vitest"}}\n');
   write(root, 'tsconfig.json', '{"compilerOptions":{"module":"NodeNext"}}\n');

@@ -52,7 +52,7 @@ describe('Operations Status JSON', () => {
     expect(report.evaluations.length).toBeGreaterThan(0);
   });
 
-  it('routes active Task Board work to task status without reading legacy current-state', () => {
+  it('routes active Task Board work to task status', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const task = createTaskCapsule(root, 'Active task');
@@ -61,21 +61,6 @@ describe('Operations Status JSON', () => {
       `# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| ${task.id} | Active task | In Progress | ${path.relative(root, task.dir)} | Active. |\n`,
       'utf8'
     );
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
-      schemaVersion: 'hadara.projectCurrentState.v1',
-      rev: 1,
-      profile: 'governed',
-      currentRelease: '0.5.0-dev',
-      latestCompletedTaskBasis: 'highest-done-task-id',
-      latestCompletedTask: null,
-      activeTask: { id: 'T-9999', title: 'Ignored legacy active task' },
-      nextWork: null,
-      nextOperatorIntent: 'Inspect active task.',
-      currentKnownProblems: [],
-      validationBaseline: { summary: 'Fixture baseline.', evidence: [] }
-    })}\n`, 'utf8');
-
     const report = createProjectStatusV2Report(root);
 
     expect(report.phase).toBe('active-work');
@@ -93,7 +78,7 @@ describe('Operations Status JSON', () => {
     expect(report.sources).not.toHaveProperty('currentState');
   });
 
-  it('ignores legacy current-state continuation when Task Board has no next work', () => {
+  it('does not use global handoff continuation when Task Board has no next work', () => {
     const root = tempProject();
     writeProjectDocs(root);
     fs.writeFileSync(
@@ -106,28 +91,6 @@ describe('Operations Status JSON', () => {
       '# AGENT_HANDOFF\n\n## Next Recommended Step\n\nNo follow-up work is queued.\n',
       'utf8'
     );
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
-      schemaVersion: 'hadara.projectCurrentState.v1',
-      rev: 1,
-      profile: 'governed',
-      currentRelease: '0.5.0-rc.1',
-      latestCompletedTaskBasis: 'highest-done-task-id',
-      latestCompletedTask: { id: 'T-0677', title: 'Structured Continuation Semantics and rc2 Baseline Rollup' },
-      activeTask: null,
-      nextWork: null,
-      nextOperatorIntent: 'No next work selected.',
-      continuation: {
-        disposition: 'actionable',
-        kind: 'task-handoff',
-        title: 'Prepare 0.5.0-rc.2 after Phase D through end',
-        reason: 'Continuation must not be lost by project status.',
-        createCommandAllowed: true
-      },
-      currentKnownProblems: [],
-      validationBaseline: { summary: 'Fixture baseline.', evidence: [] }
-    })}\n`, 'utf8');
-
     const report = createProjectStatusV2Report(root);
 
     expect(report.phase).toBe('idle');
@@ -139,20 +102,6 @@ describe('Operations Status JSON', () => {
     expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
   });
 
-  it('ignores malformed legacy current-state checkpoint in project status v2', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), '{not-json', 'utf8');
-
-    const report = createProjectStatusV2Report(root);
-
-    expect(report.phase).toBe('select-work');
-    expect(report.health).toBe('ok');
-    expect(report.evaluations.map((evaluation) => evaluation.id)).not.toContain('current-state');
-    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_INVALID_JSON' }));
-  });
-
   it('routes uninitialized projects to init before task creation recommendations', () => {
     const root = tempProject();
 
@@ -162,7 +111,7 @@ describe('Operations Status JSON', () => {
     expect(report.primaryNextAction).toMatchObject({
       id: 'initialize-project',
       command: 'hadara init --json',
-      writeBoundary: 'project-state',
+      writeBoundary: 'project-config',
       requiresReview: true,
       writes: true
     });
@@ -198,52 +147,6 @@ describe('Operations Status JSON', () => {
       knownProblems: expect.any(Number)
     });
     expect(assertSchema('hadara.project.status.v2', full)).toBeUndefined();
-  });
-
-  it('surfaces full status state-consistency drift in compact v2 issues and health', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(
-      path.join(root, '.hadara', 'state', 'current.json'),
-      `${JSON.stringify({
-        schemaVersion: 'hadara.projectCurrentState.v1',
-        rev: 1,
-        profile: 'governed',
-        currentRelease: '0.5.0-dev',
-        latestCompletedTaskBasis: 'highest-done-task-id',
-        latestCompletedTask: { id: 'T-0001', title: 'Old done task' },
-        activeTask: null,
-        nextWork: null,
-        nextOperatorIntent: 'Fixture.',
-        currentKnownProblems: [],
-        validationBaseline: { summary: 'Fixture baseline.', evidence: [] }
-      })}\n`,
-      'utf8'
-    );
-    fs.writeFileSync(
-      path.join(root, 'docs', 'TASK_BOARD.md'),
-      [
-        '# TASK_BOARD',
-        '',
-        '| ID | Title | Status | Path | Notes |',
-        '|---|---|---|---|---|',
-        '| T-0002 | Newer done task | Done | tasks/T-0002-newer-done-task | Closed. |'
-      ].join('\n'),
-      'utf8'
-    );
-
-    const report = createProjectStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
-
-    expect(report.health).toBe('degraded');
-    expect(report.sources.opsStatusV1.stateConsistency).toMatchObject({
-      evaluated: true,
-      consistent: false,
-      warnings: expect.any(Number)
-    });
-    expect(report.sources.opsStatusV1.stateConsistency?.warnings).toBeGreaterThan(0);
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'STATUS_STATE_CONSISTENCY_WARNING', severity: 'warning' }));
-    expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
   });
 
   it('builds a dashboard-ready status snapshot from project docs and task capsules', () => {
@@ -715,21 +618,6 @@ describe('Operations Status JSON', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const task = createTaskCapsule(root, 'Status alias active capsule');
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
-      schemaVersion: 'hadara.projectCurrentState.v1',
-      rev: 1,
-      profile: 'governed',
-      currentRelease: 'unversioned',
-      latestCompletedTaskBasis: 'highest-done-task-id',
-      latestCompletedTask: null,
-      activeTask: { id: task.id, title: task.title },
-      nextWork: null,
-      nextOperatorIntent: 'Resume active work.',
-      continuation: null,
-      currentKnownProblems: [],
-      validationBaseline: { summary: 'No validation baseline.', evidence: [] }
-    }, null, 2)}\n`, 'utf8');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);

@@ -135,5 +135,5 @@ function handleProtocolRemediateCommand(input: ProtocolCommandInput): boolean {
 }
 
 function isSupportedFix(value: string): value is ProtocolRemediationFix {
-  return value === 'task-board-row' || value === 'decisions-table-frame' || value === 'project-state-profile' || value === 'evidence-jsonl';
+  return value === 'task-board-row' || value === 'decisions-table-frame' || value === 'evidence-jsonl';
 }

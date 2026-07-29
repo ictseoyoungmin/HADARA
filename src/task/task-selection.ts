@@ -3,7 +3,7 @@ import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
-import { continuationFromTaskHandoffStep } from '../services/project-current-state';
+import { continuationFromTaskHandoffStep } from './handoff-continuation';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';

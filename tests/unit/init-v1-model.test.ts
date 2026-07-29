@@ -102,7 +102,7 @@ describe('Init v1 core model', () => {
     expect(() => assertInitProjectConfig({
       ...createInitProjectConfig('stable-project', 'minimal'),
       activeTask: 'T-0001'
-    })).toThrow(/unsupported field/);
+    })).toThrow(/unsupported field|is not allowed/);
     expect(() => assertInitProjectConfig({
       ...createInitProjectConfig('stable-project', 'standard'),
       features: ['task-lifecycle', 'evidence', 'document-routing']

@@ -507,7 +507,7 @@ function detectMigrationState(
   const commandSurfaceDocPresent = fs.existsSync(path.join(projectRoot, 'docs/COMMAND_SURFACE.md'));
   const sop = readIfExists(path.join(projectRoot, 'docs/IMPLEMENTATION_SOP.md'));
   const requiredReadingManaged = sop.includes('hadara:managed:start required-reading');
-  const managedSectionsPresent = ['docs/TASK_BOARD.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/DOC_REGISTRY.md']
+  const managedSectionsPresent = ['docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/DOC_REGISTRY.md']
     .some((target) => readIfExists(path.join(projectRoot, target)).includes('hadara:managed:start'));
   const taskCapsulePresent = taskId ? listTaskCapsules(projectRoot).some((candidate) => candidate.id === taskId) : null;
   const migratedSignals = [registryPresent, registryValid, commandSurfaceDocPresent, requiredReadingManaged, managedSectionsPresent].filter(Boolean).length;
@@ -525,12 +525,20 @@ function detectMigrationState(
 }
 
 function detectProfile(projectRoot: string): InitProfile | 'hadara-dev' {
-  const state = readIfExists(path.join(projectRoot, 'docs/PROJECT_STATE.md'));
-  const declared = state.match(/\|\s*HADARA Profile\s*\|\s*(basic|standard|governed|hadara-dev)\s*\|/)?.[1];
+  const scaffold = readJsonIfExists(path.join(projectRoot, '.hadara/scaffold.json'));
+  const declared = typeof scaffold?.profile === 'string' ? scaffold.profile : null;
   if (declared === 'basic' || declared === 'standard' || declared === 'governed' || declared === 'hadara-dev') return declared;
   if (fs.existsSync(path.join(projectRoot, 'docs/SECURITY_MODEL.md'))) return 'governed';
   if (fs.existsSync(path.join(projectRoot, 'docs/ARCHITECTURE.md'))) return 'standard';
   return 'basic';
+}
+
+function readJsonIfExists(filePath: string): Record<string, unknown> | null {
+  try {
+    return fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) as Record<string, unknown> : null;
+  } catch {
+    return null;
+  }
 }
 
 function renderCommandSurfaceDoc(): string {

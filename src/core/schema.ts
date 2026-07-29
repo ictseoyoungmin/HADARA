@@ -45,7 +45,6 @@ import nextActionSchemaJson from '../schemas/next-action.schema.json';
 import packageRecycleSchemaJson from '../schemas/package-recycle.schema.json';
 import packageSmokeSchemaJson from '../schemas/package-smoke.schema.json';
 import planContextSchemaJson from '../schemas/plan-context.schema.json';
-import projectCurrentStateSchemaJson from '../schemas/project-current-state.schema.json';
 import projectStatusSchemaJson from '../schemas/project-status.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
 import protocolConsistencySchemaJson from '../schemas/protocol-consistency.schema.json';
@@ -63,7 +62,6 @@ import runtimeVersionSchemaJson from '../schemas/runtime-version.schema.json';
 import sessionStartSchemaJson from '../schemas/session-start.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
 import stateProjectionSchemaJson from '../schemas/state-projection.schema.json';
-import statusBaselinePromoteSchemaJson from '../schemas/status-baseline-promote.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
 import taskCloseV3SchemaJson from '../schemas/task-close-v3.schema.json';
@@ -164,7 +162,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.packageRecycle.v1': packageRecycleSchemaJson as JsonObject,
   'hadara.packageSmoke.v1': packageSmokeSchemaJson as JsonObject,
   'hadara.plan_context.v1': planContextSchemaJson as JsonObject,
-  'hadara.projectCurrentState.v1': projectCurrentStateSchemaJson as JsonObject,
   'hadara.project.status.v2': projectStatusSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
   'hadara.protocol.consistency.v1': protocolConsistencySchemaJson as JsonObject,
@@ -182,7 +179,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.sessionStart.v1': sessionStartSchemaJson as JsonObject,
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
   'hadara.stateProjection.v1': stateProjectionSchemaJson as JsonObject,
-  'hadara.status.baseline.promote.v1': statusBaselinePromoteSchemaJson as JsonObject,
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
   'hadara.task.close.v3': taskCloseV3SchemaJson as JsonObject,

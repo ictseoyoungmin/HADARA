@@ -2,7 +2,6 @@ import { createEvidenceCollectReport } from '../cli/evidence-json';
 import { writeAuditEvent } from '../core/audit';
 import { resolveHadaraPaths } from '../core/paths';
 import { createContextExportReport } from '../hermes/context-export';
-import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
 import { createActiveRunResumeReport, safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createHarnessValidateReport } from '../services/harness-service';
@@ -43,16 +42,6 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
     case 'hadara.task.read':
       return createTaskReadReport(projectRoot, String(args.taskId), {
         includePrivate: args.includePrivate === true
-      });
-    case 'hadara.handoff.read':
-      return createHandoffReadReport(projectRoot, {
-        includeHistory: args.includeHistory === true,
-        historyLimit: typeof args.historyLimit === 'number' ? args.historyLimit : 20
-      });
-    case 'hadara.project.state.read':
-      return createProjectStateReadReport(projectRoot, {
-        includeDocuments: args.includeDocuments === undefined ? true : args.includeDocuments === true,
-        summaryOnly: args.summaryOnly === true
       });
     case 'hadara.policy.evaluate':
       return createPolicyEvaluateReport(String(args.command), typeof args.mode === 'string' ? args.mode : 'assisted');

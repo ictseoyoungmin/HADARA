@@ -55,8 +55,8 @@ describe('tools list read model', () => {
       ])
     );
     const publicCliNames = report.surfaces.cli.map((surface) => surface.name);
-    expect(publicCliNames).not.toContain('hadara smoke run [--profile core|release-readiness] [--json]');
-    expect(publicCliNames).not.toContain('hadara smoke package --dry-run --json');
+    expect(publicCliNames).not.toContain('node --import tsx tools/dev-surfaces.ts smoke run [--profile core|release-readiness] [--json]');
+    expect(publicCliNames).not.toContain('node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json');
     expect(publicCliNames).not.toContain('hadara package recycle --json');
     expect(publicCliNames).not.toContain('hadara debt list [--json]');
     expect(publicCliNames).not.toContain('hadara release gate [--mode advisory|strict] [--json]');

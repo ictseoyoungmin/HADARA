@@ -43,47 +43,6 @@ describe('session start', () => {
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });
 
-  it('ignores legacy current-state checkpoint once task history exists', () => {
-    const root = tempProject();
-    initProject(root, 'basic', { silent: true });
-    const created = createTaskCreateReport(root, 'Historical task');
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(
-      path.join(root, '.hadara', 'state', 'current.json'),
-      `${JSON.stringify({
-        schemaVersion: 'hadara.projectCurrentState.v1',
-        rev: 2,
-        profile: 'basic',
-        currentRelease: '0.0.0',
-        latestCompletedTask: { id: created.taskId, title: 'Historical task' },
-        activeTask: null,
-        nextWork: {
-          title: 'Create first Task Capsule',
-          state: 'candidate',
-          operatorGuidance: 'Create or select the first bounded Task Capsule.',
-          createCommandAllowed: true
-        },
-        nextOperatorIntent: 'Create first Task Capsule',
-        currentKnownProblems: [],
-        validationBaseline: { summary: 'No validation baseline has been recorded yet.', evidence: [] }
-      }, null, 2)}\n`,
-      'utf8'
-    );
-
-    const report = buildSessionStartReport({
-      projectRoot: root,
-      generatedAt: '2026-07-10T00:00:00.000Z'
-    });
-
-    expect(report.currentState).toMatchObject({
-      activeTask: created.taskId,
-      recommendedNextTask: created.taskId,
-      source: 'task-context'
-    });
-    expect(JSON.stringify(report.currentState)).not.toContain('Create first Task Capsule');
-    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
-  });
-
   it('builds a schema-valid bounded packet from context pack without writing files', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Session start task');

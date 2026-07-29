@@ -130,15 +130,14 @@ Reason:
 - Structured current-state authority and generated profile scaffolds are migrated in subsequent substantial capsules under `docs/archive/retired-2026-07-26/specs/0.5/PRE_STABLE_LIFECYCLE_SIMPLIFICATION.md`.
 - Evidence: T-0679.
 
-## D-0016: Markdown owns inspectable intent; structured current state is a compatibility checkpoint
+## D-0016: Task-local Markdown owns inspectable intent
 
 Reason:
 - D-0014 made `.hadara/state/current.json` authoritative to eliminate duplicated prose, but that made an internal implementation file mandatory reading and let checkpoint corruption block otherwise inspectable work.
-- Before 0.5 stable, Task Board rows, Task Capsules, PROJECT_STATE, and explicit HANDOFF prose regain authority for task and project intent.
-- Default task selection reads those Markdown sources before the structured checkpoint; a missing or malformed checkpoint is advisory and cannot hide an open capsule.
-- `.hadara/state/current.json` remains readable and command-owned during the 0.5.x migration window, but it is not Required Reading, a human authoring surface, or a place for public mutation commands under the deprecated `status` alias.
-- Managed state blocks are labelled compatibility projections so old readers remain operable without implying that humans should edit or start sessions from the raw JSON file.
-- This decision supersedes D-0014 where it calls structured current state the portable canon. Evidence: T-0680.
+- Before 0.5 stable, Task Board rows, Task Capsules, and task-local HANDOFF prose regain authority for task and project intent.
+- Default task selection reads those Markdown sources and command read models; removed global continuation checkpoints are historical inputs only.
+- Task close no longer creates or maintains global Project State/Handoff projections.
+- This decision supersedes D-0014 where it calls structured current state the portable canon. Evidence: T-0680 and T-0742.
 
 ## D-0017: Init v1 uses one lifecycle, init-time presets, and minimal explicit state
 

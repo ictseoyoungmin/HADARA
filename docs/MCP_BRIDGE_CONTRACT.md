@@ -99,8 +99,6 @@ Current default read-only tools:
 ```text
 hadara.task.list
 hadara.task.read
-hadara.handoff.read
-hadara.project.state.read
 hadara.policy.evaluate
 hadara.harness.validate
 hadara.evidence.list
@@ -518,73 +516,6 @@ Output schema:
   "issues": []
 }
 ```
-
-### `hadara.handoff.read`
-
-Read compact continuation state and historical indexes. The compatibility tool name remains `handoff.read`, but current continuation state is routed through `docs/TASK_BOARD.md` plus task-local `HANDOFF.md` from `task.read`.
-
-Input schema:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "includeHistory": { "type": "boolean", "default": false },
-    "historyLimit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
-  }
-}
-```
-
-Output schema:
-
-```json
-{
-  "schemaVersion": "hadara.handoff.read.v1",
-  "command": "handoff.read",
-  "ok": true,
-  "handoff": {
-    "current": "docs/TASK_BOARD.md content",
-    "history": null,
-    "validationHistory": null
-  },
-  "issues": []
-}
-```
-
-If `includeHistory` is true, `history` and `validationHistory` should return compact tail history by default, limited by `historyLimit`. Full unbounded history is out of scope until a later paginated API exists.
-
-### `hadara.project.state.read`
-
-Read task-state and roadmap pointers. The compatibility tool name remains `project.state.read`, but it no longer returns legacy global project-state document content.
-
-Input schema:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "includeDocuments": { "type": "boolean", "default": true },
-    "summaryOnly": { "type": "boolean", "default": false }
-  }
-}
-```
-
-Output schema:
-
-```json
-{
-  "schemaVersion": "hadara.project.state.read.v1",
-  "command": "project.state.read",
-  "ok": true,
-  "taskBoard": "docs/TASK_BOARD.md content",
-  "developmentSlices": "docs/DEVELOPMENT_SLICES.md content",
-  "issues": []
-}
-```
-
-If `summaryOnly` is true, the tool may return Task Board and development-slice tails instead of full document text. If `includeDocuments` is false, full Markdown document bodies should be omitted while preserving enough metadata for agent orientation.
 
 ### `hadara.policy.evaluate`
 

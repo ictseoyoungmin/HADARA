@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { extractAgentHandoff, extractDecisions, extractManagedSections, extractProjectState } from '../../src/context/document-extractors';
+import { extractDecisions, extractManagedSections } from '../../src/context/document-extractors';
 import { managedSectionBlock } from '../../src/services/managed-sections';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -22,31 +22,31 @@ afterEach(() => {
 describe('context graph document extractors', () => {
   it('extracts ManagedSection nodes and document ownership edges', () => {
     const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), `# TASK_BOARD
 
-${managedSectionBlock('project-state-metadata', {
+${managedSectionBlock('task-board', {
   schema: 'hadara.managedSection.v1',
-  owner: 'project-state.update',
-  kind: 'key-value-table',
+  owner: 'task.close',
+  kind: 'markdown-table',
   mode: 'update-row',
   version: 1,
   required: true,
   closeSourceRole: 'included'
-}, `| Field | Value |
-|---|---|
-| Latest Completed Task | T-0001 |
+}, `| ID | Title | Status | Capsule | Notes |
+|---|---|---|---|---|
+| T-0001 | Example | Draft | tasks/T-0001-example | |
 `)}
 `, 'utf8');
 
     const result = extractManagedSections(root);
 
     expect(result.nodes).toContainEqual(expect.objectContaining({
-      id: 'section:docs/PROJECT_STATE.md#project-state-metadata',
+      id: 'section:docs/TASK_BOARD.md#task-board',
       type: 'ManagedSection',
-      label: 'project-state-metadata',
-      path: 'docs/PROJECT_STATE.md',
-      kind: 'key-value-table',
-      owner: 'project-state.update',
+      label: 'task-board',
+      path: 'docs/TASK_BOARD.md',
+      kind: 'markdown-table',
+      owner: 'task.close',
       metadata: expect.objectContaining({
         mode: 'update-row',
         required: true,
@@ -56,8 +56,8 @@ ${managedSectionBlock('project-state-metadata', {
       source: expect.objectContaining({ extractor: 'extractManagedSections', line: 3 })
     }));
     expect(result.edges).toContainEqual(expect.objectContaining({
-      from: 'section:docs/PROJECT_STATE.md#project-state-metadata',
-      to: 'doc:docs/PROJECT_STATE.md',
+      from: 'section:docs/TASK_BOARD.md#task-board',
+      to: 'doc:docs/TASK_BOARD.md',
       type: 'BELONGS_TO_DOCUMENT',
       confidence: 'explicit'
     }));
@@ -122,172 +122,4 @@ Reason:
     expect(result.issues).toEqual([]);
   });
 
-  it('extracts KnownProblem nodes from Agent Handoff current known problems', () => {
-    const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
-
-## Current Known Problems
-
-| Issue | Impact | Next Step |
-|---|---|---|
-| Docker validation can timeout under contention. | Full checks may need rerun. | Serialize heavy validation. |
-`, 'utf8');
-
-    const result = extractAgentHandoff(root);
-
-    expect(result.nodes).toEqual([expect.objectContaining({
-      type: 'KnownProblem',
-      label: 'Docker validation can timeout under contention.',
-      path: 'docs/AGENT_HANDOFF.md',
-      kind: 'current-known-problem',
-      metadata: {
-        impact: 'Full checks may need rerun.',
-        nextStep: 'Serialize heavy validation.'
-      },
-      source: expect.objectContaining({ extractor: 'extractAgentHandoff', line: 7 })
-    })]);
-    expect(result.edges).toEqual([expect.objectContaining({
-      from: 'doc:docs/AGENT_HANDOFF.md',
-      to: result.nodes[0].id,
-      type: 'HAS_KNOWN_PROBLEM',
-      confidence: 'explicit'
-    })]);
-    expect(result.issues).toEqual([]);
-  });
-
-  it('extracts only explicitly current known-problem rows when a State column exists', () => {
-    const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
-
-## Current Known Problems
-
-| Issue | State | Impact | Next Step |
-|---|---|---|---|
-| Active context-pack warning. | Active | Current context can be noisy. | Tighten extraction. |
-| Historical release blocker. | Historical | Old release note. | Keep as history. |
-| Resolved cache warning. | Resolved | Already fixed. | No action. |
-`, 'utf8');
-
-    const result = extractAgentHandoff(root);
-
-    expect(result.nodes.map((node) => node.label)).toEqual(['Active context-pack warning.']);
-    expect(result.nodes[0]).toEqual(expect.objectContaining({
-      metadata: {
-        impact: 'Current context can be noisy.',
-        nextStep: 'Tighten extraction.'
-      }
-    }));
-    expect(result.stateSources?.[0].extracted.knownProblems).toBe(1);
-  });
-
-  it('does not warn when basic or standard profiles omit Agent Handoff', () => {
-    for (const profile of ['basic', 'standard']) {
-      const root = tempProject();
-      fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
-      fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile }), 'utf8');
-
-      const result = extractAgentHandoff(root);
-
-      expect(result.issues).toEqual([]);
-      expect(result.stateSources).toEqual([]);
-      expect(result.nodes).toEqual([]);
-    }
-  });
-
-  it('warns when governed profiles omit Agent Handoff', () => {
-    const root = tempProject();
-    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile: 'governed' }), 'utf8');
-
-    const result = extractAgentHandoff(root);
-
-    expect(result.issues).toEqual([expect.objectContaining({
-      severity: 'warning',
-      code: 'CONTEXT_GRAPH_SOURCE_MISSING',
-      path: 'docs/AGENT_HANDOFF.md'
-    })]);
-  });
-
-  it('extracts Project State and Agent Handoff state sources', () => {
-    const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE
-
-## Metadata
-
-| Field | Value |
-|---|---|
-| Latest Completed Task | T-0349 Context Graph Release Readiness Extractor |
-| Active Task | T-0350 C1 State Projection and Consistency Diagnostics |
-`, 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
-
-## Current State
-
-| Area | State | Notes |
-|---|---|---|
-| Latest Completed Task | T-0349 Context Graph Release Readiness Extractor | Fixture. |
-| Active / Next Task | T-0350 C1 State Projection and Consistency Diagnostics | Fixture. |
-
-## Current Known Problems
-
-| Issue | Impact | Next Step |
-|---|---|---|
-| Fixture issue. | Fixture impact. | Fixture next. |
-`, 'utf8');
-
-    expect(extractProjectState(root).stateSources).toEqual([expect.objectContaining({
-      id: 'state-source:project-state',
-      kind: 'project-state',
-      path: 'docs/PROJECT_STATE.md',
-      extracted: {
-        latestCompletedTask: 'T-0349',
-        activeTask: 'T-0350',
-        latestCompletedRaw: 'T-0349 Context Graph Release Readiness Extractor',
-        activeRaw: 'T-0350 C1 State Projection and Consistency Diagnostics'
-      }
-    })]);
-    expect(extractAgentHandoff(root).stateSources).toEqual([expect.objectContaining({
-      id: 'state-source:agent-handoff',
-      kind: 'agent-handoff',
-      path: 'docs/AGENT_HANDOFF.md',
-      extracted: {
-        latestCompletedTask: 'T-0349',
-        activeTask: 'T-0350',
-        latestCompletedRaw: 'T-0349 Context Graph Release Readiness Extractor',
-        activeRaw: 'T-0350 C1 State Projection and Consistency Diagnostics',
-        knownProblems: 1
-      }
-    })]);
-  });
-
-  it('does not extract historical task ids from non-active current-state prose', () => {
-    const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE
-
-## Metadata
-
-| Field | Value |
-|---|---|
-| Latest Completed Task | T-0553 Implement code-index and docs registry routing cleanup |
-| Active Task | Stable 0.4.2 is complete. The T-0548 context-pack cleanup sequence is complete through T-0553. |
-`, 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
-
-## Current State
-
-| Area | State | Notes |
-|---|---|---|
-| Latest Completed Task | T-0553 Implement code-index and docs registry routing cleanup | Fixture. |
-| Active / Next Task | None selected after T-0553 | Fixture. |
-`, 'utf8');
-
-    expect(extractProjectState(root).stateSources?.[0]?.extracted).toEqual(expect.objectContaining({
-      latestCompletedTask: 'T-0553',
-      activeTask: null
-    }));
-    expect(extractAgentHandoff(root).stateSources?.[0]?.extracted).toEqual(expect.objectContaining({
-      latestCompletedTask: 'T-0553',
-      activeTask: null
-    }));
-  });
 });

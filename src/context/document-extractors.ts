@@ -1,13 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ContextGraphEdge, ContextGraphIssue, ContextGraphNode, ContextGraphSourceRef, GraphExtractionResult, StateSource } from './context-graph';
+import type { ContextGraphEdge, ContextGraphIssue, ContextGraphNode, ContextGraphSourceRef, GraphExtractionResult } from './context-graph';
 import {
   createContextGraphEdgeId,
   createContextGraphSourceRef,
   createDecisionNodeId,
   createDocumentNodeId,
   createEmptyExtractionResult,
-  createKnownProblemNodeId,
   createManagedSectionNodeId,
   createTaskNodeId,
   hashContextGraphText,
@@ -15,7 +14,6 @@ import {
   toProjectRelativeContextPath
 } from './extractor-contract';
 import { parseManagedSections, type ManagedPatchIssue, type ManagedSection } from '../services/managed-sections';
-import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
 import { listTaskCapsules, type TaskCapsule } from '../task/task-capsule';
 
 interface DecisionRecord {
@@ -24,13 +22,6 @@ interface DecisionRecord {
   status: string;
   rationale?: string;
   evidence?: string;
-  line?: number;
-}
-
-interface KnownProblemRecord {
-  issue: string;
-  impact?: string;
-  nextStep?: string;
   line?: number;
 }
 
@@ -66,17 +57,6 @@ export function extractManagedSections(projectRoot: string): GraphExtractionResu
   return result;
 }
 
-export function extractProjectState(projectRoot: string): GraphExtractionResult {
-  const relativePath = 'docs/PROJECT_STATE.md';
-  const content = readOptionalText(path.join(projectRoot, relativePath));
-  const result = createEmptyExtractionResult('extractProjectState', [{ path: relativePath, content }]);
-  if (content == null) return result;
-
-  const sourceHash = hashContextGraphText(content);
-  result.stateSources?.push(projectStateSource(relativePath, sourceHash, extractProjectStateHints(content)));
-  return result;
-}
-
 export function extractDecisions(projectRoot: string): GraphExtractionResult {
   const targets = listDecisionTargets(projectRoot);
   const sources = targets.map((target) => readSource(projectRoot, target.path));
@@ -101,105 +81,6 @@ export function extractDecisions(projectRoot: string): GraphExtractionResult {
   }
 
   return result;
-}
-
-export function extractAgentHandoff(projectRoot: string): GraphExtractionResult {
-  const relativePath = 'docs/AGENT_HANDOFF.md';
-  const content = readOptionalText(path.join(projectRoot, relativePath));
-  const result = createEmptyExtractionResult('extractAgentHandoff', [{ path: relativePath, content }]);
-  if (content == null) return result;
-
-  const sourceHash = hashContextGraphText(content);
-  const knownProblems = parseKnownProblems(content);
-  result.stateSources?.push(agentHandoffStateSource(relativePath, sourceHash, extractAgentHandoffHints(content), knownProblems.length));
-  for (const problem of knownProblems) {
-    const source = createContextGraphSourceRef({
-      path: relativePath,
-      extractor: 'extractAgentHandoff',
-      line: problem.line,
-      hash: sourceHash
-    });
-    const problemNodeId = createKnownProblemNodeId(relativePath, problem.issue);
-    result.nodes.push(knownProblemNode(relativePath, problem, source));
-    result.edges.push(edge('HAS_KNOWN_PROBLEM', createDocumentNodeId(relativePath), problemNodeId, source, `docs/AGENT_HANDOFF.md records known problem: ${problem.issue}`));
-  }
-
-  return result;
-}
-
-function projectStateSource(relativePath: string, sourceHash: string, hints: SharedStateHints): StateSource {
-  return {
-    id: 'state-source:project-state',
-    path: normalizeContextGraphPath(relativePath),
-    kind: 'project-state',
-    hash: sourceHash,
-    extracted: hints
-  };
-}
-
-function agentHandoffStateSource(relativePath: string, sourceHash: string, hints: SharedStateHints, knownProblems: number): StateSource {
-  return {
-    id: 'state-source:agent-handoff',
-    path: normalizeContextGraphPath(relativePath),
-    kind: 'agent-handoff',
-    hash: sourceHash,
-    extracted: {
-      ...hints,
-      knownProblems
-    }
-  };
-}
-
-type SharedStateHints = Record<string, unknown> & {
-  latestCompletedTask: string | null;
-  activeTask: string | null;
-  latestCompletedRaw: string | null;
-  activeRaw: string | null;
-};
-
-function extractProjectStateHints(content: string): SharedStateHints {
-  const rows = parseMarkdownRowsUnderHeading(content, '## Metadata');
-  const latestRaw = findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? findLineValue(content, /latest completed task is\s+([^\n.]+)/i);
-  const activeRaw = findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? null;
-  return {
-    latestCompletedTask: normalizeTaskHint(latestRaw),
-    activeTask: normalizeActiveTaskHint(activeRaw),
-    latestCompletedRaw: latestRaw ?? null,
-    activeRaw: activeRaw ?? null
-  };
-}
-
-function extractAgentHandoffHints(content: string): SharedStateHints {
-  const rows = parseMarkdownRowsUnderHeading(content, '## Current State');
-  const latestRaw = findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? null;
-  const activeRaw = findMarkdownRowByCell(rows, 0, 'Active / Next Task')?.[1] ?? findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? null;
-  return {
-    latestCompletedTask: normalizeTaskHint(latestRaw),
-    activeTask: normalizeActiveTaskHint(activeRaw),
-    latestCompletedRaw: latestRaw,
-    activeRaw: activeRaw
-  };
-}
-
-function normalizeTaskHint(value: string | null | undefined): string | null {
-  if (!value) return null;
-  if (/^(none|n\/a|tbd)\b/i.test(value.trim())) return null;
-  return value.match(/\bT-\d{4}\b/)?.[0] ?? null;
-}
-
-function normalizeActiveTaskHint(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (/^(none|n\/a|tbd|no active|none selected)\b/i.test(trimmed)) return null;
-  return trimmed.match(/^`?(T-\d{4})\b/)?.[1] ?? null;
-}
-
-function findLineValue(content: string, pattern: RegExp): string | null {
-  for (const line of content.split(/\r?\n/)) {
-    const match = line.match(pattern);
-    if (match?.[1]) return match[1].trim();
-  }
-  return null;
 }
 
 function managedSectionNode(section: ManagedSection, source: ContextGraphSourceRef): ContextGraphNode {
@@ -235,21 +116,6 @@ function decisionNode(documentPath: string, decision: DecisionRecord, source: Co
       decision: decision.decision,
       rationale: decision.rationale ?? null,
       evidence: decision.evidence ?? null
-    },
-    source
-  };
-}
-
-function knownProblemNode(documentPath: string, problem: KnownProblemRecord, source: ContextGraphSourceRef): ContextGraphNode {
-  return {
-    id: createKnownProblemNodeId(documentPath, problem.issue),
-    type: 'KnownProblem',
-    label: problem.issue,
-    path: normalizeContextGraphPath(documentPath),
-    kind: 'current-known-problem',
-    metadata: {
-      impact: problem.impact ?? null,
-      nextStep: problem.nextStep ?? null
     },
     source
   };
@@ -300,32 +166,6 @@ function parseDecisionHeadingRecords(content: string): DecisionRecord[] {
     });
   }
   return records;
-}
-
-function parseKnownProblems(content: string): KnownProblemRecord[] {
-  const rows = parseMarkdownRowsUnderHeading(content, '## Current Known Problems');
-  const header = rows.find((row) => row.some((cell) => normalizeHeader(cell) === 'issue'));
-  const issueIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'issue') : 0;
-  const impactIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'impact') : 1;
-  const nextStepIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'nextstep') : 2;
-  const stateIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'state') : -1;
-  return rows
-    .filter((row) => row[issueIndex] && normalizeHeader(row[issueIndex]) !== 'issue')
-    .filter((row) => stateIndex < 0 || isCurrentKnownProblemState(row[stateIndex]))
-    .map((row) => ({
-      issue: row[issueIndex],
-      impact: impactIndex >= 0 ? row[impactIndex] : undefined,
-      nextStep: nextStepIndex >= 0 ? row[nextStepIndex] : undefined,
-      line: findLineContaining(content, row[issueIndex])
-    }));
-}
-
-function normalizeHeader(value: string | undefined): string {
-  return (value ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-function isCurrentKnownProblemState(value: string | undefined): boolean {
-  return /^(active|current|open|watch)$/i.test((value ?? '').trim());
 }
 
 function listManagedSectionTargets(projectRoot: string): string[] {
@@ -387,11 +227,6 @@ function managedSectionIssue(issue: ManagedPatchIssue): ContextGraphIssue {
     message: issue.message,
     fixHint: issue.sectionId ? `Repair managed section ${issue.sectionId} in ${issue.path}.` : `Repair managed section markers in ${issue.path}.`
   };
-}
-
-function findLineContaining(content: string, needle: string): number | undefined {
-  const index = content.split(/\r?\n/).findIndex((line) => line.includes(needle));
-  return index >= 0 ? index + 1 : undefined;
 }
 
 function uniqueSorted(values: string[]): string[] {

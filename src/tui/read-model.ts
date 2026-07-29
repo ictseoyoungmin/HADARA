@@ -401,7 +401,7 @@ function createTuiOperatorReadModel(projectRoot: string): TuiReadModel['operator
     maxTextLength: 240
   });
   const pendingSections: string[] = [];
-  if (status.project.phase === 'unknown') pendingSections.push('project-state');
+  if (status.project.phase === 'unknown') pendingSections.push('project-overview');
   if (status.tasks.nextRecommended === null) pendingSections.push('task-selection');
   const projectionStatus: TuiOperatorProjectionStatusReport = {
     schemaVersion: 'hadara.tui.operator_status.v1',

@@ -32,24 +32,24 @@ describe('json-document adapter', () => {
 
   it('reads a present value as a canonical fact', () => {
     const root = tempRoot('hadara-json-doc-');
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), JSON.stringify({ currentRelease: '0.5.0-rc.0' }), 'utf8');
-    const fact = readJsonDocumentFact<string>(root, 'project.release', 'project-current-state', '.hadara/state/current.json', '/currentRelease');
-    expect(fact).toMatchObject({ state: 'present', value: '0.5.0-rc.0', authority: 'canonical' });
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'project.json'), JSON.stringify({ projectId: 'demo-project' }), 'utf8');
+    const fact = readJsonDocumentFact<string>(root, 'project.id', 'project-config', '.hadara/project.json', '/projectId');
+    expect(fact).toMatchObject({ state: 'present', value: 'demo-project', authority: 'canonical' });
   });
 
   it('returns missing (not invalid, not a healthy default) when the file does not exist', () => {
     const root = tempRoot('hadara-json-doc-missing-');
-    const fact = readJsonDocumentFact(root, 'project.release', 'project-current-state', '.hadara/state/current.json', '/currentRelease');
+    const fact = readJsonDocumentFact(root, 'project.id', 'project-config', '.hadara/project.json', '/projectId');
     expect(fact.state).toBe('missing');
     expect(fact.value).toBeNull();
   });
 
   it('returns invalid for unparsable JSON instead of silently treating it as missing', () => {
     const root = tempRoot('hadara-json-doc-invalid-');
-    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), '{not valid json', 'utf8');
-    const fact = readJsonDocumentFact(root, 'project.release', 'project-current-state', '.hadara/state/current.json', '/currentRelease');
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'project.json'), '{not valid json', 'utf8');
+    const fact = readJsonDocumentFact(root, 'project.id', 'project-config', '.hadara/project.json', '/projectId');
     expect(fact.state).toBe('invalid');
   });
 });

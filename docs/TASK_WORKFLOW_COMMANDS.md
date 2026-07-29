@@ -14,7 +14,7 @@ The authoritative command inventory is `src/services/capability-registry.ts`. `d
 
 ## Required Reading Tier
 
-`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for current-state docs. Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs, then use this document for lifecycle command semantics.
+`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for task status. Start from `.hadara/context/HADARA_CONTEXT.md`, Task Board, and the selected Task Capsule, then use this document for lifecycle command semantics.
 
 `hadara docs required-reading --json` exposes the same semantic model with additive entry-level `tier` metadata while preserving the existing `documents` and `excluded` arrays.
 
@@ -42,7 +42,7 @@ hadara validation run --task T-XXXX --check "Focused tests" --direct-result pass
 # Or record an already-run validation result:
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 
-# Finalize Task Capsule docs and tracked state docs before closing.
+# Finalize Task Capsule docs and Task Board state before closing.
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --dry-run --json

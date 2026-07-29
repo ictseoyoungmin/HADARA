@@ -285,7 +285,7 @@ function requiredReadingTier(doc: DocumentRegistryEntry): RequiredReadingTier {
   if (doc.kind === 'workflow-guide' || doc.kind === 'task-board' || doc.kind === 'task-capsule' || doc.readWhen.some((readWhen) => readWhen === 'task-start' || readWhen === 'task-close')) {
     return 'task-work';
   }
-  if (doc.kind === 'project-context' || doc.kind === 'project-state' || doc.kind === 'handoff' || doc.kind === 'protocol' || doc.readWhen.includes('session-start')) {
+  if (doc.kind === 'project-context' || doc.kind === 'protocol' || doc.readWhen.includes('session-start')) {
     return 'current-state';
   }
   return 'conditional-reference';

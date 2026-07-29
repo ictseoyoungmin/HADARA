@@ -54,8 +54,6 @@
         "fixture-file",
         "config-file",
         "release-doc",
-        "handoff-doc",
-        "project-state-doc",
         "spec-doc",
         "other-doc"
       ]

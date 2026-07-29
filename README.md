@@ -17,7 +17,7 @@
 
 It turns non-deterministic agent work into inspectable Task Capsules, append-only evidence, explicit current state, and guarded handoffs—without requiring a cloud service or a full agent runtime.
 
-Portable current-state guidance lives in the Task Board, Task Capsules, and their tracked Markdown projections. `.hadara/state/current.json` remains a command-owned compatibility checkpoint, not the normal human/agent starting point. A new session should start with `hadara task status --json`.
+Portable current-state guidance lives in the Task Board, Task Capsules, and task-local handoff docs. A new session should start with `hadara task status --json`.
 
 This repository is both the HADARA source checkout and the HADARA protocol workspace used to build it.
 
@@ -164,7 +164,7 @@ hadara task status --task T-XXXX --json
 
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 
-# Finalize Task Capsule docs and tracked state docs before closing.
+# Finalize Task Capsule docs and Task Board state before closing.
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --dry-run --json
@@ -200,7 +200,7 @@ Important boundaries:
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. `--detail full` includes done-level diagnostics and `state.closeState`. |
 | `task close` | Default agent close path. Executes the guarded proof-last transaction by default; `--dry-run` previews and `--execute --plan-hash <hash>` executes a reviewed plan. |
 
-Before executing `task close`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning task close.
+Before executing `task close`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, and Task Board updates. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning task close.
 
 The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
 
@@ -228,11 +228,11 @@ HADARA projects can register and classify their operating documents:
 ```bash
 hadara docs list --json
 hadara docs doctor --json
-hadara docs explain --path docs/PROJECT_STATE.md --json
+hadara docs explain --path docs/TASK_BOARD.md --json
 hadara docs required-reading --json
 ```
 
-`docs doctor --json` separates command success from document currentness. `ok` reports whether the doctor completed without error-severity issues, the legacy `health` field remains compatible, and `summary.currentnessVerdict` reports `clean`, `warning`, or `drifted`. Semantic drift includes stale install/removed-command guidance and mismatches between `.hadara/state/current.json`, its Markdown projections, and Task Board task state.
+`docs doctor --json` separates command success from document currentness. `ok` reports whether the doctor completed without error-severity issues, the legacy `health` field remains compatible, and `summary.currentnessVerdict` reports `clean`, `warning`, or `drifted`. Semantic drift includes stale install/removed-command guidance and Task Board/capsule task-state mismatches.
 
 The document registry distinguishes canonical, active, reference, historical, superseded, and archived docs. `docs required-reading` reports the effective default reading set and excludes historical, superseded, and archived docs.
 

@@ -325,37 +325,12 @@ describe('TUI snapshot renderer', () => {
       'utf8'
     );
     writeProjectDocs(root, task.id);
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      [
-        '# AGENT_HANDOFF',
-        '',
-        '## Current State',
-        '',
-        '| Area | State | Notes |',
-        '|---|---|---|',
-        '| Branch | main | table fixture |',
-        '',
-        '## Next Recommended Step',
-        '',
-        '| Step | Reason | Done Evidence |',
-        '|---|---|---|',
-        '| Continue with roadmap value work. | Timing target is met. | T-0231 evidence |',
-        '',
-        '## Validation Baseline',
-        '',
-        '| Check | Latest Evidence | Notes |',
-        '|---|---|---|',
-        '| Latest full check | Docker sync-build passed | fixture |'
-      ].join('\n'),
-      'utf8'
-    );
     const model = createTuiReadModel(root, { selectedTaskId: task.id });
 
     const snapshot = renderTuiSnapshot(model, { panel: 'overview', width: 150, height: 30 });
 
     expect(snapshot.text).toContain('Goal Render table data rows in Overview.');
-    expect(snapshot.text).toContain('Continue with roadmap value work. · Timing target is met. · T-0231 evidence');
+    expect(snapshot.text).toContain('Continue T-0001 Table preview cleanup task');
     expect(snapshot.text).toContain('Proof unknown: No evidence records are indexed for the sel');
     expect(snapshot.text).not.toContain('| Goal | Notes |');
     expect(snapshot.text).not.toContain('| Step | Reason |');
@@ -418,37 +393,8 @@ describe('TUI snapshot renderer', () => {
 
 function writeProjectDocs(root: string, activeTaskId: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 0 / Phase 1 boundary.\n', 'utf8');
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      `- ${activeTaskId} is current.`,
-      '',
-      '## Current Known Problems',
-      '',
-      '- Docker is the working validation path for now.',
-      '',
-      '## Last 3 Completed Tasks',
-      '',
-      '- T-0101 Task Board Append Done-Level Guard: complete.',
-      '',
-      '## Next Recommended Step',
-      '',
-      '- Continue TUI snapshot renderer.',
-      '',
-      '## Validation Baseline',
-      '',
-      '- Latest full check: Docker npm run check passed',
-      '- Latest done-level validation: T-0101 ok'
-    ].join('\n'),
-    'utf8'
-  );
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), `# VALIDATION_HISTORY\n\n- Docker check passed for ${activeTaskId}.\n- harness validate passed for ${activeTaskId}.\n`, 'utf8');
 }
 
 function listProjectFiles(root: string): string[] {

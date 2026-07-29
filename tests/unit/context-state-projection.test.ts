@@ -19,14 +19,6 @@ describe('context state projection', () => {
             activeTasks: ['T-0003'],
             rows: 2
           }),
-          stateSource('state-source:project-state', 'docs/PROJECT_STATE.md', 'project-state', {
-            latestCompletedTask: 'T-0002',
-            activeTask: 'T-0003'
-          }),
-          stateSource('state-source:agent-handoff', 'docs/AGENT_HANDOFF.md', 'agent-handoff', {
-            latestCompletedTask: 'T-0002',
-            activeTask: 'T-0003'
-          }),
           stateSource('state-source:evidence:T-0002', 'tasks/T-0002-fixture/evidence.jsonl', 'evidence', {
             taskId: 'T-0002',
             closeProofs: 1
@@ -61,8 +53,6 @@ describe('context state projection', () => {
     }));
     expect(report.sources.map((item) => item.id)).toEqual([
       'state-source:task-board',
-      'state-source:project-state',
-      'state-source:agent-handoff',
       'state-source:evidence:T-0002',
       'state-source:release-readiness'
     ]);
@@ -77,14 +67,6 @@ describe('context state projection', () => {
             latestDoneTask: 'T-0002',
             activeTasks: ['T-0003'],
             rows: 2
-          }),
-          stateSource('state-source:project-state', 'docs/PROJECT_STATE.md', 'project-state', {
-            latestCompletedTask: 'T-0001',
-            activeTask: null
-          }),
-          stateSource('state-source:agent-handoff', 'docs/AGENT_HANDOFF.md', 'agent-handoff', {
-            latestCompletedTask: 'T-0002',
-            activeTask: 'T-0004'
           }),
           stateSource('state-source:evidence:T-0001', 'tasks/T-0001-fixture/evidence.jsonl', 'evidence', {
             taskId: 'T-0001',
@@ -103,8 +85,6 @@ describe('context state projection', () => {
     expect(report.ok).toBe(true);
     expect(report.summary.stateConsistency).toBe('warning');
     expect(codes).toEqual(expect.arrayContaining([
-      'STATE_LATEST_TASK_MISMATCH',
-      'STATE_ACTIVE_TASK_MISMATCH',
       'STATE_TASK_CAPSULE_MISSING',
       'STATE_TASK_BOARD_MISSING_ROW',
       'STATE_CLOSE_PROOF_STALE'

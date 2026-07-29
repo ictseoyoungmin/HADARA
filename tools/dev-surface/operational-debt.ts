@@ -399,29 +399,15 @@ function checkPackageSmokeArtifactBoundary(releaseReadiness: string | null, mode
 }
 
 function checkPackageSmokeCommandSurface(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const dryRunCommandDocumented = includesAny(releaseReadiness, [
-    'node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json',
-    'hadara smoke package --dry-run --json'
-  ]);
-  const taskCommandDocumented = includesAny(releaseReadiness, [
-    'node --import tsx tools/dev-surfaces.ts smoke package --task <task-id> --json',
-    'hadara smoke package --task <task-id> --json'
-  ]);
+  const dryRunCommandDocumented = includesAny(releaseReadiness, ['node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json']);
+  const taskCommandDocumented = includesAny(releaseReadiness, ['node --import tsx tools/dev-surfaces.ts smoke package --task <task-id> --json']);
   const workspaceCommandDocumented = includesAny(releaseReadiness, [
-    'node --import tsx tools/dev-surfaces.ts smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json',
-    'hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json'
+    'node --import tsx tools/dev-surfaces.ts smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json'
   ]);
-  const keepTempCommandDocumented = includesAny(releaseReadiness, [
-    'node --import tsx tools/dev-surfaces.ts smoke package --keep-temp --json',
-    'hadara smoke package --keep-temp --json'
-  ]);
-  const releaseSmokeWarningDocumented = includesAny(releaseReadiness, [
-    'Do not use `release smoke` as the primary command surface',
-    'Do not use `hadara release smoke` as the primary command surface'
-  ]);
+  const keepTempCommandDocumented = includesAny(releaseReadiness, ['node --import tsx tools/dev-surfaces.ts smoke package --keep-temp --json']);
+  const releaseSmokeWarningDocumented = includesAny(releaseReadiness, ['Do not use `release smoke` as the primary command surface']);
   const noReleaseGateExecutionDocumented = includesAny(releaseReadiness, [
-    'The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`',
-    'The release gate must not call `hadara smoke package`'
+    'The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`'
   ]);
   const ok =
     includesAll(releaseReadiness, [
@@ -506,10 +492,7 @@ function checkPackageMetadataReadiness(
 }
 
 function hasVersionedHadaraTarballExample(text: string | null): boolean {
-  return text !== null && (
-    /node --import tsx tools\/dev-surfaces\.ts smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text) ||
-    /hadara smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text)
-  );
+  return text !== null && /node --import tsx tools\/dev-surfaces\.ts smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text);
 }
 
 function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {

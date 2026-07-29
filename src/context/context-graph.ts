@@ -55,8 +55,6 @@ export type ContextGraphIssueCode =
 export type StateSourceKind =
   | 'task-board'
   | 'task-capsule'
-  | 'project-state'
-  | 'agent-handoff'
   | 'docs-registry'
   | 'release-readiness'
   | 'evidence'

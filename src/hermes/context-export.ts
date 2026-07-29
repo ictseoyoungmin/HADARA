@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, readTextIfExists } from '../core/fs';
+import { listTaskCapsules } from '../task/task-capsule';
 
 export interface HermesDetection {
   found: string[];
@@ -54,7 +55,11 @@ export function buildHadaraContextContent(projectRoot: string): string {
     'docs/SECURITY_MODEL.md'
   ];
 
-  const sections = sourceFiles.map((relativePath) => {
+  const taskHandoffFiles = listTaskCapsules(projectRoot)
+    .map((task) => path.relative(projectRoot, path.join(task.dir, 'HANDOFF.md')).replace(/\\/g, '/'))
+    .filter((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))
+    .sort();
+  const sections = [...sourceFiles, ...taskHandoffFiles].map((relativePath) => {
     const content = readTextIfExists(path.join(projectRoot, relativePath)) ?? '_Missing._';
     return `## ${relativePath}\n\n${content}`;
   });

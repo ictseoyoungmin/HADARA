@@ -232,7 +232,7 @@
         "id": { "type": "string", "minLength": 1 },
         "path": { "type": "string", "minLength": 1 },
         "kind": {
-          "enum": ["task-board", "task-capsule", "project-state", "agent-handoff", "docs-registry", "release-readiness", "evidence", "code-index"]
+          "enum": ["task-board", "task-capsule", "docs-registry", "release-readiness", "evidence", "code-index"]
         },
         "hash": { "type": "string" },
         "extracted": { "type": "object" }

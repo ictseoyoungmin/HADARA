@@ -74,7 +74,7 @@
             "kind": { "enum": ["command", "review", "create", "none"] },
             "command": { "type": "string" },
             "message": { "type": "string" },
-            "writeBoundary": { "enum": ["read-only", "task-local", "project-state", "evidence-append", "none"] },
+            "writeBoundary": { "enum": ["read-only", "task-local", "project-config", "evidence-append", "none"] },
             "risk": { "enum": ["none", "low", "medium", "high"] },
             "requiresReview": { "type": "boolean" },
             "writes": { "type": "boolean" }

@@ -53,7 +53,6 @@ describe('controlled vocabulary (FD-006 / FD-009)', () => {
       done: 'implemented'
     });
     expect(createVocabularyReport('task.source.role').domains[0].aliases).toMatchObject({
-      'current-state canon': 'reference',
       requirement: 'constraint'
     });
     expect(SOURCE_DOCUMENT_ROLE_TOKENS).toContain('design');

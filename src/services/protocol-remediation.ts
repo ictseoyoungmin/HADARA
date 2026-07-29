@@ -18,7 +18,7 @@ export interface ManualRemediationInput {
   };
 }
 
-export type ProtocolRemediationFix = 'task-board-row' | 'decisions-table-frame' | 'project-state-profile' | 'evidence-jsonl';
+export type ProtocolRemediationFix = 'task-board-row' | 'decisions-table-frame' | 'evidence-jsonl';
 export type ProtocolRemediationMode = 'dry-run' | 'execute';
 
 export interface ProtocolRemediateInput {
@@ -76,9 +76,6 @@ export function createProtocolRemediateReport(input: ProtocolRemediateInput): Pr
       break;
     case 'decisions-table-frame':
       planDecisionsTableFrame(input, actions, issues);
-      break;
-    case 'project-state-profile':
-      planProjectStateProfile(input, actions, issues);
       break;
     case 'evidence-jsonl':
       planEvidenceJsonl(input, actions, issues);
@@ -230,35 +227,6 @@ function planDecisionsTableFrame(input: ProtocolRemediateInput, actions: Protoco
   }
 }
 
-function planProjectStateProfile(input: ProtocolRemediateInput, actions: ProtocolRemediateAction[], issues: ProtocolRemediateIssue[]): void {
-  const profile = input.profile;
-  if (!profile) {
-    issues.push({ severity: 'error', code: 'PROTOCOL_REMEDIATION_PROFILE_REQUIRED', message: '--profile basic|standard|governed is required for project-state-profile remediation' });
-    return;
-  }
-  const relativePath = 'docs/PROJECT_STATE.md';
-  const absolutePath = path.join(input.projectRoot, relativePath);
-  const existsAtPlan = fs.existsSync(absolutePath);
-  const current = readIfExists(absolutePath);
-  const base = current || '# PROJECT_STATE\n';
-  const after = upsertProjectStateProfile(base, profile);
-  if (after === current) {
-    actions.push({ id: 'project-state-profile', path: relativePath, status: 'skipped', summary: `${relativePath} already declares ${profile}.` });
-    return;
-  }
-  actions.push({
-    id: 'project-state-profile',
-    path: relativePath,
-    status: 'planned',
-    summary: `${input.mode === 'execute' ? 'Set' : 'Would set'} HADARA Profile to ${profile}.`,
-    before: current,
-    after,
-    expectedBeforeExists: existsAtPlan,
-    expectedBeforeHash: hashContent(current),
-    afterHash: hashContent(after)
-  });
-}
-
 function planEvidenceJsonl(input: ProtocolRemediateInput, actions: ProtocolRemediateAction[], issues: ProtocolRemediateIssue[]): void {
   const taskId = input.taskId;
   if (!taskId) {
@@ -389,38 +357,6 @@ function insertAfterTitle(content: string, insertion: string): string {
   const index = titleIndex >= 0 ? titleIndex + 1 : 0;
   lines.splice(index, 0, insertion.trimEnd(), '');
   return lines.join('\n').replace(/\n{4,}/g, '\n\n\n');
-}
-
-function upsertProjectStateProfile(content: string, profile: 'basic' | 'standard' | 'governed'): string {
-  if (/\|\s*HADARA Profile\s*\|[^|\n]*\|/i.test(content)) {
-    return content.replace(/\|\s*HADARA Profile\s*\|[^|\n]*\|/i, `| HADARA Profile | ${profile} |`);
-  }
-  const metadataTable = `| Field | Value |\n|---|---|\n| HADARA Profile | ${profile} |\n`;
-  const metadataHeading = content.match(/^## Metadata\b.*$/im);
-  if (metadataHeading?.index !== undefined) {
-    const headingStart = metadataHeading.index;
-    const headingEnd = headingStart + metadataHeading[0].length;
-    const rest = content.slice(headingEnd);
-    const nextHeading = rest.search(/\n##\s+/);
-    const sectionEnd = nextHeading >= 0 ? headingEnd + nextHeading : content.length;
-    const body = content.slice(headingEnd, sectionEnd);
-    const updatedBody = upsertMetadataBody(body, profile);
-    return `${content.slice(0, headingEnd)}${updatedBody}${content.slice(sectionEnd)}`;
-  }
-  return insertAfterTitle(content || '# PROJECT_STATE\n', `\n## Metadata\n\n${metadataTable}`);
-}
-
-function upsertMetadataBody(body: string, profile: 'basic' | 'standard' | 'governed'): string {
-  const normalizedBody = body.startsWith('\n') ? body : `\n${body}`;
-  const lines = normalizedBody.split('\n');
-  const headerIndex = lines.findIndex((line) => /^\|\s*Field\s*\|\s*Value\s*\|\s*$/i.test(line));
-  if (headerIndex < 0) {
-    return `\n\n| Field | Value |\n|---|---|\n| HADARA Profile | ${profile} |\n${normalizedBody.replace(/^\n+/, '\n')}`;
-  }
-  const delimiterIndex = lines.findIndex((line, index) => index > headerIndex && /^\|\s*:?-{3,}:?\s*\|\s*:?-{3,}:?\s*\|\s*$/i.test(line));
-  const insertIndex = delimiterIndex >= 0 ? delimiterIndex + 1 : headerIndex + 1;
-  lines.splice(insertIndex, 0, `| HADARA Profile | ${profile} |`);
-  return lines.join('\n');
 }
 
 function hasLegacyDecisionTable(content: string): boolean {

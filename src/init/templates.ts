@@ -271,7 +271,7 @@ HADARA Task Capsules contain \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, and \
 | Before execution | Refine \`TASK.md\` Plan, Source Documents, and Acceptance. |
 | During execution | Update \`TASK.md\` Plan, Change Summary, Risks / Follow-ups; update \`HANDOFF.md\` warnings if continuity changes. |
 | After validation | Use \`validation run\` when possible; record evidence, then update \`TASK.md\` Validation and Acceptance deliberately with evidence ids or residual notes. |
-| Before close | Finish \`TASK.md\` Change Summary, Acceptance, Validation, Risks / Follow-ups; update task-local \`HANDOFF.md\`. Registered existing Project State/Handoff managed checkpoints are projected by close. |
+| Before close | Finish \`TASK.md\` Change Summary, Acceptance, Validation, Risks / Follow-ups; update task-local \`HANDOFF.md\`. Task Board bookkeeping is projected by close. |
 | Close execute | Run \`task close --json\`. Do not edit close-source docs during execute. |
 | Close review | Use \`task close --dry-run --json\` only when a separate review/debug path is needed. |
 | After close | Only clarify docs if the task contract did not change; rerun task close after close-source edits. |
@@ -611,7 +611,7 @@ HADARA task workflow commands are split by responsibility. Similar-looking comma
 
 ## Required Reading Tier
 
-\`docs/TASK_WORKFLOW_COMMANDS.md\` is \`task-work\` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for current-state docs. Start from \`.hadara/context/HADARA_CONTEXT.md\` and compact state docs, then use this document for lifecycle command semantics.
+\`docs/TASK_WORKFLOW_COMMANDS.md\` is \`task-work\` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for task status. Start from \`.hadara/context/HADARA_CONTEXT.md\`, Task Board, and the selected Task Capsule, then use this document for lifecycle command semantics.
 
 ## Standard Task Loop
 
@@ -720,10 +720,10 @@ Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`
 | \`EVIDENCE.md\` and \`evidence.jsonl\` | Evidence writer-owned; do not hand-edit \`evidence.jsonl\`. Treat \`evidence.jsonl\` as canonical and \`EVIDENCE.md\` as a non-canonical human summary; evidence rebuild is not implemented in this scaffold and any future execute mode must be dry-run-first and before-hash guarded. |
 | Task-local \`HANDOFF.md\` Identity table | Command-owned for \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` during task create/close bookkeeping. |
 | Task-local \`HANDOFF.md\` prose/tables | Worker-owned close-time handoff guidance. Persist \`TaskStatus\` only; \`CloseState\` is derived by status/close/state read models and should not be written into close-source handoff tables. |
-| Shared state docs | Optional registered documents. Close updates existing Project State/Handoff managed checkpoints; human prose remains user-owned. |
+| Shared state docs | Optional registered documents. Close does not create or maintain global state projections. |
 | \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
-Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board bookkeeping and existing registered Project State/Handoff managed checkpoints are projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing close-source documents requires rerunning task close.
+Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board bookkeeping is projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing close-source documents requires rerunning task close.
 
 ## Documentation Timing and Write Coordination
 
@@ -731,7 +731,7 @@ Do not defer all documentation until after implementation. Keep \`PLAN.md\` curr
 
 Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task close\`, and release artifact or publish operations. Evidence commands may run in parallel because each append is internally serialized by a task-scoped local lock; JSON responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
+Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, before-hash execute operations, \`task close\`, and release artifact or publish operations. Evidence commands may run in parallel because each append is internally serialized by a task-scoped local lock; JSON responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
 
 ## Command Semantics
 
@@ -758,7 +758,7 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Pr
 - \`evidence list\` is the supported evidence id discovery surface. Text output shows \`[id] time | category/outcome | visibility | summary\`; JSON records expose \`id\`, \`idSource\`, \`idStability\`, \`persistedSchemaVersion\`, \`category\`, \`outcome\`, and \`tags\`. Use durable persisted \`ev:\` ids for long-lived \`--resolves\` and \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.
 - \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. When both are supplied, \`--result\` must match \`--outcome\` for \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit \`--result\`. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags from passed or recorded follow-up evidence. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows. Evidence append responses include \`evidence.appendLock\`; if \`contended\` is true, another process held the task-scoped append lock before this write.
 - Evidence v2 deferred scope remains explicit: rebuild preview/execute, \`check-id\`, \`subject\`, and a new add-command report schema id are future candidates. Do not infer those commands or schema changes from the current \`evidence list\` and \`evidence add-command\` ergonomics.
-- Finalize may update only the bounded Task Capsule status bookkeeping, the matching \`docs/TASK_BOARD.md\` row's command-owned cells, and close evidence append. It must not update handoff, Project State, roadmap docs, or arbitrary evidence after the close-source hash is captured.
+- Finalize may update only the bounded Task Capsule status bookkeeping, the matching \`docs/TASK_BOARD.md\` row's command-owned cells, and close evidence append. It must not update task-local handoff, roadmap docs, or arbitrary evidence after the close-source hash is captured.
 - After close proof is recorded, close-source document edits intentionally invalidate the previous close proof. Make those edits before task close, or rerun task close if the edit is unavoidable.
 - When \`task close\` returns \`ok:true\` and \`closed-valid\`, report the result and stop. Do not call \`task status\` to reconfirm the audit or select follow-up work unless the current human/reviewer instruction explicitly requires continued work.
 
@@ -794,7 +794,7 @@ This repository uses the HADARA protocol for scoped, evidenced, resumable AI-ass
 |---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
-\`AGENTS.md\` owns Required Reading.${spec.docs.contextRouter ? ' `.hadara/context/HADARA_CONTEXT.md` is a compact routing anchor that points to current-state and workflow documents; it is not a second Required Reading authority.' : ''}
+\`AGENTS.md\` owns Required Reading.${spec.docs.contextRouter ? ' `.hadara/context/HADARA_CONTEXT.md` is a compact routing anchor that points to task status, Task Board, and workflow documents; it is not a second Required Reading authority.' : ''}
 
 ## Required Reading Tiers
 
@@ -819,7 +819,7 @@ ${requiredReadingRows.map(formatTableRow).join('\n')}
 - Do not mark work done without evidence.
 - Keep Task Capsule docs current as work changes; do not defer all documentation until after implementation.
 - Keep generated or project-owned \`docs/\` files current when a task changes their subject. Use \`hadara docs add <type>\` for optional docs, or create Markdown directly and register it with \`hadara docs register\`.
-- The selected init profile intentionally omits some project-state and governance documents. Their absence is not a defect. Add optional documents only for a concrete project need, never merely to imitate a larger profile.
+- The selected init profile intentionally omits some overview and governance documents. Their absence is not a defect. Add optional documents only for a concrete project need, never merely to imitate a larger profile.
 - Current human or reviewer instructions override persisted \`Next Recommended Step\` prose when they conflict. Treat handoff next steps as review input, read the routed current/project/development sources, and choose a concise task title yourself only after deciding that a new capsule is still appropriate.
 - When planned milestone work is exhausted and no explicit instruction remains, review the result and either propose a justified next step, identify a planning flaw or optimization, or ask the reviewer what to do next. Do not turn stale handoff prose into an automatic task.
 - A successful \`task close\` result with \`closed-valid\` is terminal for that capsule. Report it and stop; do not run \`task status\` merely to confirm close or discover another capsule unless the current human/reviewer instruction explicitly requires continued work.

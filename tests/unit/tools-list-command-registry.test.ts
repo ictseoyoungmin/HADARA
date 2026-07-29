@@ -18,8 +18,8 @@ describe('tools list command registry projection', () => {
   it('omits repo-local developer surfaces from the public CLI capability projection', () => {
     const names = createToolsListReport().surfaces.cli.map((surface) => surface.name);
 
-    expect(names).not.toContain('hadara smoke package --dry-run --json');
-    expect(names).not.toContain('hadara smoke package --execute --json');
+    expect(names).not.toContain('node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json');
+    expect(names).not.toContain('node --import tsx tools/dev-surfaces.ts smoke package --execute --json');
     expect(names).not.toContain('hadara package recycle --json');
     expect(names).not.toContain('hadara package recycle --execute --json');
     expect(names).not.toContain('hadara release publish --mode dry-run --json');

@@ -978,8 +978,6 @@ function safeFixTitle(fix: ProtocolRemediationFix): string {
       return 'Add the missing Task Board row';
     case 'decisions-table-frame':
       return 'Insert the Decisions table frame';
-    case 'project-state-profile':
-      return 'Align the Project State profile metadata row';
     case 'evidence-jsonl':
       return 'Create the missing task evidence JSONL index';
   }

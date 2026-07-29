@@ -44,7 +44,7 @@
     {
       "id": "feature-smoke-core",
       "label": "Core feature smoke",
-      "command": "hadara smoke run --profile core --json",
+      "command": "node --import tsx tools/dev-surfaces.ts smoke run --profile core --json",
       "status": "passed",
       "exitCode": 0,
       "elapsedMs": 900,

@@ -35,7 +35,7 @@ Use `basic` for small projects and `governed` for long-lived projects with roadm
 
 ## Resume Without Reconstructing History
 
-HADARA keeps portable continuation guidance in the Task Board, Task Capsules, and their tracked Markdown projections. `.hadara/state/current.json` remains a command-owned compatibility checkpoint for older readers, not the normal human or agent starting point.
+HADARA keeps portable continuation guidance in the Task Board, Task Capsules, and task-local handoff docs.
 
 At the start of a later session, run:
 

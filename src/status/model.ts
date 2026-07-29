@@ -18,7 +18,7 @@ export interface StatusNextAction {
     requiresReview: boolean;
   };
   message: string;
-  writeBoundary: 'read-only' | 'task-local' | 'project-state' | 'evidence-append' | 'task-close-transaction' | 'none';
+  writeBoundary: 'read-only' | 'task-local' | 'project-config' | 'evidence-append' | 'task-close-transaction' | 'none';
   risk: 'none' | 'low' | 'medium' | 'high';
   requiresReview: boolean;
   writes: boolean;

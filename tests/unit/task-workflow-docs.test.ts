@@ -17,7 +17,7 @@ describe('task workflow command semantics docs', () => {
       'hadara task status --json',
       'hadara task status --task T-XXXX --json',
       'hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json',
-      '# Finalize Task Capsule docs and tracked state docs before closing.',
+      '# Finalize Task Capsule docs and Task Board state before closing.',
       'hadara task close --task T-XXXX --json',
       'hadara task close --task T-XXXX --dry-run --json',
       'hadara task close --task T-XXXX --execute --plan-hash sha256:... --json',
@@ -91,8 +91,7 @@ describe('task workflow command semantics docs', () => {
     expect(agents).toContain('Serialize same-file prose writes, Task Capsule doc writes');
     expect(agents).toContain('Evidence commands are internally serialized by their task-scoped append lock.');
     expect(agents).toContain('agents should use `task status` for next-work selection, phase checks, and next-action guidance');
-    expect(agents).toContain('`.hadara/state/current.json` is a command-owned compatibility checkpoint, not Required Reading');
-    expect(agents).toContain('Task Board, Task Capsules, and human-readable project docs own inspectable intent');
+    expect(agents).toContain('Task Board, Task Capsules, and task-local handoff docs own inspectable intent');
     expect(agents).not.toContain('unless `session start` already exposed it');
     expect(agents).not.toContain('equivalent `session start` projection');
     expect(contract).toContain('| `task status --json` | `hadara.task.status.summary.v1` | Compact adaptive lifecycle ingress with focused reads/edits and one next action.');
@@ -125,7 +124,6 @@ describe('task workflow command semantics docs', () => {
       expect(doc).toContain('`historical`');
       expect(doc).toContain('`excluded`');
       expect(doc).toContain('`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point');
-      expect(doc).toContain('Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session');
       expect(doc).toContain('Historical and superseded docs are never default required reading.');
     }
 
@@ -133,6 +131,6 @@ describe('task workflow command semantics docs', () => {
     expect(hadaraWorkflow).toContain('Agents must follow this read order:');
     expect(workflow).toContain('## Required Reading Tier');
     expect(workflow).toContain('`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading.');
-    expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');
+    expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md`, Task Board, and the selected Task Capsule');
   });
 });

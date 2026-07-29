@@ -9,8 +9,6 @@ export type DocumentStatus = 'canonical' | 'active' | 'reference' | 'historical'
 export type DocumentKind =
   | 'project-context'
   | 'protocol'
-  | 'project-state'
-  | 'handoff'
   | 'task-board'
   | 'workflow-guide'
   | 'architecture'
@@ -235,8 +233,6 @@ const VALID_STATUSES: DocumentStatus[] = ['canonical', 'active', 'reference', 'h
 const VALID_KINDS: DocumentKind[] = [
   'project-context',
   'protocol',
-  'project-state',
-  'handoff',
   'task-board',
   'workflow-guide',
   'architecture',

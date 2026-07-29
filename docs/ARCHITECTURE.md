@@ -81,7 +81,7 @@ Not implemented:
 
 `docs/`, `tasks/`, `.hadara/context`, `.hadara/state`, and agent context files belong to the project repository.
 
-`docs/TASK_BOARD.md`, Task Capsules, and project-authored Markdown own inspectable task and project intent. `.hadara/state/current.json` remains a command-owned 0.5.x compatibility checkpoint, not Required Reading; default task selection prefers Markdown sources and treats a missing or malformed checkpoint as advisory. Managed checkpoint projections keep older readers operable during migration without becoming the human authoring surface.
+`docs/TASK_BOARD.md`, Task Capsules, and task-local `HANDOFF.md` own inspectable task and project intent. Default task selection reads those Markdown sources and command read models; removed global continuation checkpoints are historical inputs only.
 
 ### TUI Boundary
 
@@ -99,4 +99,4 @@ Re-init and upgrade share that transaction but have distinct ownership. Base ini
 
 Init v1 Task Boards use one schema-aware lifecycle boundary: `task create` projects immutable identity, compact explicit targets (default `project`), capsule path, Draft status, and `Result=-`; valid close projects Done plus only the exact optional `TASK.md` Close Summary. Legacy five-column Boards remain compatibility inputs whose Notes and extra cells are preserved, not reinterpreted as Result.
 
-Task close projects shared state only into registered documents that already exist. Project State and Agent Handoff receive bounded managed checkpoint updates; their surrounding prose remains user-owned. Development Slices participates only when it explicitly links the task. Fresh Init never gains optional global prose documents through close.
+Task close projects lifecycle state into Task Capsule docs, `docs/TASK_BOARD.md`, readiness evidence, and close proof only. Development Slices participates only when it explicitly links the task. Fresh Init never gains optional global prose documents through close.

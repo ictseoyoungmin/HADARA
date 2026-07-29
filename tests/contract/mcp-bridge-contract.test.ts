@@ -16,10 +16,7 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-mcp-contract-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Contract\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'HANDOFF_HISTORY.md'), '# HANDOFF_HISTORY\n\n- Earlier handoff\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n\n- Earlier validation\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\n- Contract project\n', 'utf8');
   writeCanonicalTaskBoard(dir);
   fs.writeFileSync(path.join(dir, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n\n| Order | Slice |\n|---|---|\n', 'utf8');
   return dir;
@@ -96,7 +93,6 @@ describe('MCP bridge contract', () => {
   it('matches active run MCP payloads to shared active-run services', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Contract active run');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
     writeActiveRunManifest(
       root,
       createActiveRunManifest(root, {
@@ -131,28 +127,12 @@ describe('MCP bridge contract', () => {
       issues: []
     });
 
-    expect(mcpToolPayload(root, 'hadara.handoff.read', { includeHistory: true, historyLimit: 1 })).toMatchObject({
-      schemaVersion: 'hadara.handoff.read.v1',
-      command: 'handoff.read',
+    expect(mcpToolPayload(root, 'hadara.context.export')).toMatchObject({
+      schemaVersion: 'hadara.context.export.v1',
+      command: 'context.export',
       ok: true,
-      handoff: {
-        current: expect.stringContaining('# AGENT_HANDOFF'),
-        history: '- Earlier handoff',
-        validationHistory: '- Earlier validation'
-      },
-      issues: []
-    });
-
-    expect(mcpToolPayload(root, 'hadara.project.state.read', { includeDocuments: false })).toMatchObject({
-      schemaVersion: 'hadara.project.state.read.v1',
-      command: 'project.state.read',
-      ok: true,
-      documents: [
-        { path: 'docs/PROJECT_STATE.md', included: false },
-        { path: 'docs/TASK_BOARD.md', included: false },
-        { path: 'docs/DEVELOPMENT_SLICES.md', included: false }
-      ],
-      issues: []
+      mode: 'memory',
+      contextPath: null
     });
   });
 

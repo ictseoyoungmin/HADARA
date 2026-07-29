@@ -22,6 +22,7 @@ export const TASK_STATUS_TOKENS = ['Draft', 'In Progress', 'Blocked', 'Done', 'P
 export const PLAN_STATUS_TOKENS = ['Pending', 'In Progress', 'Done', 'Blocked', 'Skipped'] as const;
 export const SOURCE_DOCUMENT_ROLE_TOKENS = ['implementation-source', 'reference', 'constraint', 'decision', 'design', 'background'] as const;
 export const SOURCE_DOCUMENT_ROLE_ALIASES: Readonly<Record<string, typeof SOURCE_DOCUMENT_ROLE_TOKENS[number]>> = {
+  source: 'reference',
   requirement: 'constraint',
   requirements: 'constraint',
   workflow: 'constraint',
@@ -37,9 +38,6 @@ export const SOURCE_DOCUMENT_ROLE_ALIASES: Readonly<Record<string, typeof SOURCE
   'workflow constraint': 'constraint',
   'task driver': 'background',
   'task-local context': 'background',
-  'current-state canon': 'reference',
-  'current state canon': 'reference',
-  'state canon': 'reference',
   request: 'background',
   'user request': 'background'
 };
@@ -86,8 +84,6 @@ export const EVIDENCE_CATEGORY_ALIASES: Readonly<Record<string, typeof EVIDENCE_
 };
 export const EVIDENCE_OUTCOME_TOKENS = ['passed', 'failed', 'blocked', 'unknown', 'recorded', 'not-applicable'] as const;
 export const SLICE_STATUS_TOKENS = ['not-started', 'in-progress', 'done', 'deferred'] as const;
-export const PROJECT_NEXT_WORK_STATE_TOKENS = ['candidate', 'active', 'blocked', 'waiting-for-operator', 'none'] as const;
-
 export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
   { domain: 'task.status', field: 'Status', surface: 'TASK.md ## Identity Status row (case-insensitive)', issueCode: 'TASK_STATUS_INVALID_TOKEN', allowed: TASK_STATUS_TOKENS },
   { domain: 'task.plan.status', field: 'Status', surface: 'TASK.md ## Plan Status column', issueCode: 'TASK_PLAN_STATUS_INVALID_TOKEN', allowed: PLAN_STATUS_TOKENS },
@@ -108,7 +104,6 @@ export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
   { domain: 'evidence.category', field: 'category', surface: 'evidence.jsonl v2 record category', issueCode: 'EVIDENCE_INDEX_CATEGORY_INVALID', allowed: EVIDENCE_CATEGORY_TOKENS },
   { domain: 'evidence.outcome', field: 'outcome', surface: 'evidence.jsonl v2 record outcome', issueCode: 'EVIDENCE_INDEX_OUTCOME_INVALID', allowed: EVIDENCE_OUTCOME_TOKENS },
   { domain: 'slices.status', field: 'status', surface: 'slices state entry status (hadara slice add/set --status)', issueCode: 'SLICE_STATUS_INVALID_TOKEN', allowed: SLICE_STATUS_TOKENS },
-  { domain: 'project.nextWork.state', field: 'nextWork.state', surface: 'legacy structured continuation checkpoint', issueCode: 'PROJECT_CURRENT_STATE_INVALID', allowed: PROJECT_NEXT_WORK_STATE_TOKENS },
   { domain: 'docs.kind', field: 'kind', surface: 'docs registry entry kind (`docs register --kind`)', issueCode: 'DOC_UNKNOWN_KIND', allowed: DOCS_REGISTER_ALLOWED_VALUES.kind },
   { domain: 'docs.status', field: 'status', surface: 'docs registry entry status (`docs register --status`, `docs mark --status`)', issueCode: 'DOC_UNKNOWN_STATUS', allowed: DOCS_REGISTER_ALLOWED_VALUES.status },
   { domain: 'docs.readWhen', field: 'readWhen', surface: 'docs registry entry readWhen (`docs register --read-when`)', issueCode: 'DOC_UNKNOWN_READ_WHEN', allowed: DOCS_REGISTER_ALLOWED_VALUES.readWhen },

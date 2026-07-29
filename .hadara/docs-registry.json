@@ -1604,7 +1604,7 @@
       "path": "docs/archive/retired-2026-07-26/history/AGENT_HANDOFF_PRE_T0558.md",
       "title": "AGENT_HANDOFF pre-T0558 snapshot",
       "owner": "hadara-docs",
-      "kind": "handoff",
+      "kind": "historical-plan",
       "status": "historical",
       "scope": "project",
       "profiles": [
@@ -1632,7 +1632,7 @@
       "path": "docs/archive/retired-2026-07-26/history/PROJECT_STATE_PRE_T0558.md",
       "title": "PROJECT_STATE pre-T0558 snapshot",
       "owner": "hadara-docs",
-      "kind": "project-state",
+      "kind": "historical-plan",
       "status": "historical",
       "scope": "project",
       "profiles": [

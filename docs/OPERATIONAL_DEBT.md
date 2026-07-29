@@ -29,7 +29,7 @@ Operational debt records track weaknesses discovered while dogfooding HADARA its
 
 ## Mitigation Notes
 
-- OD-0003 is mitigated by the current HADARA session protocol: `AGENTS.md` and `docs/IMPLEMENTATION_SOP.md` require agents to read current project state, handoff, task board, development slices, the active Task Capsule, and referenced specs before implementation. `docs/AGENT_HANDOFF.md` now stays compact and points to historical indexes instead of acting as the only source of context.
+- OD-0003 is mitigated by the current HADARA session protocol: `AGENTS.md` and `docs/IMPLEMENTATION_SOP.md` route agents through task status, Task Board, task-local handoff, development slices, the active Task Capsule, and referenced specs before implementation. Historical handoff/project-state snapshots live under `docs/history/` and are not default session context.
 - OD-0008 is mitigated by release-readiness and completion guards already implemented in the harness and operational debt service. Debt reports warn on checked acceptance before Done status or valid evidence, and done-level harness validation requires completed acceptance, evidence records, handoff sections, Task Board consistency, and non-scaffold capsule Markdown before work can be marked done.
 
 ## Current Report
