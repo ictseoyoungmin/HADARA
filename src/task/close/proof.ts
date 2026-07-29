@@ -84,6 +84,18 @@ export interface TaskCloseEvidenceWrite {
   };
 }
 
+export interface TaskCloseProofAppendGuard {
+  markerPath: string;
+  taskId: string;
+  operationId: string;
+  operationIdempotencyKey: string;
+  closeBasisHash: string;
+  planHash: string;
+  writeSetHash: string;
+  expectedWrites: PersistedTaskLocalExpectedWrite[];
+  proofIdempotencyKey?: string;
+}
+
 export class TaskCloseProofAppendRevalidationError extends Error {
   constructor(public readonly issue: TaskCloseIssue) {
     super(issue.message);
@@ -647,12 +659,16 @@ function hashText(content: string): string {
   return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
 }
 
-export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseReport): void {
+function hashObject(value: unknown): string {
+  return hashText(JSON.stringify(value));
+}
+
+export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseReport, guard?: TaskCloseProofAppendGuard): void {
   if (report.closeEvidenceWrite?.duplicateAction === 'no-op') {
     report.closeEvidence.appended = false;
     return;
   }
-  revalidateCloseProofAppendState(projectRoot, report);
+  revalidateCloseProofAppendState(projectRoot, report, guard);
   const task = findTaskCapsule(projectRoot, report.taskId);
   const recheckedWrite = task
     ? createCloseEvidenceWritePlan(
@@ -715,7 +731,7 @@ interface PersistedTaskLocalExpectedWrite {
   afterHash?: string;
 }
 
-function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseReport): void {
+function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseReport, guard?: TaskCloseProofAppendGuard): void {
   const task = findTaskCapsule(projectRoot, report.taskId);
   if (!task) return;
 
@@ -732,8 +748,11 @@ function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseR
     });
   }
 
-  const marker = readPersistedCloseOperationMarker(projectRoot, report.taskId);
-  if (!marker) return;
+  const marker = guard ? readRequiredCloseOperationMarker(projectRoot, report.taskId, guard) : readPersistedCloseOperationMarker(projectRoot, report.taskId);
+  if (!marker) {
+    if (guard) throwProofAppendGuardIssue(projectRoot, report.taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MISSING', 'Task close operation marker is missing before proof append.');
+    return;
+  }
   const taskLocalWrites = marker.expectedWrites
     .map((write, index) => ({ write, sequence: index + 1 }))
     .filter((entry) => entry.write.writeBoundary === 'task-local');
@@ -750,6 +769,72 @@ function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseR
       example: `hadara task close --task ${report.taskId} --json`
     });
   }
+}
+
+function readRequiredCloseOperationMarker(
+  projectRoot: string,
+  taskId: string,
+  guard: TaskCloseProofAppendGuard
+): { expectedWrites: PersistedTaskLocalExpectedWrite[] } {
+  const markerPath = path.join(projectRoot, guard.markerPath);
+  if (!fs.existsSync(markerPath)) {
+    throwProofAppendGuardIssue(projectRoot, taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MISSING', 'Task close operation marker is missing before proof append.');
+  }
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(fs.readFileSync(markerPath, 'utf8')) as Record<string, unknown>;
+  } catch {
+    throwProofAppendGuardIssue(projectRoot, taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MALFORMED', 'Task close operation marker is missing or malformed before proof append.');
+  }
+  const expectedWrites = parsed.expectedWrites;
+  const proof = parsed.proof && typeof parsed.proof === 'object' ? parsed.proof as { idempotencyKey?: unknown; outcome?: unknown } : undefined;
+  const mismatches: string[] = [];
+  if (parsed.taskId !== guard.taskId) mismatches.push('taskId');
+  if (parsed.operationId !== guard.operationId) mismatches.push('operationId');
+  if (parsed.idempotencyKey !== guard.operationIdempotencyKey) mismatches.push('idempotencyKey');
+  if (parsed.closeBasisHash !== guard.closeBasisHash) mismatches.push('closeBasisHash');
+  if (parsed.planHash !== guard.planHash) mismatches.push('planHash');
+  if (parsed.writeSetHash !== guard.writeSetHash) mismatches.push('writeSetHash');
+  if (parsed.phase !== 'proof-pending') mismatches.push('phase');
+  if (guard.proofIdempotencyKey && proof?.idempotencyKey !== guard.proofIdempotencyKey) mismatches.push('proof.idempotencyKey');
+  if (!Array.isArray(expectedWrites)) mismatches.push('expectedWrites');
+  if (Array.isArray(expectedWrites)) {
+    if (hashObject(expectedWrites) !== guard.writeSetHash) mismatches.push('hash(expectedWrites)');
+    if (hashObject(expectedWrites) !== hashObject(guard.expectedWrites)) mismatches.push('expectedWrites');
+  }
+  if (mismatches.length > 0) {
+    throwProofAppendGuardIssue(
+      projectRoot,
+      taskId,
+      guard,
+      'TASK_CLOSE_PROOF_APPEND_MARKER_MISMATCH',
+      `Task close operation marker no longer matches proof append guard (${mismatches.join(', ')}).`
+    );
+  }
+  const markerExpectedWrites = Array.isArray(expectedWrites) ? expectedWrites : [];
+  return {
+    expectedWrites: markerExpectedWrites
+      .filter((write): write is PersistedTaskLocalExpectedWrite =>
+        Boolean(write && typeof write === 'object' && typeof (write as PersistedTaskLocalExpectedWrite).path === 'string')
+      )
+  };
+}
+
+function throwProofAppendGuardIssue(
+  projectRoot: string,
+  taskId: string,
+  guard: TaskCloseProofAppendGuard,
+  code: string,
+  message: string
+): never {
+  throw new TaskCloseProofAppendRevalidationError({
+    severity: 'error',
+    code,
+    message,
+    path: toPortablePath(path.relative(projectRoot, path.join(projectRoot, guard.markerPath))),
+    fixHint: 'Inspect the local task-close operation marker and rerun task close only after the recovery state is understood.',
+    example: `hadara task close --task ${taskId} --json`
+  });
 }
 
 function readPersistedCloseOperationMarker(

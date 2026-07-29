@@ -232,7 +232,7 @@ describe('workbench next actions', () => {
     });
 
     expect(actions[0]).toMatchObject({
-      id: 'close-auto-sync',
+      id: 'close-auto-guarded-writes',
       kind: 'command',
       command: 'hadara task close --task T-0001 --json',
       loopBoundary: true

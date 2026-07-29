@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0733 Close transaction proof and marker hardening | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0734 Close plan guarded write integration | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0733 closes the reviewer-identified task-close correctness and contract gaps after T-0732. Proof append now revalidates actual close source hash and persisted task-local expected writes immediately before proof append; operation markers and fast reuse require `writeSetHash === hashObject(expectedWrites)`; missing-target path confinement resolves the nearest existing ancestor to block symlink escapes; proof-pending resume stays in proof-stage semantics; recovery detail does not fabricate completed/pending classifications; persisted/reported operation state separates `closeBasisHash` from `finalSourceHash`; stale current-state continuation data is cleaned; and public close-plan terminology no longer exposes the legacy bookkeeping step/domain. Validation passed focused close/path/schema regressions, TypeScript no-emit, command registry surface check, and final `npm run check`.
+T-0734 completes the final reviewer-limited task-close hardening after T-0733. Proof append now receives an explicit operation-marker guard from the write-capable transaction and refuses to append proof if the marker is missing, malformed, mismatched by operation identity/hash/write set/proof idempotency, not `proof-pending`, or internally write-set-inconsistent. Guarded task-local writes are now a top-level `closePlan.guardedWrites` component; public close-plan `steps` no longer include `sync`, operation/recovery expected writes use `guarded-writes`, the legacy `CloseBookkeepingReport` helper is gone, and command registry exposes `task-close-guarded-writes`. Validation passed focused close/schema/current-state tests, TypeScript no-emit, built command registry inspection, and final `npm run check`.
 
 ## Previous Handoff
 

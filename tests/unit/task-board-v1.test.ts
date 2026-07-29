@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createCloseBookkeepingReport } from '../../src/task/close/bookkeeping';
+import { createCloseGuardedWritePlan } from '../../src/task/close/guardedWrites';
 import { normalizeCloseSummary, parseTaskBoard, renderTaskTargets } from '../../src/task/task-board';
 
 const roots: string[] = [];
@@ -48,7 +48,7 @@ describe('Init v1 Task Board', () => {
     fs.writeFileSync(taskPath, taskContent, 'utf8');
     expect(taskContent).not.toContain('| Targets | project |');
 
-    const report = createCloseBookkeepingReport(root, task.id, 'execute');
+    const report = createCloseGuardedWritePlan(root, task.id, 'execute');
     const row = parseTaskBoard(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).rows[0];
 
     expect(report.ok).toBe(true);
@@ -85,7 +85,7 @@ describe('Init v1 Task Board', () => {
       'utf8'
     );
 
-    const report = createCloseBookkeepingReport(root, task.id, 'execute');
+    const report = createCloseGuardedWritePlan(root, task.id, 'execute');
 
     expect(report.ok).toBe(true);
     const rewrittenRow = fs.readFileSync(boardPath, 'utf8').split(/\r?\n/).find((line) => line.startsWith(`| ${task.id} |`));
@@ -130,7 +130,7 @@ describe('Init v1 Task Board', () => {
       'utf8'
     );
 
-    const report = createCloseBookkeepingReport(root, task.id, 'execute');
+    const report = createCloseGuardedWritePlan(root, task.id, 'execute');
 
     expect(report.ok).toBe(true);
     expect(fs.readFileSync(boardPath, 'utf8')).toContain('| Keep this | reviewer |');

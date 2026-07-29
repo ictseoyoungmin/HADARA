@@ -11,7 +11,7 @@ import {
   readProjectCurrentState
 } from '../../src/services/project-current-state';
 import { createTaskCreateReport } from '../../src/task/task-create';
-import { createCloseBookkeepingReport } from '../../src/task/close/bookkeeping';
+import { createCloseGuardedWritePlan } from '../../src/task/close/guardedWrites';
 import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
 
 const roots: string[] = [];
@@ -320,7 +320,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const executed = createCloseBookkeepingReport(root, created.taskId!, 'execute');
+    const executed = createCloseGuardedWritePlan(root, created.taskId!, 'execute');
     expect(executed.ok).toBe(true);
 
     const continuation = readProjectCurrentState(root).state?.continuation;
@@ -355,7 +355,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const executed = createCloseBookkeepingReport(root, created.taskId!, 'execute');
+    const executed = createCloseGuardedWritePlan(root, created.taskId!, 'execute');
     expect(executed.ok).toBe(true);
     expect(readProjectCurrentState(root).state?.continuation).toBeNull();
   });
@@ -371,7 +371,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
+    const report = createCloseGuardedWritePlan(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_DISPOSITION_INVALID'
@@ -389,7 +389,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
+    const report = createCloseGuardedWritePlan(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_CREATE_TASK_INVALID'
@@ -407,7 +407,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
+    const report = createCloseGuardedWritePlan(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT'
@@ -425,7 +425,7 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
     );
     fs.writeFileSync(handoffPath, handoff, 'utf8');
 
-    const report = createCloseBookkeepingReport(root, created.taskId!, 'execute');
+    const report = createCloseGuardedWritePlan(root, created.taskId!, 'execute');
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT'
@@ -446,12 +446,12 @@ describe('task close promotes HANDOFF Next Recommended Step into continuation (T
       ),
       'utf8'
     );
-    expect(createCloseBookkeepingReport(root, first.taskId!, 'execute').ok).toBe(true);
+    expect(createCloseGuardedWritePlan(root, first.taskId!, 'execute').ok).toBe(true);
     const afterFirst = readProjectCurrentState(root).state?.continuation;
     expect(afterFirst?.title).toBe('Publish 0.5.0 stable');
 
     const second = createTaskCreateReport(root, 'Placeholder next step fixture');
-    expect(createCloseBookkeepingReport(root, second.taskId!, 'execute').ok).toBe(true);
+    expect(createCloseGuardedWritePlan(root, second.taskId!, 'execute').ok).toBe(true);
     const afterSecond = readProjectCurrentState(root).state?.continuation;
     expect(afterSecond).toEqual(afterFirst);
   });

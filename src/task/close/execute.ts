@@ -6,10 +6,10 @@ import type { HadaraNextAction } from '../../core/next-action';
 import { ensureDir } from '../../core/fs';
 import { isInside } from '../../core/paths';
 import { startMonotonicTimer } from '../../core/timing';
-import { createReviewedTaskClosePlan, createTaskClosePlanReport, didClosePlanExecutedStepMutate, formatTaskClosePlanReport, type ReviewedTaskClosePlan, type TaskClosePlanExecutedStep, type TaskClosePlanOptions, type TaskClosePlanProgressEvent, type TaskClosePlanReport, type TaskClosePlanStepId } from './plan';
+import { createReviewedTaskClosePlan, createTaskClosePlanReport, didClosePlanExecutedStepMutate, formatTaskClosePlanReport, type ReviewedTaskClosePlan, type TaskClosePlanExecutedStep, type TaskClosePlanExecutionStepId, type TaskClosePlanOptions, type TaskClosePlanProgressEvent, type TaskClosePlanReport, type TaskClosePlanStepId } from './plan';
 import { defaultTaskLifecycleActor } from '../lifecycle-next-actions';
-import type { CloseBookkeepingWrite } from './bookkeeping';
-import type { TaskCloseReport } from './proof';
+import type { CloseGuardedWrite } from './guardedWrites';
+import type { TaskCloseProofAppendGuard, TaskCloseReport } from './proof';
 
 export type TaskCloseTransactionMode = 'dry-run' | 'execute' | 'execute-refused';
 
@@ -96,11 +96,11 @@ export interface TaskCloseOperationState {
 }
 
 export interface TaskCloseExpectedWrite {
-  step: TaskClosePlanStepId;
+  step: TaskClosePlanExecutionStepId;
   path: string;
   writeBoundary: 'task-local' | 'evidence-append';
-  action?: CloseBookkeepingWrite['action'];
-  field?: CloseBookkeepingWrite['field'];
+  action?: CloseGuardedWrite['action'];
+  field?: CloseGuardedWrite['field'];
   expectedBeforeExists?: boolean;
   expectedBeforeHash?: string;
   afterHash?: string;
@@ -131,7 +131,7 @@ export interface TaskCloseOperationAttempt {
 
 export interface TaskCloseOperationStepJournalEntry {
   seq: number;
-  step: TaskClosePlanStepId;
+  step: TaskClosePlanExecutionStepId;
   phase: 'intent' | 'outcome';
   status: 'start' | 'executed' | 'satisfied' | 'blocked' | 'skipped';
   writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
@@ -200,7 +200,7 @@ export interface TaskCloseTransactionReport {
 }
 
 export interface TaskCloseRecoveryWrite {
-  step: TaskClosePlanStepId;
+  step: TaskClosePlanExecutionStepId;
   path: string;
   writeBoundary: 'task-local' | 'evidence-append';
   status: 'before' | 'after' | 'conflict' | 'missing-conflict' | 'pending';
@@ -263,6 +263,7 @@ export function createTaskCloseTransactionReport(
       recordReadinessEvidence: true,
       onProgress: progressWrapper,
       onAutoReview: options.onAutoReview,
+      proofAppendGuard: () => createProofAppendGuardFromOperation(operation),
       faultHooks: {
         ...options.faultHooks,
         afterWritesPersisted: () => {
@@ -862,7 +863,7 @@ function validateExpectedWriteShape(value: unknown): string | null {
     'recordHash'
   ]);
   if (unknown.length > 0) return `unknown property ${unknown[0]}`;
-  if (!['sync', 'ready', 'close', 'audit-close'].includes(String(write.step))) return 'step is invalid';
+  if (!['guarded-writes', 'ready', 'close', 'audit-close'].includes(String(write.step))) return 'step is invalid';
   if (typeof write.path !== 'string') return 'path must be a string';
   if (write.action !== undefined && !['update', 'insert'].includes(String(write.action))) return 'action is invalid';
   if (write.field !== undefined && !['task-status', 'task-handoff-identity', 'task-board-row', 'current-state', 'project-state-projection', 'handoff-projection'].includes(String(write.field))) return 'field is invalid';
@@ -885,7 +886,7 @@ function validateExpectedWriteShape(value: unknown): string | null {
 function validateStepArray(value: unknown, label: string): string | null {
   if (!Array.isArray(value)) return `${label} must be an array`;
   for (const [index, step] of value.entries()) {
-    if (!['sync', 'ready', 'close', 'audit-close'].includes(String(step))) return `${label}[${index}] is invalid`;
+    if (!['guarded-writes', 'ready', 'close', 'audit-close'].includes(String(step))) return `${label}[${index}] is invalid`;
   }
   return null;
 }
@@ -912,7 +913,7 @@ function validateStepJournal(value: unknown, label: string): string | null {
     const unknown = unknownKeys(journal, ['seq', 'step', 'phase', 'status', 'writeBoundary', 'writeOutcome', 'mutated', 'fileWrites', 'at']);
     if (unknown.length > 0) return `${label}[${index}] unknown property ${unknown[0]}`;
     if (!isNonNegativeInteger(journal.seq) || (journal.seq ?? 0) < 1) return `${label}[${index}].seq must be a positive integer`;
-    if (!['sync', 'ready', 'close', 'audit-close'].includes(String(journal.step))) return `${label}[${index}].step is invalid`;
+    if (!['guarded-writes', 'ready', 'close', 'audit-close'].includes(String(journal.step))) return `${label}[${index}].step is invalid`;
     if (!['intent', 'outcome'].includes(String(journal.phase))) return `${label}[${index}].phase is invalid`;
     if (!['start', 'executed', 'satisfied', 'blocked', 'skipped'].includes(String(journal.status))) return `${label}[${index}].status is invalid`;
     if (!['read-only', 'task-local', 'evidence-append'].includes(String(journal.writeBoundary))) return `${label}[${index}].writeBoundary is invalid`;
@@ -1287,7 +1288,7 @@ function createCloseOperation(
     writeSetHash: previousState?.writeSetHash ?? writeSetHash,
     expectedWrites: previousState?.expectedWrites ?? expectedWrites,
     completedSteps: previousState?.completedSteps ?? [],
-    pendingSteps: previousState?.pendingSteps ?? ['sync', 'ready', 'close', 'audit-close'],
+    pendingSteps: previousState?.pendingSteps ?? ['guarded-writes', 'ready', 'close', 'audit-close'],
     stepJournal: [],
     mutationSummary: nextAttempt.mutationSummary,
     attempts: [...previousAttempts, nextAttempt],
@@ -1301,9 +1302,24 @@ function createCloseOperation(
   };
 }
 
+function createProofAppendGuardFromOperation(operation: TaskCloseOperationState | undefined): TaskCloseProofAppendGuard | undefined {
+  if (!operation) return undefined;
+  return {
+    markerPath: operation.path,
+    taskId: operation.taskId,
+    operationId: operation.operationId,
+    operationIdempotencyKey: operation.idempotencyKey,
+    closeBasisHash: operation.closeBasisHash,
+    planHash: operation.planHash,
+    writeSetHash: operation.writeSetHash,
+    expectedWrites: operation.expectedWrites.map((write) => ({ ...write })),
+    proofIdempotencyKey: operation.proof?.idempotencyKey
+  };
+}
+
 function createExpectedWrites(reviewedPlan: ReviewedTaskClosePlan): TaskCloseExpectedWrite[] {
-  const bookkeepingWrites: TaskCloseExpectedWrite[] = reviewedPlan.reports.bookkeeping.writes.map((write) => ({
-    step: 'sync',
+  const guardedWritesWrites: TaskCloseExpectedWrite[] = reviewedPlan.reports.guardedWrites.writes.map((write) => ({
+    step: 'guarded-writes',
     path: write.path,
     writeBoundary: 'task-local',
     action: write.action,
@@ -1313,8 +1329,8 @@ function createExpectedWrites(reviewedPlan: ReviewedTaskClosePlan): TaskCloseExp
     afterHash: write.afterHash
   }));
   const closeReport = reviewedPlan.reports.close;
-  const evidencePath = reviewedPlan.reports.bookkeeping.task?.capsule
-    ? `${reviewedPlan.reports.bookkeeping.task.capsule}/evidence.jsonl`
+  const evidencePath = reviewedPlan.reports.guardedWrites.task?.capsule
+    ? `${reviewedPlan.reports.guardedWrites.task.capsule}/evidence.jsonl`
     : reviewedPlan.review.pendingWrites.find((write) => write.step === 'close' && write.writeBoundary === 'evidence-append')?.paths[0];
   const evidenceWrites: TaskCloseExpectedWrite[] = closeReport?.ok && evidencePath
     ? [
@@ -1322,7 +1338,7 @@ function createExpectedWrites(reviewedPlan: ReviewedTaskClosePlan): TaskCloseExp
         createCloseProofExpectedWrite(evidencePath, closeReport)
       ]
     : [];
-  return [...bookkeepingWrites, ...evidenceWrites];
+  return [...guardedWritesWrites, ...evidenceWrites];
 }
 
 function createReadinessEvidenceExpectedWrite(evidencePath: string, closeReport: TaskCloseReport): TaskCloseExpectedWrite {
@@ -1422,7 +1438,13 @@ function persistCloseOperation(projectRoot: string, operation: TaskCloseOperatio
 
 function updateCloseOperationFromClosePlan(operation: TaskCloseOperationState, closePlan: TaskClosePlanReport): TaskCloseOperationState {
   const completedSteps = (closePlan.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' || step.status === 'satisfied').map((step) => step.id);
-  const allSteps: TaskClosePlanStepId[] = ['sync', 'ready', 'close', 'audit-close'];
+  const guardedWritesParticipated = completedSteps.includes('guarded-writes') || closePlan.guardedWrites.summary.plannedWrites > 0;
+  const allSteps: TaskClosePlanExecutionStepId[] = [
+    ...(guardedWritesParticipated ? ['guarded-writes' as const] : []),
+    'ready',
+    'close',
+    'audit-close'
+  ];
   const pendingSteps = allSteps.filter((step) => !completedSteps.includes(step));
   const attempts = syncOperationAttemptsFromClosePlan(operation.attempts ?? [], closePlan);
   const activeAttempt = attempts.at(-1);
@@ -1460,7 +1482,7 @@ function updateCloseOperationFromClosePlan(operation: TaskCloseOperationState, c
 }
 
 function updateCloseOperationFromProgress(operation: TaskCloseOperationState, event: TaskClosePlanProgressEvent): TaskCloseOperationState {
-  const allSteps: TaskClosePlanStepId[] = ['sync', 'ready', 'close', 'audit-close'];
+  const allSteps: TaskClosePlanExecutionStepId[] = ['guarded-writes', 'ready', 'close', 'audit-close'];
   const completed = new Set(operation.completedSteps);
   if (event.phase === 'executed' || event.phase === 'satisfied') completed.add(event.step);
   const completedSteps = allSteps.filter((step) => completed.has(step));
@@ -1562,7 +1584,7 @@ function summarizeAttemptJournal(
   journal: TaskCloseOperationStepJournalEntry[],
   blocked = false
 ): TaskCloseOperationAttempt['mutationSummary'] {
-  const latestOutcomes = new Map<TaskClosePlanStepId, TaskCloseOperationStepJournalEntry>();
+  const latestOutcomes = new Map<TaskClosePlanExecutionStepId, TaskCloseOperationStepJournalEntry>();
   for (const entry of journal) {
     if (entry.phase !== 'outcome') continue;
     latestOutcomes.set(entry.step, entry);

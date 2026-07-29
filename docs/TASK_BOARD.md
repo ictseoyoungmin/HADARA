@@ -734,3 +734,4 @@
 | T-0731 | Close Operation Reconciliation Hardening | Done | tasks/T-0731-close-operation-reconciliation-hardening | |
 | T-0732 | Close operation reconciliation follow-up hardening | Done | tasks/T-0732-close-operation-reconciliation-follow-up-hardening | |
 | T-0733 | Close transaction proof and marker hardening | Done | tasks/T-0733-close-transaction-proof-and-marker-hardening | |
+| T-0734 | Close plan guarded write integration | Done | tasks/T-0734-close-plan-guarded-write-integration | |

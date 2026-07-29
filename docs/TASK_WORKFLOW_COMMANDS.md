@@ -1,6 +1,6 @@
 # TASK_WORKFLOW_COMMANDS
 
-HADARA task workflow commands are split by responsibility. Similar-looking commands are not interchangeable: some only report state, some check readiness, some perform bounded close write-sync writes, and some append close evidence.
+HADARA task workflow commands are split by responsibility. Similar-looking commands are not interchangeable: some only report state, some check readiness, some perform bounded close-plan guarded write writes, and some append close evidence.
 
 For command discovery, use the registry-backed surfaces instead of copying command tables into task instructions:
 
@@ -60,7 +60,7 @@ Default status and close JSON are compact. Use their reported `detailCommand`, o
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
-`task close` includes done-level Task Capsule validation through its internal ready/close steps. In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof: `task close --json` records that readiness evidence and close proof against the virtual post-finish capsule state, then commits the lifecycle-owned Done close write sync before the final audit. Use `hadara harness validate --task T-XXXX --level done --json` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+`task close` includes done-level Task Capsule validation through its internal ready/close steps. In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof: `task close --json` records that readiness evidence and close proof against the virtual post-finish capsule state, then commits the lifecycle-owned Done close-plan guarded writes before the final audit. Use `hadara harness validate --task T-XXXX --level done --json` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
 
 ## Status Token And Ownership Policy
 
@@ -117,17 +117,17 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`
 
 | Surface | Ownership |
 |---|---|
-| `TASK.md` status metadata, `## Status`, and Status History | Command-owned for finish close write sync; worker-owned before finish. |
+| `TASK.md` status metadata, `## Status`, and Status History | Command-owned for finish close-plan guarded writes; worker-owned before finish. |
 | `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task close`; Notes and extra cells are mixed/human-owned. |
 | `EVIDENCE.md` and `evidence.jsonl` | Evidence writer-owned; do not hand-edit `evidence.jsonl`. |
-| Task-local `HANDOFF.md` Identity table | Command-owned for `ID`, `Title`, `Status`, `Created`, and `Updated` during task create/close write sync. |
+| Task-local `HANDOFF.md` Identity table | Command-owned for `ID`, `Title`, `Status`, `Created`, and `Updated` during task create/close-plan guarded writes. |
 | Task-local `HANDOFF.md` prose/tables | Worker-owned close-time handoff guidance. Persist `TaskStatus` only; `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Optional registered documents. Close updates existing Project State/Handoff managed checkpoints; human prose remains user-owned. |
 | `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
 Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Treat Task Capsule `evidence.jsonl` as canonical append-only evidence and `EVIDENCE.md` as a non-canonical human summary. Future rebuild preview must define whether `wouldChange` means formatting regeneration, managed-section drift, or data inconsistency before it reports changes; any future execute mode must be dry-run-first and before-hash guarded.
 
-Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board close write sync and existing registered Project State/Handoff managed checkpoints are projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After `task close --json` reaches close proof, changing close-source documents requires rerunning task close.
+Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board close-plan guarded writes and existing registered Project State/Handoff managed checkpoints are projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After `task close --json` reaches close proof, changing close-source documents requires rerunning task close.
 
 Task-local `HANDOFF.md` `## Next Recommended Step` is machine-readable continuation input. New capsules should use this table shape:
 
@@ -203,7 +203,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `task create` uses bounded local collision retries for sequential task ids. If the selected task directory appears before creation or the Task Board already contains the candidate id, it retries another id; exhausted retries return `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`. This is a collision guard, not a durable global task allocator.
 - `task status` is an operator cockpit; `ok: true` means report generation succeeded. Default JSON is the compact summary with `focus.read`, `focus.edit`, counts, and one primary action. It may skip close-grade diagnostics. Use `task status --task T-XXXX --detail full --json` only for the complete v2 projection or `task close --task T-XXXX --dry-run --json` for close planning.
 - `task status` is the operator cockpit for next-work selection and selected-task guidance.
-- `task close` is the public proof-last transaction. By default it executes the internally reviewed close plan once; `--dry-run` previews finish/ready/close/audit intent, write boundaries, expected write paths, close-proof repair when current close evidence is stale or invalid, and a `planHash`; reviewed execute requires the matching current plan hash, records readiness evidence and close proof against the virtual post-finish state when needed, commits lifecycle-owned Done close write sync, stops on the first blocker, and returns success only after the final audit is `closed-valid`.
+- `task close` is the public proof-last transaction. By default it executes the internally reviewed close plan once; `--dry-run` previews finish/ready/close/audit intent, write boundaries, expected write paths, close-proof repair when current close evidence is stale or invalid, and a `planHash`; reviewed execute requires the matching current plan hash, records readiness evidence and close proof against the virtual post-finish state when needed, commits lifecycle-owned Done close-plan guarded writes, stops on the first blocker, and returns success only after the final audit is `closed-valid`.
 - `handoff suggest` is fully removed from public routing. Task close updates only the registered existing Agent Handoff managed checkpoint; no command invents user-authored handoff prose.
 - `tools/dev-surfaces.ts dev docker-check` is intentionally an external-subprocess command. It must keep raw Docker/npm logs out of JSON output, redact workspace paths, create a run-scoped temp copy, and require explicit `--sync-dist --before-hash <current dist hash>` before copying Docker-built `dist` to the workspace.
 - `tools/dev-surfaces.ts dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available, which hash the operator reviewed, whether it matched, whether sync was allowed through the first-time missing-hash escape hatch, and whether a conflict blocked the copy.
@@ -216,7 +216,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - If the wrapper cannot launch child processes in the current tool environment but the same command ran directly, use `--direct-result passed|failed|blocked --direct-summary "..."` on `validation run`. That keeps validation-check resolution tags and optional `TASK.md` row sync in the validation surface without requiring a second `evidence add-command` command.
 - Evidence v2 deferred scope remains explicit: rebuild preview/execute, `check-id`, `subject`, and a new add-command report schema id are future candidates. Do not infer those commands or schema changes from the current `evidence list` and `evidence add-command` ergonomics.
 - The internal finish step may update only the Task Capsule `TASK.md` status and the matching `docs/TASK_BOARD.md` row's command-owned cells: `ID`, `Title`, `Status`, and `Capsule`. It preserves human/mixed-owned `Notes` and any extra cells. Public callers reach it through `task close`.
-- The internal close-proof step may append only close evidence. Earlier finish close write sync in the same public transaction owns Task Board and registered managed checkpoint projection; neither phase invents broad prose or creates optional state documents.
+- The internal close-proof step may append only close evidence. Earlier finish close-plan guarded writes in the same public transaction owns Task Board and registered managed checkpoint projection; neither phase invents broad prose or creates optional state documents.
 - After close proof is recorded, close-source document edits intentionally invalidate the previous close proof. Make those edits before task close. If the edit is unavoidable, finish the intended edits, rerun `hadara task close --task T-XXXX --dry-run --json`, review the new plan hash when using reviewed mode, then rerun task close to append fresh close proof.
 - Task close reports additive close-evidence idempotency metadata. Repeating close with the same task/source/report hash is a no-op in execute mode; a changed source/report hash may append a new close proof with supersedes metadata for the previous proof. T-0264 rechecks `evidence.jsonl` immediately before append, so an execute report created before another same-key close proof was appended is converted to a no-op instead of appending a duplicate. This is a local append race recheck, not a global lock service.
 - Audit-close is no longer public and is normally reached through `task close`.

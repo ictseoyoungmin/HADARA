@@ -272,7 +272,7 @@
         }
       ],
       "properties": {
-        "step": { "enum": ["sync", "ready", "close", "audit-close"] },
+        "step": { "enum": ["guarded-writes", "ready", "close", "audit-close"] },
         "path": { "type": "string" },
         "writeBoundary": { "enum": ["task-local", "evidence-append"] },
         "action": { "enum": ["update", "insert"] },
@@ -292,7 +292,7 @@
       "required": ["seq", "step", "phase", "status", "writeBoundary", "mutated", "at"],
       "properties": {
         "seq": { "type": "integer", "minimum": 1 },
-        "step": { "enum": ["sync", "ready", "close", "audit-close"] },
+        "step": { "enum": ["guarded-writes", "ready", "close", "audit-close"] },
         "phase": { "enum": ["intent", "outcome"] },
         "status": { "enum": ["start", "executed", "satisfied", "blocked", "skipped"] },
         "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
@@ -307,7 +307,7 @@
       "additionalProperties": false,
       "required": ["step", "path", "writeBoundary", "status", "sequence"],
       "properties": {
-        "step": { "enum": ["sync", "ready", "close", "audit-close"] },
+        "step": { "enum": ["guarded-writes", "ready", "close", "audit-close"] },
         "path": { "type": "string" },
         "writeBoundary": { "enum": ["task-local", "evidence-append"] },
         "status": { "enum": ["before", "after", "conflict", "missing-conflict", "pending"] },

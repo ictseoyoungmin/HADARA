@@ -1244,7 +1244,7 @@ Read-only eligibility, guarded write plan, plan hash.
 
 Guarded write planning support와 execution.
 
-기존 close write-sync helper의 필요한 before/after hash, root confinement, temp write, rename 로직은 이곳으로 이동한다.
+기존 close-plan guarded write helper의 필요한 before/after hash, root confinement, temp write, rename 로직은 이곳으로 이동한다.
 
 ### `journal.ts`
 

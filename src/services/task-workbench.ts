@@ -4,7 +4,7 @@ import path from 'node:path';
 import { withInvocationFsMemo } from '../core/invocation-fs-memo';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/close';
-import { isCloseBookkeepingResolvableBlocker } from '../task/close';
+import { isCloseGuardedWriteResolvableBlocker } from '../task/close';
 import { findTaskCapsule } from '../task/task-capsule';
 import { summarizeTask } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
@@ -291,7 +291,7 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
   const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, task.capsule, task.title);
   const useFullChecks = detail === 'full';
   const closePlan = useFullChecks ? createTaskCloseReport(projectRoot, taskId, 'dry-run') : null;
-  const closePlanIssues = closePlan?.issues.filter((issue) => !isCloseBookkeepingResolvableBlocker(issue.code)) ?? [];
+  const closePlanIssues = closePlan?.issues.filter((issue) => !isCloseGuardedWriteResolvableBlocker(issue.code)) ?? [];
   const docsDoctor = useFullChecks ? createDocsProtocolConsistencyReport(projectRoot, now) : null;
   const profileDoctor = useFullChecks ? createProfileProtocolConsistencyReport(projectRoot, now) : null;
   const currentReady = closePlan !== null && !closePlanIssues.some((issue) => issue.severity === 'error');

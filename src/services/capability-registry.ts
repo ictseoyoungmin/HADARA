@@ -71,7 +71,7 @@ export type CommandRequiredness =
 export type CommandWriteBoundary =
   | 'read-only'
   | 'task-capsule-create'
-  | 'task-status-sync'
+  | 'task-close-guarded-writes'
   | 'evidence-append'
   | 'close-evidence-append'
   | 'managed-doc-section'
@@ -549,7 +549,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     scope: 'capsule',
     lifecycleStage: 'close',
     requiredness: 'primary',
-    writeBoundary: 'task-status-sync',
+    writeBoundary: 'task-close-guarded-writes',
     readOnly: false,
     risk: 'medium',
     actor: 'agent-worker',

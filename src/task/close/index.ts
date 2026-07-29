@@ -6,7 +6,7 @@ export {
   createTaskClosePlanReport,
   createReviewedTaskClosePlan,
   formatTaskClosePlanReport,
-  isCloseBookkeepingResolvableBlocker
+  isCloseGuardedWriteResolvableBlocker
 } from './plan';
 export {
   createTaskCloseReport,
