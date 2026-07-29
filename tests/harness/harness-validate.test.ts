@@ -244,7 +244,43 @@ describe('Harness Task Capsule validation', () => {
 
     expect(result.ok).toBe(true);
     expect(result.issues).toEqual([]);
-    expect(SOURCE_DOCUMENT_ROLE_TOKENS).toEqual(['implementation-source', 'reference', 'constraint', 'decision', 'background']);
+    expect(SOURCE_DOCUMENT_ROLE_TOKENS).toEqual(['implementation-source', 'reference', 'constraint', 'decision', 'design', 'background']);
+  });
+
+  it('accepts design as a canonical source role token', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Design source role');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| TBD | reference | active | TBD |', '| docs/design.md | design | active | Design source. |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.issues.map((issue) => issue.code)).not.toContain('TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN');
+  });
+
+  it('keeps Done invalid for risk state and points authors to Closed', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Risk done hint');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | Completed follow-up. | Done | ev:T-0001:test |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+    const issue = result.issues.find((entry) => entry.code === 'TASK_RISK_STATE_INVALID_TOKEN');
+
+    expect(issue).toMatchObject({
+      received: 'Done',
+      fixHint: expect.stringContaining('Use `Closed`'),
+      example: '| RF-1 | Follow-up | Completed follow-up. | Closed | evidence id or note |'
+    });
+    expect(issue?.allowedValues).not.toContain('Done');
   });
 
   it('accepts no-risk risk kind aliases without expanding canonical tokens', () => {

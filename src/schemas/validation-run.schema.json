@@ -35,6 +35,11 @@
             "mode": { "enum": ["file", "injected", "direct"] },
             "stdoutBytes": { "type": "number" },
             "stderrBytes": { "type": "number" },
+            "stdoutPreview": { "type": "string" },
+            "stderrPreview": { "type": "string" },
+            "stdoutTruncated": { "type": "boolean" },
+            "stderrTruncated": { "type": "boolean" },
+            "previewLimitBytes": { "type": "number" },
             "fallbackUsed": { "type": "boolean" },
             "fallbackReason": { "type": "string" }
           }

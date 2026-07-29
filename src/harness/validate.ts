@@ -581,9 +581,23 @@ function checkToken(
   if (domain) issue.field = domain.field;
   issue.received = value;
   issue.allowedValues = [...allowed];
+  applyTokenFixHint(issue, domainId, value);
   const aliases = vocab.vocabularyAliasesForDomain(domainId);
   if (Object.keys(aliases).length > 0) issue.aliases = aliases;
   issues.push(issue);
+}
+
+function applyTokenFixHint(issue: HarnessValidationIssue, domainId: string, value: string): void {
+  const normalized = value.trim().toLowerCase();
+  if (domainId === 'task.risk.state' && normalized === 'done') {
+    const fixHint = 'Use `Closed` when a risk or follow-up has been fully resolved; use `Mitigated` when the risk remains but has an active mitigation.';
+    issue.fixHint = fixHint;
+    issue.example = '| RF-1 | Follow-up | Completed follow-up. | Closed | evidence id or note |';
+    if (issue.remediationHint) {
+      issue.remediationHint.requiredChange = 'Replace risk/follow-up State `Done` with `Closed` for completed items, or `Mitigated` for addressed residual risk.';
+      issue.remediationHint.example = issue.example;
+    }
+  }
 }
 
 function taskTableIssue(code: string, message: string, relativePath: string, heading: string, example?: string): HarnessValidationIssue {

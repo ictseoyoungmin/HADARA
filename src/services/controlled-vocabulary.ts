@@ -20,7 +20,7 @@ export interface VocabularyDomain {
 
 export const TASK_STATUS_TOKENS = ['Draft', 'In Progress', 'Blocked', 'Done', 'Partial', 'Superseded', 'Archived'] as const;
 export const PLAN_STATUS_TOKENS = ['Pending', 'In Progress', 'Done', 'Blocked', 'Skipped'] as const;
-export const SOURCE_DOCUMENT_ROLE_TOKENS = ['implementation-source', 'reference', 'constraint', 'decision', 'background'] as const;
+export const SOURCE_DOCUMENT_ROLE_TOKENS = ['implementation-source', 'reference', 'constraint', 'decision', 'design', 'background'] as const;
 export const SOURCE_DOCUMENT_ROLE_ALIASES: Readonly<Record<string, typeof SOURCE_DOCUMENT_ROLE_TOKENS[number]>> = {
   requirement: 'constraint',
   requirements: 'constraint',

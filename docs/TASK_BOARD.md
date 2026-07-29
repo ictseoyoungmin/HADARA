@@ -737,3 +737,4 @@
 | T-0734 | Close plan guarded write integration | Done | tasks/T-0734-close-plan-guarded-write-integration | |
 | T-0735 | Close plan final contract cleanup | Done | tasks/T-0735-close-plan-final-contract-cleanup | |
 | T-0736 | Remove legacy current-state docs from code paths | Done | tasks/T-0736-remove-legacy-current-state-docs-from-code-paths | Focused cleanup validation passed; remaining status/MCP old-contract tests need update or follow-up. |
+| T-0737 | Improve validation tokens and command output | Done | tasks/T-0737-improve-validation-tokens-and-command-output | |

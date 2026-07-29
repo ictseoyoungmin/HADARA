@@ -57,6 +57,10 @@ describe('validation run', () => {
           mode: 'file',
           stdoutBytes: 2,
           stderrBytes: 0,
+          stdoutPreview: 'ok',
+          stderrPreview: '',
+          stdoutTruncated: false,
+          stderrTruncated: false,
           fallbackUsed: false
         }
       },
@@ -500,7 +504,18 @@ describe('validation run', () => {
     try {
       expect(
         handleValidationCommand({
-          args: ['validation', 'run', '--task', task.id, '--check', 'CLI check', '--', process.execPath, '-e', 'process.exit(0)'],
+          args: [
+            'validation',
+            'run',
+            '--task',
+            task.id,
+            '--check',
+            'CLI check',
+            '--',
+            process.execPath,
+            '-e',
+            'process.stdout.write("original stdout"); process.stderr.write("original stderr"); process.exit(0)'
+          ],
           projectRoot: root,
           jsonOutput: false
         })
@@ -512,9 +527,12 @@ describe('validation run', () => {
     const text = output.join('\n');
     expect(text).toContain(`[HADARA] validation run ${task.id}: Passed`);
     expect(text).toContain('[HADARA] child command');
-    expect(text).toContain(`command=${process.execPath} -e process.exit(0)`);
+    expect(text).toContain(`command=${process.execPath} -e process.stdout.write("original stdout"); process.stderr.write("original stderr"); process.exit(0)`);
     expect(text).toContain('failureClass=none');
-    expect(text).toContain('childOutput=not printed; stdout/stderr hashes are recorded in HADARA evidence');
+    expect(text).toContain('[HADARA] child stdout');
+    expect(text).toContain('original stdout');
+    expect(text).toContain('[HADARA] child stderr');
+    expect(text).toContain('original stderr');
     expect(text).toContain('[HADARA] evidence');
     expect(text).toContain('taskValidationRow=skipped not-updated');
     expect(text).toContain('acceptanceRows=not-updated');

@@ -43,7 +43,8 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     console.log(`failureClass=${report.execution.failureClass}`);
     console.log(`stdoutHash=${report.execution.stdoutHash}`);
     console.log(`stderrHash=${report.execution.stderrHash}`);
-    console.log(`childOutput=not printed; stdout/stderr hashes are recorded in HADARA evidence`);
+    printChildOutput('stdout', report.execution.capture.stdoutPreview, report.execution.capture.stdoutTruncated, report.execution.capture.previewLimitBytes);
+    printChildOutput('stderr', report.execution.capture.stderrPreview, report.execution.capture.stderrTruncated, report.execution.capture.previewLimitBytes);
     console.log(`[HADARA] evidence`);
     if (report.evidence) console.log(`id=${report.evidence.id}`);
     if (report.evidence?.appendLock.contended) console.log(`appendLock=waited ${report.evidence.appendLock.waitedMs}ms at ${report.evidence.appendLock.path}`);
@@ -57,6 +58,11 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
   }
   if (!report.ok || report.status !== 'Passed') process.exitCode = 6;
   return true;
+}
+
+function printChildOutput(name: 'stdout' | 'stderr', text: string, truncated: boolean, limitBytes: number): void {
+  console.log(`[HADARA] child ${name}${truncated ? ` (truncated to ${limitBytes} bytes)` : ''}`);
+  console.log(text.length > 0 ? text : '(empty)');
 }
 
 function formatTaskValidationRow(row: { mode: string; updated: boolean }): string {

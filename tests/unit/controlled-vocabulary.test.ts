@@ -4,6 +4,7 @@ import {
   ACCEPTANCE_STATUS_TOKENS,
   createVocabularyReport,
   findVocabularyDomain,
+  SOURCE_DOCUMENT_ROLE_TOKENS,
   SOURCE_DOCUMENT_STATUS_TOKENS,
   VOCABULARY_DOMAINS
 } from '../../src/services/controlled-vocabulary';
@@ -55,6 +56,8 @@ describe('controlled vocabulary (FD-006 / FD-009)', () => {
       'current-state canon': 'reference',
       requirement: 'constraint'
     });
+    expect(SOURCE_DOCUMENT_ROLE_TOKENS).toContain('design');
+    expect(createVocabularyReport('task.source.role').domains[0].allowed).toContain('design');
   });
 
   it('exposes canonical evidence category tokens separately from CLI-only aliases', () => {

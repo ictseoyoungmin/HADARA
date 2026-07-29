@@ -9,6 +9,8 @@ import { findTaskCapsule } from '../task/task-capsule';
 import { parseEvidenceIndexFile, EvidenceListRecord } from './evidence-list';
 import { formatMarkdownTableRow, isSafeMarkdownTableCell } from './markdown-table';
 
+const OUTPUT_PREVIEW_LIMIT_BYTES = 16 * 1024;
+
 export interface ValidationRunReport {
   schemaVersion: 'hadara.validation.run.v1';
   command: 'validation.run';
@@ -31,6 +33,11 @@ export interface ValidationRunReport {
       mode: 'file' | 'injected' | 'direct';
       stdoutBytes: number;
       stderrBytes: number;
+      stdoutPreview: string;
+      stderrPreview: string;
+      stdoutTruncated: boolean;
+      stderrTruncated: boolean;
+      previewLimitBytes: number;
       fallbackUsed: boolean;
       fallbackReason?: string;
     };
@@ -268,6 +275,7 @@ function spawnSyncWithFileCapture(command: string, args: string[], options: Spaw
         mode: 'file',
         stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
         stderrBytes: Buffer.byteLength(stderr, 'utf8'),
+        ...outputPreviewFields(stdout, stderr),
         fallbackUsed: false
       }
     };
@@ -288,7 +296,13 @@ function readCaptureFile(filePath: string): string {
 
 function executionCapture(executed: ValidationSpawnResult, modes: { direct: boolean; injected: boolean }): ValidationRunReport['execution']['capture'] {
   if (modes.direct) {
-    return { mode: 'direct', stdoutBytes: 0, stderrBytes: 0, fallbackUsed: false };
+    return {
+      mode: 'direct',
+      stdoutBytes: 0,
+      stderrBytes: 0,
+      ...outputPreviewFields('', ''),
+      fallbackUsed: false
+    };
   }
   if (executed.hadaraCapture) return executed.hadaraCapture;
   const stdout = executed.stdout ?? '';
@@ -297,7 +311,29 @@ function executionCapture(executed: ValidationSpawnResult, modes: { direct: bool
     mode: modes.injected ? 'injected' : 'file',
     stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
     stderrBytes: Buffer.byteLength(stderr, 'utf8'),
+    ...outputPreviewFields(stdout, stderr),
     fallbackUsed: false
+  };
+}
+
+function outputPreviewFields(stdout: string, stderr: string): Pick<ValidationRunReport['execution']['capture'], 'stdoutPreview' | 'stderrPreview' | 'stdoutTruncated' | 'stderrTruncated' | 'previewLimitBytes'> {
+  const stdoutPreview = boundedOutputPreview(stdout);
+  const stderrPreview = boundedOutputPreview(stderr);
+  return {
+    stdoutPreview: stdoutPreview.text,
+    stderrPreview: stderrPreview.text,
+    stdoutTruncated: stdoutPreview.truncated,
+    stderrTruncated: stderrPreview.truncated,
+    previewLimitBytes: OUTPUT_PREVIEW_LIMIT_BYTES
+  };
+}
+
+function boundedOutputPreview(text: string): { text: string; truncated: boolean } {
+  const bytes = Buffer.byteLength(text, 'utf8');
+  if (bytes <= OUTPUT_PREVIEW_LIMIT_BYTES) return { text, truncated: false };
+  return {
+    text: Buffer.from(text, 'utf8').subarray(0, OUTPUT_PREVIEW_LIMIT_BYTES).toString('utf8'),
+    truncated: true
   };
 }
 
@@ -461,7 +497,13 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       commandStarted: false,
       failureKind: 'launch-error',
       failureClass: 'environment-setup',
-      capture: { mode: 'direct', stdoutBytes: 0, stderrBytes: 0, fallbackUsed: false }
+      capture: {
+        mode: 'direct',
+        stdoutBytes: 0,
+        stderrBytes: 0,
+        ...outputPreviewFields('', ''),
+        fallbackUsed: false
+      }
     },
     status: 'Blocked',
     detail: message,
