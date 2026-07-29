@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
 import { appendEvidenceWithResult, EvidenceAppendResult, EvidenceTaskDirectoryError } from '../../evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeGuardedTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport } from './proof';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeGuardedTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport, type TaskCloseProofAppendGuard } from './proof';
 import { createCloseGuardedWritePlan, executeReviewedCloseGuardedWrites, CloseGuardedWritePlan } from './guardedWrites';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction } from '../lifecycle-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../authoring-guidance';
@@ -541,23 +541,46 @@ function executeTaskClosePlan(
   let reports = initialReports;
   let steps = initialSteps;
   let guardedWriteStatus = getGuardedWriteStatus(reports.guardedWrites);
-  if (!proofAppendGuard && closePlanExecutionMayNeedProofAppendGuard(steps, guardedWriteStatus)) {
-    return createExecuteRefusal(
-      taskId,
-      actor,
-      'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED',
-      'task close execute refused before mutation because close proof append requires a transaction operation-marker guard.',
-      currentPlanHash,
-      steps,
-      {
-        requestedPlanHash,
+  let proofGuard: TaskCloseProofAppendGuard | undefined;
+  if (closePlanExecutionMayNeedProofAppendGuard(steps, guardedWriteStatus)) {
+    try {
+      proofGuard = proofAppendGuard?.();
+    } catch (error) {
+      return createExecuteRefusal(
+        taskId,
+        actor,
+        'TASK_CLOSE_PROOF_APPEND_GUARD_PROVIDER_FAILED',
+        `task close execute refused before mutation because close proof append guard provider failed: ${error instanceof Error ? error.message : String(error)}`,
         currentPlanHash,
-        planHashMatched: true,
-        executedSteps: [],
-        stoppedAt: guardedWriteStatus === 'required' ? 'guarded-writes' : 'close'
-      },
-      reports
-    );
+        steps,
+        {
+          requestedPlanHash,
+          currentPlanHash,
+          planHashMatched: true,
+          executedSteps: [],
+          stoppedAt: guardedWriteStatus === 'required' ? 'guarded-writes' : 'close'
+        },
+        reports
+      );
+    }
+    if (!proofGuard) {
+      return createExecuteRefusal(
+        taskId,
+        actor,
+        'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED',
+        'task close execute refused before mutation because close proof append requires a transaction operation-marker guard.',
+        currentPlanHash,
+        steps,
+        {
+          requestedPlanHash,
+          currentPlanHash,
+          planHashMatched: true,
+          executedSteps: [],
+          stoppedAt: guardedWriteStatus === 'required' ? 'guarded-writes' : 'close'
+        },
+        reports
+      );
+    }
   }
   if (guardedWriteStatus === 'required') {
     // Verify close would succeed against a virtual post-guarded-writes snapshot
@@ -661,7 +684,7 @@ function executeTaskClosePlan(
     }
     if (closeReport.ok) {
       try {
-        const guard = proofAppendGuard?.();
+        const guard = proofGuard;
         if (!guard) {
           throw new TaskCloseProofAppendRevalidationError({
             severity: 'error',

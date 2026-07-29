@@ -172,44 +172,42 @@ function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[],
 }
 
 function recommendationFromLatestDoneHandoff(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
-  for (const row of [...boardRows].reverse()) {
-    if (row.status.trim().toLowerCase() !== 'done') continue;
-    const capsule = findTaskCapsule(projectRoot, row.taskId);
-    if (!capsule) continue;
-    const handoffPath = path.join(capsule.dir, 'HANDOFF.md');
-    if (!fs.existsSync(handoffPath)) continue;
-    const nextStep = readStructuredHandoffNextStep(fs.readFileSync(handoffPath, 'utf8'));
-    if (!nextStep) continue;
-    const capsulePath = toPortablePath(path.relative(projectRoot, capsule.dir));
-    const continuation = continuationFromTaskHandoffStep({
-      ...nextStep,
-      sourceTaskId: row.taskId,
-      sourceCapsulePath: capsulePath
-    });
-    if (!continuation) continue;
-    if (continuation.disposition !== 'actionable' && continuation.disposition !== 'waiting-for-operator') continue;
-    const requiredReading = [
-      `${capsulePath}/HANDOFF.md`,
-      ...(continuation.references ?? []).map((reference) => reference.path)
-    ].filter((entry, index, all) => all.indexOf(entry) === index && fs.existsSync(path.join(projectRoot, entry)));
-    const createCommandAllowed = continuation.disposition === 'actionable' && continuation.createCommandAllowed === true;
-    return {
-      taskId: 'TBD',
-      title: continuation.title,
-      reason: `Latest Done Task Capsule HANDOFF continuation from ${capsulePath}/HANDOFF.md.`,
-      source: `${capsulePath}/HANDOFF.md`,
-      sourceKind: 'task-handoff-continuation',
-      taskBoardStatus: null,
-      taskBoardPath: 'docs/TASK_BOARD.md',
-      taskCapsulePresent: false,
-      capsule: null,
-      requiredReading,
-      createCommand: createCommandAllowed ? `hadara task create ${shellQuote(continuation.title)}` : null,
-      operatorGuidance: continuation.reason ?? 'Review task-local HANDOFF continuation before creating follow-up work.',
-      createCommandAllowed
-    };
-  }
-  return null;
+  const row = [...boardRows].reverse().find((candidate) => candidate.status.trim().toLowerCase().startsWith('done'));
+  if (!row) return null;
+  const capsule = findTaskCapsule(projectRoot, row.taskId);
+  if (!capsule) return null;
+  const handoffPath = path.join(capsule.dir, 'HANDOFF.md');
+  if (!fs.existsSync(handoffPath)) return null;
+  const nextStep = readStructuredHandoffNextStep(fs.readFileSync(handoffPath, 'utf8'));
+  if (!nextStep) return null;
+  const capsulePath = toPortablePath(path.relative(projectRoot, capsule.dir));
+  const continuation = continuationFromTaskHandoffStep({
+    ...nextStep,
+    sourceTaskId: row.taskId,
+    sourceCapsulePath: capsulePath
+  });
+  if (!continuation) return null;
+  if (continuation.disposition !== 'actionable' && continuation.disposition !== 'waiting-for-operator') return null;
+  const requiredReading = [
+    `${capsulePath}/HANDOFF.md`,
+    ...(continuation.references ?? []).map((reference) => reference.path)
+  ].filter((entry, index, all) => all.indexOf(entry) === index && fs.existsSync(path.join(projectRoot, entry)));
+  const createCommandAllowed = continuation.disposition === 'actionable' && continuation.createCommandAllowed === true;
+  return {
+    taskId: 'TBD',
+    title: continuation.title,
+    reason: `Latest Done Task Capsule HANDOFF continuation from ${capsulePath}/HANDOFF.md.`,
+    source: `${capsulePath}/HANDOFF.md`,
+    sourceKind: 'task-handoff-continuation',
+    taskBoardStatus: null,
+    taskBoardPath: 'docs/TASK_BOARD.md',
+    taskCapsulePresent: false,
+    capsule: null,
+    requiredReading,
+    createCommand: createCommandAllowed ? `hadara task create ${shellQuote(continuation.title)}` : null,
+    operatorGuidance: continuation.reason ?? 'Review task-local HANDOFF continuation before creating follow-up work.',
+    createCommandAllowed
+  };
 }
 
 function readStructuredHandoffNextStep(content: string): { step: string; reason: string; requiredReading: string; disposition?: string; createTask?: string } | null {

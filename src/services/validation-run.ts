@@ -19,7 +19,10 @@ export interface ValidationRunReport {
   taskId: string;
   check: string;
   cwd: string;
-  argv: string[];
+  argvHash: string;
+  argvPreview: string[];
+  argvRedacted: boolean;
+  rawArgv?: string[];
   execution: {
     exitCode: number | null;
     signal: string | null;
@@ -109,6 +112,7 @@ export interface ValidationRunOptions {
   directResult?: ValidationRunReport['result'];
   directSummary?: string;
   showRawOutput?: boolean;
+  showRawArgv?: boolean;
   spawnSyncFn?: ValidationSpawnSync;
 }
 
@@ -153,12 +157,15 @@ export function createValidationRunReport(projectRoot: string, options: Validati
 
   const blockedReason = result === 'Blocked' ? executionSemantics.blockedReason : null;
   const detail = validationDetail(options, result, executed.status, durationMs, blockedReason);
+  const argvFields = argvReportFields(options.argv, Boolean(options.showRawArgv));
+  const commandPreview = validationCommandText(argvFields.argvPreview);
   const summary = [
     `Validation "${options.check}" ${result.toLowerCase()}${options.directResult ? ' from direct result' : ''}`,
     ...(options.directSummary ? [options.directSummary] : []),
     ...(blockedReason ? [blockedReason] : []),
     `failureClass: ${failureClass}`,
-    `command: ${options.argv.length > 0 ? options.argv.join(' ') : 'direct-result'}`,
+    `command: ${commandPreview}`,
+    `argvHash: ${argvFields.argvHash}`,
     `exitCode: ${executed.status ?? 'null'}`,
     `signal: ${executed.signal ?? 'null'}`,
     `durationMs: ${durationMs}`,
@@ -192,7 +199,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     });
   }
   const taskValidationRow = options.updateTask
-    ? updateTaskValidationRow(projectRoot, task.dir, options.check, options.argv.join(' '), result, detail, evidenceId)
+    ? updateTaskValidationRow(projectRoot, task.dir, options.check, commandPreview, result, detail, evidenceId)
     : {
         mode: 'skipped' as const,
         updated: false,
@@ -208,7 +215,10 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     taskId: options.taskId,
     check: options.check,
     cwd: projectRoot,
-    argv: options.argv,
+    argvHash: argvFields.argvHash,
+    argvPreview: argvFields.argvPreview,
+    argvRedacted: argvFields.argvRedacted,
+    ...(argvFields.rawArgv ? { rawArgv: argvFields.rawArgv } : {}),
     execution: {
       exitCode: executed.status,
       signal: executed.signal,
@@ -374,6 +384,31 @@ function prepareOutputPreviewText(text: string, showRawOutput: boolean): { text:
     redactionFindingCount: redaction.findings.reduce((sum, finding) => sum + finding.count, 0),
     controlSequenceFindingCount: sanitized.removedCount
   };
+}
+
+function argvReportFields(argv: string[], showRawArgv: boolean): Pick<ValidationRunReport, 'argvHash' | 'argvPreview' | 'argvRedacted' | 'rawArgv'> {
+  const prepared: Array<{ text: string; redactionFindingCount: number }> = [];
+  let redactNext = false;
+  for (const arg of argv) {
+    if (redactNext) {
+      prepared.push({ text: '[REDACTED]', redactionFindingCount: 1 });
+      redactNext = false;
+      continue;
+    }
+    const entry = prepareOutputPreviewText(arg, false);
+    prepared.push(entry);
+    if (isSensitiveArgName(arg)) redactNext = true;
+  }
+  return {
+    argvHash: hashText(argv.join('\0')),
+    argvPreview: prepared.map((entry) => entry.text),
+    argvRedacted: prepared.some((entry) => entry.redactionFindingCount > 0),
+    ...(showRawArgv ? { rawArgv: argv } : {})
+  };
+}
+
+function isSensitiveArgName(arg: string): boolean {
+  return /^--?(?:api[-_]?key|token|password|secret|private[-_]?key|authorization)$/i.test(arg.trim());
 }
 
 function stripTerminalControls(text: string): { text: string; removedCount: number } {
@@ -580,7 +615,7 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
     taskId: options.taskId,
     check: options.check,
     cwd: projectRoot,
-    argv: options.argv,
+    ...argvReportFields(options.argv, Boolean(options.showRawArgv)),
     execution: {
       exitCode: null,
       signal: null,

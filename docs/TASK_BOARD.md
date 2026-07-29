@@ -736,6 +736,7 @@
 | T-0733 | Close transaction proof and marker hardening | Done | tasks/T-0733-close-transaction-proof-and-marker-hardening | |
 | T-0734 | Close plan guarded write integration | Done | tasks/T-0734-close-plan-guarded-write-integration | |
 | T-0735 | Close plan final contract cleanup | Done | tasks/T-0735-close-plan-final-contract-cleanup | |
-| T-0736 | Remove legacy current-state docs from code paths | Done | tasks/T-0736-remove-legacy-current-state-docs-from-code-paths | Focused cleanup validation passed; remaining status/MCP old-contract tests need update or follow-up. |
+| T-0736 | Remove legacy current-state docs from code paths | Done | tasks/T-0736-remove-legacy-current-state-docs-from-code-paths | Focused cleanup validation passed. |
 | T-0737 | Improve validation tokens and command output | Done | tasks/T-0737-improve-validation-tokens-and-command-output | |
 | T-0738 | Release blocker registry and safety hotfixes | Done | tasks/T-0738-release-blocker-registry-and-safety-hotfixes | |
+| T-0739 | Harden close guard validation output and continuation consumption | Done | tasks/T-0739-harden-close-guard-validation-output-and-continuation-consumptio | |

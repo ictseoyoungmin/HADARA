@@ -20,6 +20,19 @@ describe('redactSecrets', () => {
     expect(containsSecret('test output is clean')).toBe(false);
   });
 
+  it('does not treat task-selection-continuation filenames as OpenAI keys', () => {
+    const input = 'npx vitest run tests/unit/task-selection-continuation.test.ts';
+
+    expect(containsSecret(input)).toBe(false);
+    expect(redactSecrets(input)).toBe(input);
+  });
+
+  it('still redacts OpenAI-style keys with token boundaries', () => {
+    const input = 'api_key=sk-abcdefghijklmnopqrstuvwxyz token sk-proj-abcdefghijklmnopqrstuvwxyz';
+
+    expect(redactSecrets(input)).toBe('api_key=[REDACTED] token [REDACTED]');
+  });
+
   it('reports high and critical findings by pattern family', () => {
     const report = createRedactionReport(
       [

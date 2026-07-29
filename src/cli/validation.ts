@@ -32,14 +32,17 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     updateTask: getFlag(optionArgs, '--update-task'),
     directResult,
     directSummary: getStringOption(optionArgs, '--direct-summary'),
-    showRawOutput: getFlag(optionArgs, '--show-raw-output')
+    showRawOutput: getFlag(optionArgs, '--show-raw-output'),
+    showRawArgv: getFlag(optionArgs, '--show-raw-argv')
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(`[HADARA] validation run ${taskId}: ${report.status}`);
     console.log(`[HADARA] child command`);
-    console.log(`command=${report.argv.join(' ')}`);
+    console.log(`argvHash=${report.argvHash}`);
+    console.log(`argvPreview=${report.argvPreview.join(' ')}`);
+    console.log(`argvRedacted=${report.argvRedacted}`);
     console.log(`exitCode=${report.execution.exitCode ?? 'null'} signal=${report.execution.signal ?? 'null'} durationMs=${report.execution.durationMs}`);
     console.log(`failureClass=${report.execution.failureClass}`);
     console.log(`stdoutHash=${report.execution.stdoutHash}`);

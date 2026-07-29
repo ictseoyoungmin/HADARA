@@ -593,7 +593,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'validation.run',
-    command: 'hadara validation run --task <task-id> --check <name> [--timeout-ms <ms>] [--update-task] [--direct-result passed|failed|blocked] [--direct-summary <text>] [--resolves <id>] [--supersedes <id>] -- <command...>',
+    command: 'hadara validation run --task <task-id> --check <name> [--timeout-ms <ms>] [--update-task] [--show-raw-output] [--show-raw-argv] [--direct-result passed|failed|blocked] [--direct-summary <text>] [--resolves <id>] [--supersedes <id>] -- <command...>',
     summary: 'Run a validation command, append execution evidence, refresh evidence projection, auto-resolve earlier failed attempts for the same check, and optionally sync the matching TASK.md Validation row with --update-task.',
     canonical: true,
     appearsInDefaultHelp: true,
@@ -616,7 +616,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Record direct validation result', 'hadara validation run --task T-0001 --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json', 'When the wrapper cannot launch child processes in the current tool environment but the same command was run directly.')
     ],
     related: ['evidence.add-command', 'evidence.project', 'task.close'],
-    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. Reports expose the controlled status token separately from concise detail; result remains a deprecated compatibility alias. execution.failureClass automatically maps a started non-zero validation to assertion, a timeout to timeout, and launch/permission/command preparation failures to environment-setup while failureKind retains low-level detail. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process. The evidence response includes appendLock diagnostics for task-scoped append-lock waits.',
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. Reports expose the controlled status token separately from concise detail; result remains a deprecated compatibility alias. execution.failureClass automatically maps a started non-zero validation to assertion, a timeout to timeout, and launch/permission/command preparation failures to environment-setup while failureKind retains low-level detail. Child stdout/stderr previews and argv previews are redacted by default; use --show-raw-output or --show-raw-argv only when the content is safe to expose. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process. The evidence response includes appendLock diagnostics for task-scoped append-lock waits.',
     conflictsWith: []
   },
   {

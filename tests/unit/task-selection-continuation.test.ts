@@ -125,6 +125,64 @@ describe('task-selection-status-v2 continuation routing (T-0658-class fix)', () 
     expect(report.primaryNextAction?.command).toBeUndefined();
   });
 
+  it('does not revive an older actionable HANDOFF after a newer Done task declares terminal continuation', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-local-continuation-consumed-'));
+    roots.push(root);
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    const older = createTaskCapsule(root, 'Older continuation source');
+    const newer = createTaskCapsule(root, 'Newer terminal source');
+    const olderCapsule = path.relative(root, older.dir).split(path.sep).join('/');
+    const newerCapsule = path.relative(root, newer.dir).split(path.sep).join('/');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Capsule | Notes |',
+        '|---|---|---|---|---|',
+        `| ${older.id} | ${older.title} | Done | ${olderCapsule} | |`,
+        `| ${newer.id} | ${newer.title} | Done | ${newerCapsule} | |`,
+        ''
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(older.dir, 'HANDOFF.md'),
+      [
+        `# ${older.id} HANDOFF`,
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Disposition | Create Task | Reason | Required Reading |',
+        '|---|---|---|---|---|',
+        '| Repeated follow-up | actionable | yes | Older guidance should be superseded. | docs/TASK_WORKFLOW_COMMANDS.md |',
+        ''
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(newer.dir, 'HANDOFF.md'),
+      [
+        `# ${newer.id} HANDOFF`,
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Disposition | Create Task | Reason | Required Reading |',
+        '|---|---|---|---|---|',
+        '| No continuation | terminal | no | Latest task consumes older continuation. | docs/TASK_WORKFLOW_COMMANDS.md |',
+        ''
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'), '# Workflow\n', 'utf8');
+
+    const report = createTaskSelectionStatusV2Report(root);
+
+    expect(report.phase).toBe('idle');
+    expect(report.recommendations).toEqual([]);
+    expect(report.selection.selectedSourceKind).toBeNull();
+  });
+
   it('leaves idle unchanged for terminal, blocked, and unresolved dispositions (MVP scope boundary)', () => {
     for (const disposition of ['terminal', 'blocked', 'unresolved'] as const) {
       const root = tempProjectWithHandoff({ disposition, title: 'x', createTask: 'no' });

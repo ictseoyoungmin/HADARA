@@ -1153,6 +1153,87 @@ describe('task close report', () => {
     expect(closeProofCount(task.dir)).toBe(0);
   });
 
+  it('refuses direct close-plan execute before guarded writes when the proof append guard provider returns undefined', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan undefined guard before writes');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan undefined guard before writes | Done |`, `| ${task.id} | Close plan undefined guard before writes | Draft |`),
+      'utf8'
+    );
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+    const dryRun = createTaskClosePlanReport(root, task.id);
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash,
+      proofAppendGuard: () => undefined
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED'
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
+  it('refuses direct close-plan execute before guarded writes when the proof append guard provider throws', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan throwing guard before writes');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace(`| ${task.id} | Close plan throwing guard before writes | Done |`, `| ${task.id} | Close plan throwing guard before writes | Draft |`),
+      'utf8'
+    );
+    const beforeTask = fs.readFileSync(taskPath, 'utf8');
+    const beforeBoard = fs.readFileSync(boardPath, 'utf8');
+    const dryRun = createTaskClosePlanReport(root, task.id);
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash,
+      proofAppendGuard: () => {
+        throw new Error('guard unavailable');
+      }
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute-refused',
+      execution: {
+        stoppedAt: 'guarded-writes',
+        executedSteps: []
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARD_PROVIDER_FAILED',
+      message: expect.stringContaining('guard unavailable')
+    }));
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(beforeTask);
+    expect(fs.readFileSync(boardPath, 'utf8')).toBe(beforeBoard);
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
   it('stops before a guarded write without lifecycle mutation or close proof', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction before write fault');

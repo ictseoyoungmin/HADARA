@@ -37,7 +37,7 @@ export const REDACTION_PATTERNS: RedactionPattern[] = [
   {
     id: 'openai-api-key',
     description: 'OpenAI-style API key',
-    regex: /sk-[A-Za-z0-9_-]{16,}/g,
+    regex: /(?<![A-Za-z0-9])sk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{16,}/g,
     severity: 'critical',
     replacement: '[REDACTED]',
     enabledByDefault: true

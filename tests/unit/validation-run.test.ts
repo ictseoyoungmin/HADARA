@@ -150,7 +150,45 @@ describe('validation run', () => {
     expect(report.execution.capture.stderrPreview).toContain('Authorization: Bearer [REDACTED]');
     expect(report.execution.capture.stdoutPreview).not.toContain('\u001b');
     expect(report.execution.capture.stdoutPreview).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+    expect(report.rawArgv).toBeUndefined();
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
+  it('redacts validation argv previews by default and exposes raw argv only by explicit opt-in', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation argv redaction');
+    const secretScript = 'const token="actual-secret"; process.stdout.write("ok")';
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Sensitive argv',
+      argv: [process.execPath, '--token', 'actual-secret', '-e', secretScript]
+    });
+
+    expect(report.argvHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.argvPreview).toEqual([
+      process.execPath,
+      '--token',
+      '[REDACTED]',
+      '-e',
+      'const token=[REDACTED] process.stdout.write("ok")'
+    ]);
+    expect(report.argvRedacted).toBe(true);
+    expect(report.rawArgv).toBeUndefined();
+    expect(JSON.stringify(report)).not.toContain('actual-secret');
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).not.toContain('actual-secret');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+
+    const rawReport = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Sensitive argv raw',
+      argv: [process.execPath, '--token', 'actual-secret', '-e', secretScript],
+      showRawArgv: true
+    });
+
+    expect(rawReport.argvPreview).toContain('[REDACTED]');
+    expect(rawReport.rawArgv).toEqual([process.execPath, '--token', 'actual-secret', '-e', secretScript]);
+    expect(validateSchema('hadara.validation.run.v1', rawReport).ok).toBe(true);
   });
 
   it('exposes unredacted sanitized previews only when raw output is explicitly requested', () => {
@@ -532,6 +570,9 @@ describe('validation run', () => {
     const report = JSON.parse(output.join('\n'));
     expect(report.schemaVersion).toBe('hadara.validation.run.v1');
     expect(report.result).toBe('Passed');
+    expect(report.argvHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.argvPreview).toEqual([process.execPath, '-e', 'process.exit(0)']);
+    expect(report.rawArgv).toBeUndefined();
     expect(report.execution.directResult).toBe(true);
     expect(report.taskValidationRow.updated).toBe(true);
     expect(report.evidence.tags).toContain('resolves:ev:T-0000:old');
@@ -597,7 +638,9 @@ describe('validation run', () => {
     const text = output.join('\n');
     expect(text).toContain(`[HADARA] validation run ${task.id}: Passed`);
     expect(text).toContain('[HADARA] child command');
-    expect(text).toContain(`command=${process.execPath} -e process.stdout.write("original stdout"); process.stderr.write("original stderr"); process.exit(0)`);
+    expect(text).toContain('argvHash=sha256:');
+    expect(text).toContain(`argvPreview=${process.execPath} -e process.stdout.write("original stdout"); process.stderr.write("original stderr"); process.exit(0)`);
+    expect(text).toContain('argvRedacted=false');
     expect(text).toContain('failureClass=none');
     expect(text).toContain('[HADARA] child stdout');
     expect(text).toContain('original stdout');
