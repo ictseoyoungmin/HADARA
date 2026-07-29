@@ -57,7 +57,8 @@ describe('task close source', () => {
     expect(report.sourceUnits.find((unit) => unit.path.endsWith('EVIDENCE.md'))).toBeUndefined();
     expect(report.sourceUnits.find((unit) => unit.path.endsWith('evidence.jsonl'))?.selector).toBe('readiness-summary');
     expect(report.sourceUnits.find((unit) => unit.path === 'docs/TASK_BOARD.md')?.selector).toBe(`task:${task.id}:command-owned-cells`);
-    expect(report.excludedRawInputs).toEqual(expect.arrayContaining(['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md']));
+    expect(report.excludedRawInputs).toEqual(expect.arrayContaining([`tasks/${task.id}-close-source-ready/HANDOFF.md`, 'docs/TASK_BOARD.md']));
+    expect(report.excludedRawInputs).not.toEqual(expect.arrayContaining(['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md']));
   });
 
   it('uses the close-source payload hash for close and audit source comparison', () => {

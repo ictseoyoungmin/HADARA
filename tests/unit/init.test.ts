@@ -58,7 +58,6 @@ describe('init profiles', () => {
       '.hadara/scaffold.json',
       '.hadara/docs-registry.json',
       '.hadara/slot-registry.json',
-      'docs/PROJECT_STATE.md',
       'docs/TASK_BOARD.md',
       'docs/HADARA_WORKFLOW.md',
       'tasks'
@@ -105,7 +104,6 @@ describe('init profiles', () => {
       '.hadara/context/HADARA_CONTEXT.md',
       'AGENTS.md',
       'docs/HADARA_WORKFLOW.md',
-      'docs/PROJECT_STATE.md',
       'docs/TASK_BOARD.md'
     ]));
     expect(registry.documents.map((doc: any) => doc.path)).not.toEqual(expect.arrayContaining([
@@ -118,11 +116,7 @@ describe('init profiles', () => {
       'docs/TASK_WORKFLOW_COMMANDS.md',
       'docs/DOC_REGISTRY.md'
     ]));
-    expect(registry.documents.find((doc: any) => doc.path === '.hadara/state/current.json')).toMatchObject({
-      status: 'reference',
-      readWhen: [],
-      requiredReading: false
-    });
+    expect(registry.documents.map((doc: any) => doc.path)).not.toContain('.hadara/state/current.json');
 
     expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
@@ -244,15 +238,13 @@ describe('init profiles', () => {
     const standard = tempProject();
     initProject(standard, 'standard');
     expect(exists(standard, '.hadara/context/HADARA_CONTEXT.md')).toBe(true);
-    expect(exists(standard, 'docs/PROJECT_STATE.md')).toBe(true);
+    expect(exists(standard, 'docs/PROJECT_STATE.md')).toBe(false);
     expect(exists(standard, 'docs/AGENT_HANDOFF.md')).toBe(false);
 
     const governed = tempProject();
     initProject(governed, 'governed');
 
-    for (const file of ['docs/AGENT_HANDOFF.md']) {
-      expect(exists(governed, file), file).toBe(true);
-    }
+    expect(exists(governed, 'docs/AGENT_HANDOFF.md')).toBe(false);
     for (const file of ['docs/ARCHITECTURE.md', 'docs/ROADMAP.md', 'docs/DECISIONS.md', 'docs/SECURITY_MODEL.md']) {
       expect(exists(governed, file), file).toBe(false);
     }
@@ -260,7 +252,7 @@ describe('init profiles', () => {
     expect(exists(governed, 'docs/TASK_WORKFLOW_COMMANDS.md')).toBe(false);
     expect(JSON.parse(read(governed, '.hadara/scaffold.json')).profile).toBe('governed');
     for (const root of [basic, standard, governed]) {
-      expect(JSON.parse(read(root, '.hadara/state/current.json')).currentRelease).toBe('unversioned');
+      expect(exists(root, '.hadara/state/current.json')).toBe(false);
       expect(JSON.parse(read(root, '.hadara/scaffold.json')).createdWith).toBe(`hadara@${packageJson.version}`);
     }
   });
@@ -296,7 +288,7 @@ describe('init profiles', () => {
     ]);
     expect((report as any).actions).toEqual(expect.arrayContaining([
       expect.objectContaining({ path: 'AGENTS.md', disposition: 'create' }),
-      expect.objectContaining({ path: 'docs/PROJECT_STATE.md', disposition: 'create' }),
+      expect.objectContaining({ path: 'docs/TASK_BOARD.md', disposition: 'create' }),
       expect.objectContaining({ path: 'tasks', disposition: 'create' })
     ]));
     expect(exists(root, 'AGENTS.md')).toBe(false);
@@ -637,9 +629,10 @@ describe('init profiles', () => {
     expect(report.writes).toEqual(expect.arrayContaining([
       '.hadara/docs-registry.json',
       '.hadara/scaffold.json',
-      '.hadara/state/current.json',
+      '.hadara/slot-registry.json',
       'AGENTS.md',
       '.gitignore',
+      'docs/TASK_BOARD.md',
       'tasks'
     ]));
     expect(read(root, '.gitignore')).toContain('dist\n');
@@ -647,9 +640,7 @@ describe('init profiles', () => {
     expect(read(root, 'AGENTS.md')).toContain('Keep custom guidance.');
     expect(read(root, 'AGENTS.md')).toContain('hadara:managed:start agent-entry');
     expect(read(root, 'docs/ARCHITECTURE.md')).toBe('# Existing architecture\n');
-    const state = JSON.parse(read(root, '.hadara/state/current.json'));
-    expect(state.currentRelease).toBe('2.3.4');
-    expect(state.nextWork.title).toBe('Establish HADARA adoption baseline');
+    expect(exists(root, '.hadara/state/current.json')).toBe(false);
     const scaffold = JSON.parse(read(root, '.hadara/scaffold.json'));
     expect(scaffold).toMatchObject({
       docsRegistrySchema: 'hadara.docsRegistry.v3',
@@ -693,7 +684,7 @@ describe('init profiles', () => {
     expect(report.ok).toBe(true);
     expect(read(root, 'docs/TASK_BOARD.md').match(/^# .+$/gm)).toEqual(['# Existing task board']);
     const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
-    for (const docPath of ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/AGENT_HANDOFF.md']) {
+    for (const docPath of ['docs/TASK_BOARD.md']) {
       expect(registry.documents).toContainEqual(expect.objectContaining({
         path: docPath,
         owner: 'project',
@@ -738,18 +729,14 @@ describe('init profiles', () => {
     expect(exists(root, 'AGENTS.md')).toBe(false);
   });
 
-  it('routes governed handoff history to task-local sources instead of empty placeholder tables', () => {
+  it('does not create global governed handoff placeholders', () => {
     const root = tempProject();
 
     initProject(root, 'governed');
 
-    const handoff = read(root, 'docs/AGENT_HANDOFF.md');
-    expect(handoff).not.toContain('## Last 3 Completed Tasks');
-    expect(handoff).not.toContain('| Completed tasks | TBD |');
-    expect(handoff).not.toContain('| Validation history | TBD |');
-    expect(handoff).toContain('| Task queue | `docs/TASK_BOARD.md` |');
-    expect(handoff).toContain('| Task handoffs | `tasks/T-*/HANDOFF.md` |');
-    expect(handoff).toContain('| Task evidence | `tasks/T-*/evidence.jsonl` |');
+    expect(exists(root, 'docs/AGENT_HANDOFF.md')).toBe(false);
+    expect(read(root, 'AGENTS.md')).toContain('docs/TASK_BOARD.md');
+    expect(read(root, 'AGENTS.md')).not.toContain('docs/AGENT_HANDOFF.md');
   });
 
   it('keeps generated 0.4 docs free of product-specific defaults', () => {
@@ -938,11 +925,11 @@ describe('init profiles', () => {
     const upgradedRegistry = JSON.parse(read(root, '.hadara/docs-registry.json'));
     expect(upgradedRegistry.projectProfile).toBe('hadara-dev');
     expect(upgradedRegistry.documents.map((doc: any) => doc.path)).toEqual(expect.arrayContaining([
-      'docs/AGENT_HANDOFF.md'
+      '.hadara/context/HADARA_CONTEXT.md'
     ]));
     expect(upgradedRegistry.documents.map((doc: any) => doc.path)).not.toContain('docs/SECURITY_MODEL.md');
     expect(exists(root, 'docs/SECURITY_MODEL.md')).toBe(false);
-    expect(exists(root, 'docs/AGENT_HANDOFF.md')).toBe(true);
+    expect(exists(root, 'docs/AGENT_HANDOFF.md')).toBe(false);
     expect(exists(root, 'tasks/.gitkeep')).toBe(false);
   });
 });

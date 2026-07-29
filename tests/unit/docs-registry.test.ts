@@ -88,9 +88,7 @@ describe('Phase 7.3 docs registry', () => {
     expect(readRegistry(standard).documents.map((doc) => doc.path)).not.toEqual(
       expect.arrayContaining(['docs/DEVELOPMENT_SLICES.md', 'docs/SECURITY_MODEL.md'])
     );
-    expect(readRegistry(governed).documents.map((doc) => doc.path)).toEqual(
-      expect.arrayContaining(['docs/AGENT_HANDOFF.md'])
-    );
+    expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toContain('docs/AGENT_HANDOFF.md');
     expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toEqual(
       expect.arrayContaining(['docs/SECURITY_MODEL.md', 'docs/ROADMAP.md'])
     );
@@ -184,16 +182,12 @@ describe('Phase 7.3 docs registry', () => {
     const readMap = createDocsReadMapReport(root, 'T-0001');
 
     expect(list.ok).toBe(true);
-    expect(list.documents.find((doc) => doc.path === 'docs/AGENT_HANDOFF.md')).toMatchObject({
-      profiles: ['governed'],
-      applicableProfiles: ['governed'],
-      origin: { type: 'hadara-scaffold', generator: 'hadara init' }
-    });
+    expect(list.documents.find((doc) => doc.path === 'docs/AGENT_HANDOFF.md')).toBeUndefined();
     expect(doctor).toMatchObject({
       ok: true,
       summary: expect.objectContaining({ registryPresent: true })
     });
-    expect(readMap.readFirst.map((entry) => entry.path)).toContain('docs/AGENT_HANDOFF.md');
+    expect(readMap.readFirst.map((entry) => entry.path)).not.toContain('docs/AGENT_HANDOFF.md');
   });
 
   it('lists registry entries with status and read-time filters', () => {
@@ -227,7 +221,7 @@ describe('Phase 7.3 docs registry', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'DOC_REGISTRY_MISSING' }));
   });
 
-  it('explains a registered document and validates its schema', () => {
+  it('reports an unregistered legacy project-state document', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
 
@@ -238,8 +232,8 @@ describe('Phase 7.3 docs registry', () => {
       command: 'docs.explain',
       ok: true,
       path: 'docs/PROJECT_STATE.md',
-      document: { kind: 'project-state', status: 'canonical', requiredReading: true },
-      guidance: { shouldReadNow: true, safeToAutoUpdate: false }
+      document: null,
+      guidance: null
     });
     assertSchema('hadara.docs.explain.v1', report);
   });
@@ -520,7 +514,7 @@ describe('Phase 7.3 docs registry', () => {
     initProject(root, 'governed', { silent: true });
 
     const archive = createDocsArchiveReport(root, {
-      documentPath: 'docs/PROJECT_STATE.md',
+      documentPath: 'docs/HADARA_WORKFLOW.md',
       reason: 'incorrect cleanup'
     });
     const unregister = createDocsUnregisterReport(root, {

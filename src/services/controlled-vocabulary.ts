@@ -108,7 +108,7 @@ export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
   { domain: 'evidence.category', field: 'category', surface: 'evidence.jsonl v2 record category', issueCode: 'EVIDENCE_INDEX_CATEGORY_INVALID', allowed: EVIDENCE_CATEGORY_TOKENS },
   { domain: 'evidence.outcome', field: 'outcome', surface: 'evidence.jsonl v2 record outcome', issueCode: 'EVIDENCE_INDEX_OUTCOME_INVALID', allowed: EVIDENCE_OUTCOME_TOKENS },
   { domain: 'slices.status', field: 'status', surface: 'slices state entry status (hadara slice add/set --status)', issueCode: 'SLICE_STATUS_INVALID_TOKEN', allowed: SLICE_STATUS_TOKENS },
-  { domain: 'project.nextWork.state', field: 'nextWork.state', surface: '.hadara/state/current.json structured continuation state', issueCode: 'PROJECT_CURRENT_STATE_INVALID', allowed: PROJECT_NEXT_WORK_STATE_TOKENS },
+  { domain: 'project.nextWork.state', field: 'nextWork.state', surface: 'legacy structured continuation checkpoint', issueCode: 'PROJECT_CURRENT_STATE_INVALID', allowed: PROJECT_NEXT_WORK_STATE_TOKENS },
   { domain: 'docs.kind', field: 'kind', surface: 'docs registry entry kind (`docs register --kind`)', issueCode: 'DOC_UNKNOWN_KIND', allowed: DOCS_REGISTER_ALLOWED_VALUES.kind },
   { domain: 'docs.status', field: 'status', surface: 'docs registry entry status (`docs register --status`, `docs mark --status`)', issueCode: 'DOC_UNKNOWN_STATUS', allowed: DOCS_REGISTER_ALLOWED_VALUES.status },
   { domain: 'docs.readWhen', field: 'readWhen', surface: 'docs registry entry readWhen (`docs register --read-when`)', issueCode: 'DOC_UNKNOWN_READ_WHEN', allowed: DOCS_REGISTER_ALLOWED_VALUES.readWhen },

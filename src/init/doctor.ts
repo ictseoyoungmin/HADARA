@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DOCS_REGISTRY_PATH } from '../services/docs-registry';
 import type { DocumentRegistryFile } from '../services/docs-registry';
-import { isLowerProfile, requiredDocsForProfile } from './profile';
+import { requiredDocsForProfile } from './profile';
 import type { InitAction, InitFollowUpReport, InitIssue, InitProfile } from './types';
 import { readProjectText } from './files';
 
@@ -21,11 +21,9 @@ export function createInitDoctorReport(projectRoot: string): InitFollowUpReport 
   ];
   if (profile === 'standard' || profile === 'governed') {
     requiredCore.push(
-      { path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' },
-      { path: 'docs/PROJECT_STATE.md', code: 'INIT_CORE_DOC_MISSING' }
+      { path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' }
     );
   }
-  if (profile === 'governed') requiredCore.push({ path: 'docs/AGENT_HANDOFF.md', code: 'INIT_CORE_DOC_MISSING' });
   for (const required of requiredCore) {
     const relativePath = required.path;
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {
@@ -167,8 +165,6 @@ function detectProductDefaultLeaks(projectRoot: string): InitIssue[] {
     'AGENTS.md',
     '.hadara/context/HADARA_CONTEXT.md',
     'docs/HADARA_WORKFLOW.md',
-    'docs/PROJECT_STATE.md',
-    'docs/AGENT_HANDOFF.md',
     'docs/ARCHITECTURE.md',
     'docs/ROADMAP.md',
     'docs/DECISIONS.md',
@@ -206,8 +202,6 @@ function productDefaultLeakToken(content: string): string | null {
 
 const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
   'AGENTS.md': ['| Document | When to Read | Purpose |'],
-  'docs/PROJECT_STATE.md': ['| Field | Value |', '| Area | Status | Notes |', '| Source | Path | Purpose |'],
-  'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| History Type | Path | When to Use |'],
   'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
   'docs/HADARA_WORKFLOW.md': ['| Order | Authority | Allowed Reads |', '| Gate | Required State |', '| Timing | Update |', '| Situation | Use | Notes |', '| Surface | Human / Operator | Agent | CLI |'],
   'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],
@@ -222,16 +216,6 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
   const inferredProfile = inferProfileFromGeneratedDocs(projectRoot);
   const issues: InitIssue[] = [];
   const projectAuthoredPaths = projectAuthoredRegistryPaths(projectRoot);
-  const projectState = readProjectText(projectRoot, 'docs/PROJECT_STATE.md');
-  const projectStateProfile = projectState?.match(/\|\s*HADARA Profile\s*\|\s*(basic|standard|governed)\s*\|/)?.[1] as InitProfile | undefined;
-  if (projectStateProfile !== undefined && isLowerProfile(projectStateProfile, inferredProfile)) {
-    issues.push({
-      severity: 'warning',
-      code: 'INIT_PROFILE_METADATA_MISMATCH',
-      path: 'docs/PROJECT_STATE.md',
-      message: `PROJECT_STATE says ${projectStateProfile}, but ${inferredProfile}-level scaffold docs exist.`
-    });
-  }
 
   const agents = readProjectText(projectRoot, 'AGENTS.md');
   if (agents !== null && !projectAuthoredPaths.has('AGENTS.md')) {
@@ -267,7 +251,7 @@ function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
       // Protocol parse errors are reported by the main doctor path.
     }
   }
-  if (['docs/SECURITY_MODEL.md', 'docs/AGENT_HANDOFF.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
+  if (['docs/SECURITY_MODEL.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
     return 'governed';
   }
   if (['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {

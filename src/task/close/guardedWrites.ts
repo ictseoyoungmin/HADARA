@@ -5,7 +5,6 @@ import type { HadaraActorContext } from '../../core/actor-context';
 import { formatLocalMinuteTimestamp } from '../../core/local-time';
 import { isInside } from '../../core/paths';
 import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../../services/markdown-table';
-import { continuationFromTaskHandoffStep, planCompletedProjectCurrentStateWrites } from '../../services/project-current-state';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
 import { findTaskCapsule, TaskCapsule } from '../task-capsule';
 import {
@@ -51,7 +50,7 @@ export type CloseGuardedWriteNextAction = TaskLifecycleNextAction;
 export interface CloseGuardedWrite {
   path: string;
   action: 'update' | 'insert';
-  field: 'task-status' | 'task-handoff-identity' | 'task-board-row' | 'current-state' | 'project-state-projection' | 'handoff-projection';
+  field: 'task-status' | 'task-handoff-identity' | 'task-board-row';
   before: string | null;
   after: string;
   expectedBeforeExists: boolean;
@@ -69,7 +68,7 @@ export interface CloseGuardedWriteAdvisory {
 }
 
 export interface CloseGuardedWriteStateDoc {
-  path: 'docs/DEVELOPMENT_SLICES.md' | 'docs/PROJECT_STATE.md' | 'docs/AGENT_HANDOFF.md';
+  path: 'docs/DEVELOPMENT_SLICES.md';
   present: boolean;
   mentionsTask: boolean;
   state: 'current' | 'pending' | 'missing';
@@ -124,50 +123,8 @@ export function createCloseGuardedWritePlan(projectRoot: string, taskId: string,
   const handoffNextStep = readTaskHandoffNextStep(task);
   const handoffContinuationIssue = handoffTableIssue ? null : validateStructuredHandoffContinuation(handoffNextStep);
   if (handoffContinuationIssue) issues.push(handoffContinuationIssue);
-  const handoffContinuation = handoffNextStep && !handoffContinuationIssue
-    ? continuationFromTaskHandoffStep({
-        step: handoffNextStep.step,
-        reason: handoffNextStep.reason,
-        requiredReading: handoffNextStep.requiredReading,
-        disposition: handoffNextStep.disposition,
-        createTask: handoffNextStep.createTask,
-        sourceTaskId: task.id,
-        sourceCapsulePath: capsule
-      })
-    : undefined;
-  const promotedContinuation = handoffContinuation?.disposition === 'terminal' ? null : handoffContinuation ?? undefined;
-  const currentStatePlan = planCompletedProjectCurrentStateWrites(projectRoot, { id: task.id, title: task.title }, promotedContinuation);
-  issues.push(...currentStatePlan.issues.map((issue) => ({
-    severity: issue.severity,
-    code: issue.code,
-    message: issue.message,
-    path: issue.path
-  })));
   const stateSpecs = stateDocSpecs(projectRoot);
-  const applicableStatePaths = new Set(stateSpecs.map((spec) => spec.path));
-  const currentStateWrites = currentStatePlan.writes.filter((write) =>
-    !write.path.startsWith('docs/') || applicableStatePaths.has(write.path as CloseGuardedWriteStateDoc['path'])
-  );
-  for (const write of currentStateWrites) {
-    writes.push({
-      path: write.path,
-      action: write.before === null ? 'insert' : 'update',
-      field: write.path === '.hadara/state/current.json'
-        ? 'current-state'
-        : write.path === 'docs/PROJECT_STATE.md'
-          ? 'project-state-projection'
-          : 'handoff-projection',
-      before: write.before,
-      after: write.after,
-      expectedBeforeExists: write.before !== null,
-      expectedBeforeHash: hashContent(write.before ?? ''),
-      afterHash: hashContent(write.after),
-      applied: false,
-      contentAfter: write.after
-    });
-  }
-  const projectedPaths = new Set(currentStateWrites.map((write) => write.path));
-  const stateDocs = createStateDocAdvisories(projectRoot, task, stateSpecs, projectedPaths);
+  const stateDocs = createStateDocAdvisories(projectRoot, task, stateSpecs, new Set());
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
     applyCloseGuardedWrites(projectRoot, writes, issues);
   }
@@ -524,9 +481,7 @@ function createStateDocAdvisories(
 
 function stateDocSpecs(projectRoot: string): Array<{ path: CloseGuardedWriteStateDoc['path']; reason: string; recommendation: string }> {
   const specs: Array<{ path: CloseGuardedWriteStateDoc['path']; reason: string; recommendation: string }> = [
-    { path: 'docs/DEVELOPMENT_SLICES.md', reason: 'Slice completion evidence still requires operator-authored summary.', recommendation: 'Add or update a Development Slices row with Done evidence for this task.' },
-    { path: 'docs/PROJECT_STATE.md', reason: 'Latest completed/current task prose remains operator-authored.', recommendation: 'Update Project State current phase/status text if this task changes project capability state.' },
-    { path: 'docs/AGENT_HANDOFF.md', reason: 'Next-session handoff remains operator-authored.', recommendation: 'Update Agent Handoff latest completed task, validation baseline, known problems, and next recommended step.' }
+    { path: 'docs/DEVELOPMENT_SLICES.md', reason: 'Slice completion evidence still requires operator-authored summary.', recommendation: 'Add or update a Development Slices row with Done evidence for this task.' }
   ];
   const registryPath = ['documents.json', 'docs-registry.json']
     .map((name) => path.join(projectRoot, '.hadara', name))

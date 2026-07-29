@@ -366,29 +366,17 @@ describe('context graph builder', () => {
 
       expect(report.cache).toMatchObject({
         used: true,
-        hit: false,
-        mode: 'graph-core-stale-bounded+code-index',
+        hit: true,
+        mode: 'graph-core+code-index',
         sourceManifestFastPath: 'assumed-hot',
         sourceManifestFastPathReason: 'fingerprint-mismatch-metadata-only',
         sourceManifestTrust: 'assumed',
         sourceManifestFullManifestBuilt: false,
-        staleExtractorKeys: [
-          'extractAgentHandoff',
-          'extractManagedSections',
-          'extractProjectState',
-          'extractTaskBoard',
-          'extractTaskCapsules'
-        ]
+        staleExtractorKeys: []
       });
       expect(report.taskContext?.task?.id).toBe(`task:${taskId}`);
-      expect(report.stateProjection.sources.find((source) => source.kind === 'project-state')?.extracted).toMatchObject({
-        activeTask: null,
-        latestCompletedTask: null
-      });
-      expect(report.stateProjection.sources.find((source) => source.kind === 'agent-handoff')?.extracted).toMatchObject({
-        activeTask: null,
-        knownProblems: 0
-      });
+      expect(report.stateProjection.sources.find((source) => source.kind === 'project-state')).toBeUndefined();
+      expect(report.stateProjection.sources.find((source) => source.kind === 'agent-handoff')).toBeUndefined();
       assertSchema('hadara.contextGraph.v1', report);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

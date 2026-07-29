@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
+import { parseMarkdownRows } from '../services/markdown-table';
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
-import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState, type ProjectContinuation, type ProjectCurrentState } from '../services/project-current-state';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';
@@ -18,19 +17,8 @@ export interface TaskSelectionReport {
   recommendations: TaskSelectionRecommendation[];
   backlog?: TaskSelectionBacklogItem[];
   sources: {
-      currentState: {
-        path: string;
-        authority: 'compatibility-checkpoint';
-        present: boolean;
-        activeTask: string | null;
-        nextWork: ProjectCurrentState['nextWork'] | null;
-        nextOperatorIntent: string | null;
-        continuation: ProjectContinuation | null;
-        continuations: ProjectContinuation[];
-      };
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
-    agentHandoff: { path: string; present: boolean; activeNext: string | null; nextRecommendedStep?: string | null };
   };
   issues: TaskSelectionIssue[];
 }
@@ -40,7 +28,7 @@ export interface TaskSelectionRecommendation {
   title: string;
   reason: string;
   source: string;
-  sourceKind?: 'current-state' | 'handoff' | 'development-slices' | 'task-board-fallback';
+  sourceKind?: 'development-slices' | 'task-board-fallback';
   taskBoardStatus: string | null;
   taskBoardPath: string | null;
   taskCapsulePresent: boolean;
@@ -81,30 +69,22 @@ interface BoardRow {
   capsule: string;
 }
 
-const REQUIRED_READING_CANDIDATES = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/TASK_BOARD.md'];
+const REQUIRED_READING_CANDIDATES = ['docs/DEVELOPMENT_SLICES.md', 'docs/TASK_BOARD.md'];
 
 export function createTaskSelectionReport(projectRoot: string): TaskSelectionReport {
   const issues: TaskSelectionIssue[] = [];
-  const currentState = readCurrentState(projectRoot, issues);
   const slices = readDevelopmentSlices(projectRoot, issues);
   const board = readTaskBoard(projectRoot, issues);
-  const handoff = readAgentHandoff(projectRoot);
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
-  const activeTaskRecommendation = currentState.state ? recommendationFromActiveCurrentState(projectRoot, currentState.state, board.rows) : null;
-  const currentStateRecommendation = currentState.state ? recommendationFromCurrentState(projectRoot, currentState.state, board.rows) : null;
-  const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows) : null;
   const inProgressRecommendation = recommendationFromTaskBoard(projectRoot, board.rows, ['in progress', 'in-progress']);
   const openTaskRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
   const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows);
   const sliceRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : null;
   const recommendation =
     inProgressRecommendation ??
-    activeTaskRecommendation ??
     openTaskRecommendation ??
     sliceRecommendation ??
-    handoffRecommendation ??
-    currentStateRecommendation ??
     firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(projectRoot, board.rows, recommendation?.taskId ?? null);
@@ -129,35 +109,11 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
     recommendations,
     backlog,
     sources: {
-      currentState: {
-        path: PROJECT_CURRENT_STATE_PATH,
-        authority: 'compatibility-checkpoint',
-        present: currentState.present,
-        activeTask: currentState.state?.activeTask?.id ?? null,
-        nextWork: currentState.state?.nextWork ?? null,
-        nextOperatorIntent: currentState.state?.nextOperatorIntent ?? null,
-        continuation: currentState.state?.continuation ?? null,
-        continuations: currentState.state?.continuations ?? []
-      },
       developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', present: slices.present, rows: slices.rows.length },
-      taskBoard: { path: 'docs/TASK_BOARD.md', present: board.present, rows: board.rows.length },
-      agentHandoff: { path: 'docs/AGENT_HANDOFF.md', present: handoff.present, activeNext: handoff.activeNext, nextRecommendedStep: handoff.nextRecommendedStep }
+      taskBoard: { path: 'docs/TASK_BOARD.md', present: board.present, rows: board.rows.length }
     },
     issues
   };
-}
-
-function readCurrentState(projectRoot: string, issues: TaskSelectionIssue[]): { present: boolean; state: ProjectCurrentState | null } {
-  const read = readProjectCurrentState(projectRoot);
-  for (const issue of read.issues) {
-    issues.push({
-      severity: 'warning',
-      code: issue.code,
-      message: issue.message,
-      path: issue.path
-    });
-  }
-  return { present: read.present, state: read.state };
 }
 
 export function formatTaskSelectionReport(report: TaskSelectionReport): string {
@@ -188,101 +144,6 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
     requiredReading: requiredReadingForProject(projectRoot),
     createCommand: capsule ? null : `hadara task create ${shellQuote(slice.title)}`
   };
-}
-
-function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[]): TaskSelectionRecommendation {
-  const knownTaskId = step.match(/\bT-\d{4}\b/)?.[0] ?? null;
-  const title = normalizeHandoffTitle(step);
-  const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
-  const taskId = knownTaskId ?? fuzzyBoardRow?.taskId ?? 'TBD';
-  const boardRow = knownTaskId
-    ? boardRows.find((row) => row.taskId === knownTaskId)
-    : fuzzyBoardRow;
-  const capsule = taskId !== 'TBD' ? findTaskCapsule(projectRoot, taskId) : undefined;
-  const resolvedTitle = boardRow?.title ?? title;
-  return {
-    taskId,
-    title: resolvedTitle,
-    reason: boardRow && !knownTaskId
-      ? 'Existing open Task Board row closely matches docs/AGENT_HANDOFF.md next recommended step.'
-      : 'Current next recommended step from docs/AGENT_HANDOFF.md.',
-    source: 'docs/AGENT_HANDOFF.md',
-    sourceKind: 'handoff',
-    taskBoardStatus: boardRow?.status ?? null,
-    taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
-    taskCapsulePresent: Boolean(capsule),
-    capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
-    requiredReading: requiredReadingForProject(projectRoot),
-    createCommand: null,
-    operatorGuidance: capsule || boardRow
-      ? 'Inspect the existing matching capsule after applying current human/reviewer direction.'
-      : 'Treat this handoff step as review input. Apply current human/reviewer direction first, read the routed project and development sources, then decide whether a new capsule is warranted and choose a concise title yourself.'
-  };
-}
-
-function recommendationFromActiveCurrentState(projectRoot: string, state: ProjectCurrentState, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
-  if (!state.activeTask) return null;
-  const boardRow = boardRows.find((row) => row.taskId === state.activeTask?.id && isPrimaryOpenBoardStatus(row.status));
-  if (!boardRow) return null;
-  const capsule = findTaskCapsule(projectRoot, state.activeTask.id);
-  return {
-    taskId: state.activeTask.id,
-    title: boardRow.title || state.activeTask.title,
-    reason: `Compatibility current-state checkpoint names ${state.activeTask.id} as the active task and docs/TASK_BOARD.md still lists it as ${boardRow.status || 'open'}.`,
-    source: PROJECT_CURRENT_STATE_PATH,
-    sourceKind: 'current-state',
-    taskBoardStatus: boardRow.status,
-    taskBoardPath: 'docs/TASK_BOARD.md',
-    taskCapsulePresent: Boolean(capsule),
-    capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow.capsule || null,
-    requiredReading: requiredReadingForProject(projectRoot),
-    createCommand: null
-  };
-}
-
-function recommendationFromCurrentState(projectRoot: string, state: ProjectCurrentState, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
-  const nextWork = state.nextWork;
-  if (!nextWork || nextWork.state === 'none') return null;
-  if (!isActionableHandoffStep(nextWork.title)) return null;
-  if (nextWork.origin === 'bootstrap-first-task' && (boardRows.length > 0 || hasAnyTaskCapsule(projectRoot))) return null;
-  const knownTaskId = nextWork.title.match(/\bT-\d{4}\b/)?.[0] ?? null;
-  const title = normalizeNextWorkTitle(nextWork.title);
-  const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
-  const taskId = knownTaskId ?? fuzzyBoardRow?.taskId ?? 'TBD';
-  const boardRow = knownTaskId
-    ? boardRows.find((row) => row.taskId === knownTaskId)
-    : fuzzyBoardRow;
-  const capsule = taskId !== 'TBD' ? findTaskCapsule(projectRoot, taskId) : undefined;
-  const resolvedTitle = boardRow?.title ?? title;
-  const existingTaskHistory = boardRows.length > 0 || hasAnyTaskCapsule(projectRoot);
-  const adoptionBaselineReviewOnly = nextWork.origin === 'bootstrap-adoption-baseline' && existingTaskHistory;
-  const createCommandAllowed = adoptionBaselineReviewOnly ? false : nextWork.createCommandAllowed;
-  const operatorGuidance = adoptionBaselineReviewOnly
-    ? `${nextWork.operatorGuidance} Existing task history is present; review whether the adoption baseline is still needed before creating another capsule.`
-    : nextWork.operatorGuidance;
-  return {
-    taskId,
-    title: resolvedTitle,
-    reason: adoptionBaselineReviewOnly
-      ? 'Compatibility current-state checkpoint names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
-      : boardRow && !knownTaskId
-      ? 'Existing open Task Board row closely matches the structured current-state next work.'
-      : 'Fallback next work from the compatibility current-state checkpoint.',
-    source: PROJECT_CURRENT_STATE_PATH,
-    sourceKind: 'current-state',
-    taskBoardStatus: boardRow?.status ?? null,
-    taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
-    taskCapsulePresent: Boolean(capsule),
-    capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
-    requiredReading: requiredReadingForProject(projectRoot),
-    createCommand: capsule || boardRow || !createCommandAllowed ? null : `hadara task create ${shellQuote(title)}`,
-    operatorGuidance,
-    createCommandAllowed
-  };
-}
-
-function normalizeNextWorkTitle(title: string): string {
-  return title.replace(/[.]+$/, '').trim();
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[], statusPrefixes?: string[]): TaskSelectionRecommendation | null {
@@ -347,31 +208,6 @@ function requiredReadingForProject(projectRoot: string): string[] {
   return REQUIRED_READING_CANDIDATES.filter((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)));
 }
 
-function findSimilarOpenBoardRow(title: string, boardRows: BoardRow[]): BoardRow | undefined {
-  const titleTokens = normalizedTitleTokens(title);
-  if (titleTokens.length === 0) return undefined;
-  let best: { row: BoardRow; score: number; overlap: number } | null = null;
-  for (const row of boardRows.filter((candidate) => isOpenBoardStatus(candidate.status))) {
-    const rowTokens = normalizedTitleTokens(row.title);
-    const overlap = rowTokens.filter((token) => titleTokens.includes(token)).length;
-    const union = new Set([...titleTokens, ...rowTokens]).size;
-    const score = union === 0 ? 0 : overlap / union;
-    if (!best || score > best.score) best = { row, score, overlap };
-  }
-  return best && best.overlap >= 2 && best.score >= 0.4 ? best.row : undefined;
-}
-
-function normalizedTitleTokens(value: string): string[] {
-  return Array.from(new Set(value
-    .toLowerCase()
-    .replace(/[`*_.,:;()[\]{}]/g, ' ')
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length >= 3)
-    .map((token) => token.replace(/^(finalize|finalise|finalizing)$/, 'final'))
-    .filter((token) => !['and', 'task', 'capsule', 'create', 'select', 'first', 'with', 'next', 'work'].includes(token))));
-}
-
 function readDevelopmentSlices(projectRoot: string, issues: TaskSelectionIssue[]): { present: boolean; rows: SliceRow[] } {
   // FD-012 state-first path: when the canonical slices state exists, read it
   // directly instead of parsing the generated projection. This also fixes
@@ -415,47 +251,10 @@ function readTaskBoard(projectRoot: string, issues: TaskSelectionIssue[]): { pre
   return { present: true, rows };
 }
 
-function readAgentHandoff(projectRoot: string): { present: boolean; activeNext: string | null; nextRecommendedStep: string | null } {
-  const filePath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
-  if (!fs.existsSync(filePath)) return { present: false, activeNext: null, nextRecommendedStep: null };
-  const content = fs.readFileSync(filePath, 'utf8');
-  const row = parseMarkdownRows(content).find((cells) => cells[0] === 'Active / Next Task');
-  const nextRecommendedStep = parseMarkdownRows(readMarkdownSection(content, '## Next Recommended Step'))
-    .map((cells) => cells[0] ?? '')
-    .find((cell) => isActionableHandoffStep(cell)) ?? null;
-  return { present: true, activeNext: row?.[1] ?? null, nextRecommendedStep };
-}
-
-function isActionableHandoffStep(step: string): boolean {
-  const normalized = step.trim().toLowerCase();
-  if (!normalized || normalized === 'step' || normalized === 'tbd') return false;
-  if (/^(later|eventually|future|deferred)\b/.test(normalized)) return false;
-  if (isTaskSelectionMetaGuidance(normalized)) return false;
-  if (normalized.includes('create or select first task capsule')) return false;
-  if (normalized.startsWith('migrate selected historical evidence only when explicitly requested')) return false;
-  return true;
-}
-
-function isTaskSelectionMetaGuidance(normalizedStep: string): boolean {
-  const compact = normalizedStep.replace(/[`*_]/g, '').replace(/\s+/g, ' ');
-  if (/\b(hadara\s+)?task\s+(next|selection)\b/.test(compact) && /\b(run|select|choose|create)\b/.test(compact)) return true;
-  if (/\bselect the next capsule\b/.test(compact) && /\b(operator priority|fresh diagnostic evidence)\b/.test(compact)) return true;
-  return false;
-}
-
 function hasAnyTaskCapsule(projectRoot: string): boolean {
   const tasksDir = path.join(projectRoot, 'tasks');
   if (!fs.existsSync(tasksDir)) return false;
   return fs.readdirSync(tasksDir, { withFileTypes: true }).some((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name));
-}
-
-function normalizeHandoffTitle(step: string): string {
-  return step
-    .replace(/^continue\s+(with\s+)?/i, '')
-    .replace(/\.$/, '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/^./, (first) => first.toUpperCase());
 }
 
 function isOpenSliceStatus(status: string): boolean {

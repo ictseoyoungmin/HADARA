@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DOCS_REGISTRY_PATH, createSeedDocumentRegistry, registryJson } from '../services/docs-registry';
 import type { DocumentRegistryFile } from '../services/docs-registry';
-import { planProjectCurrentStateUpgrade, projectCurrentStateDocument, PROJECT_CURRENT_STATE_PATH } from '../services/project-current-state';
 import { createGeneratedScaffoldFiles } from './scaffold';
 import type { InitAction, InitFollowUpMode, InitFollowUpReport, InitIssue, InitProfile, InitWriteOperation } from './types';
 import { readProjectText, writeFilesAtomically } from './files';
@@ -14,7 +13,6 @@ export function createInitUpgradeReport(projectRoot: string, profile: InitProfil
   const writes: InitWriteOperation[] = [];
   const summary = 'This command creates missing scaffold docs and updates generated profile metadata in known scaffold files. It does not overwrite unrelated user-authored content.';
   for (const file of createGeneratedScaffoldFiles(profile)) {
-    if (file.path === PROJECT_CURRENT_STATE_PATH) continue;
     const filePath = path.join(projectRoot, file.path);
     if (fs.existsSync(filePath)) {
       actions.push({ action: 'upgrade-doc', path: file.path, status: 'exists', summary: `${file.path} already exists and will not be overwritten.` });
@@ -31,26 +29,6 @@ export function createInitUpgradeReport(projectRoot: string, profile: InitProfil
   actions.push(...metadataMerge.actions);
   writes.push(...metadataMerge.writes);
   issues.push(...metadataMerge.issues);
-  const currentStateUpgrade = planProjectCurrentStateUpgrade(projectRoot, profile);
-  issues.push(...currentStateUpgrade.issues);
-  for (const write of currentStateUpgrade.writes) {
-    actions.push({
-      action: 'upgrade-current-state',
-      path: write.path,
-      status: mode === 'execute' ? (write.before === null ? 'created' : 'updated') : 'planned',
-      summary: write.before === null
-        ? `${write.path} ${mode === 'execute' ? 'was created' : 'would be created'} as a command-owned compatibility checkpoint.`
-        : `${write.path} ${mode === 'execute' ? 'was synchronized' : 'would be synchronized'} from the compatibility checkpoint.`
-    });
-    if (mode === 'execute') {
-      const existing = writes.find((candidate) => candidate.path === write.path);
-      if (existing && (write.path === 'docs/PROJECT_STATE.md' || write.path === 'docs/AGENT_HANDOFF.md')) {
-        existing.content = projectCurrentStateDocument(existing.content, write.path === 'docs/PROJECT_STATE.md' ? 'project-state' : 'handoff', currentStateUpgrade.state);
-      } else if (!existing) {
-        writes.push({ path: write.path, content: write.after });
-      }
-    }
-  }
   const registryMerge = createDocsRegistryProfileMerge(projectRoot, profile, mode);
   actions.push(...registryMerge.actions);
   writes.push(...registryMerge.writes);
@@ -231,11 +209,6 @@ function createProfileMetadataMerge(projectRoot: string, profile: InitProfile, m
   };
 
   planUpdate(
-    'docs/PROJECT_STATE.md',
-    replaceProfileTableValue(readProjectText(projectRoot, 'docs/PROJECT_STATE.md'), profile),
-    `docs/PROJECT_STATE.md HADARA profile metadata ${mode === 'execute' ? 'was updated' : 'would be updated'} to ${profile}.`
-  );
-  planUpdate(
     'docs/ARCHITECTURE.md',
     replaceProfileTableValue(readProjectText(projectRoot, 'docs/ARCHITECTURE.md'), profile),
     `docs/ARCHITECTURE.md HADARA profile metadata ${mode === 'execute' ? 'was updated' : 'would be updated'} to ${profile}.`
@@ -288,12 +261,8 @@ function agentsRequiredReadingRowsForProfile(profile: InitProfile): Array<{ docu
   ];
   if (profile === 'standard' || profile === 'governed') {
     rows.unshift(
-      { document: '`.hadara/context/HADARA_CONTEXT.md`', when: 'Every session', purpose: 'Compact project-local read routing.' },
-      { document: '`docs/PROJECT_STATE.md`', when: 'Every session', purpose: 'Current product and capability state.' }
+      { document: '`.hadara/context/HADARA_CONTEXT.md`', when: 'Every session', purpose: 'Compact project-local read routing.' }
     );
-  }
-  if (profile === 'governed') {
-    rows.push({ document: '`docs/AGENT_HANDOFF.md`', when: 'Every session', purpose: 'Compact continuation state.' });
   }
   return rows;
 }

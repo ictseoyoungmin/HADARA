@@ -86,8 +86,8 @@ export interface ProtocolConsistencyReport {
 const REQUIRED_TASK_FILES = Object.keys(TASK_FILES);
 const DONE_STATUSES = new Set(['done']);
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md'];
-const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
+const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md'];
+const GOVERNED_MINIMAL_DOCS: string[] = [];
 const EVIDENCE_REF_PATTERN = /\bev:T-\d{4}:[A-Za-z0-9]+\b/g;
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
@@ -116,7 +116,7 @@ export function createTaskProtocolConsistencyReport(projectRoot: string, taskId:
   checkTaskBoard(projectRoot, task, taskStatus, taskBoardRows, issues);
   checkDoneAcceptance(projectRoot, task, taskLooksDone, issues);
   checkEvidenceIndex(projectRoot, task, taskLooksDone, issues);
-  checkProjectHandoff(projectRoot, task, taskStatus, checkedDocs, issues);
+  checkTaskHandoff(projectRoot, task, taskStatus, checkedDocs, issues);
   checkScaffoldPlaceholders(projectRoot, task, taskLooksDone, issues);
 
   return buildReport(projectRoot, now, issues, checkedDocs, task, taskBoardStatus, {
@@ -131,14 +131,11 @@ export function createDocsProtocolConsistencyReport(projectRoot: string, now = n
   const tasks = listTaskCapsules(projectRoot);
   const taskBoardRows = readTaskBoardRows(projectRoot, checkedDocs);
   const activeTaskId = findActiveTaskId(taskBoardRows, tasks);
-  const latestDoneTask = findLatestDoneTask(tasks);
 
   checkRequiredProjectDocs(projectRoot, checkedDocs, issues);
   checkRequiredReadingPaths(projectRoot, checkedDocs, issues);
   checkTaskBoardAgainstCapsules(projectRoot, tasks, taskBoardRows, issues);
-  checkProjectStateConsistency(projectRoot, activeTaskId, latestDoneTask, checkedDocs, issues);
-  checkProjectHandoffConsistency(projectRoot, activeTaskId, latestDoneTask, checkedDocs, issues);
-  checkProjectHandoffEvidenceRefs(projectRoot, checkedDocs, issues);
+  for (const task of tasks) checkTaskHandoffEvidenceRefs(projectRoot, task, checkedDocs, issues);
   checkDevelopmentSlicesConsistency(projectRoot, tasks, checkedDocs, issues);
   checkDecisionsConsistency(projectRoot, checkedDocs, issues);
   checkWorkflowScaffoldStructure(projectRoot, checkedDocs, issues);
@@ -436,90 +433,6 @@ function checkTaskBoardAgainstCapsules(
       message: `docs/TASK_BOARD.md contains ${row.id}, but no matching Task Capsule directory was found.`,
       expected: 'matching Task Capsule directory',
       actual: 'missing'
-    });
-  }
-}
-
-function checkProjectStateConsistency(
-  projectRoot: string,
-  activeTaskId: string | null,
-  latestDoneTask: TaskCapsule | undefined,
-  checkedDocs: Set<string>,
-  issues: ProtocolConsistencyIssue[]
-): void {
-  const projectStatePath = path.join(projectRoot, 'docs', 'PROJECT_STATE.md');
-  const relativePath = 'docs/PROJECT_STATE.md';
-  checkedDocs.add(relativePath);
-  if (!fs.existsSync(projectStatePath)) return;
-
-  const content = fs.readFileSync(projectStatePath, 'utf8');
-  const currentStatus = readMarkdownSection(content, '## Compatibility State Checkpoint') || readMarkdownSection(content, '## Canonical Current State') || readMarkdownSection(content, '## Current Status');
-  if (activeTaskId && hasTaskStateMarker(content, 'active') && !currentStatus.includes(activeTaskId)) {
-    pushIssue(issues, {
-      code: 'PROJECT_STATE_ACTIVE_TASK_STALE',
-      severity: 'warning',
-      area: 'docs',
-      taskId: activeTaskId,
-      path: relativePath,
-      message: `docs/PROJECT_STATE.md active/current task markers do not mention ${activeTaskId}.`,
-      expected: `Compatibility State Checkpoint or Current Status mentions ${activeTaskId}`,
-      actual: 'task id not found in the current-state projection'
-    });
-  }
-  if (latestDoneTask && hasTaskStateMarker(content, 'latest') && !currentStatus.includes(latestDoneTask.id)) {
-    pushIssue(issues, {
-      code: 'PROJECT_STATE_LATEST_COMPLETED_STALE',
-      severity: 'warning',
-      area: 'docs',
-      taskId: latestDoneTask.id,
-      path: relativePath,
-      message: `docs/PROJECT_STATE.md latest completed markers do not mention ${latestDoneTask.id}.`,
-      expected: `Compatibility State Checkpoint or Current Status mentions ${latestDoneTask.id}`,
-      actual: 'task id not found in the current-state projection'
-    });
-  }
-}
-
-function checkProjectHandoffConsistency(
-  projectRoot: string,
-  activeTaskId: string | null,
-  latestDoneTask: TaskCapsule | undefined,
-  checkedDocs: Set<string>,
-  issues: ProtocolConsistencyIssue[]
-): void {
-  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
-  const relativePath = 'docs/AGENT_HANDOFF.md';
-  checkedDocs.add(relativePath);
-  if (!fs.existsSync(handoffPath)) return;
-
-  const content = fs.readFileSync(handoffPath, 'utf8');
-  const currentState = readMarkdownSection(content, '## Compatibility Continuation Checkpoint') || readMarkdownSection(content, '## Canonical Continuation State') || readMarkdownSection(content, '## Current State');
-  const fields = readKeyValueRows(currentState);
-  const latestCell = fields.get('latest completed task') ?? '';
-  const activeCell = fields.get('active task') ?? fields.get('active / next task') ?? '';
-
-  if (latestDoneTask && !latestCell.includes(latestDoneTask.id)) {
-    pushIssue(issues, {
-      code: 'PROJECT_HANDOFF_LATEST_COMPLETED_STALE',
-      severity: 'warning',
-      area: 'handoff',
-      taskId: latestDoneTask.id,
-      path: relativePath,
-      message: `docs/AGENT_HANDOFF.md Latest Completed Task does not point at ${latestDoneTask.id}.`,
-      expected: `Latest Completed Task mentions ${latestDoneTask.id}`,
-      actual: latestCell || 'missing Latest Completed Task field'
-    });
-  }
-  if (activeTaskId && !activeCell.includes(activeTaskId)) {
-    pushIssue(issues, {
-      code: 'PROJECT_HANDOFF_ACTIVE_TASK_STALE',
-      severity: 'warning',
-      area: 'handoff',
-      taskId: activeTaskId,
-      path: relativePath,
-      message: `docs/AGENT_HANDOFF.md Active / Next Task does not point at ${activeTaskId}.`,
-      expected: `Active / Next Task mentions ${activeTaskId}`,
-      actual: activeCell || 'missing Active / Next Task field'
     });
   }
 }
@@ -828,7 +741,7 @@ function checkEvidenceIndex(projectRoot: string, task: TaskCapsule, taskLooksDon
   }
 }
 
-function checkProjectHandoff(
+function checkTaskHandoff(
   projectRoot: string,
   task: TaskCapsule,
   taskStatus: string,
@@ -837,16 +750,16 @@ function checkProjectHandoff(
 ): void {
   if (isDoneStatus(taskStatus)) return;
 
-  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
   checkedDocs.add(toPortablePath(path.relative(projectRoot, handoffPath)));
   if (!fs.existsSync(handoffPath)) {
     pushIssue(issues, {
-      code: 'PROJECT_HANDOFF_MISSING',
+      code: 'TASK_HANDOFF_MISSING',
       severity: 'warning',
       area: 'handoff',
       taskId: task.id,
       path: toPortablePath(path.relative(projectRoot, handoffPath)),
-      message: 'docs/AGENT_HANDOFF.md is missing, so active task handoff freshness cannot be checked.'
+      message: `${task.id} HANDOFF.md is missing, so active task handoff freshness cannot be checked.`
     });
     return;
   }
@@ -854,20 +767,20 @@ function checkProjectHandoff(
   const content = fs.readFileSync(handoffPath, 'utf8');
   if (!content.includes(task.id)) {
     pushIssue(issues, {
-      code: 'PROJECT_HANDOFF_STALE',
+      code: 'TASK_HANDOFF_STALE',
       severity: 'warning',
       area: 'handoff',
       taskId: task.id,
       path: toPortablePath(path.relative(projectRoot, handoffPath)),
-      message: `docs/AGENT_HANDOFF.md does not mention active task ${task.id}.`,
+      message: `${task.id} HANDOFF.md does not mention active task ${task.id}.`,
       expected: `handoff mentions ${task.id}`,
       actual: 'task id not found'
     });
   }
 }
 
-function checkProjectHandoffEvidenceRefs(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
-  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
+function checkTaskHandoffEvidenceRefs(projectRoot: string, task: TaskCapsule, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
   checkedDocs.add(toPortablePath(path.relative(projectRoot, handoffPath)));
   if (!fs.existsSync(handoffPath)) return;
   const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
@@ -875,11 +788,12 @@ function checkProjectHandoffEvidenceRefs(projectRoot: string, checkedDocs: Set<s
   const missingRefs = refs.filter((ref) => !protocolEvidenceRefExists(projectRoot, ref));
   for (const ref of missingRefs) {
     pushIssue(issues, {
-      code: 'PROJECT_HANDOFF_EVIDENCE_REF_MISSING',
+      code: 'TASK_HANDOFF_EVIDENCE_REF_MISSING',
       severity: 'warning',
       area: 'handoff',
+      taskId: task.id,
       path: relativePath,
-      message: `docs/AGENT_HANDOFF.md references missing evidence id ${ref}.`,
+      message: `${relativePath} references missing evidence id ${ref}.`,
       expected: 'reference an evidence id that exists in the referenced task evidence.jsonl',
       actual: ref
     });
@@ -975,21 +889,6 @@ function findActiveTaskId(rows: TaskBoardRow[], tasks: TaskCapsule[]): string | 
   return activeTask?.id ?? null;
 }
 
-function readKeyValueRows(content: string): Map<string, string> {
-  const fields = new Map<string, string>();
-  for (const row of parseMarkdownRows(content)) {
-    const key = (row[0] ?? '').trim().toLowerCase();
-    if (!key || key === 'area' || key === 'field') continue;
-    fields.set(key, row.slice(1).join(' | '));
-  }
-  return fields;
-}
-
-function hasTaskStateMarker(content: string, kind: 'active' | 'latest'): boolean {
-  const pattern = kind === 'active' ? /active\s*(\/|or)?\s*(current|next)?\s*task/i : /latest\s+completed\s+task/i;
-  return pattern.test(content);
-}
-
 function isEmptyEvidenceCell(value: string): boolean {
   return !value.trim() || /^(TBD|N\/A|None|Not Run)$/i.test(value.trim());
 }
@@ -1008,9 +907,9 @@ function createProfileSuggestedFix(
   },
   targetProfile: 'basic' | 'standard' | 'governed' | 'unknown'
 ): ProtocolSuggestedFix | undefined {
-  if (targetProfile === 'unknown') return undefined;
-  if ((issue.code !== 'PROFILE_METADATA_MISSING' && issue.code !== 'PROFILE_METADATA_DRIFT') || issue.path !== 'docs/PROJECT_STATE.md') return undefined;
-  return createSuggestedFix('project-state-profile', undefined, ['docs/PROJECT_STATE.md'], targetProfile);
+  void issue;
+  void targetProfile;
+  return undefined;
 }
 
 function createSuggestedFix(

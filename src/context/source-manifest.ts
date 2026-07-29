@@ -37,8 +37,6 @@ export type ContextSourceKind =
   | 'fixture-file'
   | 'config-file'
   | 'release-doc'
-  | 'handoff-doc'
-  | 'project-state-doc'
   | 'spec-doc'
   | 'other-doc';
 
@@ -144,13 +142,11 @@ export interface ContextSourceManifestFastFreshnessResult {
 
 const DEFAULT_EXTRACTOR_VERSIONS: Record<string, string> = {
   codeIndex: CODE_INDEX_EXTRACTOR_VERSION,
-  extractAgentHandoff: 'c1-agent-handoff-v1',
   extractCommandRegistry: 'c1-command-registry-v1',
   extractDecisions: 'c1-decisions-v1',
   extractDocsRegistry: 'c1-docs-registry-v1',
   extractEvidence: 'c1-evidence-v1',
   extractManagedSections: 'c1-managed-sections-v1',
-  extractProjectState: 'c1-project-state-v1',
   extractReleaseReadiness: 'c1-release-readiness-v1',
   extractTaskBoard: 'c1-task-board-v1',
   extractTaskCapsules: 'c1-task-capsules-v1'
@@ -426,8 +422,6 @@ export function classifyContextSourcePath(inputPath: string): ContextSourceKind 
   if (filePath === 'docs/TASK_BOARD.md') return 'task-board';
   if (filePath === '.hadara/docs-registry.json' || filePath === 'docs/DOC_REGISTRY.md') return 'docs-registry';
   if (filePath === 'src/services/capability-registry.ts') return 'command-registry';
-  if (filePath === 'docs/PROJECT_STATE.md') return 'project-state-doc';
-  if (filePath === 'docs/AGENT_HANDOFF.md') return 'handoff-doc';
   if (filePath === 'docs/RELEASE_READINESS.md') return 'release-doc';
   if (filePath.startsWith('docs/specs/') && filePath.endsWith('.md')) return 'spec-doc';
   if (filePath.startsWith('tasks/') && filePath.endsWith('/evidence.jsonl')) return 'evidence';
@@ -457,10 +451,6 @@ export function extractorKeysForContextSource(relativePath: string, kind: Contex
       return ['extractManagedSections', 'extractDecisions'];
     case 'release-doc':
       return ['extractReleaseReadiness', 'extractManagedSections'];
-    case 'handoff-doc':
-      return ['extractAgentHandoff', 'extractManagedSections'];
-    case 'project-state-doc':
-      return ['extractProjectState', 'extractManagedSections'];
     case 'spec-doc':
       return ['extractDocsRegistry', 'extractManagedSections'];
     case 'source-file':

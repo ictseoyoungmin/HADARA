@@ -1,5 +1,3 @@
-import { readProjectCurrentState } from './project-current-state';
-import type { ProjectContinuation } from './project-current-state';
 import { createOpsStatusReport, OpsStatusReport } from './operations-status-service';
 import { createTaskSelectionReport } from '../task/task-selection';
 
@@ -65,14 +63,6 @@ export interface ProjectStatusV2Report {
     migration: string;
   };
   sources: {
-    currentState: {
-      present: boolean;
-      activeTask: string | null;
-      nextWork: string | null;
-      currentRelease: string | null;
-      validationBaseline: string | null;
-      validationBaselineMeaning: string;
-    };
     taskSelection: {
       recommendations: number;
       source: string;
@@ -108,8 +98,6 @@ export interface ProjectStatusV2Report {
 
 export function createProjectStatusV2Report(projectRoot: string, now = new Date(), options: { detail?: 'fast' | 'full' } = {}): ProjectStatusV2Report {
   const detail = options.detail ?? 'fast';
-  const currentStateRead = readProjectCurrentState(projectRoot);
-  const currentState = currentStateRead.state;
   const opsStatus = createOpsStatusReport(projectRoot, detail === 'full'
     ? { includeStateConsistency: true }
     : {
@@ -120,15 +108,10 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
         maxTextLength: 240
       });
   const taskSelection = createTaskSelectionReport(projectRoot);
-  const currentStateIssues = currentStateRead.issues.map((issue) => ({
-    severity: issue.severity,
-    code: issue.code,
-    message: issue.message
-  }));
   const opsStatusIssues = projectStatusIssuesFromOpsStatus(opsStatus);
-  const phase = determineProjectPhase({ currentState, currentStateIssues, opsStatus, taskSelection });
-  const health = determineHealth(opsStatus, phase, [...currentStateIssues, ...opsStatusIssues]);
-  const primaryNextAction = buildPrimaryNextAction({ phase, currentState, taskSelection, health, issues: [...currentStateIssues, ...opsStatusIssues] });
+  const phase = determineProjectPhase({ opsStatus, taskSelection });
+  const health = determineHealth(opsStatus, phase, opsStatusIssues);
+  const primaryNextAction = buildPrimaryNextAction({ phase, taskSelection, health, issues: opsStatusIssues });
 
   return {
     schemaVersion: 'hadara.project.status.v2',
@@ -140,7 +123,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
     phase,
     health,
     readiness: buildReadiness(phase, health, primaryNextAction),
-    evaluations: buildEvaluations({ currentStateRead, opsStatus, taskSelection }),
+    evaluations: buildEvaluations({ opsStatus, taskSelection }),
     primaryNextAction,
     compatibility: {
       legacySchemaVersion: 'hadara.ops.status.v1',
@@ -148,14 +131,6 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
       migration: 'Use this v2 report for project/session ingress. Use the explicit v1 compatibility command only for legacy status/read-model consumers during 0.5.x.'
     },
     sources: {
-      currentState: {
-        present: Boolean(currentState),
-        activeTask: currentState?.activeTask?.id ?? null,
-        nextWork: currentState?.nextWork?.title ?? null,
-        currentRelease: currentState?.currentRelease ?? null,
-        validationBaseline: currentState?.validationBaseline.summary ?? null,
-        validationBaselineMeaning: 'current trusted validation baseline; not necessarily the latest completed task evidence'
-      },
       taskSelection: {
         recommendations: taskSelection.recommendations.length,
         source: taskSelection.summary.source
@@ -189,7 +164,7 @@ export function createProjectStatusV2Report(projectRoot: string, now = new Date(
         } : {})
       }
     },
-    issues: [...currentStateIssues, ...opsStatus.issues, ...opsStatusIssues]
+    issues: [...opsStatus.issues, ...opsStatusIssues]
   };
 }
 
@@ -205,34 +180,27 @@ export function formatProjectStatusV2Report(report: ProjectStatusV2Report): stri
 }
 
 function determineProjectPhase(input: {
-  currentState: ReturnType<typeof readProjectCurrentState>['state'];
-  currentStateIssues: ProjectStatusV2Report['issues'];
   opsStatus: OpsStatusReport;
   taskSelection: ReturnType<typeof createTaskSelectionReport>;
 }): ProjectStatusPhase {
-  if (input.currentStateIssues.some((issue) => issue.severity === 'error')) return 'degraded';
-  if (input.opsStatus.issues.some((issue) => issue.code === 'PROJECT_STATE_MISSING' && input.opsStatus.issues.some((candidate) => candidate.code === 'TASK_BOARD_MISSING'))) return 'uninitialized';
-  if (input.currentState?.activeTask?.id) return 'active-work';
-  if (input.currentState?.nextWork?.state === 'waiting-for-operator') return 'adoption-review';
-  if (input.currentState?.nextWork?.state === 'blocked') return 'degraded';
+  if (input.opsStatus.issues.some((issue) => issue.code === 'TASK_BOARD_MISSING')) return 'uninitialized';
+  if (input.taskSelection.recommendations.some((recommendation) => recommendation.taskCapsulePresent && recommendation.taskId !== 'TBD')) return 'active-work';
   if (input.taskSelection.recommendations.length > 0) return 'select-work';
-  if (continuationNextAction(input.currentState?.continuation ?? null)) return 'continuation-ready';
   if (input.opsStatus.health !== 'ok') return 'degraded';
   return 'idle';
 }
 
-function determineHealth(opsStatus: OpsStatusReport, phase: ProjectStatusPhase, currentStateIssues: ProjectStatusV2Report['issues']): ProjectStatusHealth {
-  if (currentStateIssues.some((issue) => issue.severity === 'error')) return 'blocked';
+function determineHealth(opsStatus: OpsStatusReport, phase: ProjectStatusPhase, issues: ProjectStatusV2Report['issues']): ProjectStatusHealth {
+  if (issues.some((issue) => issue.severity === 'error')) return 'blocked';
   if (opsStatus.health === 'error') return 'blocked';
   if (phase === 'uninitialized') return 'attention';
-  if (currentStateIssues.some((issue) => issue.severity === 'warning')) return 'degraded';
+  if (issues.some((issue) => issue.severity === 'warning')) return 'degraded';
   if (opsStatus.health === 'degraded') return 'degraded';
   return 'ok';
 }
 
 function buildPrimaryNextAction(input: {
   phase: ProjectStatusPhase;
-  currentState: ReturnType<typeof readProjectCurrentState>['state'];
   taskSelection: ReturnType<typeof createTaskSelectionReport>;
   health: ProjectStatusHealth;
   issues: ProjectStatusV2Report['issues'];
@@ -250,10 +218,6 @@ function buildPrimaryNextAction(input: {
       };
     }
     return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect blocking status diagnostics.');
-  }
-  if (input.currentState?.activeTask?.id) {
-    const taskId = input.currentState.activeTask.id;
-    return readOnlyCommandAction('inspect-active-task', `hadara task status --task ${taskId} --json`, `Inspect active task ${taskId}.`);
   }
   if (input.phase === 'uninitialized') {
     return {
@@ -286,23 +250,8 @@ function buildPrimaryNextAction(input: {
       writes: true
     };
   }
-  const continuationAction = continuationNextAction(input.currentState?.continuation ?? null);
-  if (continuationAction) return continuationAction;
   if (input.health !== 'ok') {
     return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect degraded status diagnostics.');
-  }
-  return null;
-}
-
-function continuationNextAction(continuation: ProjectContinuation | null): ProjectStatusNextActionV2 | null {
-  if (!continuation) return null;
-  const suggestion = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
-  const message = `Review continuation suggestion: ${suggestion} Current human/reviewer direction has priority. Read routed project/development sources, decide whether work should continue, and choose a concise task title yourself.`;
-  if (continuation.disposition === 'waiting-for-operator') {
-    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'none', requiresReview: true, writes: false };
-  }
-  if (continuation.disposition === 'actionable') {
-    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
   }
   return null;
 }
@@ -325,7 +274,6 @@ function buildReadiness(phase: ProjectStatusPhase, health: ProjectStatusHealth, 
   if (health === 'blocked') return { intent: 'orient', status: 'blocked', reason: 'Status generation found blocking project health issues.' };
   if (phase === 'active-work') return { intent: 'orient', status: 'ready', reason: 'An active task is selected; inspect selected-task status before editing.' };
   if (phase === 'select-work') return { intent: 'plan', status: 'ready', reason: 'A next-work recommendation is available.' };
-  if (phase === 'continuation-ready') return { intent: 'plan', status: 'needs-review', reason: 'A structured current-state continuation was found and requires review before acting.' };
   if (phase === 'uninitialized' || phase === 'adoption-review') return { intent: 'orient', status: 'needs-review', reason: 'Project setup or adoption state needs operator review.' };
   if (health === 'degraded') return { intent: 'orient', status: 'needs-context', reason: 'Project status is degraded; inspect explicit diagnostics before acting.' };
   return { intent: 'orient', status: 'ready', reason: 'Project status is available.' };
@@ -351,19 +299,10 @@ function projectStatusIssuesFromOpsStatus(opsStatus: OpsStatusReport): ProjectSt
 }
 
 function buildEvaluations(input: {
-  currentStateRead: ReturnType<typeof readProjectCurrentState>;
   opsStatus: OpsStatusReport;
   taskSelection: ReturnType<typeof createTaskSelectionReport>;
 }): StatusEvaluationV1[] {
-  const currentStateIssue = input.currentStateRead.issues[0] ?? null;
-  const currentStatePresent = input.currentStateRead.present && Boolean(input.currentStateRead.state);
   return [
-    {
-      id: 'current-state',
-      state: currentStateIssue ? 'invalid' : currentStatePresent ? 'evaluated' : 'unavailable',
-      health: currentStateIssue?.severity === 'error' ? 'blocked' : currentStatePresent ? 'ok' : 'attention',
-      summary: currentStateIssue ? currentStateIssue.message : currentStatePresent ? 'Structured current-state canon was read.' : 'Structured current-state canon is unavailable; status used compatibility sources.'
-    },
     {
       id: 'task-selection',
       state: 'evaluated',

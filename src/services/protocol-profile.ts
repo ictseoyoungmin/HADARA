@@ -51,8 +51,8 @@ export interface ProtocolProfileSummary {
 }
 
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md'];
-const GOVERNED_MINIMAL_DOCS = ['docs/AGENT_HANDOFF.md'];
+const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md'];
+const GOVERNED_MINIMAL_DOCS: string[] = [];
 const OPTIONAL_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md', 'docs/SECURITY_MODEL.md'];
 
 export function createProfileConsistencyDiagnostics(projectRoot: string): ProfileDiagnostics {
@@ -101,39 +101,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
     });
   }
 
-  const metadataTargets = [
-    { path: 'docs/PROJECT_STATE.md', actual: metadata.projectState }
-  ];
-
   if (targetProfile !== 'unknown') {
-    for (const item of metadataTargets) {
-      if (!exists(projectRoot, item.path)) continue;
-      checkedDocs.add(item.path);
-      if (!item.actual) {
-        issues.push({
-          code: 'PROFILE_METADATA_MISSING',
-          severity: 'warning',
-          area: 'profile',
-          path: item.path,
-          message: `${item.path} does not declare the HADARA profile.`,
-          expected: targetProfile,
-          actual: 'missing',
-          remediationId: 'profile-metadata-align'
-        });
-      } else if (item.actual !== targetProfile) {
-        issues.push({
-          code: 'PROFILE_METADATA_DRIFT',
-          severity: 'warning',
-          area: 'profile',
-          path: item.path,
-          message: `${item.path} declares ${item.actual} while metadata and project docs target ${targetProfile}.`,
-          expected: targetProfile,
-          actual: item.actual,
-          remediationId: 'profile-metadata-align'
-        });
-      }
-    }
-
     const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile);
     const agentsMissing = missingRequiredReadingPaths(projectRoot, 'AGENTS.md', requiredReadingDocs);
     if (agentsMissing.length > 0) {
@@ -206,7 +174,6 @@ function buildProfileRemediations(
         summary: `Project metadata or Required Reading does not match the ${targetProfile} profile implied by the protocol documents.`,
         steps: [
           'Review the profile diagnostic; init upgrade does not change project configuration.',
-          `In \`docs/PROJECT_STATE.md\`, set the HADARA profile metadata to \`${targetProfile}\`.`,
           `In \`AGENTS.md\`, add Required Reading entries for the \`${targetProfile}\` profile documents.`,
           'Re-run `hadara protocol doctor --scope profile --json` before using an execute-mode remediation command.'
         ],
@@ -268,15 +235,14 @@ function requiredReadingDocsForProfile(profile: TargetProtocolProfile): string[]
   return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
 }
 
-function readProfileMetadata(projectRoot: string): { scaffold: TargetProtocolProfile | null; projectState: TargetProtocolProfile | null } {
+function readProfileMetadata(projectRoot: string): { scaffold: TargetProtocolProfile | null } {
   return {
-    scaffold: readScaffoldProfile(projectRoot),
-    projectState: readProjectStateProfile(projectRoot)
+    scaffold: readScaffoldProfile(projectRoot)
   };
 }
 
-function inferDeclaredProfile(metadata: { scaffold: TargetProtocolProfile | null; projectState: TargetProtocolProfile | null }): ProtocolProfile {
-  return metadata.scaffold ?? metadata.projectState ?? 'unknown';
+function inferDeclaredProfile(metadata: { scaffold: TargetProtocolProfile | null }): ProtocolProfile {
+  return metadata.scaffold ?? 'unknown';
 }
 
 function readScaffoldProfile(projectRoot: string): TargetProtocolProfile | null {
@@ -286,17 +252,6 @@ function readScaffoldProfile(projectRoot: string): TargetProtocolProfile | null 
   } catch {
     return null;
   }
-}
-
-function readProjectStateProfile(projectRoot: string): TargetProtocolProfile | null {
-  const relativePath = 'docs/PROJECT_STATE.md';
-  if (!exists(projectRoot, relativePath)) return null;
-  const content = fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
-  for (const row of parseMarkdownRows(content)) {
-    if (!/^hadara profile$/i.test(row[0] ?? '')) continue;
-    return normalizeProfile(row.slice(1).join(' '));
-  }
-  return normalizeProfile(firstMatch(content, /HADARA\s+Profile\s*[:|]\s*`?(basic|standard|governed)`?/i));
 }
 
 function missingRequiredReadingPaths(projectRoot: string, relativePath: string, requiredPaths: string[]): string[] {
@@ -327,10 +282,6 @@ function splitDocPresence(projectRoot: string, relativePaths: string[]): { prese
 
 function exists(projectRoot: string, relativePath: string): boolean {
   return fs.existsSync(path.join(projectRoot, relativePath));
-}
-
-function firstMatch(content: string, pattern: RegExp): string | null {
-  return content.match(pattern)?.[1] ?? null;
 }
 
 function normalizeProfile(value: string | null | undefined): TargetProtocolProfile | null {

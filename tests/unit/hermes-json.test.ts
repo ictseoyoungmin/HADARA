@@ -6,6 +6,7 @@ import { createHermesDetectReport, createHermesExportContextReport } from '../..
 import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { createContextExportReport } from '../../src/hermes/context-export';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { defaultTaskBoard } from '../../src/task/task-board';
 
 const roots: string[] = [];
 
@@ -41,7 +42,6 @@ describe('CLI Hermes JSON reports', () => {
   it('exports context and returns a project-relative portable output path', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
 
     const report = createHermesExportContextReport(root);
 
@@ -59,7 +59,8 @@ describe('CLI Hermes JSON reports', () => {
   it('exports MCP and CLI read-surface instructions for external agents', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), defaultTaskBoard(), 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '# HADARA_WORKFLOW\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
 
@@ -67,14 +68,14 @@ describe('CLI Hermes JSON reports', () => {
 
     const output = fs.readFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), 'utf8');
     expect(output).toContain('Follow docs/HADARA_WORKFLOW.md for implementation, validation, and session-end procedure.');
+    expect(output).toContain('## docs/TASK_BOARD.md');
     expect(output).toContain('## docs/HADARA_WORKFLOW.md');
     expect(output).toContain('## docs/ROADMAP.md');
     expect(output).toContain('## docs/DEVELOPMENT_SLICES.md');
-    expect(output).toContain('hadara.project.state.read');
+    expect(output).toContain('hadara task status --json');
     expect(output).toContain('hadara status --json');
     expect(output).toContain('hadara.task.list');
     expect(output).toContain('hadara.task.read');
-    expect(output).toContain('hadara.handoff.read');
     expect(output).toContain('hadara.policy.evaluate');
     expect(output).toContain('hadara.harness.validate');
     expect(output).toContain('hadara.context.export');
@@ -88,7 +89,7 @@ describe('CLI Hermes JSON reports', () => {
   it('builds a read-only memory context export report without writing files', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), defaultTaskBoard(), 'utf8');
 
     const report = createContextExportReport(root);
 
@@ -103,15 +104,17 @@ describe('CLI Hermes JSON reports', () => {
       issues: []
     });
     expect(report.content).toContain('# HADARA_CONTEXT');
-    expect(report.content).toContain('## docs/PROJECT_STATE.md');
+    expect(report.content).toContain('## docs/TASK_BOARD.md');
     expect(report.content).toContain('## docs/HADARA_WORKFLOW.md');
+    expect(report.content).not.toContain('## docs/PROJECT_STATE.md');
+    expect(report.content).not.toContain('## docs/AGENT_HANDOFF.md');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
   });
 
   it('warns that summaryOnly is accepted but still returns full context', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), defaultTaskBoard(), 'utf8');
 
     const report = createContextExportReport(root, { summaryOnly: true });
 
@@ -122,13 +125,13 @@ describe('CLI Hermes JSON reports', () => {
         message: 'summaryOnly is accepted for forward compatibility but currently returns the full context.'
       }
     ]);
-    expect(report.content).toContain('## docs/PROJECT_STATE.md');
+    expect(report.content).toContain('## docs/TASK_BOARD.md');
   });
 
   it('excludes private evidence content and private store metadata from context export', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), defaultTaskBoard(), 'utf8');
     const task = createTaskCapsule(root, 'Private context export evidence');
     const privateSourcePath = path.join(root, 'private-context.log');
     fs.writeFileSync(privateSourcePath, 'context export secret sk-abcdefghijklmnopqrstuvwxyz', 'utf8');

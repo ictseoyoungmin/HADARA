@@ -372,15 +372,12 @@ function createVirtualBookkeptProjectRoot(projectRoot: string, taskId: string, g
   copyIfExists(path.join(projectRoot, task.capsule), path.join(tempRoot, task.capsule));
   for (const docPath of [
     path.join('docs', 'TASK_BOARD.md'),
-    path.join('docs', 'PROJECT_STATE.md'),
-    path.join('docs', 'AGENT_HANDOFF.md'),
     path.join('docs', 'DEVELOPMENT_SLICES.md'),
     path.join('docs', 'DECISIONS.md')
   ]) {
     copyIfExists(path.join(projectRoot, docPath), path.join(tempRoot, docPath));
   }
   for (const statePath of [
-    path.join('.hadara', 'state'),
     path.join('.hadara', 'context'),
     path.join('.hadara', 'docs-registry.json'),
     path.join('.hadara', 'slot-registry.json'),

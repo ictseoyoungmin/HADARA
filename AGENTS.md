@@ -7,8 +7,6 @@ This repository must be developed using the HADARA protocol.
 | Document | When to Read | Purpose |
 |---|---|---|
 | `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |
-| `docs/PROJECT_STATE.md` | Every session | Current project state. |
-| `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff. |
 | `docs/TASK_BOARD.md` | Every session | Task queue and capsule paths. |
 | `docs/HADARA_WORKFLOW.md` | Every session | Workflow rules and command-surface routing. |
 | `docs/DEVELOPMENT_SLICES.md` | Starting, completing, or reclassifying a development slice. | Slice order and status. |
@@ -21,7 +19,7 @@ This repository must be developed using the HADARA protocol.
 | Active Task Capsule docs | Every implementation session. | Capsule evidence and handoff. |
 | Project-specific specs or roadmap documents referenced by the current task | When referenced by the active task. | Task-specific constraints. |
 
-`docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task, validation, or refactor history is needed.
+Task-local `tasks/T-*/HANDOFF.md` is compact continuation handoff for a selected capsule. Use `docs/history/` only when older completed-task, validation, or refactor history is explicitly needed.
 
 ## Required Reading Tiers
 
@@ -35,7 +33,7 @@ Use semantic tiers to keep session startup compact:
 | `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
 | `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
 
-`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `hadara task status --json`, `docs/TASK_BOARD.md`, and the selected Task Capsule before conditional-reference docs. `.hadara/state/current.json` is a command-owned compatibility checkpoint, not Required Reading or a human authoring surface. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; use its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
+`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `hadara task status --json`, `docs/TASK_BOARD.md`, and the selected Task Capsule before conditional-reference docs. Historical and superseded docs are never default required reading.
 
 ## Rules
 
@@ -45,18 +43,17 @@ Use semantic tiers to keep session startup compact:
 - If host Node/npm is unavailable, use the reusable Docker workflow in `docs/HADARA_WORKFLOW.md` to run the HADARA CLI against the workspace.
 - For HADARA-dev CLI development, prefer the reusable `hadara-dev` Docker workflow over host-local Node/npm. After changing CLI code, build in Docker and refresh `/workspace/dist` from the Docker build output before running built-CLI smokes or treating the workspace CLI as current. Do not assume the container-global `/usr/local/bin/hadara` is the latest development build.
 - Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.
-- Do not defer all documentation until after implementation. Keep the active Task Capsule current while the work evolves: update `TASK.md` Goal, Scope, Plan, Validation, Changes, Risks, and History as the source of truth; keep `HANDOFF.md` aligned with what the next session should know; update generated `EVIDENCE.md` and append-only `evidence.jsonl` through the evidence commands. Finish human-owned shared prose before task close; registered existing Project State/Handoff managed checkpoints are projected automatically.
-- Parallelize read-only discovery, file inspection, independent validation, package/registry metadata inspection, read-only diagnostics, draft preparation, and independent evidence commands when useful. Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task close`, and release artifact/publish operations. Evidence commands are internally serialized by their task-scoped append lock.
+- Do not defer all documentation until after implementation. Keep the active Task Capsule current while the work evolves: update `TASK.md` Goal, Scope, Plan, Validation, Changes, Risks, and History as the source of truth; keep task-local `HANDOFF.md` aligned with what the next session should know; update generated `EVIDENCE.md` and append-only `evidence.jsonl` through the evidence commands. Finish human-owned shared prose before task close.
+- Parallelize read-only discovery, file inspection, independent validation, package/registry metadata inspection, read-only diagnostics, draft preparation, and independent evidence commands when useful. Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, optional shared-doc writes, before-hash execute operations, `task close`, and release artifact/publish operations. Evidence commands are internally serialized by their task-scoped append lock.
 - For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: from 0.5 onward, agents should use `task status` for next-work selection, phase checks, and next-action guidance, then `task close --task T-XXXX --json` as the default proof-last close path. Use `task close --dry-run --json` to inspect the close transaction and `task close --execute --plan-hash <hash>` only when a human or automation explicitly reviewed a dry-run plan hash.
-- Before `task close`, finish Task Capsule docs, including `TASK.md` acceptance, validation, changes, risks, history, and `HANDOFF.md` close-time continuation guidance, plus evidence summaries and any human-owned shared prose. Task Board bookkeeping and registered existing Project State/Handoff managed checkpoints are projected by close. After task close records proof, do not edit close-source docs unless you intentionally rerun task close.
+- Before `task close`, finish Task Capsule docs, including `TASK.md` acceptance, validation, changes, risks, history, and task-local `HANDOFF.md` close-time continuation guidance, plus evidence summaries and any human-owned shared prose. Task Board bookkeeping is projected by close. After task close records proof, do not edit close-source docs unless you intentionally rerun task close.
 - Do not execute dangerous commands.
 - Do not write secrets, private logs, or machine-local state into committed files.
 - Preserve the portable/project store boundary.
-- Follow validation constraints recorded in `docs/AGENT_HANDOFF.md` and the active Task Capsule.
+- Follow validation constraints recorded in the active Task Capsule.
 - Update `EVIDENCE.md` and `evidence.jsonl` for meaningful checks.
-- Treat `.hadara/state/current.json` as a command-owned compatibility checkpoint. Do not require agents to read or edit it; Task Board, Task Capsules, and human-readable project docs own inspectable intent.
-- Update `docs/TASK_BOARD.md`, product/phase prose in `docs/PROJECT_STATE.md`, and `docs/DEVELOPMENT_SLICES.md` when their separately owned state changes.
-- Update `docs/AGENT_HANDOFF.md` before stopping.
+- Update `docs/TASK_BOARD.md` and `docs/DEVELOPMENT_SLICES.md` when their separately owned state changes.
+- Update task-local `HANDOFF.md` before stopping.
 - Current human or reviewer instructions override persisted `Next Recommended Step` prose when they conflict. Treat handoff next steps as review input, read the routed project/development sources, and choose a concise task title yourself only after deciding that a new capsule is still appropriate.
 - A successful `task close` result with `closed-valid` is terminal for that capsule. Report it and stop; do not run `task status` merely to confirm close or discover another capsule unless the current human/reviewer instruction explicitly requires continued work.
 - Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`; do not reopen removed dashboard work or jump to real provider, broad MCP, or full agent-controller work before the required harness, policy, and evidence gates are ready.

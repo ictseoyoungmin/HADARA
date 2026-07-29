@@ -23,7 +23,7 @@
         "type": "object",
         "additionalProperties": true,
         "properties": {
-          "sourceKind": { "enum": ["current-state", "handoff", "development-slices", "task-board-fallback"] }
+          "sourceKind": { "enum": ["development-slices", "task-board-fallback"] }
         }
       }
     },

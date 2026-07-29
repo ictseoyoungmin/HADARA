@@ -2,12 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ActiveRunProjection, safeCreateActiveRunProjection } from './active-run-state';
 import { createEmptyOperationalDebtAggregate, OperationalDebtAggregate } from './developer-surface-placeholders';
-import { extractHandoffSectionValues, extractValidationBaselineSummary } from './handoff-summary-parser';
+import { extractValidationBaselineSummary } from './handoff-summary-parser';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading } from './markdown-table';
-import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
+import { ProjectReadSources, readProjectSources } from './project-read-model';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
-import { readProjectCurrentState } from './project-current-state';
 
 export interface OpsStatusReport {
   schemaVersion: 'hadara.ops.status.v1';
@@ -104,38 +103,18 @@ const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = createEmptyOperationalDeb
 export function createOpsStatusReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusReport {
   const includeDebt = options.includeDebt !== false;
   const sources = readProjectSources(projectRoot);
-  const structuredState = readProjectCurrentState(projectRoot).state;
   const taskBoardRows = parseTaskBoardRows(sources.taskBoard.content);
   const taskCapsules = options.taskStatusSource === 'task-board' ? [] : listTaskCapsules(projectRoot);
   const recommendationRows = options.taskStatusSource === 'task-board' ? taskBoardRows : taskCapsules.map(taskCapsuleToStatusRow);
   const taskCounts = options.taskStatusSource === 'task-board'
     ? countTaskBoardStatuses(taskBoardRows)
     : countTaskStatuses(taskCapsules);
-  const handoffSections = structuredState ? {
-    currentState: truncateList([
-      `Release: ${structuredState.currentRelease}`,
-      `Latest completed: ${structuredState.latestCompletedTask?.id ?? 'none'}`,
-      `Active: ${structuredState.activeTask?.id ?? 'none'}`
-    ], options.maxTextLength),
-    knownProblems: options.includeKnownProblems === false
-      ? []
-      : truncateList(structuredState.currentKnownProblems.map((problem) => `${problem.state}: ${problem.summary} · ${problem.guidance}`), options.maxTextLength),
-    nextRecommendedStep: truncateList([
-      structuredState.nextWork
-        ? `${structuredState.nextWork.title}${structuredState.nextWork.operatorGuidance ? ` · ${structuredState.nextWork.operatorGuidance}` : ''}`
-        : structuredState.nextOperatorIntent
-    ], options.maxTextLength)
-  } : {
-    currentState: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current State'), options.maxTextLength),
-    knownProblems: options.includeKnownProblems === false
-      ? []
-      : truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current Known Problems'), options.maxTextLength),
-    nextRecommendedStep: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Next Recommended Step'), options.maxTextLength)
+  const handoffSections = {
+    currentState: truncateList(taskBoardRows.map((row) => `${row.id}: ${row.status} - ${row.title}`), options.maxTextLength),
+    knownProblems: [],
+    nextRecommendedStep: []
   };
-  const validation = structuredState ? {
-    latestFullCheck: structuredState.validationBaseline.summary,
-    latestDoneLevelValidation: structuredState.validationBaseline.evidence.at(-1) ?? structuredState.validationBaseline.summary
-  } : extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
+  const validation = extractValidationBaselineSummary('', sources.validationHistory.content);
   const expectedSources = determineExpectedStatusSources(projectRoot, sources);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtAggregate = includeDebt ? createEmptyOperationalDebtAggregate() : EMPTY_DEBT_AGGREGATE;
@@ -152,7 +131,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
     : undefined;
   const issues = [...collectIssues(sources, validation, expectedSources), ...activeRun.issues];
-  const nextRecommended = structuredState?.activeTask?.id ?? selectNextRecommendedTask(recommendationRows, handoffSections.nextRecommendedStep[0] ?? null);
+  const nextRecommended = selectNextRecommendedTask(recommendationRows, handoffSections.nextRecommendedStep[0] ?? null);
 
   return {
     schemaVersion: 'hadara.ops.status.v1',
@@ -161,13 +140,13 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     health: issues.some((issue) => issue.severity === 'error') ? 'error' : issues.length > 0 ? 'degraded' : 'ok',
     project: {
       branch: readGitBranch(projectRoot),
-      phase: truncateText(extractProjectPhase(sources.projectState.content), options.maxTextLength)
+      phase: truncateText('bootstrap-development', options.maxTextLength)
     },
     tasks: {
       counts: taskCounts.counts,
       rawStatusCounts: taskCounts.rawStatusCounts,
       normalizedStatusCounts: taskCounts.normalizedStatusCounts,
-      lastCompleted: structuredState?.latestCompletedTask?.id ? [structuredState.latestCompletedTask.id] : extractLastCompletedTaskIds(sources.handoff.content),
+      lastCompleted: taskBoardRows.filter((row) => normalizeStatus(row.status) === 'done').map((row) => row.id).slice(-3),
       nextRecommended: nextRecommended ? truncateText(nextRecommended, options.maxTextLength) : null
     },
     handoff: handoffSections,
@@ -253,21 +232,6 @@ function readGitBranch(projectRoot: string): string {
   const refPrefix = 'ref: refs/heads/';
   if (head.startsWith(refPrefix)) return head.slice(refPrefix.length);
   return head.length > 0 ? 'detached' : 'unknown';
-}
-
-function extractProjectPhase(projectState: string): string {
-  const section = extractSection(projectState, '## Current Phase');
-  const phaseRow = findMarkdownRowByCell(parseMarkdownRowsUnderHeading(projectState, '## Current Phase'), 0, 'Phase');
-  if (phaseRow?.[1]) return phaseRow[1].trim();
-  const line = section
-    .split(/\r?\n/)
-    .map((value) => value.trim())
-    .find((value) => value && !value.startsWith('|'));
-  if (!line) return 'unknown';
-  const explicit = line.match(/^Phase:\s*(.+)$/i);
-  if (explicit) return explicit[1].trim();
-  if (/Phase 0\s*\/\s*Phase 1 boundary/i.test(line)) return 'bootstrap-development';
-  return line;
 }
 
 function countTaskStatuses(tasks: TaskCapsule[]): {
@@ -391,24 +355,16 @@ function aggregateStatus(status: string): keyof OpsStatusReport['tasks']['counts
   return 'unknown';
 }
 
-function extractLastCompletedTaskIds(handoff: string): string[] {
-  return extractHandoffSectionValues(handoff, '## Last 3 Completed Tasks')
-    .map((line) => line.match(/^(T-\d{4})\b/)?.[1])
-    .filter((value): value is string => Boolean(value));
-}
-
 function collectIssues(
   sources: ProjectReadSources,
   validation: OpsStatusReport['validation'],
   expected: ExpectedStatusSources
 ): OpsStatusReport['issues'] {
   const issues: OpsStatusReport['issues'] = [];
-  if (expected.projectState && !sources.projectState.exists) issues.push(warning('PROJECT_STATE_MISSING', 'docs/PROJECT_STATE.md is missing.'));
-  if (expected.handoff && !sources.handoff.exists) issues.push(warning('AGENT_HANDOFF_MISSING', 'docs/AGENT_HANDOFF.md is missing.'));
   if (expected.taskBoard && !sources.taskBoard.exists) issues.push(warning('TASK_BOARD_MISSING', 'docs/TASK_BOARD.md is missing.'));
   if (expected.developmentSlices && !sources.developmentSlices.exists) issues.push(warning('DEVELOPMENT_SLICES_MISSING', 'docs/DEVELOPMENT_SLICES.md is missing.'));
   if (expected.validationBaseline && !validation.latestFullCheck && !validation.latestDoneLevelValidation) {
-    issues.push(warning('VALIDATION_BASELINE_MISSING', 'No latest validation baseline was found in handoff or validation history.'));
+    issues.push(warning('VALIDATION_BASELINE_MISSING', 'No latest validation baseline was found in task evidence or validation history.'));
   }
   return issues;
 }
@@ -423,8 +379,6 @@ interface StatusSourceMetadata {
 }
 
 interface ExpectedStatusSources {
-  projectState: boolean;
-  handoff: boolean;
   taskBoard: boolean;
   developmentSlices: boolean;
   validationBaseline: boolean;
@@ -434,15 +388,11 @@ function determineExpectedStatusSources(projectRoot: string, sources: ProjectRea
   const metadata = readStatusSourceMetadata(projectRoot, sources);
   const hasAnyStatusContext = metadata.hasScaffold ||
     metadata.hasRegistry ||
-    sources.projectState.exists ||
-    sources.handoff.exists ||
     sources.taskBoard.exists ||
     sources.developmentSlices.exists ||
     sources.validationHistory.exists;
   if (!hasAnyStatusContext) {
     return {
-      projectState: true,
-      handoff: true,
       taskBoard: true,
       developmentSlices: true,
       validationBaseline: true
@@ -450,19 +400,13 @@ function determineExpectedStatusSources(projectRoot: string, sources: ProjectRea
   }
 
   const registered = metadata.registeredActiveDocs;
-  const handoffExpected = metadata.profile === 'governed' ||
-    metadata.profile === 'hadara-dev' ||
-    registered.has('docs/AGENT_HANDOFF.md');
   const developmentSlicesExpected = metadata.profile === 'hadara-dev' ||
     registered.has('docs/DEVELOPMENT_SLICES.md');
-  const validationBaselineExpected = handoffExpected ||
-    sources.handoff.exists ||
+  const validationBaselineExpected =
     sources.validationHistory.exists ||
     registered.has('docs/VALIDATION_HISTORY.md');
 
   return {
-    projectState: true,
-    handoff: handoffExpected,
     taskBoard: true,
     developmentSlices: developmentSlicesExpected,
     validationBaseline: validationBaselineExpected
@@ -470,13 +414,13 @@ function determineExpectedStatusSources(projectRoot: string, sources: ProjectRea
 }
 
 function readStatusSourceMetadata(projectRoot: string, sources: ProjectReadSources): StatusSourceMetadata {
+  void sources;
   const registryPath = path.join(projectRoot, '.hadara', 'docs-registry.json');
   const scaffoldPath = path.join(projectRoot, '.hadara', 'scaffold.json');
   const registry = readJsonObject(registryPath);
   const scaffold = readJsonObject(scaffoldPath);
   const profile = normalizeStatusProjectProfile(registry?.projectProfile) ??
     normalizeStatusProjectProfile(scaffold?.profile) ??
-    readProjectStateProfile(sources.projectState.content) ??
     'unknown';
   return {
     profile,
@@ -507,11 +451,6 @@ function readRegisteredActiveDocs(registry: Record<string, unknown> | null): Set
     paths.add(doc.path);
   }
   return paths;
-}
-
-function readProjectStateProfile(projectState: string): StatusProjectProfile | null {
-  const value = findMarkdownRowByCell(parseMarkdownRowsUnderHeading(projectState, '## Metadata'), 0, 'HADARA Profile')?.[1]?.trim();
-  return normalizeStatusProjectProfile(value);
 }
 
 function normalizeStatusProjectProfile(value: unknown): StatusProjectProfile | null {

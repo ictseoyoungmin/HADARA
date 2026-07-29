@@ -373,7 +373,7 @@ Output schema:
   "activeRun": null,
   "resumePrompt": {
     "summary": "No active run is currently recorded.",
-    "mustRead": ["docs/AGENT_HANDOFF.md", "docs/TASK_BOARD.md"],
+    "mustRead": ["docs/TASK_BOARD.md"],
     "nextActions": ["Pick or create one Task Capsule before implementation."],
     "constraints": ["Do not assume multi-agent queues."]
   },
@@ -521,7 +521,7 @@ Output schema:
 
 ### `hadara.handoff.read`
 
-Read compact handoff state and historical indexes.
+Read compact continuation state and historical indexes. The compatibility tool name remains `handoff.read`, but current continuation state is routed through `docs/TASK_BOARD.md` plus task-local `HANDOFF.md` from `task.read`.
 
 Input schema:
 
@@ -544,7 +544,7 @@ Output schema:
   "command": "handoff.read",
   "ok": true,
   "handoff": {
-    "current": "docs/AGENT_HANDOFF.md content",
+    "current": "docs/TASK_BOARD.md content",
     "history": null,
     "validationHistory": null
   },
@@ -556,7 +556,7 @@ If `includeHistory` is true, `history` and `validationHistory` should return com
 
 ### `hadara.project.state.read`
 
-Read project state and roadmap pointers.
+Read task-state and roadmap pointers. The compatibility tool name remains `project.state.read`, but it no longer returns legacy global project-state document content.
 
 Input schema:
 
@@ -578,14 +578,13 @@ Output schema:
   "schemaVersion": "hadara.project.state.read.v1",
   "command": "project.state.read",
   "ok": true,
-  "projectState": "docs/PROJECT_STATE.md content",
   "taskBoard": "docs/TASK_BOARD.md content",
   "developmentSlices": "docs/DEVELOPMENT_SLICES.md content",
   "issues": []
 }
 ```
 
-If `summaryOnly` is true, the tool may return extracted current-state and next-step fields instead of full document text. If `includeDocuments` is false, full Markdown document bodies should be omitted while preserving enough metadata for agent orientation.
+If `summaryOnly` is true, the tool may return Task Board and development-slice tails instead of full document text. If `includeDocuments` is false, full Markdown document bodies should be omitted while preserving enough metadata for agent orientation.
 
 ### `hadara.policy.evaluate`
 

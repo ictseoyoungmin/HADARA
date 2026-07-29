@@ -629,18 +629,15 @@ function createFastOpsStatusReport(
   const counts = countTaskStatuses(tasks.tasks);
   const validation = {
     latestFullCheck:
-      extractValidationLine(sources.handoff.content, 'Latest full check') ?? extractValidationHistoryLine(sources.validationHistory.content, 'Docker check'),
+      extractValidationHistoryLine(sources.validationHistory.content, 'Docker check'),
     latestDoneLevelValidation:
-      extractValidationLine(sources.handoff.content, 'Latest done-level validation') ??
       extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
   };
   const issues: OpsStatusReport['issues'] = [];
-  if (!sources.projectState.exists) issues.push({ severity: 'warning', code: 'PROJECT_STATE_MISSING', message: 'docs/PROJECT_STATE.md is missing.' });
-  if (!sources.handoff.exists) issues.push({ severity: 'warning', code: 'AGENT_HANDOFF_MISSING', message: 'docs/AGENT_HANDOFF.md is missing.' });
   if (!sources.taskBoard.exists) issues.push({ severity: 'warning', code: 'TASK_BOARD_MISSING', message: 'docs/TASK_BOARD.md is missing.' });
   if (!sources.developmentSlices.exists) issues.push({ severity: 'warning', code: 'DEVELOPMENT_SLICES_MISSING', message: 'docs/DEVELOPMENT_SLICES.md is missing.' });
   if (!validation.latestFullCheck && !validation.latestDoneLevelValidation) {
-    issues.push({ severity: 'warning', code: 'VALIDATION_BASELINE_MISSING', message: 'No latest validation baseline was found in handoff or validation history.' });
+    issues.push({ severity: 'warning', code: 'VALIDATION_BASELINE_MISSING', message: 'No latest validation baseline was found in task evidence or validation history.' });
   }
   issues.push(...activeRun.issues);
 
@@ -651,19 +648,19 @@ function createFastOpsStatusReport(
     health: issues.some((issue) => issue.severity === 'error') ? 'error' : issues.length > 0 ? 'degraded' : 'ok',
     project: {
       branch: readGitBranch(projectRoot),
-      phase: extractProjectPhase(sources.projectState.content)
+      phase: 'bootstrap-development'
     },
     tasks: {
       counts: counts.counts,
       rawStatusCounts: counts.rawStatusCounts,
       normalizedStatusCounts: counts.normalizedStatusCounts,
-      lastCompleted: extractLastCompletedTaskIds(sources.handoff.content),
-      nextRecommended: extractListSection(sources.handoff.content, '## Next Recommended Step')[0] ?? null
+      lastCompleted: tasks.tasks.filter((task) => normalizeStatus(task.status) === 'done').map((task) => task.id).slice(-3),
+      nextRecommended: tasks.tasks.find((task) => normalizeStatus(task.status) === 'inProgress' || normalizeStatus(task.status) === 'draft')?.id ?? null
     },
     handoff: {
-      currentState: extractListSection(sources.handoff.content, '## Current State'),
-      knownProblems: extractListSection(sources.handoff.content, '## Current Known Problems'),
-      nextRecommendedStep: extractListSection(sources.handoff.content, '## Next Recommended Step')
+      currentState: tasks.tasks.map((task) => `${task.id}: ${task.status} - ${task.title}`),
+      knownProblems: [],
+      nextRecommendedStep: []
     },
     validation,
     activeRun,

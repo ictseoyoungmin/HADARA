@@ -110,8 +110,6 @@ const END_MARKER = /^<!--\s*hadara:managed:end\s+([A-Za-z0-9_.-]+)\s*-->\s*$/;
 
 const KNOWN_TARGETS = [
   'docs/TASK_BOARD.md',
-  'docs/PROJECT_STATE.md',
-  'docs/AGENT_HANDOFF.md',
   'docs/HADARA_WORKFLOW.md',
   'docs/DOC_REGISTRY.md'
 ];

@@ -24,10 +24,8 @@ import {
   summarizeContextGraphExtraction
 } from './extractor-contract';
 import {
-  extractAgentHandoff,
   extractDecisions,
-  extractManagedSections,
-  extractProjectState
+  extractManagedSections
 } from './document-extractors';
 import { extractEvidence } from './evidence-extractors';
 import { extractCommandRegistry, extractDocsRegistry } from './registry-extractors';
@@ -75,9 +73,7 @@ export function collectContextGraphExtractions(projectRoot: string, options: { i
     extractDocsRegistry(projectRoot),
     extractCommandRegistry(projectRoot),
     extractManagedSections(projectRoot),
-    extractProjectState(projectRoot),
     extractDecisions(projectRoot),
-    extractAgentHandoff(projectRoot),
     extractEvidence(projectRoot),
     extractReleaseReadiness(projectRoot)
   ];
@@ -200,9 +196,7 @@ export function collectContextGraphExtractionsWithCache(
     shards.results.extractDocsRegistry ?? extractDocsRegistry(projectRoot),
     shards.results.extractCommandRegistry ?? extractCommandRegistry(projectRoot),
     extractManagedSections(projectRoot),
-    extractProjectState(projectRoot),
     extractDecisions(projectRoot),
-    extractAgentHandoff(projectRoot),
     extractEvidence(projectRoot),
     extractReleaseReadiness(projectRoot)
   ];
@@ -384,9 +378,7 @@ function shouldUseBoundedStaleGraphCore(input: {
   const staleOrAssumed = input.graphCore.status === 'stale' || (input.assumedHot && input.graphCore.hit);
   if (!taskId || !staleOrAssumed || !input.graphCore.record) return false;
   const boundedStaleKeys = new Set([
-    'extractAgentHandoff',
     'extractManagedSections',
-    'extractProjectState',
     'extractTaskBoard',
     'extractTaskCapsules',
     'extractEvidence',
@@ -407,8 +399,6 @@ function boundedLiveOverlayExtractions(projectRoot: string, input: {
   const results: GraphExtractionResult[] = [];
   if (stale.has('extractTaskBoard')) results.push(extractTaskBoard(projectRoot));
   if (stale.has('extractTaskCapsules')) results.push(extractTaskCapsules(projectRoot, { taskIds }));
-  if (stale.has('extractProjectState')) results.push(extractProjectState(projectRoot));
-  if (stale.has('extractAgentHandoff')) results.push(extractAgentHandoff(projectRoot));
   if (stale.has('extractManagedSections')) results.push(extractManagedSections(projectRoot));
   if (stale.has('extractEvidence')) results.push(extractEvidence(projectRoot, { taskIds }));
   return results;

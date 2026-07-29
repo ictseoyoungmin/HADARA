@@ -21,8 +21,6 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-active-run-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Ready.\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
   writeCanonicalTaskBoard(dir);
   fs.writeFileSync(path.join(dir, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
@@ -53,10 +51,9 @@ describe('single active run state', () => {
     });
   });
 
-  it('creates a resume projection when handoff mentions the active task', () => {
+  it('creates a resume projection when the task-local handoff mentions the active task', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Fresh active run');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
     writeActiveRunManifest(
       root,
       createActiveRunManifest(root, {
@@ -88,8 +85,8 @@ describe('single active run state', () => {
 
   it('flags stale handoff when the active task is not mentioned', () => {
     const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Last capsule only.\n', 'utf8');
     const task = createTaskCapsule(root, 'Stale active run');
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), '# Handoff\n\nNo active task here.\n', 'utf8');
     writeActiveRunManifest(
       root,
       createActiveRunManifest(root, {
@@ -103,12 +100,12 @@ describe('single active run state', () => {
     const projection = createActiveRunProjection(root);
 
     expect(projection.handoff.fresh).toBe(false);
-    expect(projection.handoff.staleReason).toBe('Active run T-0001 is not mentioned in docs/AGENT_HANDOFF.md.');
+    expect(projection.handoff.staleReason).toBe('Active run T-0001 is not mentioned in its task-local HANDOFF.md.');
     expect(projection.issues).toEqual([
       {
         severity: 'warning',
         code: 'ACTIVE_RUN_HANDOFF_STALE',
-        message: 'Active run T-0001 is not mentioned in docs/AGENT_HANDOFF.md.'
+        message: 'Active run T-0001 is not mentioned in its task-local HANDOFF.md.'
       }
     ]);
   });
@@ -175,7 +172,6 @@ describe('single active run state', () => {
 
   it('warns when active run task id has no matching Task Capsule', () => {
     const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- T-9999 is active.\n', 'utf8');
     writeActiveRunManifest(root, {
       schemaVersion: 'hadara.active_run.v1',
       runId: 'run-missing',
@@ -201,7 +197,6 @@ describe('single active run state', () => {
   it('warns and uses canonical capsule paths when the manifest capsule is stale', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Canonical active run');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
     writeActiveRunManifest(root, {
       schemaVersion: 'hadara.active_run.v1',
       runId: 'run-stale-capsule',
@@ -228,9 +223,9 @@ describe('single active run state', () => {
         'Active run T-0001 points to tasks/T-0001-old-title, but the canonical Task Capsule path is tasks/T-0001-canonical-active-run.'
     });
     expect(report.resumePrompt.mustRead).toEqual([
-      'docs/AGENT_HANDOFF.md',
       'tasks/T-0001-canonical-active-run/TASK.md',
-      'tasks/T-0001-canonical-active-run/HANDOFF.md'
+      'tasks/T-0001-canonical-active-run/HANDOFF.md',
+      'docs/TASK_BOARD.md'
     ]);
     expect(report.issues).toContainEqual(
       expect.objectContaining({
@@ -268,7 +263,6 @@ describe('single active run state', () => {
   it('creates read-only resume guidance from the active run projection', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Resume active run');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
     writeActiveRunManifest(
       root,
       createActiveRunManifest(root, {
@@ -290,7 +284,7 @@ describe('single active run state', () => {
       },
       resumePrompt: {
         summary: `Continue ${task.id}: Continue read surfaces.`,
-        mustRead: ['docs/AGENT_HANDOFF.md', 'tasks/T-0001-resume-active-run/TASK.md', 'tasks/T-0001-resume-active-run/HANDOFF.md'],
+        mustRead: ['tasks/T-0001-resume-active-run/TASK.md', 'tasks/T-0001-resume-active-run/HANDOFF.md', 'docs/TASK_BOARD.md'],
         nextActions: [expect.stringContaining(task.id), 'Run required validation before marking the task Done.'],
         constraints: expect.arrayContaining(['Do not use MCP write tools for active-run mutation.'])
       },

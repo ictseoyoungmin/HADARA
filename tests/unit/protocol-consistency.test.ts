@@ -68,13 +68,13 @@ describe('Docs protocol consistency report', () => {
         detectedProfile: 'basic',
         issueCounts: {
           error: 0,
-          warning: 2,
+          warning: 1,
           info: 0
         }
       }
     });
     expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_METADATA_MISSING', 'PROFILE_REQUIRED_READING_DRIFT'])
+      expect.arrayContaining(['PROFILE_REQUIRED_READING_DRIFT'])
     );
     expect(report.remediations.find((candidate) => candidate.id === 'profile-metadata-align')).toBeTruthy();
     expect(report.summary.checkedDocs).toBeGreaterThanOrEqual(5);
@@ -165,12 +165,12 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports missing evidence ids referenced by docs/AGENT_HANDOFF.md', () => {
+  it('reports missing evidence ids referenced by task-local HANDOFF.md', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Docs handoff evidence');
     fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      `# AGENT_HANDOFF\n\n## Current Handoff\n\nLatest check: ev:${task.id}:missinghandoffevidence0001\n`,
+      path.join(task.dir, 'HANDOFF.md'),
+      `# HANDOFF\n\n## Current Handoff\n\nLatest check: ev:${task.id}:missinghandoffevidence0001\n`,
       'utf8'
     );
 
@@ -180,9 +180,9 @@ describe('Docs protocol consistency report', () => {
     expect(report.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: 'PROJECT_HANDOFF_EVIDENCE_REF_MISSING',
+          code: 'TASK_HANDOFF_EVIDENCE_REF_MISSING',
           severity: 'warning',
-          path: 'docs/AGENT_HANDOFF.md',
+          path: `tasks/${task.id}-docs-handoff-evidence/HANDOFF.md`,
           actual: `ev:${task.id}:missinghandoffevidence0001`
         })
       ])
@@ -190,7 +190,7 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports project docs, Task Board, handoff, and required-reading drift', () => {
+  it('reports project docs, Task Board, and required-reading drift', () => {
     const root = tempProject();
     const doneTask = createTaskCapsule(root, 'Finished docs task');
     const activeTask = createTaskCapsule(root, 'Active docs task');
@@ -223,8 +223,7 @@ describe('Docs protocol consistency report', () => {
         'PROJECT_DOC_MISSING',
         'REQUIRED_READING_DOC_MISSING',
         'PROJECT_TASK_BOARD_STATUS_DRIFT',
-        'PROJECT_TASK_BOARD_CAPSULE_DRIFT',
-        'PROJECT_HANDOFF_LATEST_COMPLETED_STALE'
+        'PROJECT_TASK_BOARD_CAPSULE_DRIFT'
       ])
     );
     expect(report.issues.find((issue) => issue.code === 'PROJECT_DOC_MISSING')).toMatchObject({
@@ -240,7 +239,7 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports expanded project-doc drift for state, slices, decisions, tests, handoff, and workflow structure', () => {
+  it('reports expanded project-doc drift for slices, decisions, tests, and workflow structure', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
@@ -272,18 +271,13 @@ describe('Docs protocol consistency report', () => {
     expect(report.ok).toBe(true);
     expect(report.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining([
-        'PROJECT_STATE_ACTIVE_TASK_STALE',
-        'PROJECT_HANDOFF_ACTIVE_TASK_STALE',
         'DEVELOPMENT_SLICE_STATUS_DRIFT',
         'DECISION_EVIDENCE_MISSING',
         'WORKFLOW_SCAFFOLD_SECTION_MISSING',
         'WORKFLOW_READ_AUTHORITY_TABLE_MISSING'
       ])
     );
-    expect(report.issues.find((issue) => issue.code === 'PROJECT_STATE_ACTIVE_TASK_STALE')).toMatchObject({
-      taskId: task.id,
-      path: 'docs/PROJECT_STATE.md'
-    });
+    expect(report.summary.activeTaskId).toBe(task.id);
   });
 });
 
@@ -382,7 +376,7 @@ describe('Profile protocol consistency report', () => {
     expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeTruthy();
   });
 
-  it('uses complete governed docs as the target when metadata is missing', () => {
+  it('does not infer governed profile from legacy global docs when metadata is missing', () => {
     const root = tempProject();
     fs.rmSync(path.join(root, '.hadara', 'scaffold.json'));
     writeProfileDocs(root, 'governed');
@@ -391,11 +385,11 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.summary.profile).toMatchObject({
       declared: 'unknown',
-      detected: 'governed',
-      target: 'governed',
+      detected: 'basic',
+      target: 'basic',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(['PROFILE_METADATA_MISSING']));
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_MISSING');
   });
 
   it('uses partial governed docs as the target when metadata declares basic', () => {
@@ -433,7 +427,7 @@ describe('Profile protocol consistency report', () => {
     expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
   });
 
-  it('uses PROJECT_STATE as the only profile metadata source', () => {
+  it('does not use PROJECT_STATE as a profile metadata source', () => {
     const root = tempProject();
     fs.rmSync(path.join(root, '.hadara', 'scaffold.json'));
     writeProfileDocs(root, 'standard');
@@ -442,14 +436,12 @@ describe('Profile protocol consistency report', () => {
     const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
     expect(report.summary.profile).toMatchObject({
-      declared: 'standard',
-      detected: 'standard',
-      target: 'standard',
+      declared: 'unknown',
+      detected: 'basic',
+      target: 'basic',
       source: 'metadata-and-docset'
     });
-    expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_REQUIRED_READING_DRIFT'])
-    );
+    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
     expect(report.issues.find((issue) => issue.code === 'PROFILE_METADATA_DRIFT')).toBeUndefined();
   });
 
@@ -525,7 +517,7 @@ describe('Task protocol consistency report', () => {
 
     expect(report.ok).toBe(false);
     expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['TASK_FILE_MISSING', 'TASK_BOARD_STATUS_DRIFT', 'PROJECT_HANDOFF_STALE', 'EVIDENCE_JSONL_MISSING'])
+      expect.arrayContaining(['TASK_FILE_MISSING', 'TASK_BOARD_STATUS_DRIFT', 'TASK_HANDOFF_MISSING', 'EVIDENCE_JSONL_MISSING'])
     );
     expect(report.issues.find((issue) => issue.code === 'TASK_FILE_MISSING')).toMatchObject({
       severity: 'error',

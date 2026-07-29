@@ -18,10 +18,8 @@ import type { ContextCacheMetadata, GraphExtractionResult } from './context-grap
 import { buildCodeIndexReport, CODE_INDEX_SCHEMA_ID, type CodeIndexReport, type CodeIndexSourceEntry } from './code-index';
 import { hashContextGraphJson, mergeGraphExtractionResults, normalizeContextGraphPath } from './extractor-contract';
 import {
-  extractAgentHandoff,
   extractDecisions,
-  extractManagedSections,
-  extractProjectState
+  extractManagedSections
 } from './document-extractors';
 import { extractEvidence } from './evidence-extractors';
 import { extractCommandRegistry, extractDocsRegistry } from './registry-extractors';
@@ -356,9 +354,7 @@ const CONTEXT_GRAPH_CORE_EXTRACTOR_KEYS = [
   'extractDocsRegistry',
   'extractCommandRegistry',
   'extractManagedSections',
-  'extractProjectState',
   'extractDecisions',
-  'extractAgentHandoff',
   'extractEvidence',
   'extractReleaseReadiness'
 ] as const;
@@ -664,9 +660,7 @@ export function buildContextGraphCoreExtractionResult(projectRoot: string): Grap
     extractDocsRegistry(projectRoot),
     extractCommandRegistry(projectRoot),
     extractManagedSections(projectRoot),
-    extractProjectState(projectRoot),
     extractDecisions(projectRoot),
-    extractAgentHandoff(projectRoot),
     extractEvidence(projectRoot),
     extractReleaseReadiness(projectRoot)
   ]);

@@ -5,13 +5,6 @@ import { createTaskCloseSourceReport } from '../task/close';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { parseEvidenceIndexFile } from './evidence-list';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';
-import {
-  HANDOFF_STATE_SECTION_ID,
-  PROJECT_CURRENT_STATE_PATH,
-  PROJECT_STATE_SECTION_ID,
-  projectCurrentStateDocument,
-  readProjectCurrentState
-} from './project-current-state';
 import { SLICES_STATE_PATH } from './slices-state';
 import { parseTaskBoard } from '../task/task-board';
 
@@ -88,20 +81,6 @@ export interface StateProjectionReport {
     checkedTasks: number;
   };
   sources: {
-    currentState: StateProjectionSourceValue & {
-      rev: number | null;
-      currentRelease: string | null;
-      latestCompletedTaskId: string | null;
-      activeTaskId: string | null;
-    };
-    projectState: StateProjectionSourceValue & {
-      latestCompletedTaskId: string | null;
-      activeTaskId: string | null;
-    };
-    agentHandoff: StateProjectionSourceValue & {
-      latestCompletedTaskId: string | null;
-      activeTaskId: string | null;
-    };
     taskBoard: StateProjectionSourceValue & {
       rows: number;
       latestDoneTaskId: string | null;
@@ -144,10 +123,6 @@ const CLOSE_STATE_TOKENS = new Set(['not-closed', 'closed-valid', 'closed-stale'
 
 export function createStateProjectionReport(projectRoot: string, now = new Date()): StateProjectionReport {
   const issues: StateProjectionIssue[] = [];
-  const currentStateRead = readProjectCurrentState(projectRoot);
-  for (const issue of currentStateRead.issues) {
-    issues.push({ ...issue, fixHint: `Repair ${PROJECT_CURRENT_STATE_PATH} before relying on projected current state.` });
-  }
   const sourceTexts = readSources(projectRoot, issues);
   const taskBoardRows = parseTaskBoardRows(sourceTexts.taskBoard.content);
   const tasks = listTaskCapsules(projectRoot);
@@ -160,36 +135,24 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
   }));
   const latestDoneTaskId = latestTaskId(basicTaskStates.filter((task) => isDone(task.taskStatus) || isDone(task.taskBoardStatus)).map((task) => task.id));
   const taskBoardActiveTaskIds = basicTaskStates.filter((task) => isActive(task.taskBoardStatus)).map((task) => task.id);
-  const activeTaskIds = currentStateRead.state?.activeTask
-    ? [currentStateRead.state.activeTask.id]
-    : taskBoardActiveTaskIds;
+  const activeTaskIds = taskBoardActiveTaskIds;
   const deepCheckTaskIds = new Set([latestDoneTaskId, ...activeTaskIds].filter((value): value is string => Boolean(value)));
   const projectedTasks = [...taskIds]
     .sort()
     .map((taskId) => buildTaskProjection(projectRoot, taskId, taskById.get(taskId), taskBoardRows.find((row) => row.id === taskId), deepCheckTaskIds.has(taskId), issues));
   checkLatestCloseProof(projectedTasks, latestDoneTaskId, issues);
-  const projectState = extractProjectState(sourceTexts.projectState);
-  const agentHandoff = extractAgentHandoff(sourceTexts.agentHandoff);
   const developmentSlices = extractDevelopmentSlices(sourceTexts.developmentSlices);
   const docsRegistry = extractDocsRegistry(projectRoot, issues);
   const releaseReadiness = readSource(projectRoot, 'docs/RELEASE_READINESS.md');
-
-  if (currentStateRead.state) {
-    compareLatestTask('STATE_CURRENT_CANON_LATEST_MISMATCH', PROJECT_CURRENT_STATE_PATH, currentStateRead.state.latestCompletedTask?.id ?? null, latestDoneTaskId, issues);
-    checkCurrentStateProjectionDrift(sourceTexts.projectState, 'project-state', PROJECT_STATE_SECTION_ID, currentStateRead.state, issues);
-    if (sourceTexts.agentHandoff.exists) checkCurrentStateProjectionDrift(sourceTexts.agentHandoff, 'handoff', HANDOFF_STATE_SECTION_ID, currentStateRead.state, issues);
-  }
 
   if (!releaseReadiness.exists) {
     issues.push(info('STATE_RELEASE_READINESS_MISSING', releaseReadiness.path, 'docs/RELEASE_READINESS.md is missing.', 'Create or register release readiness docs before release work depends on this projection.'));
   }
 
-  compareLatestTask('STATE_PROJECT_STATE_LATEST_MISMATCH', 'docs/PROJECT_STATE.md', projectState.latestCompletedTaskId, latestDoneTaskId, issues);
-  compareLatestTask('STATE_HANDOFF_LATEST_MISMATCH', 'docs/AGENT_HANDOFF.md', agentHandoff.latestCompletedTaskId, latestDoneTaskId, issues);
   if (fs.existsSync(path.join(projectRoot, SLICES_STATE_PATH))) {
     compareLatestTask('STATE_DEVELOPMENT_SLICES_LATEST_MISMATCH', 'docs/DEVELOPMENT_SLICES.md', developmentSlices.latestDoneTaskId, latestDoneTaskId, issues);
   }
-  compareActiveTasks(projectState.activeTaskId, agentHandoff.activeTaskId, activeTaskIds, issues);
+  compareActiveTasks(activeTaskIds, issues);
 
   const counts = countIssues(issues);
   return {
@@ -210,26 +173,6 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
       checkedTasks: projectedTasks.length
     },
     sources: {
-      currentState: {
-        path: PROJECT_CURRENT_STATE_PATH,
-        exists: currentStateRead.present,
-        rev: currentStateRead.state?.rev ?? null,
-        currentRelease: currentStateRead.state?.currentRelease ?? null,
-        latestCompletedTaskId: currentStateRead.state?.latestCompletedTask?.id ?? null,
-        activeTaskId: currentStateRead.state?.activeTask?.id ?? null
-      },
-      projectState: {
-        path: sourceTexts.projectState.path,
-        exists: sourceTexts.projectState.exists,
-        latestCompletedTaskId: projectState.latestCompletedTaskId,
-        activeTaskId: projectState.activeTaskId
-      },
-      agentHandoff: {
-        path: sourceTexts.agentHandoff.path,
-        exists: sourceTexts.agentHandoff.exists,
-        latestCompletedTaskId: agentHandoff.latestCompletedTaskId,
-        activeTaskId: agentHandoff.activeTaskId
-      },
       taskBoard: {
         path: sourceTexts.taskBoard.path,
         exists: sourceTexts.taskBoard.exists,
@@ -289,16 +232,12 @@ export function formatStateProjectionReport(report: StateProjectionReport, issue
 }
 
 function readSources(projectRoot: string, issues: StateProjectionIssue[]): {
-  projectState: SourceText;
-  agentHandoff: SourceText;
   taskBoard: SourceText;
   developmentSlices: SourceText;
 } {
-  const projectState = readSource(projectRoot, 'docs/PROJECT_STATE.md');
-  const agentHandoff = readSource(projectRoot, 'docs/AGENT_HANDOFF.md');
   const taskBoard = readSource(projectRoot, 'docs/TASK_BOARD.md');
   const developmentSlices = readSource(projectRoot, 'docs/DEVELOPMENT_SLICES.md');
-  for (const source of [projectState, agentHandoff, taskBoard, developmentSlices]) {
+  for (const source of [taskBoard, developmentSlices]) {
     if (!source.exists) {
       if (source.path === 'docs/DEVELOPMENT_SLICES.md') {
         issues.push(info(
@@ -312,7 +251,7 @@ function readSources(projectRoot: string, issues: StateProjectionIssue[]): {
       }
     }
   }
-  return { projectState, agentHandoff, taskBoard, developmentSlices };
+  return { taskBoard, developmentSlices };
 }
 
 interface SourceText extends StateProjectionSourceValue {
@@ -480,31 +419,6 @@ function readCloseProof(projectRoot: string, task: TaskCapsule): StateProjection
   return { path: relativeEvidencePath, state, sourceHash, currentSourceHash };
 }
 
-function extractProjectState(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
-  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Compatibility State Checkpoint').length > 0
-    ? parseMarkdownRowsUnderHeading(source.content, '## Compatibility State Checkpoint')
-    : parseMarkdownRowsUnderHeading(source.content, '## Canonical Current State');
-  const rows = canonicalRows.length > 0 ? canonicalRows : parseMarkdownRowsUnderHeading(source.content, '## Metadata');
-  return {
-    latestCompletedTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? ''),
-    activeTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? '')
-  };
-}
-
-function extractAgentHandoff(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
-  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Compatibility Continuation Checkpoint').length > 0
-    ? parseMarkdownRowsUnderHeading(source.content, '## Compatibility Continuation Checkpoint')
-    : parseMarkdownRowsUnderHeading(source.content, '## Canonical Continuation State');
-  const currentRows = canonicalRows.length > 0 ? canonicalRows : parseMarkdownRowsUnderHeading(source.content, '## Current State');
-  const latest = findMarkdownRowByCell(currentRows, 0, 'Latest Completed Task')?.[1] ?? '';
-  const active = findMarkdownRowByCell(currentRows, 0, 'Active Task')?.[1] ?? findMarkdownRowByCell(currentRows, 0, 'Active / Next Task')?.[1] ?? '';
-  const lastThreeRows = parseMarkdownRowsUnderHeading(source.content, '## Last 3 Completed Tasks');
-  return {
-    latestCompletedTaskId: extractTaskId(latest) ?? extractTaskId(lastThreeRows.find((row) => /^T-\d{4}/.test(row[0] ?? ''))?.[0] ?? ''),
-    activeTaskId: extractTaskId(active)
-  };
-}
-
 function extractDevelopmentSlices(source: SourceText): { latestDoneTaskId: string | null } {
   const rows = parseMarkdownRows(source.content);
   const doneIds = rows
@@ -557,36 +471,9 @@ function compareLatestTask(
   ));
 }
 
-function checkCurrentStateProjectionDrift(
-  source: SourceText,
-  kind: 'project-state' | 'handoff',
-  sectionId: string,
-  state: import('./project-current-state').ProjectCurrentState,
-  issues: StateProjectionIssue[]
-): void {
-  const expected = projectCurrentStateDocument(source.content, kind, state);
-  if (expected === source.content) return;
-  issues.push(warning(
-    'STATE_CURRENT_CANON_PROJECTION_DRIFT',
-    source.path,
-    `${source.path} managed section ${sectionId} does not match ${PROJECT_CURRENT_STATE_PATH}.`,
-    'Review hadara init upgrade --json, then execute the reviewed plan hash to regenerate the managed projection.'
-  ));
-}
-
-function compareActiveTasks(projectActive: string | null, handoffActive: string | null, activeTaskIds: string[], issues: StateProjectionIssue[]): void {
-  const expected = activeTaskIds[0] ?? null;
+function compareActiveTasks(activeTaskIds: string[], issues: StateProjectionIssue[]): void {
   if (activeTaskIds.length > 1) {
     issues.push(warning('STATE_MULTIPLE_ACTIVE_TASKS', 'docs/TASK_BOARD.md', `Task Board has multiple active tasks: ${activeTaskIds.join(', ')}.`, 'Keep only one In Progress task unless a future coordinator explicitly supports parallel active work.'));
-  }
-  if (expected && projectActive && projectActive !== expected) {
-    issues.push(warning('STATE_PROJECT_ACTIVE_TASK_MISMATCH', 'docs/PROJECT_STATE.md', `Project State active task is ${projectActive}, but Task Board active task is ${expected}.`, `Update Project State Active Task to ${expected} or finish/reclassify the Task Board row.`, undefined, expected, projectActive));
-  }
-  if (expected && handoffActive && handoffActive !== expected) {
-    issues.push(warning('STATE_HANDOFF_ACTIVE_TASK_MISMATCH', 'docs/AGENT_HANDOFF.md', `Agent Handoff active task is ${handoffActive}, but Task Board active task is ${expected}.`, `Update Agent Handoff Active / Next Task to ${expected} or finish/reclassify the Task Board row.`, undefined, expected, handoffActive));
-  }
-  if (!expected && projectActive) {
-    issues.push(warning('STATE_PROJECT_ACTIVE_TASK_STALE', 'docs/PROJECT_STATE.md', `Project State names active task ${projectActive}, but Task Board has no In Progress task.`, 'Set Active Task to None or mark the active Task Board row In Progress.', undefined, 'None', projectActive));
   }
 }
 

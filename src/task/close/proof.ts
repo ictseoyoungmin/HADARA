@@ -625,9 +625,7 @@ function closeSourceExcludedRawInputs(taskPath: string): string[] {
     `${taskPath}/EVIDENCE.md`,
     `${taskPath}/evidence.jsonl`,
     `${taskPath}/HANDOFF.md`,
-    'docs/TASK_BOARD.md',
-    'docs/PROJECT_STATE.md',
-    'docs/AGENT_HANDOFF.md'
+    'docs/TASK_BOARD.md'
   ];
 }
 

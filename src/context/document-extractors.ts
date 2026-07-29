@@ -36,8 +36,6 @@ interface KnownProblemRecord {
 
 const PROJECT_MANAGED_TARGETS = [
   'docs/TASK_BOARD.md',
-  'docs/PROJECT_STATE.md',
-  'docs/AGENT_HANDOFF.md',
   'docs/HADARA_WORKFLOW.md',
   'docs/DOC_REGISTRY.md'
 ];
@@ -72,16 +70,7 @@ export function extractProjectState(projectRoot: string): GraphExtractionResult 
   const relativePath = 'docs/PROJECT_STATE.md';
   const content = readOptionalText(path.join(projectRoot, relativePath));
   const result = createEmptyExtractionResult('extractProjectState', [{ path: relativePath, content }]);
-  if (content == null) {
-    result.issues.push({
-      severity: 'warning',
-      code: 'CONTEXT_GRAPH_SOURCE_MISSING',
-      path: relativePath,
-      message: 'docs/PROJECT_STATE.md is missing; project-state hints cannot be extracted.',
-      fixHint: 'Restore docs/PROJECT_STATE.md before relying on state projection context routing.'
-    });
-    return result;
-  }
+  if (content == null) return result;
 
   const sourceHash = hashContextGraphText(content);
   result.stateSources?.push(projectStateSource(relativePath, sourceHash, extractProjectStateHints(content)));
@@ -118,17 +107,7 @@ export function extractAgentHandoff(projectRoot: string): GraphExtractionResult 
   const relativePath = 'docs/AGENT_HANDOFF.md';
   const content = readOptionalText(path.join(projectRoot, relativePath));
   const result = createEmptyExtractionResult('extractAgentHandoff', [{ path: relativePath, content }]);
-  if (content == null) {
-    if (!expectsAgentHandoff(projectRoot)) return result;
-    result.issues.push({
-      severity: 'warning',
-      code: 'CONTEXT_GRAPH_SOURCE_MISSING',
-      path: relativePath,
-      message: 'docs/AGENT_HANDOFF.md is missing; KnownProblem nodes cannot be extracted from current handoff state.',
-      fixHint: 'Restore docs/AGENT_HANDOFF.md before relying on known-problem context routing.'
-    });
-    return result;
-  }
+  if (content == null) return result;
 
   const sourceHash = hashContextGraphText(content);
   const knownProblems = parseKnownProblems(content);
@@ -146,20 +125,6 @@ export function extractAgentHandoff(projectRoot: string): GraphExtractionResult 
   }
 
   return result;
-}
-
-function expectsAgentHandoff(projectRoot: string): boolean {
-  const scaffoldPath = path.join(projectRoot, '.hadara', 'scaffold.json');
-  const content = readOptionalText(scaffoldPath);
-  if (content == null) return true;
-  try {
-    const parsed = JSON.parse(content) as { profile?: unknown };
-    if (parsed.profile === 'basic' || parsed.profile === 'standard') return false;
-    if (parsed.profile === 'governed') return true;
-  } catch {
-    return true;
-  }
-  return true;
 }
 
 function projectStateSource(relativePath: string, sourceHash: string, hints: SharedStateHints): StateSource {

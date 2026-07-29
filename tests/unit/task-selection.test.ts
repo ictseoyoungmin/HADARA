@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('task selection recommendation', () => {
-  it('keeps active current-state work ahead of stale project handoff guidance', () => {
+  it('uses the Task Board row for active work instead of current-state guidance', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with stale handoff work.',
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
@@ -28,24 +28,16 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: '.hadara/state/current.json', policy: 'markdown-first' },
+      summary: { recommendations: 1, source: 'docs/TASK_BOARD.md', policy: 'markdown-first' },
       recommendations: [
         expect.objectContaining({
           taskId: active.id,
           title: 'Structured Active Work',
-          source: '.hadara/state/current.json',
-          sourceKind: 'current-state',
+          source: 'docs/TASK_BOARD.md',
+          sourceKind: 'task-board-fallback',
           taskBoardStatus: 'Draft'
         })
-      ],
-      sources: {
-        currentState: expect.objectContaining({
-          present: true,
-          activeTask: active.id,
-          nextWork: expect.objectContaining({ title: 'Continue with structured active work' }),
-          nextOperatorIntent: 'Continue with structured active work.'
-        })
-      }
+      ]
     });
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
@@ -73,7 +65,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('uses structured current-state next work when no active task exists', () => {
+  it('uses first-task creation when current-state next work is present but no task exists', () => {
     const root = tempProject({
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
     });
@@ -97,13 +89,11 @@ describe('task selection recommendation', () => {
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: 'TBD',
-      title: 'v0.4.4 external repository validation planning',
-      source: '.hadara/state/current.json',
-      sourceKind: 'current-state',
+      title: 'Create first Task Capsule',
+      source: 'project-scaffold',
+      sourceKind: 'task-board-fallback',
       taskCapsulePresent: false,
-      createCommand: "hadara task create 'v0.4.4 external repository validation planning'",
-      operatorGuidance: 'Keep publication operator-controlled.',
-      createCommandAllowed: true
+      createCommand: "hadara task create 'Create first Task Capsule'"
     });
     expect(report.issues).not.toContainEqual(expect.objectContaining({
       code: 'TASK_SELECTION_NO_RECOMMENDATION'
@@ -111,7 +101,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('does not turn operator guidance into a task create command when structured next work is gated', () => {
+  it('does not use gated current-state operator guidance for task selection', () => {
     const root = tempProject({
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
     });
@@ -135,16 +125,14 @@ describe('task selection recommendation', () => {
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: 'TBD',
-      title: 'stable publication operator checkpoint',
-      sourceKind: 'current-state',
-      createCommand: null,
-      operatorGuidance: 'Do not create a task until npm and GitHub publication are complete.',
-      createCommandAllowed: false
+      title: 'Create first Task Capsule',
+      sourceKind: 'task-board-fallback',
+      createCommand: "hadara task create 'Create first Task Capsule'"
     });
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('routes actionable handoff context for review without copying it into a task-create title', () => {
+  it('does not route global handoff context into task selection', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with task capsule upgrade/remediation dry-run hardening.',
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
@@ -155,24 +143,8 @@ describe('task selection recommendation', () => {
     const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'markdown-first' },
-      recommendations: [
-        expect.objectContaining({
-          taskId: 'TBD',
-          title: 'Task capsule upgrade/remediation dry-run hardening',
-          source: 'docs/AGENT_HANDOFF.md',
-          sourceKind: 'handoff',
-          taskCapsulePresent: false,
-          createCommand: null,
-          operatorGuidance: expect.stringContaining('choose a concise title yourself')
-        })
-      ],
-      sources: {
-        agentHandoff: expect.objectContaining({
-          activeNext: 'T-0181 Task Next Recommendation',
-          nextRecommendedStep: 'Continue with task capsule upgrade/remediation dry-run hardening.'
-        })
-      },
+      summary: { recommendations: 0, source: 'none', policy: 'markdown-first' },
+      recommendations: [],
       backlog: [
         expect.objectContaining({
           taskId: legacy.id,
@@ -183,7 +155,6 @@ describe('task selection recommendation', () => {
         })
       ]
     });
-    expect(report.recommendations[0].taskId).not.toBe(legacy.id);
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
@@ -204,12 +175,7 @@ describe('task selection recommendation', () => {
           sourceKind: 'development-slices',
           createCommand: "hadara task create 'Planned Follow-up'"
         })
-      ],
-      sources: {
-        agentHandoff: expect.objectContaining({
-          nextRecommendedStep: null
-        })
-      }
+      ]
     });
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
@@ -230,7 +196,6 @@ describe('task selection recommendation', () => {
       sourceKind: 'task-board-fallback',
       createCommand: null
     });
-    expect(report.sources.agentHandoff.nextRecommendedStep).toBeNull();
     expect(report.recommendations[0].title).not.toContain('Select the next capsule');
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
@@ -250,7 +215,6 @@ describe('task selection recommendation', () => {
       source: 'docs/TASK_BOARD.md',
       sourceKind: 'task-board-fallback'
     });
-    expect(report.sources.agentHandoff.nextRecommendedStep).toBeNull();
     expect(report.recommendations[0].title).not.toContain('Later');
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
@@ -347,7 +311,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('downgrades brownfield adoption baseline to review-only after task history exists', () => {
+  it('ignores brownfield current-state baseline after task history exists', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Already Closed Feature Task');
     updateTaskBoardStatus(root, task.id, 'Done');
@@ -364,16 +328,8 @@ describe('task selection recommendation', () => {
 
     const report = createTaskSelectionReport(root);
 
-    expect(report.recommendations[0]).toMatchObject({
-      taskId: 'TBD',
-      title: 'Establish HADARA adoption baseline',
-      source: '.hadara/state/current.json',
-      sourceKind: 'current-state',
-      createCommand: null,
-      createCommandAllowed: false,
-      reason: 'Compatibility current-state checkpoint names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
-    });
-    expect(report.recommendations[0].operatorGuidance).toContain('Existing task history is present');
+    expect(report.recommendations).toEqual([]);
+    expect(report.summary.source).toBe('none');
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
@@ -411,7 +367,6 @@ describe('task selection recommendation', () => {
       ]
     });
     expect(report.recommendations[0].requiredReading).toEqual([
-      'docs/AGENT_HANDOFF.md',
       'docs/DEVELOPMENT_SLICES.md',
       'docs/TASK_BOARD.md'
     ]);
@@ -425,7 +380,6 @@ describe('task selection recommendation', () => {
     fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile: 'basic' }), 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
 
     const report = createTaskSelectionReport(root);
@@ -433,7 +387,7 @@ describe('task selection recommendation', () => {
     expect(report.recommendations[0]).toEqual(expect.objectContaining({
       taskId: 'TBD',
       createCommand: "hadara task create 'Create first Task Capsule'",
-      requiredReading: ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md']
+      requiredReading: ['docs/TASK_BOARD.md']
     }));
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });

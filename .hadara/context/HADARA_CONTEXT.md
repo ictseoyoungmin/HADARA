@@ -21,9 +21,8 @@ Use it to decide what to read next.
 | Need | Read |
 |---|---|
 | Current task or next-work choice | `hadara task status --json`, then the selected `tasks/T-XXXX/TASK.md` |
-| Product/phase state and deeper routing | `docs/PROJECT_STATE.md` |
-| Explicit cross-session handoff and live warnings when present | `docs/AGENT_HANDOFF.md` |
 | Task list | `docs/TASK_BOARD.md` |
+| Selected-task continuation | Selected `tasks/T-XXXX/HANDOFF.md` |
 | Workflow guide | `docs/HADARA_WORKFLOW.md` |
 | Command lifecycle | `docs/TASK_WORKFLOW_COMMANDS.md` |
 | Document registry | `docs/DOC_REGISTRY.md` |
@@ -34,15 +33,15 @@ Use it to decide what to read next.
 - Do not defer all documentation until after implementation.
 - Keep capsule docs current as work changes.
 - Parallelize read-only discovery and independent validation.
-- Serialize writes to evidence, Task Capsule docs, shared state docs, before-hash executes, finish/close operations, and release/publish operations.
+- Serialize writes to evidence, Task Capsule docs, optional shared docs, before-hash executes, finish/close operations, and release/publish operations.
 - Preserve the portable/project store boundary.
 - Prefer stable HADARA CLI JSON or MCP read surfaces before scraping raw files.
 - Treat MCP default mode as read-only; do not assume MCP task mutation, file writes, shell execution, or release/package execution exists.
 
 ## Project-Specific Notes
 
-HADARA-dev builds HADARA, the local-first evidence control plane for trustworthy agentic development. The Task Board, Task Capsules, and compact Markdown routing let a new session resume without reconstructing project history. `.hadara/state/current.json` is a command-owned compatibility checkpoint and is not normal reading.
+HADARA-dev builds HADARA, the local-first evidence control plane for trustworthy agentic development. The Task Board, Task Capsules, and compact Markdown routing let a new session resume without reconstructing project history.
 
 Do not store credentials, private logs, raw model transcripts, private user data, machine-local absolute paths, or large design documents here.
 
-Historical snapshots under `docs/history/` are never default reading. Use the Historical Index in current state/handoff only when investigating older decisions, validation, or carried-forward context.
+Historical snapshots under `docs/history/` are never default reading. Use them only when investigating older decisions, validation, or carried-forward context.

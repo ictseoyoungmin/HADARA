@@ -21,12 +21,12 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   },
   standard: {
     profile: 'standard',
-    generatedDocsDescription: 'Basic scaffold plus project state and compact read routing',
+    generatedDocsDescription: 'Basic scaffold plus compact read routing',
     intendedUse: 'Most multi-session projects that need lightweight planning and decision context.',
     specialNotes: 'Default profile. Add architecture, decisions, roadmap, security, test, or agent guide docs only when the project needs them.',
     docs: {
       contextRouter: true,
-      projectState: true,
+      projectState: false,
       architecture: false,
       developmentSlices: false,
       decisions: false,
@@ -39,12 +39,12 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   },
   governed: {
     profile: 'governed',
-    generatedDocsDescription: 'Core scaffold plus compact next-session handoff',
+    generatedDocsDescription: 'Core scaffold plus governance-ready optional document routing',
     intendedUse: 'Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.',
-    specialNotes: 'Governed projects generate AGENT_HANDOFF for compact continuation state. Add reference docs only when they are project-owned and maintained.',
+    specialNotes: 'Governed projects route continuation through Task Board and Task Capsules. Add reference docs only when they are project-owned and maintained.',
     docs: {
       contextRouter: true,
-      projectState: true,
+      projectState: false,
       architecture: false,
       developmentSlices: false,
       decisions: false,
@@ -52,7 +52,7 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
       securityModel: false,
       testStrategy: false,
       roadmap: false,
-      agentHandoff: true
+      agentHandoff: false
     }
   }
 };
@@ -64,10 +64,7 @@ export function parseInitProfile(value: string): InitProfile {
 
 export function requiredDocsForProfile(profile: InitProfile): string[] {
   const docs = ['docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-  if (profile === 'standard' || profile === 'governed') docs.unshift('docs/PROJECT_STATE.md');
-  if (profile === 'governed') {
-    docs.push('docs/AGENT_HANDOFF.md');
-  }
+  if (profile === 'standard' || profile === 'governed') docs.unshift('.hadara/context/HADARA_CONTEXT.md');
   return docs;
 }
 

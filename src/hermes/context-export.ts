@@ -43,10 +43,8 @@ export function detectHermesContext(projectRoot: string): HermesDetection {
 
 export function buildHadaraContextContent(projectRoot: string): string {
   const sourceFiles = [
-    'docs/PROJECT_STATE.md',
-    'docs/AGENT_HANDOFF.md',
-    'docs/HADARA_WORKFLOW.md',
     'docs/TASK_BOARD.md',
+    'docs/HADARA_WORKFLOW.md',
     'docs/ROADMAP.md',
     'docs/DEVELOPMENT_SLICES.md',
     'docs/CLI_JSON_CONTRACT.md',
@@ -71,12 +69,12 @@ Agents must:
 1. Preserve the portable/project store boundary.
 2. Work inside the active Task Capsule.
 3. Attach evidence before marking work complete.
-4. Update AGENT_HANDOFF.md before stopping.
+4. Keep task-local TASK.md and HANDOFF.md current before stopping.
 5. Respect policy decisions for shell/file/git operations.
-6. Treat AGENT_HANDOFF.md as compact current state and follow its Historical Index for older history.
-7. Prefer stable HADARA read surfaces before scraping raw files: use hadara.project.state.read or hadara status --json for project state.
+6. Treat docs/TASK_BOARD.md and task-local HANDOFF.md as the compact continuation state.
+7. Prefer stable HADARA read surfaces before scraping raw files: use hadara task status --json for next-work selection and hadara status --json for diagnostics.
 8. Use hadara.task.list and hadara.task.read, or hadara task list --json and hadara task status --task <task-id> --json, for task state.
-9. Use hadara.handoff.read, hadara.policy.evaluate, and hadara.harness.validate, or their CLI JSON equivalents, for handoff, policy, and validation state.
+9. Use hadara.policy.evaluate and hadara.harness.validate, or their CLI JSON equivalents, for policy and validation state.
 10. Use hadara.context.export for in-memory MCP context export; only hadara hermes export-context writes .hadara/context/HADARA_CONTEXT.md.
 11. Treat MCP default mode as read-only; do not assume MCP task mutation, file writes, shell execution, or release/package execution exists.
 12. If MCP is unavailable, fall back to CLI JSON commands and then to repository documents.

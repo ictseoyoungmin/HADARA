@@ -9,7 +9,6 @@ import {
   type CreateTaskCapsuleOptions
 } from './task-capsule';
 import { getTaskTemplate, supportedTaskTemplateIds, templateSummary, type TaskTemplateSummary } from './task-templates';
-import { activateProjectCurrentTask } from '../services/project-current-state';
 
 export interface TaskCreateReport {
   schemaVersion: 'hadara.task.create.v1';
@@ -75,13 +74,6 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
         targets: options.targets,
         lock: false
       });
-      for (const issue of activateProjectCurrentTask(projectRoot, { id: created.id, title: created.title })) {
-        issues.push({
-          severity: 'warning',
-          code: 'TASK_CREATE_CURRENT_STATE_SYNC_FAILED',
-          message: `${issue.message} The Task Capsule was created; repair current-state drift before relying on session continuation.`
-        });
-      }
       return created;
     }, { timeoutMs: options.lockTimeoutMs });
   } catch (error) {

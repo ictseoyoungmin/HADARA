@@ -1,12 +1,5 @@
 import { managedSectionBlock } from '../services/managed-sections';
 import packageJson from '../../package.json';
-import {
-  createInitialProjectCurrentState,
-  PROJECT_CURRENT_STATE_PATH,
-  renderHandoffCanonSection,
-  renderProjectStateCanonSection,
-  type ProjectCurrentState
-} from '../services/project-current-state';
 import type { InitProfile, InitProfileSpec, InitProjectMetadata } from './types';
 
 export function createScaffoldJson(profile: InitProfile): string {
@@ -138,8 +131,8 @@ After init, review:
 | Step | Document | Purpose |
 |---|---|---|
 | 1 | \`AGENTS.md\` | Entry rules and required reading. |
-${profile === 'basic' ? '' : '| 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |\n| 3 | `docs/PROJECT_STATE.md` | Human-readable product and phase state. |\n'}| ${profile === 'basic' ? '2' : '4'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
-| ${profile === 'basic' ? '3' : '5'} | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
+${profile === 'basic' ? '' : '| 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |\n'}| ${profile === 'basic' ? '2' : '3'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
+| ${profile === 'basic' ? '3' : '4'} | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
@@ -151,9 +144,8 @@ At minimum:
 
 | Document | Update When |
 |---|---|
-| \`docs/PROJECT_STATE.md\` | When present, product name, purpose, current phase, or capability state changes. |
 | \`docs/TASK_BOARD.md\` | Task lifecycle changes; normally \`task create\` and \`task close\` own this. |
-| \`docs/AGENT_HANDOFF.md\` | Present in governed projects and continuation state or warnings change. |
+| Task Capsule docs | Task-local goal, plan, validation, changes, risks, and handoff guidance change. |
 | Optional docs | Their subject changes after they are added. |
 
 Do not leave generated docs in scaffold form after completing the first real capability. If a document is no longer useful, remove it from desired state with docs registry commands instead of letting stale prose remain authoritative.
@@ -336,7 +328,6 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 |---|---|---|
 | New HADARA project | \`hadara init --profile <profile> --json\` | Creates scaffold docs and registries. |
 | Check scaffold health | \`hadara init doctor --json\` | Reports missing or inconsistent scaffold files. |
-| Update product metadata | \`hadara project-state update --name "..." --purpose "..." --json\` | Dry-run managed update for \`docs/PROJECT_STATE.md\` Name/Purpose; execute with the reviewed \`beforeHash\`. |
 | Find next work | \`hadara task status --json\` | Read-only selection cockpit. |
 | Inspect selected task | \`hadara task status --task T-XXXX --json\` | Fast loop phase and next-action projection. |
 | Inspect close-grade diagnostics | \`hadara task status --task T-XXXX --detail full --json\` | Heavier readiness/protocol projection for explicit diagnostics. |
@@ -448,60 +439,6 @@ export function createMcpIntegrationDoc(): string {
 `;
 }
 
-export function createProjectStateDoc(profile: InitProfile, providedState?: ProjectCurrentState, metadata: InitProjectMetadata = {}): string {
-  const currentState = providedState ?? createInitialProjectCurrentState(profile);
-  const productName = metadata.name?.trim() || 'Project name not set';
-  const productPurpose = metadata.purpose?.trim() || 'Project purpose not set';
-  const handoffRow = profile === 'governed'
-    ? '| Next-session handoff | `docs/AGENT_HANDOFF.md` | Compact continuation state. |\n'
-    : '';
-  const productTable = managedSectionBlock('project-state-metadata', {
-    schema: 'hadara.managedSection.v1',
-    owner: 'project-state.update',
-    kind: 'key-value-table',
-    mode: 'update-row',
-    version: 1,
-    required: true,
-    closeSourceRole: 'included'
-  }, `| Field | Value |
-|---|---|
-| Name | ${escapeTableCell(productName)} |
-| Purpose | ${escapeTableCell(productPurpose)} |
-| HADARA Profile | ${profile} |
-`);
-  return `# PROJECT_STATE
-
-${renderProjectStateCanonSection(currentState)}
-
-## Product
-
-${productTable}
-
-## Current Phase
-
-| Field | Value |
-|---|---|
-| Phase | bootstrap-development |
-| Status | initialized |
-
-## Current Status
-
-| Area | Status | Notes |
-|---|---|---|
-| Continuation | Canonical projection above | Use the structured state and active Task Capsule instead of reconstructing status from prose. |
-
-## Single Source of Truth
-
-| Source | Path | Purpose |
-|---|---|---|
-| Structured current state | \`${PROJECT_CURRENT_STATE_PATH}\` | Release, task continuity, next intent, current problems, and validation baseline. |
-| Current-state projection | \`docs/PROJECT_STATE.md\` | Human-readable product and capability projection. |
-| Work queue | \`docs/TASK_BOARD.md\` | Task status and queue. |
-${handoffRow}| Workflow | \`docs/HADARA_WORKFLOW.md\` | Generic HADARA lifecycle and evidence rules. |
-| Task details | \`tasks/T-*/\` | Task-local evidence and decisions. |
-`;
-}
-
 export function createTaskBoardDoc(): string {
   const taskBoardTable = managedSectionBlock('task-board', {
     schema: 'hadara.managedSection.v1',
@@ -518,27 +455,6 @@ export function createTaskBoardDoc(): string {
 
 ${taskBoardTable}
 `;
-}
-
-export function createAgentHandoffDoc(providedState?: ProjectCurrentState): string {
-  const currentState = providedState ?? createInitialProjectCurrentState('governed');
-  return `# AGENT_HANDOFF
-
-${renderHandoffCanonSection(currentState)}
-
-## Historical Index
-
-| History Type | Path | When to Use |
-|---|---|---|
-| Task queue | \`docs/TASK_BOARD.md\` | Locate open and completed capsules. |
-| Task handoffs | \`tasks/T-*/HANDOFF.md\` | Review a specific capsule outcome. |
-| Task evidence | \`tasks/T-*/evidence.jsonl\` | Audit canonical evidence records. |
-| Validation summaries | \`tasks/T-*/EVIDENCE.md\` | Review human-readable validation summaries. |
-`;
-}
-
-function escapeTableCell(value: string): string {
-  return value.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|').trim();
 }
 
 export function createArchitectureDoc(profile: InitProfile): string {
@@ -565,7 +481,7 @@ export function createArchitectureDoc(profile: InitProfile): string {
 |---|---|---|---|
 | Task Capsules | \`tasks/T-*/\` | Task-local scope, evidence, decisions, and handoff. | Active |
 | Evidence records | \`EVIDENCE.md\`, \`evidence.jsonl\` | Validation evidence and artifact references. | Active |
-| Handoff | \`docs/PROJECT_STATE.md\` or \`docs/AGENT_HANDOFF.md\` | Next-session continuation state. | Active |
+| Handoff | \`tasks/T-*/HANDOFF.md\` | Next-session continuation state scoped to a Task Capsule. | Active |
 `;
 }
 
@@ -647,7 +563,7 @@ export function createRoadmapDoc(): string {
 |---|---|---|---|
 | 1 | Define the first Task Capsule | Establish the first concrete work unit. | Task Capsule exists and is referenced from \`docs/TASK_BOARD.md\`. |
 | 2 | Attach first evidence | Verify that evidence flow works. | \`EVIDENCE.md\` and \`evidence.jsonl\` contain a meaningful check. |
-| 3 | Update handoff | Make continuation safe across sessions. | \`docs/AGENT_HANDOFF.md\` reflects current state. |
+| 3 | Update task-local handoff | Make continuation safe across sessions. | Active Task Capsule \`HANDOFF.md\` reflects current state. |
 
 ## Deferred
 
@@ -848,7 +764,7 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, Pr
 
 ## State Documents
 
-\`task close --json\` and \`task close --execute --plan-hash <hash>\` never create optional shared documents or invent broad prose. They update bounded managed checkpoints in registered existing Project State/Handoff documents. Development Slices participates only when it already links the selected task; product narrative remains human-owned.
+\`task close --json\` and \`task close --execute --plan-hash <hash>\` never create optional shared documents or invent broad prose. Development Slices participates only when it already links the selected task; product narrative remains human-owned.
 `;
 }
 
@@ -858,8 +774,6 @@ export function createAgentsDoc(spec: InitProfileSpec): string {
     ['`docs/HADARA_WORKFLOW.md`', 'Every session; whenever using HADARA CLI workflow commands', 'Project start, task lifecycle, evidence, context, document timing, repair, and useful CLI guidance.']
   ];
   if (spec.docs.contextRouter) requiredReadingRows.unshift(['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.']);
-  if (spec.docs.projectState) requiredReadingRows.splice(spec.docs.contextRouter ? 1 : 0, 0, ['`docs/PROJECT_STATE.md`', 'Every session', 'Human-readable product and phase projection.']);
-  if (spec.docs.agentHandoff) requiredReadingRows.push(['`docs/AGENT_HANDOFF.md`', 'When present in governed or long-running projects', 'Compact continuation handoff and current coordination notes.']);
   if (spec.docs.architecture) requiredReadingRows.push(['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
   if (spec.docs.decisions) requiredReadingRows.push(['`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
   if (spec.docs.securityModel) requiredReadingRows.push(['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);

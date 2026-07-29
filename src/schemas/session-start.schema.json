@@ -54,7 +54,7 @@
         },
         "nextOperatorIntent": { "type": "string" },
         "validationBaseline": { "type": "string" },
-        "source": { "enum": [".hadara/state/current.json", "markdown-compatibility"] }
+        "source": { "const": "task-context" }
       }
     },
     "contextPack": {

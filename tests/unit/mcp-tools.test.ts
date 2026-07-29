@@ -13,10 +13,8 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-mcp-tools-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Ready\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'HANDOFF_HISTORY.md'), '# HANDOFF_HISTORY\n\n- Old task\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n\n- Old validation\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\n- Skeleton\n', 'utf8');
   writeCanonicalTaskBoard(dir);
   fs.writeFileSync(path.join(dir, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n\n| Order | Slice |\n|---|---|\n', 'utf8');
   return dir;
@@ -150,7 +148,7 @@ describe('MCP read tools', () => {
     expect(JSON.stringify(privatePayload)).not.toContain('private.log');
   });
 
-  it('reads handoff state with bounded optional history', () => {
+  it('reads Task Board continuation state with bounded optional history', () => {
     const root = tempProject();
 
     const payload = parseToolPayload(callTool(root, 'hadara.handoff.read', { includeHistory: true, historyLimit: 1 }));
@@ -160,7 +158,7 @@ describe('MCP read tools', () => {
       command: 'handoff.read',
       ok: true,
       handoff: {
-        current: expect.stringContaining('# AGENT_HANDOFF'),
+        current: expect.stringContaining('# TASK_BOARD'),
         history: '- Old task',
         validationHistory: '- Old validation'
       },
@@ -168,7 +166,7 @@ describe('MCP read tools', () => {
     });
   });
 
-  it('reads project state documents and summary variants', () => {
+  it('reads task-state documents and summary variants', () => {
     const root = tempProject();
 
     const full = parseToolPayload(callTool(root, 'hadara.project.state.read'));
@@ -176,14 +174,14 @@ describe('MCP read tools', () => {
       schemaVersion: 'hadara.project.state.read.v1',
       command: 'project.state.read',
       ok: true,
-      projectState: expect.stringContaining('# PROJECT_STATE'),
       taskBoard: expect.stringContaining('# TASK_BOARD'),
       developmentSlices: expect.stringContaining('# DEVELOPMENT_SLICES'),
       issues: []
     });
 
     const summary = parseToolPayload(callTool(root, 'hadara.project.state.read', { summaryOnly: true }));
-    expect(summary.summary.projectState).toContain('- Skeleton');
+    expect(summary.summary.taskBoardTail).toContain('# TASK_BOARD');
+    expect(summary.summary.developmentSlicesTail).toContain('# DEVELOPMENT_SLICES');
   });
 
   it('evaluates policy without executing commands', () => {
@@ -308,7 +306,7 @@ describe('MCP read tools', () => {
     expect(payload.content).toContain('Follow docs/HADARA_WORKFLOW.md for implementation, validation, and session-end procedure.');
     expect(payload.content).toContain('## docs/HADARA_WORKFLOW.md');
     expect(payload.content).toContain('## docs/ROADMAP.md');
-    expect(payload.content).toContain('hadara.project.state.read');
+    expect(payload.content).toContain('hadara task status --json');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
   });
 
@@ -328,7 +326,8 @@ describe('MCP read tools', () => {
         }
       ]
     });
-    expect(payload.content).toContain('## docs/PROJECT_STATE.md');
+    expect(payload.content).toContain('## docs/TASK_BOARD.md');
+    expect(payload.content).not.toContain('## docs/PROJECT_STATE.md');
   });
 
   it('lists current CLI and MCP capabilities plus disabled surfaces', () => {
@@ -392,7 +391,6 @@ describe('MCP read tools', () => {
   it('reads active run projection and resume guidance without mutating state', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'MCP active run');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
     writeActiveRunManifest(
       root,
       createActiveRunManifest(root, {
@@ -424,7 +422,7 @@ describe('MCP read tools', () => {
         taskId: task.id
       },
       resumePrompt: {
-        mustRead: ['docs/AGENT_HANDOFF.md', 'tasks/T-0001-mcp-active-run/TASK.md', 'tasks/T-0001-mcp-active-run/HANDOFF.md']
+        mustRead: ['tasks/T-0001-mcp-active-run/TASK.md', 'tasks/T-0001-mcp-active-run/HANDOFF.md', 'docs/TASK_BOARD.md']
       },
       issues: []
     });

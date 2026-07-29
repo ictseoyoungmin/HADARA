@@ -54,8 +54,8 @@ describe('context source manifest', () => {
     expect(classifyContextSourcePath('docs/TASK_BOARD.md')).toBe('task-board');
     expect(classifyContextSourcePath('tasks/T-0001-example/TASK.md')).toBe('task-capsule');
     expect(classifyContextSourcePath('tasks/T-0001-example/evidence.jsonl')).toBe('evidence');
-    expect(classifyContextSourcePath('docs/PROJECT_STATE.md')).toBe('project-state-doc');
-    expect(classifyContextSourcePath('docs/AGENT_HANDOFF.md')).toBe('handoff-doc');
+    expect(classifyContextSourcePath('docs/PROJECT_STATE.md')).toBe('managed-section-source');
+    expect(classifyContextSourcePath('docs/AGENT_HANDOFF.md')).toBe('managed-section-source');
     expect(classifyContextSourcePath('src/context/source-manifest.ts')).toBe('source-file');
     expect(classifyContextSourcePath('tests/unit/source-manifest.test.ts')).toBe('test-file');
     expect(classifyContextSourcePath('README.md')).toBeUndefined();
@@ -258,8 +258,8 @@ describe('context source manifest', () => {
 
   it('keeps extractor-key mapping deterministic for cache invalidation planning', () => {
     expect(extractorKeysForContextSource('src/context/source-manifest.ts', 'source-file')).toEqual(['codeIndex']);
-    expect(extractorKeysForContextSource('docs/AGENT_HANDOFF.md', 'handoff-doc')).toEqual(['extractAgentHandoff', 'extractManagedSections']);
-    expect(extractorKeysForContextSource('docs/PROJECT_STATE.md', 'project-state-doc')).toEqual(['extractProjectState', 'extractManagedSections']);
+    expect(extractorKeysForContextSource('docs/AGENT_HANDOFF.md', 'managed-section-source')).toEqual(['extractManagedSections', 'extractDecisions']);
+    expect(extractorKeysForContextSource('docs/PROJECT_STATE.md', 'managed-section-source')).toEqual(['extractManagedSections', 'extractDecisions']);
     expect(extractorKeysForContextSource('docs/RELEASE_READINESS.md', 'release-doc')).toEqual(['extractReleaseReadiness', 'extractManagedSections']);
   });
 });

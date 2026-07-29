@@ -52,8 +52,6 @@ describe('state consistency projection', () => {
         checkedTasks: 1
       },
       sources: {
-        projectState: { path: 'docs/PROJECT_STATE.md', exists: true, latestCompletedTaskId: task.id, activeTaskId: null },
-        agentHandoff: { path: 'docs/AGENT_HANDOFF.md', exists: true, latestCompletedTaskId: task.id, activeTaskId: null },
         taskBoard: { path: 'docs/TASK_BOARD.md', exists: true, rows: 1, latestDoneTaskId: task.id },
         developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', exists: true, latestDoneTaskId: task.id },
         docsRegistry: { path: '.hadara/docs-registry.json', exists: true, registeredDocuments: 2 },
@@ -92,8 +90,6 @@ describe('state consistency projection', () => {
 
     expect(report.summary.consistent).toBe(false);
     expect(codes).toEqual(expect.arrayContaining([
-      'STATE_PROJECT_STATE_LATEST_MISMATCH',
-      'STATE_HANDOFF_LATEST_MISMATCH',
       'STATE_DEVELOPMENT_SLICES_LATEST_MISMATCH',
       'STATE_TASK_BOARD_STATUS_DRIFT',
       'STATE_TASK_BOARD_CAPSULE_DRIFT',
@@ -123,7 +119,6 @@ describe('state consistency projection', () => {
     });
     expect(report.summary.consistent).toBe(false);
     expect(codes).toEqual(expect.arrayContaining([
-      'STATE_SOURCE_MISSING',
       'STATE_DEVELOPMENT_SLICES_MISSING',
       'STATE_DOCS_REGISTRY_MISSING',
       'STATE_RELEASE_READINESS_MISSING'

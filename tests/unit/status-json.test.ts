@@ -52,9 +52,15 @@ describe('Operations Status JSON', () => {
     expect(report.evaluations.length).toBeGreaterThan(0);
   });
 
-  it('routes active current-state work to task status without duplicating local task phase', () => {
+  it('routes active Task Board work to task status without reading legacy current-state', () => {
     const root = tempProject();
     writeProjectDocs(root);
+    const task = createTaskCapsule(root, 'Active task');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      `# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| ${task.id} | Active task | In Progress | ${path.relative(root, task.dir)} | Active. |\n`,
+      'utf8'
+    );
     fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
     fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), `${JSON.stringify({
       schemaVersion: 'hadara.projectCurrentState.v1',
@@ -63,7 +69,7 @@ describe('Operations Status JSON', () => {
       currentRelease: '0.5.0-dev',
       latestCompletedTaskBasis: 'highest-done-task-id',
       latestCompletedTask: null,
-      activeTask: { id: 'T-0002', title: 'Active task' },
+      activeTask: { id: 'T-9999', title: 'Ignored legacy active task' },
       nextWork: null,
       nextOperatorIntent: 'Inspect active task.',
       currentKnownProblems: [],
@@ -79,14 +85,15 @@ describe('Operations Status JSON', () => {
       reason: 'An active task is selected; inspect selected-task status before editing.'
     });
     expect(report.primaryNextAction).toMatchObject({
-      id: 'inspect-active-task',
-      command: 'hadara task status --task T-0002 --json',
+      id: 'inspect-recommended-task',
+      command: `hadara task status --task ${task.id} --json`,
       writeBoundary: 'read-only',
       writes: false
     });
+    expect(report.sources).not.toHaveProperty('currentState');
   });
 
-  it('routes actionable current-state continuation before falling back to idle', () => {
+  it('ignores legacy current-state continuation when Task Board has no next work', () => {
     const root = tempProject();
     writeProjectDocs(root);
     fs.writeFileSync(
@@ -123,22 +130,16 @@ describe('Operations Status JSON', () => {
 
     const report = createProjectStatusV2Report(root);
 
-    expect(report.phase).toBe('continuation-ready');
+    expect(report.phase).toBe('idle');
     expect(report.readiness).toMatchObject({
-      intent: 'plan',
-      status: 'needs-review'
+      intent: 'orient',
+      status: 'terminal'
     });
-    expect(report.primaryNextAction).toMatchObject({
-      id: 'review-continuation',
-      kind: 'review',
-      message: expect.stringContaining('Current human/reviewer direction has priority'),
-      writes: false
-    });
-    expect(report.primaryNextAction).not.toHaveProperty('command');
+    expect(report.primaryNextAction).toBe(null);
     expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
   });
 
-  it('surfaces malformed current-state canon in project status v2', () => {
+  it('ignores malformed legacy current-state checkpoint in project status v2', () => {
     const root = tempProject();
     writeProjectDocs(root);
     fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
@@ -146,25 +147,10 @@ describe('Operations Status JSON', () => {
 
     const report = createProjectStatusV2Report(root);
 
-    expect(report.phase).toBe('degraded');
-    expect(report.health).toBe('blocked');
-    expect(report.evaluations).toContainEqual(
-      expect.objectContaining({
-        id: 'current-state',
-        state: 'invalid',
-        health: 'blocked'
-      })
-    );
-    expect(report.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_INVALID_JSON', severity: 'error' })
-      ])
-    );
-    expect(report.primaryNextAction).toMatchObject({
-      id: 'inspect-status-full',
-      command: 'hadara status --detail full --json',
-      writes: false
-    });
+    expect(report.phase).toBe('select-work');
+    expect(report.health).toBe('ok');
+    expect(report.evaluations.map((evaluation) => evaluation.id)).not.toContain('current-state');
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'PROJECT_CURRENT_STATE_INVALID_JSON' }));
   });
 
   it('routes uninitialized projects to init before task creation recommendations', () => {
@@ -305,17 +291,22 @@ describe('Operations Status JSON', () => {
           partial: 1,
           superseded: 1
         },
-        lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
+        lastCompleted: [],
         nextRecommended: 'Start T-0002 Draft task (tasks/T-0002-draft-task).'
       },
       handoff: {
-        currentState: ['MCP guard layer is complete.'],
-        knownProblems: ['Docker is the working validation path for now.'],
-        nextRecommendedStep: ['Do T-0053 Operations Status JSON before dashboard implementation.']
+        currentState: [
+          'T-0001: Draft - Done task',
+          'T-0002: Draft - Draft task',
+          'T-0003: Draft - Partial task',
+          'T-0004: Draft - Superseded task'
+        ],
+        knownProblems: [],
+        nextRecommendedStep: []
       },
       validation: {
-        latestFullCheck: 'Docker npm ci && npm run check passed with 27 test files and 142 tests',
-        latestDoneLevelValidation: 'T-0052 ok'
+        latestFullCheck: null,
+        latestDoneLevelValidation: null
       },
       debt: {
         total: 0,
@@ -373,18 +364,8 @@ describe('Operations Status JSON', () => {
 
     expect(report.ok).toBe(true);
     expect(report.health).toBe('degraded');
-    expect(report.project.phase).toBe('unknown');
+    expect(report.project.phase).toBe('bootstrap-development');
     expect(report.issues).toEqual([
-      {
-        severity: 'warning',
-        code: 'PROJECT_STATE_MISSING',
-        message: 'docs/PROJECT_STATE.md is missing.'
-      },
-      {
-        severity: 'warning',
-        code: 'AGENT_HANDOFF_MISSING',
-        message: 'docs/AGENT_HANDOFF.md is missing.'
-      },
       {
         severity: 'warning',
         code: 'TASK_BOARD_MISSING',
@@ -398,7 +379,7 @@ describe('Operations Status JSON', () => {
       {
         severity: 'warning',
         code: 'VALIDATION_BASELINE_MISSING',
-        message: 'No latest validation baseline was found in handoff or validation history.'
+        message: 'No latest validation baseline was found in task evidence or validation history.'
       }
     ]);
   });
@@ -418,18 +399,13 @@ describe('Operations Status JSON', () => {
     expect(report.issues).toEqual([]);
   });
 
-  it('requires AGENT_HANDOFF only when the profile or registry expects it', () => {
+  it('does not require AGENT_HANDOFF for governed or registered profiles', () => {
     const governed = tempProject();
     writeProfileProjectDocs(governed, 'governed');
 
     const governedReport = createOpsStatusReport(governed, { includeDebt: false, taskStatusSource: 'task-board' });
 
-    expect(governedReport.health).toBe('degraded');
-    expect(governedReport.issues).toContainEqual({
-      severity: 'warning',
-      code: 'AGENT_HANDOFF_MISSING',
-      message: 'docs/AGENT_HANDOFF.md is missing.'
-    });
+    expect(governedReport.issues).not.toContainEqual(expect.objectContaining({ code: 'AGENT_HANDOFF_MISSING' }));
     expect(governedReport.issues).not.toContainEqual(expect.objectContaining({ code: 'DEVELOPMENT_SLICES_MISSING' }));
 
     const standardWithRegisteredHandoff = tempProject();
@@ -437,11 +413,7 @@ describe('Operations Status JSON', () => {
 
     const registeredReport = createOpsStatusReport(standardWithRegisteredHandoff, { includeDebt: false, taskStatusSource: 'task-board' });
 
-    expect(registeredReport.issues).toContainEqual({
-      severity: 'warning',
-      code: 'AGENT_HANDOFF_MISSING',
-      message: 'docs/AGENT_HANDOFF.md is missing.'
-    });
+    expect(registeredReport.issues).not.toContainEqual(expect.objectContaining({ code: 'AGENT_HANDOFF_MISSING' }));
   });
 
   it('degrades instead of failing when active run local state is malformed', () => {
@@ -477,7 +449,7 @@ describe('Operations Status JSON', () => {
     );
   });
 
-  it('parses explicit phase markers and falls back to validation history', () => {
+  it('uses default phase and falls back to validation history', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: release-hardening\n', 'utf8');
@@ -501,7 +473,7 @@ describe('Operations Status JSON', () => {
 
     const report = createOpsStatusReport(root);
 
-    expect(report.project.phase).toBe('release-hardening');
+    expect(report.project.phase).toBe('bootstrap-development');
     expect(report.validation).toEqual({
       latestFullCheck: 'Docker check after T-0053: 28 test files passed, 144 tests passed',
       latestDoneLevelValidation: 'Docker node dist/cli/main.js harness validate --task T-0053 --level done --json returned ok true'
@@ -536,7 +508,7 @@ describe('Operations Status JSON', () => {
     expect(report.project.phase).toBe('bootstrap-development');
   });
 
-  it('prefers table-first handoff validation over older validation history', () => {
+  it('ignores legacy handoff validation and uses validation history', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: dashboard-refresh\n', 'utf8');
@@ -571,11 +543,10 @@ describe('Operations Status JSON', () => {
 
     const report = createOpsStatusReport(root);
 
-    expect(report.validation.latestFullCheck).toBe('Docker `npm run dev:docker-sync-build` passed with 90 files and 586 tests during T-0224');
-    expect(report.validation.latestFullCheck).not.toContain('T-0096');
+    expect(report.validation.latestFullCheck).toBe('Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed');
   });
 
-  it('parses handoff table sections as data rows instead of Markdown headers', () => {
+  it('does not parse legacy handoff table sections into status', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: table-parser\n', 'utf8');
@@ -617,13 +588,11 @@ describe('Operations Status JSON', () => {
 
     const report = createOpsStatusReport(root);
 
-    expect(report.handoff.currentState[0]).toBe('Branch · main · table fixture');
-    expect(report.handoff.nextRecommendedStep[0]).toBe('Continue · table parser works · status evidence');
-    expect(report.tasks.nextRecommended).toBe('Continue · table parser works · status evidence');
-    expect(report.validation.latestFullCheck).toBe('Docker sync-build passed');
-    expect(report.validation.latestDoneLevelValidation).toBe('harness validate passed');
-    expect(report.handoff.currentState).not.toContain('Area · State · Notes');
-    expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
+    expect(report.handoff.currentState).toEqual([]);
+    expect(report.handoff.nextRecommendedStep).toEqual([]);
+    expect(report.tasks.nextRecommended).toBe(null);
+    expect(report.validation.latestFullCheck).toBe(null);
+    expect(report.validation.latestDoneLevelValidation).toBe(null);
   });
 
   it('aliases default status to task status and keeps legacy diagnostics explicit', () => {
@@ -672,7 +641,7 @@ describe('Operations Status JSON', () => {
       issueCounts: expect.any(Object),
       issues: expect.any(Array)
     });
-    expect(compatFull.handoff.knownProblems).toEqual(['Docker is the working validation path for now.']);
+    expect(compatFull.handoff.knownProblems).toEqual([]);
     expect(stateOnly).toMatchObject({
       schemaVersion: 'hadara.ops.statusState.v1',
       command: 'status.state',
@@ -690,8 +659,8 @@ describe('Operations Status JSON', () => {
       ok: true,
       tasks: {
         counts: expect.any(Object),
-        lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
-        nextRecommended: 'Do T-0053 Operations Status JSON before dashboard implementation.'
+        lastCompleted: [],
+        nextRecommended: null
       }
     });
     expect(summary.stateConsistency).toBeUndefined();
@@ -795,7 +764,7 @@ describe('Operations Status JSON', () => {
     expect(report.tasks.nextRecommended).not.toContain('T-0053 Operations Status JSON');
   });
 
-  it('uses handoff guidance before old partial Task Board rows', () => {
+  it('uses Task Board partial work instead of legacy handoff guidance', () => {
     const root = tempProject();
     writeProjectDocs(root);
     fs.writeFileSync(
@@ -812,7 +781,7 @@ describe('Operations Status JSON', () => {
 
     const report = createOpsStatusSummaryReport(root);
 
-    expect(report.tasks.nextRecommended).toBe('Do T-0053 Operations Status JSON before dashboard implementation.');
+    expect(report.tasks.nextRecommended).toBe('Resume partial T-0001 Historical partial (tasks/T-0001-historical-partial).');
   });
 
   it('builds a compact summary report without debt, known problems, or state checks by default', () => {
@@ -830,11 +799,11 @@ describe('Operations Status JSON', () => {
         phase: 'bootstrap-development'
       },
       tasks: {
-        lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
-        nextRecommended: 'Do T-0053 Operations Status JSON before dashboard implementation.'
+        lastCompleted: [],
+        nextRecommended: null
       },
       validation: {
-        latestDoneLevelValidation: 'T-0052 ok'
+        latestDoneLevelValidation: null
       },
       issues: []
     });

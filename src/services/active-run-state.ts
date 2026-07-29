@@ -3,7 +3,6 @@ import path from 'node:path';
 import { ensureDir } from '../core/fs';
 import { assertSchema, SchemaValidationError } from '../core/schema';
 import { listTaskCapsules } from '../task/task-capsule';
-import { readProjectSources } from './project-read-model';
 
 export interface ActiveRunManifest {
   schemaVersion: 'hadara.active_run.v1';
@@ -118,9 +117,9 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
   const issues: ActiveRunProjection['issues'] = [];
   const task = activeRun ? listTaskCapsules(projectRoot).find((item) => item.id === activeRun.taskId) : undefined;
   const canonicalCapsule = task ? toPortablePath(path.relative(projectRoot, task.dir)) : null;
-  const staleReason = activeRun ? findStaleHandoffReason(projectRoot, activeRun) : null;
   const taskMissing = activeRun ? !task : false;
   const capsuleMismatch = activeRun && canonicalCapsule !== null && activeRun.capsule !== canonicalCapsule;
+  const staleReason = activeRun && !taskMissing ? findStaleHandoffReason(projectRoot, activeRun, canonicalCapsule ?? activeRun.capsule) : null;
 
   if (staleReason) {
     issues.push({
@@ -219,11 +218,11 @@ export function createActiveRunResumeReport(projectRoot: string): ActiveRunResum
     resumePrompt: {
       summary: activeRun ? `Continue ${activeRun.taskId}: ${activeRun.summary}` : 'No active run is currently recorded.',
       mustRead: activeRun
-        ? ['docs/AGENT_HANDOFF.md', `${capsule}/TASK.md`, `${capsule}/HANDOFF.md`]
-        : ['docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md'],
+        ? [`${capsule}/TASK.md`, `${capsule}/HANDOFF.md`, 'docs/TASK_BOARD.md']
+        : ['docs/TASK_BOARD.md'],
       nextActions: activeRun
         ? [projection.resume?.nextAction ?? `Resume ${activeRun.taskId}.`, 'Run required validation before marking the task Done.']
-        : ['Pick or create one Task Capsule before implementation.', 'Follow docs/AGENT_HANDOFF.md for the next recommended step.'],
+        : ['Pick or create one Task Capsule before implementation.', 'Use `hadara task status --json` for next-work selection.'],
       constraints: [
         'Do not assume multi-agent queues.',
         'Do not use MCP write tools for active-run mutation.',
@@ -244,11 +243,12 @@ export function assertActiveRunResumeSchema(report: ActiveRunResumeReport): void
   assertSchema('hadara.active_run.resume.v1', report);
 }
 
-function findStaleHandoffReason(projectRoot: string, activeRun: ActiveRunManifest): string | null {
-  const sources = readProjectSources(projectRoot);
-  if (!sources.handoff.exists) return `Active run ${activeRun.taskId} exists, but docs/AGENT_HANDOFF.md is missing.`;
-  if (!sources.handoff.content.includes(activeRun.taskId)) {
-    return `Active run ${activeRun.taskId} is not mentioned in docs/AGENT_HANDOFF.md.`;
+function findStaleHandoffReason(projectRoot: string, activeRun: ActiveRunManifest, capsule: string): string | null {
+  const handoffPath = path.join(projectRoot, capsule, 'HANDOFF.md');
+  if (!capsule || !fs.existsSync(handoffPath)) return `Active run ${activeRun.taskId} exists, but its task-local HANDOFF.md is missing.`;
+  const content = fs.readFileSync(handoffPath, 'utf8');
+  if (!content.includes(activeRun.taskId)) {
+    return `Active run ${activeRun.taskId} is not mentioned in its task-local HANDOFF.md.`;
   }
   return null;
 }

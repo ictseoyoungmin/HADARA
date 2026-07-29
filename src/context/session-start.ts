@@ -19,7 +19,7 @@ import { checkContextSourceManifestFastFreshness } from './source-manifest';
 import { codeIndexReportToGraphExtraction } from './code-graph-extractor';
 import { validateTaskCapsule } from '../harness/validate';
 import { createDocsReadMapReport, type DocsDriftWarning, type DocsReadMapEntry } from '../services/docs-registry';
-import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState, type ProjectNextWork } from '../services/project-current-state';
+import { parseTaskBoard } from '../task/task-board';
 
 export const SESSION_START_SCHEMA_ID = 'hadara.sessionStart.v1' as const;
 export const SESSION_START_COMMAND = 'session.start' as const;
@@ -31,12 +31,8 @@ export interface SessionStartCurrentState {
   activeTask?: string;
   latestCompletedTask?: string;
   recommendedNextTask?: string;
-  currentRelease?: string;
   releaseState?: string;
-  nextWork?: ProjectNextWork | null;
-  nextOperatorIntent?: string;
-  validationBaseline?: string;
-  source?: typeof PROJECT_CURRENT_STATE_PATH | 'markdown-compatibility';
+  source?: 'task-context';
 }
 
 export interface SessionStartLifecycle {
@@ -165,9 +161,7 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
         budget: input.budget
       }));
   const stateProjection = contextPack.stateProjection;
-  const structuredState = readProjectCurrentState(input.projectRoot).state;
-  const sessionState = structuredState ? scrubBootstrapNextWorkForSession(input.projectRoot, structuredState) : null;
-  const taskId = contextPack.taskId ?? input.taskId ?? structuredState?.activeTask?.id ?? stateProjection.activeTask;
+  const taskId = contextPack.taskId ?? input.taskId ?? stateProjection.activeTask ?? selectTaskFromTaskBoard(input.projectRoot);
   const issues = [...contextPack.issues];
   const lifecycle = lifecycleForSessionStart(taskId, contextPack);
   const guidance = guidanceForSessionStart({
@@ -177,16 +171,7 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     allowLiveContextPack: Boolean(input.allowLiveContextPack)
   });
   const docsReadMap = taskId ? createSessionStartDocsReadMap(input.projectRoot, taskId, input.budget?.maxReadFirstItems ?? 7) : undefined;
-  const canonicalKnownProblems: ContextPackItem[] = (structuredState?.currentKnownProblems ?? []).map((problem, index) => ({
-    id: `project-current-state-known-problem:${index + 1}`,
-    type: 'KnownProblem',
-    path: PROJECT_CURRENT_STATE_PATH,
-    title: problem.summary,
-    reason: problem.guidance,
-    confidence: 'explicit',
-    required: problem.state === 'active' || problem.state === 'blocked'
-  }));
-  const knownProblems = canonicalKnownProblems.length > 0 ? canonicalKnownProblems : contextPack.knownProblems;
+  const knownProblems = contextPack.knownProblems;
 
   return {
     schemaVersion: SESSION_START_SCHEMA_ID,
@@ -195,17 +180,11 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     generatedAt,
     projectRoot: input.projectRoot,
     currentState: {
-      ...(sessionState?.activeTask?.id || stateProjection.activeTask ? { activeTask: sessionState?.activeTask?.id ?? stateProjection.activeTask } : {}),
-      ...(sessionState?.latestCompletedTask?.id || stateProjection.latestCompletedTask ? { latestCompletedTask: sessionState?.latestCompletedTask?.id ?? stateProjection.latestCompletedTask } : {}),
+      ...(stateProjection.activeTask || taskId ? { activeTask: stateProjection.activeTask ?? taskId } : {}),
+      ...(stateProjection.latestCompletedTask ? { latestCompletedTask: stateProjection.latestCompletedTask } : {}),
       ...(taskId ? { recommendedNextTask: taskId } : {}),
-      ...(sessionState?.currentRelease ? { currentRelease: sessionState.currentRelease } : {}),
       ...(stateProjection.releaseState ? { releaseState: stateProjection.releaseState } : {}),
-      ...(sessionState ? {
-        nextWork: sessionState.nextWork,
-        nextOperatorIntent: sessionState.nextOperatorIntent,
-        validationBaseline: sessionState.validationBaseline.summary,
-        source: PROJECT_CURRENT_STATE_PATH
-      } : { source: 'markdown-compatibility' })
+      source: 'task-context'
     },
     contextPack,
     lifecycle,
@@ -226,25 +205,12 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
   };
 }
 
-function scrubBootstrapNextWorkForSession<T extends { nextWork: ProjectNextWork | null; nextOperatorIntent: string }>(
-  projectRoot: string,
-  state: T
-): T {
-  if (!state.nextWork || state.nextWork.origin === 'declared') return state;
-  if (!projectHasAnyTask(projectRoot)) return state;
-  return {
-    ...state,
-    nextWork: null,
-    nextOperatorIntent: 'No next work selected. Run `hadara task status --json` for current task-selection guidance.'
-  };
-}
-
-function projectHasAnyTask(projectRoot: string): boolean {
-  const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-  if (fs.existsSync(taskBoard) && /^\|\s*T-\d{4}\s*\|/m.test(fs.readFileSync(taskBoard, 'utf8'))) return true;
-  const tasksDir = path.join(projectRoot, 'tasks');
-  if (!fs.existsSync(tasksDir)) return false;
-  return fs.readdirSync(tasksDir, { withFileTypes: true }).some((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name));
+function selectTaskFromTaskBoard(projectRoot: string): string | undefined {
+  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoardPath)) return undefined;
+  const parsed = parseTaskBoard(fs.readFileSync(taskBoardPath, 'utf8'));
+  const active = parsed.rows.find((row) => /^(in progress|active)$/i.test(row.status.trim()));
+  return active?.id ?? parsed.rows.find((row) => !/^(done|superseded|archived)$/i.test(row.status.trim()))?.id;
 }
 
 function createSessionStartDocsReadMap(projectRoot: string, taskId: string, maxReadFirst: number): SessionStartDocsReadMap {

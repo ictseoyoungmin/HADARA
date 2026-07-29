@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readMarkdownSection } from './markdown-table';
-import { readProjectCurrentState, type ProjectCurrentState } from './project-current-state';
 
 export interface ProjectFileRead {
   path: string;
@@ -10,8 +9,6 @@ export interface ProjectFileRead {
 }
 
 export interface ProjectReadSources {
-  projectState: ProjectFileRead;
-  handoff: ProjectFileRead;
   taskBoard: ProjectFileRead;
   developmentSlices: ProjectFileRead;
   validationHistory: ProjectFileRead;
@@ -26,7 +23,6 @@ export interface HandoffReadReport {
     history: string | null;
     validationHistory: string | null;
   };
-  structuredCurrentState?: ProjectCurrentState;
   issues: [];
 }
 
@@ -34,11 +30,10 @@ export interface ProjectStateReadReport {
   schemaVersion: 'hadara.project.state.read.v1';
   command: 'project.state.read';
   ok: true;
-  projectState?: string;
   taskBoard?: string;
   developmentSlices?: string;
   summary?: {
-    projectState: string;
+    taskBoard: string;
     taskBoardTail: string;
     developmentSlicesTail: string;
   };
@@ -47,7 +42,6 @@ export interface ProjectStateReadReport {
     included: boolean;
   }>;
   issues: [];
-  structuredCurrentState?: ProjectCurrentState;
 }
 
 export function readProjectFile(projectRoot: string, relativePath: string): ProjectFileRead {
@@ -62,8 +56,6 @@ export function readProjectFile(projectRoot: string, relativePath: string): Proj
 
 export function readProjectSources(projectRoot: string): ProjectReadSources {
   return {
-    projectState: readProjectFile(projectRoot, 'docs/PROJECT_STATE.md'),
-    handoff: readProjectFile(projectRoot, 'docs/AGENT_HANDOFF.md'),
     taskBoard: readProjectFile(projectRoot, 'docs/TASK_BOARD.md'),
     developmentSlices: readProjectFile(projectRoot, 'docs/DEVELOPMENT_SLICES.md'),
     validationHistory: readProjectFile(projectRoot, 'docs/VALIDATION_HISTORY.md')
@@ -78,17 +70,15 @@ export function createHandoffReadReport(
   }
 ): HandoffReadReport {
   const sources = readProjectSources(projectRoot);
-  const structuredCurrentState = readProjectCurrentState(projectRoot).state;
   return {
     schemaVersion: 'hadara.handoff.read.v1',
     command: 'handoff.read',
     ok: true,
     handoff: {
-      current: sources.handoff.content,
+      current: sources.taskBoard.content,
       history: options.includeHistory ? tailLines(readProjectFile(projectRoot, 'docs/HANDOFF_HISTORY.md').content, options.historyLimit) : null,
       validationHistory: options.includeHistory ? tailLines(sources.validationHistory.content, options.historyLimit) : null
     },
-    ...(structuredCurrentState ? { structuredCurrentState } : {}),
     issues: []
   };
 }
@@ -101,7 +91,6 @@ export function createProjectStateReadReport(
   }
 ): ProjectStateReadReport {
   const sources = readProjectSources(projectRoot);
-  const structuredCurrentState = readProjectCurrentState(projectRoot).state;
 
   if (options.summaryOnly) {
     return {
@@ -109,13 +98,10 @@ export function createProjectStateReadReport(
       command: 'project.state.read',
       ok: true,
       summary: {
-        projectState: structuredCurrentState
-          ? JSON.stringify(structuredCurrentState)
-          : extractSection(sources.projectState.content, '## Current Status'),
+        taskBoard: extractSection(sources.taskBoard.content, '## Task Board'),
         taskBoardTail: tailLines(sources.taskBoard.content, 20),
         developmentSlicesTail: tailLines(sources.developmentSlices.content, 12)
       },
-      ...(structuredCurrentState ? { structuredCurrentState } : {}),
       issues: []
     };
   }
@@ -126,11 +112,9 @@ export function createProjectStateReadReport(
       command: 'project.state.read',
       ok: true,
       documents: [
-        { path: sources.projectState.path, included: false },
         { path: sources.taskBoard.path, included: false },
         { path: sources.developmentSlices.path, included: false }
       ],
-      ...(structuredCurrentState ? { structuredCurrentState } : {}),
       issues: []
     };
   }
@@ -139,10 +123,8 @@ export function createProjectStateReadReport(
     schemaVersion: 'hadara.project.state.read.v1',
     command: 'project.state.read',
     ok: true,
-    projectState: sources.projectState.content,
     taskBoard: sources.taskBoard.content,
     developmentSlices: sources.developmentSlices.content,
-    ...(structuredCurrentState ? { structuredCurrentState } : {}),
     issues: []
   };
 }

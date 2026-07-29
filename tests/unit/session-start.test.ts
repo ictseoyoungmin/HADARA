@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 describe('session start', () => {
-  it('prefers the structured current-state canon for fast session resume', () => {
+  it('uses task context for fast session resume', () => {
     const root = tempProject();
     initProject(root, 'governed', { silent: true });
     const created = createTaskCreateReport(root, 'Structured resume task');
@@ -37,20 +37,17 @@ describe('session start', () => {
     expect(report.currentState).toMatchObject({
       activeTask: created.taskId,
       recommendedNextTask: created.taskId,
-      currentRelease: expect.any(String),
-      nextWork: null,
-      nextOperatorIntent: 'No next work selected. Run `hadara task status --json` for current task-selection guidance.',
-      source: '.hadara/state/current.json'
+      source: 'task-context'
     });
-    expect(report.currentState.releaseState).not.toBe(report.currentState.currentRelease);
     expect(report.guidance.primaryAction.args).toEqual(['task', 'status', '--task', created.taskId, '--json']);
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });
 
-  it('hides stale bootstrap next-work from session start once task history exists', () => {
+  it('ignores legacy current-state checkpoint once task history exists', () => {
     const root = tempProject();
     initProject(root, 'basic', { silent: true });
     const created = createTaskCreateReport(root, 'Historical task');
+    fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
     fs.writeFileSync(
       path.join(root, '.hadara', 'state', 'current.json'),
       `${JSON.stringify({
@@ -78,8 +75,12 @@ describe('session start', () => {
       generatedAt: '2026-07-10T00:00:00.000Z'
     });
 
-    expect(report.currentState.nextWork).toBe(null);
-    expect(report.currentState.nextOperatorIntent).toBe('No next work selected. Run `hadara task status --json` for current task-selection guidance.');
+    expect(report.currentState).toMatchObject({
+      activeTask: created.taskId,
+      recommendedNextTask: created.taskId,
+      source: 'task-context'
+    });
+    expect(JSON.stringify(report.currentState)).not.toContain('Create first Task Capsule');
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });
 

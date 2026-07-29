@@ -782,7 +782,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/context.ts', 'src/context/context-slice.ts'],
     testFiles: ['tests/unit/context-slice.test.ts', 'tests/unit/context-graph-cli.test.ts'],
     examples: [
-      example('Read an explicit range', 'hadara context slice --path docs/AGENT_HANDOFF.md --from 1 --to 80 --json', 'When a worker needs exact source text from a known range.'),
+      example('Read an explicit range', 'hadara context slice --path tasks/T-0001-example/HANDOFF.md --from 1 --to 80 --json', 'When a worker needs exact source text from a known range.'),
       example('Read a symbol neighborhood', 'hadara context slice --path src/cli/context.ts --symbol handleContextCommand --json', 'When a worker needs bounded source around one exported symbol.'),
       example('Read keyword windows', 'hadara context slice --path docs/TASK_BOARD.md --keyword T-0001 --window 20 --json', 'When a worker needs bounded context around known text.'),
       example('Read a managed section', 'hadara context slice --path docs/TASK_BOARD.md --managed-section task-board --json', 'When a worker needs marker-bounded managed content.'),
@@ -1021,7 +1021,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.docs.explain.v1',
     docs: ['docs/DOC_REGISTRY.md', 'docs/SCHEMAS.md'],
-    examples: [example('Explain project state', 'hadara docs explain --path docs/PROJECT_STATE.md --json', 'When deciding whether PROJECT_STATE is required reading.')],
+    examples: [example('Explain Task Board', 'hadara docs explain --path docs/TASK_BOARD.md --json', 'When deciding whether Task Board is required reading.')],
     related: ['docs.list', 'docs.doctor'],
     conflictsWith: []
   }),
@@ -1517,7 +1517,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'deprecated',
     schemaVersion: 'hadara.taskSelection.status.v2',
-    docs: ['docs/PROJECT_STATE.md'],
+    docs: ['docs/TASK_BOARD.md'],
     examples: [
       example('Use the compatibility alias', 'hadara status --json', 'Only while migrating a 0.5.x caller to hadara task status.'),
       example('Read compact status', 'hadara status --summary-json', 'When automation needs the smallest status payload.'),
@@ -1526,34 +1526,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     ],
     related: ['doctor', 'status'],
     conflictsWith: []
-  }),
-  commandEntry({
-    id: 'project-state.update',
-    command: 'hadara project-state update [--name <name>] [--purpose <purpose>] [--execute --before-hash <hash>] [--json]',
-    summary: 'Update docs/PROJECT_STATE.md product metadata inside the project-state.update managed section.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'project-health',
-    scope: 'project',
-    lifecycleStage: 'work',
-    requiredness: 'conditional',
-    writeBoundary: 'managed-doc-section',
-    readOnly: false,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'experimental',
-    since: '0.5.0',
-    schemaVersion: 'hadara.projectState.update.v1',
-    docs: ['docs/PROJECT_STATE.md', 'docs/HADARA_WORKFLOW.md'],
-    implementationFiles: ['src/cli/project-state.ts', 'src/services/project-state-update.ts'],
-    testFiles: ['tests/unit/project-state-update.test.ts'],
-    examples: [
-      example('Preview product metadata update', 'hadara project-state update --name "Quant Battle Arena" --purpose "Backtest and compare trading strategies." --json', 'When generated PROJECT_STATE metadata still contains placeholder project identity.'),
-      example('Execute reviewed metadata update', 'hadara project-state update --name "Quant Battle Arena" --purpose "Backtest and compare trading strategies." --execute --before-hash sha256:... --json', 'After reviewing the dry-run hash.')
-    ],
-    related: ['status', 'docs.managed.list', 'docs.patch'],
-    conflictsWith: [],
-    notes: 'Dry-run first. Execute requires --before-hash and only rewrites the project-state-metadata managed section; it does not change scaffold profile or current-state canon.'
   }),
   commandEntry({
     id: 'install.plan',
@@ -1772,7 +1744,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.releaseCloseout.v1',
     implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/release-closeout.ts'],
     testFiles: ['tests/unit/release-closeout.test.ts'],
-    docs: ['docs/RELEASE_READINESS.md', 'docs/RELEASE_NOTES.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md'],
+    docs: ['docs/RELEASE_READINESS.md', 'docs/RELEASE_NOTES.md', 'docs/TASK_BOARD.md'],
     examples: [example('Plan release closeout', 'hadara release closeout --version 0.3.4 --task T-0418 --json', 'After publish/recycle work when aligning release state docs.')],
     related: ['release.dry-run', 'release.publish', 'release.gate'],
     conflictsWith: []

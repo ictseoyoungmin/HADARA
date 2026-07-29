@@ -30,34 +30,6 @@
         "generator": "hadara init"
       }
     },
-    {
-      "path": ".hadara/state/current.json",
-      "title": "CURRENT_STATE",
-      "owner": "hadara-docs",
-      "kind": "schema-reference",
-      "status": "canonical",
-      "scope": "project",
-      "profiles": [
-        "basic",
-        "standard",
-        "governed"
-      ],
-      "readWhen": [
-        "session-start"
-      ],
-      "requiredReading": true,
-      "updateOwner": "hadara-init",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init",
-      "origin": {
-        "type": "hadara-scaffold",
-        "generator": "hadara init"
-      }
-    },
-    {
       "path": "AGENTS.md",
       "title": "AGENTS",
       "owner": "hadara-docs",
@@ -84,34 +56,6 @@
         "generator": "hadara init"
       }
     },
-    {
-      "path": "docs/AGENT_HANDOFF.md",
-      "title": "AGENT_HANDOFF",
-      "owner": "hadara-docs",
-      "kind": "handoff",
-      "status": "canonical",
-      "scope": "project",
-      "profiles": [
-        "basic",
-        "standard",
-        "governed"
-      ],
-      "readWhen": [
-        "session-start"
-      ],
-      "requiredReading": true,
-      "updateOwner": "mixed",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init",
-      "origin": {
-        "type": "hadara-scaffold",
-        "generator": "hadara init"
-      }
-    },
-    {
       "path": "docs/ARCHITECTURE.md",
       "title": "ARCHITECTURE",
       "owner": "hadara-docs",
@@ -1738,34 +1682,6 @@
         "reason": "Archived source; consult only for historical investigation."
       }
     },
-    {
-      "path": "docs/PROJECT_STATE.md",
-      "title": "PROJECT_STATE",
-      "owner": "hadara-docs",
-      "kind": "project-state",
-      "status": "canonical",
-      "scope": "project",
-      "profiles": [
-        "basic",
-        "standard",
-        "governed"
-      ],
-      "readWhen": [
-        "session-start"
-      ],
-      "requiredReading": true,
-      "updateOwner": "mixed",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init",
-      "origin": {
-        "type": "hadara-scaffold",
-        "generator": "hadara init"
-      }
-    },
-    {
       "path": "docs/archive/retired-2026-07-26/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md",
       "title": "0.4.1-rc.0 Functional Debt",
       "owner": "hadara-docs",

@@ -1,5 +1,4 @@
 import { createTaskSelectionReport, type TaskSelectionIssue, type TaskSelectionRecommendation, type TaskSelectionReport } from '../task/task-selection';
-import type { ProjectContinuation } from './project-current-state';
 import type { EvaluationState, StatusHealth, StatusNextAction, StatusReadiness } from '../status/model';
 
 export interface TaskSelectionStatusV2Report {
@@ -54,10 +53,8 @@ export interface TaskSelectionStatusV2Report {
     summary: {
       recommendations: number;
       selectedSource: string;
-      currentStatePresent: boolean;
       taskBoardPresent: boolean;
       taskBoardRows: number;
-      agentHandoffPresent: boolean;
       issueCodes: string[];
     };
     taskSelection?: TaskSelectionReport;
@@ -74,10 +71,8 @@ export function createTaskSelectionStatusV2Report(
   const detail = options.detail ?? 'fast';
   const taskSelection = createTaskSelectionReport(projectRoot);
   const recommendation = taskSelection.recommendations[0] ?? null;
-  const continuation = taskSelection.sources.currentState.continuation;
-  const continuationAction = recommendation ? null : continuationNextAction(continuation);
-  const primaryNextAction = recommendation ? nextActionFromRecommendation(recommendation) : continuationAction;
-  const phase = determinePhase(taskSelection, recommendation, primaryNextAction, continuationAction);
+  const primaryNextAction = recommendation ? nextActionFromRecommendation(recommendation) : null;
+  const phase = determinePhase(taskSelection, recommendation, primaryNextAction);
   const health = taskSelection.ok ? (phase === 'idle' ? 'ok' : 'ok') : 'degraded';
 
   return {
@@ -116,11 +111,9 @@ export function createTaskSelectionStatusV2Report(
       },
       {
         id: 'continuation',
-        state: taskSelection.sources.currentState.continuations.length > 0 ? 'evaluated' : 'not-evaluated',
+        state: 'not-evaluated',
         health: 'ok',
-        summary: taskSelection.sources.currentState.continuations.length > 0
-          ? `Structured current-state continuation backlog found: ${taskSelection.sources.currentState.continuations.length} item(s), primary disposition=${continuation?.disposition ?? 'none'}.`
-          : 'No structured current-state continuation was found.'
+        summary: 'Continuation is routed through Task Board rows and task-local Task Capsule handoffs.'
       }
     ],
     primaryNextAction,
@@ -148,9 +141,7 @@ export function createTaskSelectionStatusV2Report(
       selectedSourceKind: recommendation?.sourceKind ?? null,
       sourceExplanation: recommendation
         ? recommendation.reason
-        : continuationAction
-        ? `No task-selection recommendation matched, but a structured continuation (disposition=${continuation?.disposition}) was found in current-state canon.`
-        : 'No active task, structured next work, Task Board row, slice row, first-task creation candidate, or structured continuation was selected.',
+        : 'No active Task Board row, slice row, or first-task creation candidate was selected.',
       primaryActionId: primaryNextAction?.id ?? null
     },
     sources: {
@@ -158,10 +149,8 @@ export function createTaskSelectionStatusV2Report(
       summary: {
         recommendations: taskSelection.recommendations.length,
         selectedSource: taskSelection.summary.source,
-        currentStatePresent: taskSelection.sources.currentState.present,
         taskBoardPresent: taskSelection.sources.taskBoard.present,
         taskBoardRows: taskSelection.sources.taskBoard.rows,
-        agentHandoffPresent: taskSelection.sources.agentHandoff.present,
         issueCodes: taskSelection.issues.map((issue) => issue.code)
       },
       ...(detail === 'full' ? { taskSelection } : {})
@@ -184,31 +173,11 @@ export function formatTaskSelectionStatusV2Report(report: TaskSelectionStatusV2R
 function determinePhase(
   taskSelection: TaskSelectionReport,
   recommendation: TaskSelectionRecommendation | null,
-  action: StatusNextAction | null,
-  continuationAction: StatusNextAction | null
+  action: StatusNextAction | null
 ): TaskSelectionStatusV2Report['phase'] {
   if (!taskSelection.ok) return 'degraded';
   if (recommendation && action) return action.kind === 'review' ? 'review-next-work' : 'select-work';
-  if (continuationAction) return 'continuation-ready';
   return 'idle';
-}
-
-/**
- * Routes an explicit current-state continuation (docx section 9) before falling back to
- * idle. Only "actionable" and "waiting-for-operator" override idle in this MVP;
- * "blocked"/"terminal"/"unresolved" intentionally fall through unchanged (T-0661 scope).
- */
-function continuationNextAction(continuation: ProjectContinuation | null): StatusNextAction | null {
-  if (!continuation) return null;
-  const suggestion = continuation.reason ? `${continuation.title} ${continuation.reason}` : continuation.title;
-  const message = `Review continuation suggestion: ${suggestion} Current human/reviewer direction has priority. Read the routed project, handoff, and development sources; then decide whether work should continue, choose a concise task title yourself, propose a better next step, or ask the reviewer.`;
-  if (continuation.disposition === 'waiting-for-operator') {
-    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'none', requiresReview: true, writes: false };
-  }
-  if (continuation.disposition === 'actionable') {
-    return { id: 'review-continuation', kind: 'review', message, writeBoundary: 'read-only', risk: 'low', requiresReview: true, writes: false };
-  }
-  return null;
 }
 
 function nextActionFromRecommendation(recommendation: TaskSelectionRecommendation): StatusNextAction {
@@ -254,7 +223,6 @@ function buildReadiness(
 ): StatusReadiness {
   if (health === 'degraded') return { intent: 'orient', status: 'needs-context', reason: 'Task selection has degraded source diagnostics.' };
   if (phase === 'idle') return { intent: 'plan', status: 'terminal', reason: 'No open task recommendation was found.' };
-  if (phase === 'continuation-ready') return { intent: 'plan', status: 'needs-review', reason: 'A structured current-state continuation was found and requires review before acting.' };
   if (phase === 'review-next-work') return { intent: 'plan', status: 'needs-review', reason: 'Current next-work guidance requires operator review before mutation.' };
   if (action?.writes) return { intent: 'plan', status: 'needs-review', reason: 'A task-local create action is available and should be reviewed before execution.' };
   return { intent: 'plan', status: 'ready', reason: 'A read-only task inspection action is available.' };
@@ -273,11 +241,6 @@ function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['pr
       description: 'Use an In Progress Task Board row before persisted handoff or continuation guidance.'
     },
     {
-      id: 'active-task',
-      source: '.hadara/state/current.json',
-      description: 'Use activeTask only when it cross-checks against an open Task Board row.'
-    },
-    {
       id: 'task-board-open',
       source: 'docs/TASK_BOARD.md',
       description: 'Use an existing Draft, Blocked, or other primary open Task Board row before creating or selecting new work.'
@@ -288,24 +251,9 @@ function taskSelectionPrecedence(): TaskSelectionStatusV2Report['selection']['pr
       description: 'Use the first open development slice only when no open Task Board row is already queued.'
     },
     {
-      id: 'handoff-next-step',
-      source: 'docs/AGENT_HANDOFF.md',
-      description: 'Treat explicit handoff next-step guidance as review input only after open task and slice sources are exhausted.'
-    },
-    {
-      id: 'structured-next-work',
-      source: '.hadara/state/current.json',
-      description: 'Use structured nextWork when it is actionable, not stale bootstrap guidance, and no stronger Markdown work source selected work.'
-    },
-    {
       id: 'first-task',
       source: 'project scaffold',
       description: 'Offer first-task creation when the project has no task history.'
-    },
-    {
-      id: 'continuation',
-      source: '.hadara/state/current.json',
-      description: 'Review an explicit actionable or waiting-for-operator continuation before falling back to idle; task creation and title choice remain agent/reviewer decisions.'
     },
     {
       id: 'idle',

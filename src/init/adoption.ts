@@ -5,7 +5,6 @@ import packageJson from '../../package.json';
 import { ensureDir } from '../core/fs';
 import { createSeedDocumentRegistry, normalizeDocumentRegistryFile, registryJson, type DocumentRegistryEntry, type DocumentRegistryFile } from '../services/docs-registry';
 import { managedSectionBlock, parseManagedSections, type ManagedSectionMetadata } from '../services/managed-sections';
-import { createInitialProjectCurrentState, PROJECT_CURRENT_STATE_PATH, serializeProjectCurrentState, type ProjectCurrentState } from '../services/project-current-state';
 import type {
   InitAdoptionAction,
   InitAdoptionProject,
@@ -18,20 +17,17 @@ import type {
 } from './types';
 import { createGeneratedScaffoldFiles } from './scaffold';
 import { writeFilesAtomically } from './files';
-import { createAgentHandoffDoc, createProjectStateDoc, createScaffoldJson } from './templates';
+import { createScaffoldJson } from './templates';
 
 const HADARA_STATE_PATHS = [
   '.hadara',
   '.hadara/scaffold.json',
-  '.hadara/docs-registry.json',
-  '.hadara/state/current.json'
+  '.hadara/docs-registry.json'
 ] as const;
 
 const TARGET_DOC_PATHS = [
   'docs/HADARA_WORKFLOW.md',
-  'docs/PROJECT_STATE.md',
   'docs/TASK_BOARD.md',
-  'docs/AGENT_HANDOFF.md',
   'docs/ARCHITECTURE.md',
   'docs/DECISIONS.md',
   'docs/ROADMAP.md',
@@ -63,7 +59,7 @@ const ZERO_BYTE_INIT_OUTPUT_PLACEHOLDERS = new Set([
   'hadara-init-report.json'
 ]);
 const PROJECT_REFERENCE_DOCS = new Set(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md', 'docs/SECURITY_MODEL.md']);
-const CORE_PATCH_DOCS = new Set(['.gitignore', 'AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/AGENT_HANDOFF.md']);
+const CORE_PATCH_DOCS = new Set(['.gitignore', 'AGENTS.md', 'docs/TASK_BOARD.md']);
 
 export function createInitAdoptionReport(projectRoot: string, input: {
   profile: InitProfile;
@@ -250,7 +246,7 @@ function collectSafetyBlockers(projectRoot: string, signals: InitAdoptionSignal[
       });
     }
   }
-  for (const jsonPath of ['.hadara/scaffold.json', '.hadara/docs-registry.json', '.hadara/state/current.json']) {
+  for (const jsonPath of ['.hadara/scaffold.json', '.hadara/docs-registry.json']) {
     const signal = signals.find((candidate) => candidate.path === jsonPath);
     if (signal?.type === 'file') {
       try {
@@ -415,15 +411,14 @@ function classifyRepository(projectRoot: string, signals: InitAdoptionSignal[], 
   if (blockers.length > 0) return 'unsafe';
   const scaffoldSignal = signals.find((signal) => signal.path === '.hadara/scaffold.json');
   const registrySignal = signals.find((signal) => signal.path === '.hadara/docs-registry.json');
-  const currentStateSignal = signals.find((signal) => signal.path === '.hadara/state/current.json');
   const hadaraDir = signals.find((signal) => signal.path === '.hadara');
   if (scaffoldSignal?.type === 'file') {
     const scaffold = readJsonObject(path.join(projectRoot, '.hadara/scaffold.json'));
     if (scaffold?.hadaraProtocol && scaffold.hadaraProtocol !== '0.4') return 'hadara-legacy';
-    if (registrySignal?.type === 'file' && currentStateSignal?.type === 'file') return 'hadara-current';
+    if (registrySignal?.type === 'file') return 'hadara-current';
     return 'hadara-partial';
   }
-  if (hadaraDir?.type !== 'missing' || registrySignal?.type === 'file' || currentStateSignal?.type === 'file') return 'hadara-partial';
+  if (hadaraDir?.type !== 'missing' || registrySignal?.type === 'file') return 'hadara-partial';
   const hasProjectSignals = signals.some((signal) => signalMeansBrownfield(projectRoot, signal));
   return hasProjectSignals ? 'brownfield' : 'greenfield';
 }
@@ -536,34 +531,10 @@ function applyBrownfieldAdoption(
 }
 
 function createBrownfieldGeneratedFiles(profile: InitProfile, project: InitAdoptionProject, planHash: string): Map<string, string> {
-  const state = createBrownfieldCurrentState(profile, project);
   const metadata = { name: project.name, purpose: project.purpose };
   const files = new Map(createGeneratedScaffoldFiles(profile, metadata).map((file) => [file.path, file.content]));
-  files.set(PROJECT_CURRENT_STATE_PATH, serializeProjectCurrentState(state));
-  files.set('docs/PROJECT_STATE.md', createProjectStateDoc(profile, state, metadata));
-  files.set('docs/AGENT_HANDOFF.md', createAgentHandoffDoc(state));
   files.set('.hadara/scaffold.json', createBrownfieldScaffoldJson(profile, project, planHash));
   return files;
-}
-
-function createBrownfieldCurrentState(profile: InitProfile, project: InitAdoptionProject): ProjectCurrentState {
-  const state = createInitialProjectCurrentState(profile);
-  return {
-    ...state,
-    currentRelease: project.currentRelease,
-    nextWork: {
-      title: 'Establish HADARA adoption baseline',
-      state: 'candidate',
-      operatorGuidance: 'Review existing project docs, validation commands, known problems, and authoritative sources before normal feature work.',
-      createCommandAllowed: true,
-      origin: 'bootstrap-adoption-baseline'
-    },
-    nextOperatorIntent: 'Review existing project docs, validation commands, known problems, and authoritative sources before normal feature work.',
-    validationBaseline: {
-      summary: 'Existing project adopted; no current trusted validation baseline has been promoted yet. Task-local validation evidence may exist, but this field is reserved for the project baseline used to resume work.',
-      evidence: []
-    }
-  };
 }
 
 function createBrownfieldScaffoldJson(profile: InitProfile, project: InitAdoptionProject, planHash: string): string {
@@ -597,7 +568,7 @@ function createBrownfieldRegistryJson(profile: InitProfile, project: InitAdoptio
 
 function normalizeBrownfieldRegistryEntry(document: DocumentRegistryEntry, action: InitAdoptionAction | undefined): DocumentRegistryEntry {
   const projectAuthored = action?.disposition === 'patch-managed-section' || action?.disposition === 'register-existing' || (action?.disposition === 'preserve' && PROJECT_REFERENCE_DOCS.has(document.path));
-  const projection = document.path === PROJECT_CURRENT_STATE_PATH || document.path === 'docs/PROJECT_STATE.md' || document.path === 'docs/TASK_BOARD.md' || document.path === 'docs/AGENT_HANDOFF.md';
+  const projection = document.path === 'docs/TASK_BOARD.md';
   const managedSections = projectAuthored && action?.disposition === 'patch-managed-section'
     ? managedSectionsForPatchedPath(document.path)
     : document.path === 'AGENTS.md'
@@ -618,8 +589,6 @@ function normalizeBrownfieldRegistryEntry(document: DocumentRegistryEntry, actio
 
 function managedSectionsForPatchedPath(relativePath: string): DocumentRegistryEntry['managedSections'] {
   if (relativePath === 'AGENTS.md') return [{ id: 'agent-entry', owner: 'init.adoption', kind: 'single-block', required: true }];
-  if (relativePath === 'docs/PROJECT_STATE.md') return [{ id: 'current-state-canon', owner: 'current-state.projection', kind: 'single-block', required: true }];
-  if (relativePath === 'docs/AGENT_HANDOFF.md') return [{ id: 'current-state-canon', owner: 'current-state.projection', kind: 'single-block', required: true }];
   if (relativePath === 'docs/TASK_BOARD.md') return [{ id: 'task-board', owner: 'task.board.projection', kind: 'single-block', required: true }];
   return [];
 }
@@ -682,8 +651,6 @@ Before starting work:
 `
     };
   }
-  if (relativePath === 'docs/PROJECT_STATE.md') return { id: 'current-state-canon', metadata: metadata('current-state-canon', 'current-state.projection'), body: managedBody(generated.get(relativePath) ?? createProjectStateDoc(profile, createBrownfieldCurrentState(profile, project), { name: project.name, purpose: project.purpose }), 'current-state-canon') };
-  if (relativePath === 'docs/AGENT_HANDOFF.md') return { id: 'current-state-canon', metadata: metadata('current-state-canon', 'current-state.projection'), body: managedBody(generated.get(relativePath) ?? createAgentHandoffDoc(createBrownfieldCurrentState(profile, project)), 'current-state-canon') };
   if (relativePath === 'docs/TASK_BOARD.md') return {
     id: 'task-board',
     metadata: metadata('task-board', 'task.board.projection'),
@@ -741,9 +708,7 @@ function dispositionForSignal(signal: InitAdoptionSignal): InitAdoptionAction['d
 function roleForPath(relativePath: string): string {
   if (relativePath === '.gitignore') return 'local-state-ignore';
   if (relativePath === 'AGENTS.md') return 'agent-entry';
-  if (relativePath === 'docs/PROJECT_STATE.md') return 'project-state-projection';
   if (relativePath === 'docs/TASK_BOARD.md') return 'task-board-projection';
-  if (relativePath === 'docs/AGENT_HANDOFF.md') return 'handoff-projection';
   if (PROJECT_REFERENCE_DOCS.has(relativePath)) return 'project-reference-doc';
   if (relativePath === 'tasks') return 'task-area';
   return 'adoption-target';

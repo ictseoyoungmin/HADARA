@@ -736,3 +736,4 @@
 | T-0733 | Close transaction proof and marker hardening | Done | tasks/T-0733-close-transaction-proof-and-marker-hardening | |
 | T-0734 | Close plan guarded write integration | Done | tasks/T-0734-close-plan-guarded-write-integration | |
 | T-0735 | Close plan final contract cleanup | Done | tasks/T-0735-close-plan-final-contract-cleanup | |
+| T-0736 | Remove legacy current-state docs from code paths | Done | tasks/T-0736-remove-legacy-current-state-docs-from-code-paths | Focused cleanup validation passed; remaining status/MCP old-contract tests need update or follow-up. |

@@ -79,9 +79,8 @@ After init, review:
 |---|---|---|
 | 1 | `AGENTS.md` | Entry rules and required reading. |
 | 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |
-| 3 | `docs/PROJECT_STATE.md` | Human-readable product and phase state. |
-| 4 | `docs/TASK_BOARD.md` | Inspectable task index and active-work source. |
-| 5 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
+| 3 | `docs/TASK_BOARD.md` | Inspectable task index and active-work source. |
+| 4 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
@@ -101,13 +100,12 @@ A project-local install does not remove or shadow any `hadara` already earlier o
 
 ## Generated Docs Completion
 
-`hadara init` creates the minimum docs needed for safe task work. Generated docs are not decorative placeholders. They are current-state surfaces that agents must keep aligned when the task changes their subject.
+`hadara init` creates the minimum docs needed for safe task work. Generated docs are not decorative placeholders. They are routing and task-work surfaces that agents must keep aligned when the task changes their subject.
 
 | Document | Update When |
 |---|---|
-| `docs/PROJECT_STATE.md` | Product identity, current release, phase, current problems, or validation baseline changes. |
 | `docs/TASK_BOARD.md` | Task status changes. Prefer HADARA lifecycle commands when possible. |
-| `docs/AGENT_HANDOFF.md` | The governed profile uses this for compact continuation guidance; update it before stopping when active/latest work, risks, or next-step guidance changes. |
+| Task-local `tasks/T-*/HANDOFF.md` | Continuation guidance, carry-forward risks, or next-step guidance changes for the selected capsule. |
 | Optional project docs | Architecture, decisions, roadmap, security, or agent guidance changes after those docs have been added. |
 
 Do not leave generated docs in scaffold form after the first real capability exists. If a generated or registered doc is no longer useful, update its registry state with `hadara docs update`, `hadara docs archive`, `hadara docs supersede`, or `hadara docs unregister` instead of silently ignoring it.
@@ -183,7 +181,7 @@ hadara task status --task T-XXXX --json
 
 Use `task status --json` to decide what to work on when no task is selected. Use `task create` only when no suitable capsule exists. Use `task status --task T-XXXX --json` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use `task close --task T-XXXX --dry-run --json` or `task status --task T-XXXX --detail full --json` when you need close-grade readiness diagnostics.
 
-Task selection is a review decision, not title generation. Current human or reviewer instructions have highest priority. Then read the routed project state, governed handoff when present, development/roadmap sources, Task Board, and the previous capsule handoff. A handoff `Next Recommended Step` is one input and must not be copied verbatim as a task title. If a new capsule is still warranted, choose a short behavior-focused title. If planned work is exhausted, review for design gaps or useful optimization and propose a next step or ask the reviewer instead of manufacturing work.
+Task selection is a review decision, not title generation. Current human or reviewer instructions have highest priority. Then read `task status`, the Task Board, routed development/roadmap sources, and the relevant task-local `HANDOFF.md`. A task-local `Next Recommended Step` is one input and must not be copied verbatim as a task title. If a new capsule is still warranted, choose a short behavior-focused title. If planned work is exhausted, review for design gaps or useful optimization and propose a next step or ask the reviewer instead of manufacturing work.
 
 ## Task Context
 
@@ -227,7 +225,7 @@ read task context
 author task contract
 do scoped work
 record evidence
-finish task docs and shared state
+finish task docs and Task Board state
 run task close, or review a close dry-run when an external plan hash is needed
 execute task close with the reviewed plan hash when using reviewed mode
 stop when task close returns closed-valid
@@ -238,8 +236,8 @@ Use the high-level lifecycle path for ordinary work:
 ```bash
 hadara task status --task T-XXXX --json
 
-# Finalize Task Capsule docs and tracked state docs before closing.
-# Task Board and Task Capsule prose must be current before close; project-authored product/phase context is updated deliberately.
+# Finalize Task Capsule docs before closing.
+# Task Board and Task Capsule prose must be current before close.
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --dry-run --json
@@ -288,7 +286,7 @@ HADARA Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `eviden
 | Before execution | Refine `TASK.md` Plan, Source Documents, and Acceptance. |
 | During execution | Update `TASK.md` Plan, Change Summary, Risks / Follow-ups; update `HANDOFF.md` warnings if continuity changes. |
 | After validation | Use `validation run` when possible; record evidence, then update `TASK.md` Validation and Acceptance deliberately with evidence ids or residual notes. |
-| Before task close | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert task-local `HANDOFF.md` into close-time guidance. Existing registered Project State/Handoff managed checkpoints are projected by close; optional prose remains human-owned. |
+| Before task close | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; convert task-local `HANDOFF.md` into close-time guidance. Optional shared prose remains human-owned and is not created by close. |
 | Close review | Inspect `task close --dry-run --json` output and fix reported blockers when a separate review needs the plan hash. |
 | Close execute | Do not edit close-source docs during execute. |
 | After close | Only clarify docs if the task contract did not change; rerun task close after close-source edits. |
@@ -347,7 +345,6 @@ Agents should use `task close --json` for ordinary clean capsules; it performs t
 |---|---|---|
 | New HADARA project | `hadara init --profile <profile> --json` | Creates scaffold docs and registries. |
 | Check scaffold health | `hadara init doctor --json` | Reports missing or inconsistent scaffold files. |
-| Update product metadata | `hadara project-state update --name "..." --purpose "..." --json` | Dry-run managed update for `docs/PROJECT_STATE.md` Name/Purpose; execute with the reviewed `beforeHash`. |
 | Find next work | `hadara task status --json` | Read-only selection cockpit. |
 | Inspect selected task | `hadara task status --task T-XXXX --json` | Fast loop phase and next-action projection. |
 | Inspect close-grade diagnostics | `hadara task status --task T-XXXX --detail full --json` | Heavier readiness/protocol projection for explicit diagnostics. |
