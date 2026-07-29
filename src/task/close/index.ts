@@ -9,8 +9,7 @@ export {
   isCloseGuardedWriteResolvableBlocker
 } from './plan';
 export {
-  createTaskCloseReport,
-  executeTaskCloseEvidence
+  createTaskCloseReport
 } from './proof';
 export {
   createTaskAuditCloseReport,

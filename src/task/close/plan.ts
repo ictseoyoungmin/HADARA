@@ -4,8 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
-import { appendEvidenceWithResult, EvidenceAppendResult } from '../../evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport } from './proof';
+import { appendEvidenceWithResult, EvidenceAppendResult, EvidenceTaskDirectoryError } from '../../evidence/evidence';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeGuardedTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport } from './proof';
 import { createCloseGuardedWritePlan, executeReviewedCloseGuardedWrites, CloseGuardedWritePlan } from './guardedWrites';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction } from '../lifecycle-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../authoring-guidance';
@@ -60,7 +60,8 @@ export interface TaskClosePlanReport {
     evaluatedReports?: string[];
     skippedReports?: string[];
   };
-  guardedWrites: CloseGuardedWritePlan;
+  writeSetHash: string;
+  writes: CloseGuardedWritePlan['writes'];
   steps: TaskClosePlanStep[];
   execution?: TaskClosePlanExecution;
   readinessEvidence?: TaskClosePlanReadinessEvidence;
@@ -440,7 +441,7 @@ function createAutoPreflightBlockedReport(taskId: string, review: TaskClosePlanR
     }
     return step;
   });
-  const nextAction = createPrimaryNextAction(taskId, steps, mergedIssues, review.planHash, review.guardedWrites);
+  const nextAction = createPrimaryNextAction(taskId, steps, mergedIssues, review.planHash);
   const blockedReport: TaskClosePlanReport = {
     ...review,
     ok: false,
@@ -450,7 +451,9 @@ function createAutoPreflightBlockedReport(taskId: string, review: TaskClosePlanR
     deferredChecks: [],
     partialExecutionRisk: false,
     pendingWrites: [],
-    summary: summarizeSteps(steps, review.guardedWrites),
+    summary: summarizeSteps(steps),
+    writeSetHash: review.writeSetHash,
+    writes: review.writes,
     steps,
     issues: mergedIssues,
     nextActions: nextAction ? [nextAction] : []
@@ -618,12 +621,42 @@ function executeTaskClosePlan(
     faultHooks?.afterFinalVerification?.();
     if (closeReport.ok) faultHooks?.afterProofIntent?.(closeReport);
     if (closeReport.ok && recordReadinessEvidence) {
-      readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, closeReport);
-      faultHooks?.afterReadinessEvidenceAppend?.();
+      try {
+        readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, closeReport);
+        faultHooks?.afterReadinessEvidenceAppend?.();
+      } catch (error) {
+        if (!(error instanceof EvidenceTaskDirectoryError) || error.code !== 'TASK_NOT_FOUND') throw error;
+        closeReport.ok = false;
+        closeReport.closeEvidence.planned = false;
+        closeReport.closeEvidence.appended = false;
+        closeReport.issues.push({
+          severity: 'error',
+          code: 'TASK_CLOSE_PROOF_APPEND_TASK_MISSING',
+          message: `Task Capsule disappeared before close proof append for ${taskId}; refusing to append close proof.`,
+          fixHint: 'Restore or intentionally clean up the missing Task Capsule before retrying close.',
+          example: `hadara task close --task ${taskId} --json`
+        });
+        closeReport.summary = {
+          blockers: closeReport.issues.filter((issue) => issue.severity === 'error').length,
+          warnings: closeReport.issues.filter((issue) => issue.severity === 'warning').length,
+          nextActions: closeReport.nextActions.length
+        };
+        readinessEvidence = { attempted: false, reason: 'blocked' };
+      }
     }
     if (closeReport.ok) {
       try {
-        executeTaskCloseEvidence(projectRoot, closeReport, proofAppendGuard?.());
+        const guard = proofAppendGuard?.();
+        if (!guard) {
+          throw new TaskCloseProofAppendRevalidationError({
+            severity: 'error',
+            code: 'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED',
+            message: 'Task close proof append requires a transaction operation-marker guard.',
+            fixHint: 'Use the public task close transaction route so the proof append is bound to the persisted operation marker.',
+            example: `hadara task close --task ${taskId} --json`
+          });
+        }
+        executeGuardedTaskCloseEvidence(projectRoot, closeReport, guard);
       } catch (error) {
         if (!(error instanceof TaskCloseProofAppendRevalidationError)) throw error;
         closeReport.ok = false;
@@ -764,7 +797,8 @@ function createPostExecutionReport(
     actor,
     planHash: reviewedPlanHash,
     summary: summarizeSteps(steps, reports.guardedWrites, reports),
-    guardedWrites: reports.guardedWrites,
+    writeSetHash: reports.guardedWrites.writeSetHash,
+    writes: reports.guardedWrites.writes,
     steps,
     execution,
     ...(readinessEvidence ? { readinessEvidence } : {}),
@@ -786,8 +820,9 @@ function createClosePlanReport(
   execution?: TaskClosePlanExecution,
   reports?: ClosePlanReports
 ): TaskClosePlanReport {
-  const nextAction = createPrimaryNextAction(taskId, steps, issues, planHash, reports?.guardedWrites);
-  const projectRoot = reports?.guardedWrites.projectRoot ?? '';
+  const guardedWrites = reports?.guardedWrites ?? missingGuardedWritePlan(taskId, actor);
+  const nextAction = createPrimaryNextAction(taskId, steps, issues, planHash, guardedWrites);
+  const projectRoot = guardedWrites.projectRoot;
   const authoringGuidance: TaskAuthoringGuidance = projectRoot ? createTaskAuthoringGuidance(projectRoot, taskId) : missingTaskAuthoringGuidance();
   const state = deriveClosePlanState(steps, issues, reports);
   const blockingIssues = closePlanBlockingIssues(issues);
@@ -811,8 +846,9 @@ function createClosePlanReport(
     generatedAt: new Date().toISOString(),
     actor,
     ...(planHash ? { planHash } : {}),
-    summary: summarizeSteps(steps, reports?.guardedWrites, reports),
-    ...(reports ? { guardedWrites: reports.guardedWrites } : { guardedWrites: missingGuardedWritePlan(taskId, actor) }),
+    summary: summarizeSteps(steps, guardedWrites, reports),
+    writeSetHash: guardedWrites.writeSetHash,
+    writes: guardedWrites.writes,
     steps,
     ...(execution ? { execution } : {}),
     authoringGuidance,
@@ -850,14 +886,12 @@ function createExecuteRefusal(
 
 function missingGuardedWritePlan(taskId: string, actor: HadaraActorContext): CloseGuardedWritePlan {
   return {
-    schemaVersion: 'hadara.task.close_plan.guard_writes.v1',
-    command: 'task.close-plan.guard-writes',
     ok: true,
     mode: 'dry-run',
     taskId,
     projectRoot: '',
     actor,
-    status: { taskStatus: null, taskBoardStatus: null, taskBoardPresent: false },
+    writeSetHash: hashReport([]),
     summary: { plannedWrites: 0, appliedWrites: 0, advisoryOnly: 0, stateDocsPending: 0 },
     writes: [],
     advisories: [],
@@ -1261,7 +1295,7 @@ function createGuardedWritesExecutedStep(
     reportHash: hashReport({
       ok: report.ok,
       taskId: report.taskId,
-      status: report.status,
+      writeSetHash: report.writeSetHash,
       summary: report.summary,
       writes: report.writes.map((write) => ({
         path: write.path,
@@ -1287,7 +1321,12 @@ function countExecutedTargetFileWrites(step: TaskClosePlanStep, report: unknown,
 }
 
 function isCloseGuardedWritePlan(value: unknown): value is CloseGuardedWritePlan {
-  return Boolean(value && typeof value === 'object' && (value as CloseGuardedWritePlan).schemaVersion === 'hadara.task.close_plan.guard_writes.v1');
+  return Boolean(
+    value
+    && typeof value === 'object'
+    && Array.isArray((value as CloseGuardedWritePlan).writes)
+    && typeof (value as CloseGuardedWritePlan).writeSetHash === 'string'
+  );
 }
 
 export function didClosePlanExecutedStepMutate(step: TaskClosePlanExecutedStep): boolean {
@@ -1389,12 +1428,10 @@ function hashPlan(taskId: string, steps: TaskClosePlanStep[], reports?: ClosePla
 
 function stableGuardedWritePlanFingerprint(report: CloseGuardedWritePlan): string {
   return hashReport({
-    schemaVersion: report.schemaVersion,
-    command: report.command,
     ok: report.ok,
     taskId: report.taskId,
     task: report.task,
-    status: report.status,
+    writeSetHash: report.writeSetHash,
     summary: {
       plannedWrites: report.summary.plannedWrites,
       advisoryOnly: report.summary.advisoryOnly,

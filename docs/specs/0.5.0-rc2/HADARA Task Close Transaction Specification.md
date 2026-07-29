@@ -81,7 +81,7 @@ sync required
 sync satisfied
 sync blocked
 hadara.task.close_plan.v1#guarded-write-set
-task.close-plan.guard-writes
+separate guarded-write command/report identity
 ```
 
 대신 close plan이 적용할 명시적인 write set을 가진다.

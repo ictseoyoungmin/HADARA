@@ -1025,6 +1025,7 @@ interface CloseOperationBasis {
   expectedWrites: TaskCloseExpectedWrite[];
   writeSetHash: string;
   closeBasisHash: string;
+  finalSourceHash: string;
   planFingerprint: string;
 }
 
@@ -1048,10 +1049,17 @@ function createCloseOperationBasis(reviewedPlan: ReviewedTaskClosePlan): CloseOp
     issues: reviewedPlan.issues.map((issue) => ({ severity: issue.severity, code: issue.code, path: issue.path ?? null })),
     writeSetHash
   });
+  const finalSourceHash = reviewedPlan.reports.close?.validation.validatedBeforeCloseEvidenceSourceHash ?? planFingerprint;
   return {
     expectedWrites,
     writeSetHash,
-    closeBasisHash: reviewedPlan.reports.close?.validation.validatedBeforeCloseEvidenceSourceHash ?? planFingerprint,
+    closeBasisHash: hashObject({
+      kind: 'task-close-operation-basis.v1',
+      taskId: reviewedPlan.review.taskId,
+      finalSourceHash,
+      readinessReportHash: reviewedPlan.reports.close?.validation.validatedBeforeCloseEvidenceReportHash ?? null
+    }),
+    finalSourceHash,
     planFingerprint
   };
 }
@@ -1089,10 +1097,16 @@ function reconcileCloseOperationMarker(
   }
   // Close-source drift must fail closed before any phase-specific resume decision,
   // including proof-pending; otherwise a proof-pending retry can skip drift detection.
-  if (operationCloseBasisHash(previous) !== basis.closeBasisHash) {
+  if (previous.closeSourceHash !== basis.finalSourceHash) {
     return {
       ...base,
       issue: createOperationRecoveryIssue(taskId, previous, 'close source hash changed')
+    };
+  }
+  if (operationCloseBasisHash(previous) !== basis.closeBasisHash) {
+    return {
+      ...base,
+      issue: createOperationRecoveryIssue(taskId, previous, 'close basis hash changed')
     };
   }
   // The regenerated write set must exactly match the still-pending portion of the persisted
@@ -1249,7 +1263,7 @@ function createCloseOperation(
   previous: TaskCloseOperationState | null,
   reconciliation?: CloseOperationMarkerReconciliation
 ): TaskCloseOperationState {
-  const { expectedWrites, writeSetHash, closeBasisHash, planFingerprint } = basis;
+  const { expectedWrites, writeSetHash, closeBasisHash, finalSourceHash, planFingerprint } = basis;
   const idempotencyKey = hashObject({ taskId, closeBasisHash, intendedFinalState: 'closed-valid' });
   const reusePrevious = Boolean(previous && reconciliation?.preservePreviousIdentity && !reconciliation.issue);
   const previousState = reusePrevious ? previous : null;
@@ -1282,7 +1296,7 @@ function createCloseOperation(
     intendedFinalState: 'closed-valid',
     phase,
     closeBasisHash: previousState?.closeBasisHash ?? previousState?.closeSourceHash ?? closeBasisHash,
-    closeSourceHash: previousState?.closeSourceHash ?? closeBasisHash,
+    closeSourceHash: previousState?.closeSourceHash ?? finalSourceHash,
     planFingerprint: previousState?.planFingerprint ?? planFingerprint,
     planHash: previousState?.planHash ?? planHash,
     writeSetHash: previousState?.writeSetHash ?? writeSetHash,
@@ -1438,7 +1452,7 @@ function persistCloseOperation(projectRoot: string, operation: TaskCloseOperatio
 
 function updateCloseOperationFromClosePlan(operation: TaskCloseOperationState, closePlan: TaskClosePlanReport): TaskCloseOperationState {
   const completedSteps = (closePlan.execution?.executedSteps ?? []).filter((step) => step.status === 'executed' || step.status === 'satisfied').map((step) => step.id);
-  const guardedWritesParticipated = completedSteps.includes('guarded-writes') || closePlan.guardedWrites.summary.plannedWrites > 0;
+  const guardedWritesParticipated = completedSteps.includes('guarded-writes') || closePlan.writes.length > 0;
   const allSteps: TaskClosePlanExecutionStepId[] = [
     ...(guardedWritesParticipated ? ['guarded-writes' as const] : []),
     'ready',

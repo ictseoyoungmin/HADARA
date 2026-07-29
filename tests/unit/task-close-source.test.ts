@@ -4,8 +4,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
-import { appendEvidence } from '../../src/evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, executeTaskCloseEvidence } from '../../src/task/close';
+import { appendEvidenceWithResult } from '../../src/evidence/evidence';
+import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { assertSchema } from '../../src/core/schema';
 
@@ -68,7 +68,9 @@ describe('task close source', () => {
     const closeSource = createTaskCloseSourceReport(root, task.id);
     const close = createTaskCloseReport(root, task.id, 'execute');
     expect(close.validation.validatedBeforeCloseEvidenceSourceHash).toBe(closeSource.sourceHash);
-    executeTaskCloseEvidence(root, close);
+    const transaction = createTaskCloseTransactionReport(root, task.id);
+    expect(transaction.issues).toEqual([]);
+    expect(transaction.ok).toBe(true);
 
     const audit = createTaskAuditCloseReport(root, task.id);
     expect(audit.currentSourceHash).toBe(createTaskCloseSourceReport(root, task.id).sourceHash);
@@ -100,6 +102,8 @@ describe('task close source', () => {
 
 function completeTask(root: string, taskId: string, taskDir: string): void {
   updateTaskBoardDone(root, taskId);
+  const evidence = appendEvidenceWithResult(root, { taskId, kind: 'test-log', summary: 'Close-source fixture validation passed.', result: 'passed', visibility: 'public', category: 'validation', outcome: 'passed' });
+  const evidenceId = evidence.evidence.schemaVersion === 'hadara.evidence.v2' ? evidence.evidence.id : 'evidence.jsonl';
   const taskBoardHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'))).digest('hex');
   fs.writeFileSync(
     path.join(taskDir, 'TASK.md'),
@@ -108,6 +112,8 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace(/\| Status \| Draft \|/g, '| Status | Done |')
       .replace('| Created | TBD |', '| Created | 2026-06-30 |')
       .replace('| Updated | TBD |', '| Updated | 2026-06-30 |')
+      .replace(/\nDraft\n/, '\nDone\n')
+      .replace(/## Scope\n\n[\s\S]*?(?=## Plan)/, '## Scope\n\n| Boundary | Items |\n|---|---|\n| In | Close-source fixture. |\n| Out | Unrelated workflow changes. |\n\n')
       .replace(
         '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
         `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/TASK_BOARD.md | reference | approved | implemented | Fixture. | sha256:${taskBoardHash} |`
@@ -116,15 +122,42 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| 1 | Define the task contract. | Pending |', '| 1 | Define the task contract. | Done |')
       .replace('| 2 | Implement the smallest useful slice. | Pending |', '| 2 | Implement fixture. | Done |')
       .replace('| 3 | Validate and record evidence. | Pending |', '| 3 | Validate and record evidence. | Done |')
-      .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Met | Fixture. | docs/TASK_BOARD.md |')
-      .replace('| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Met | Fixture. | docs/TASK_BOARD.md |')
-      .replace('| TBD | Yes | Not Run | TBD |', '| Fixture | Yes | Passed | Fixture. |')
-      .replace('| N/A | TBD |', '| src/task/close/proof.ts | Fixture. |')
-      .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Deferred | docs/TASK_BOARD.md |'),
+      .replace(/## Acceptance\n\n[\s\S]*?(?=## Validation)/, `## Acceptance\n\n| ID | Criterion | State | Evidence | Reference |\n|---|---|---|---|---|\n| AC-1 | Scope is implemented. | Done | ${evidenceId} | docs/TASK_BOARD.md |\n| AC-2 | Validation evidence is recorded. | Done | ${evidenceId} | docs/TASK_BOARD.md |\n\n`)
+      .replace(/## Validation\n\n[\s\S]*?(?=## Inputs \/ Constraints)/, `## Validation\n\n| Check | Gate | Status | Detail | Evidence |\n|---|---|---|---|---|\n| Fixture | Yes | Passed | Fixture. | ${evidenceId} |\n\n`)
+      .replace(/## Changes\n\n[\s\S]*?(?=## Risks \/ Follow-ups)/, '## Changes\n\n| Area | Summary |\n|---|---|\n| src/task/close/proof.ts | Fixture. |\n\n')
+      .replace(/## Risks \/ Follow-ups\n\n[\s\S]*?(?=## Close Summary)/, '## Risks / Follow-ups\n\n| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Follow-up | None. | Deferred | docs/TASK_BOARD.md |\n\n')
+      .replace(/## History\n\n[\s\S]*$/, '## History\n\n| Date | State | Note |\n|---|---|---|\n| 2026-07-29 | Draft | Initial task scaffold. |\n| 2026-06-30 | Done | Fixture complete. |\n'),
     'utf8'
   );
-  fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Fixture. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n', 'utf8');
-  appendEvidence(root, { taskId, kind: 'test-log', summary: 'Close-source fixture validation passed.', result: 'passed', visibility: 'public' });
+  fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), `# Handoff
+
+## Identity
+
+| Field | Value |
+|---|---|
+| ID | ${taskId} |
+| Title | ${taskId} |
+| Status | Done |
+| Created | 2026-06-30 |
+| Updated | 2026-06-30 |
+
+## Last Completed
+
+| Item | Evidence |
+|---|---|
+| Fixture complete. | Fixture. |
+
+## Next Recommended Step
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+| None. | terminal | no | Done. | docs/TASK_BOARD.md |
+
+## Carry Forward Warnings
+
+| Warning | Impact | Mitigation |
+|---|---|---|
+`, 'utf8');
 }
 
 function updateTaskBoardDone(root: string, taskId: string): void {

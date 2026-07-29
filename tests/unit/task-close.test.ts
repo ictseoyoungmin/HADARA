@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/close';
+import { createTaskAuditCloseReport, createTaskCloseReport, formatTaskAuditCloseReport } from '../../src/task/close';
 import { createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskClosePlanReport } from '../../src/task/close';
@@ -93,11 +93,9 @@ describe('task close report', () => {
     expect(report.transaction.operation?.planHash).toBe(report.transaction.planHash);
     expect(report.source.closePlan.execution?.requestedPlanHash).toBe(report.transaction.planHash);
     expect(report.source.closePlan.steps.map((step) => step.id)).toEqual(['ready', 'close', 'audit-close']);
-    expect(report.source.closePlan.guardedWrites).toMatchObject({
-      taskId: task.id,
-      summary: {
-        plannedWrites: 0
-      }
+    expect(report.source.closePlan).toMatchObject({
+      writeSetHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      writes: []
     });
     expect(fs.existsSync(path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`))).toBe(false);
     expect(report.writeSummary.executedSteps).toEqual(['ready', 'close', 'audit-close']);
@@ -136,8 +134,8 @@ describe('task close report', () => {
     });
     expect(report.recovery?.action.writeBoundary).not.toBe('read-only');
     expect(report.transaction.markerPersistence).toMatchObject({ contentWrites: 1, cleanupWrites: 1, progressWrites: 0 });
-    expect(report.recovery?.action.command).toContain('task close');
-    expect(report.nextActions.map((action) => action.command ?? '').join('\n')).toContain('task close');
+    expect(report.recovery?.action.command).toContain('hadara ');
+    expect(report.nextActions.map((action) => action.command ?? '').join('\n')).toContain('hadara ');
     expect(report.source.closePlan.mode).toBe('dry-run');
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
@@ -426,7 +424,7 @@ describe('task close report', () => {
       planFingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       writeSetHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/)
     });
-    expect(report.transaction.operation?.closeSourceHash).toBe(report.transaction.operation?.closeBasisHash);
+    expect(report.transaction.operation?.closeSourceHash).not.toBe(report.transaction.operation?.closeBasisHash);
     expect(expectedWrites).toEqual(expect.arrayContaining([
       expect.objectContaining({
         step: 'guarded-writes',
@@ -1061,6 +1059,58 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
+  it('fails closed with a structured issue when the task capsule disappears before proof append', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction missing task at proof');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    let removed = false;
+
+    const report = createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterProofIntent() {
+          removed = true;
+          fs.rmSync(task.dir, { recursive: true, force: true });
+        }
+      }
+    });
+
+    expect(removed).toBe(true);
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute',
+      writeSummary: {
+        closeProofAppended: false
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_TASK_MISSING'
+    }));
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('requires a proof append guard on direct close-plan execute paths', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close plan guard required');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const dryRun = createTaskClosePlanReport(root, task.id);
+
+    const report = createTaskClosePlanReport(root, task.id, {
+      executeRequested: true,
+      planHash: dryRun.planHash
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute'
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_GUARD_REQUIRED'
+    }));
+    expect(closeProofCount(task.dir)).toBe(0);
+  });
+
   it('stops before a guarded write without lifecycle mutation or close proof', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction before write fault');
@@ -1179,7 +1229,17 @@ describe('task close report', () => {
         raced = true;
         const concurrent = createTaskCloseReport(root, task.id, 'execute');
         expect(concurrent.ok).toBe(true);
-        executeTaskCloseEvidence(root, concurrent);
+        appendEvidenceWithResult(root, {
+          taskId: task.id,
+          kind: 'command-log',
+          summary: concurrent.closeEvidence.summary,
+          result: concurrent.closeEvidence.result,
+          visibility: 'public',
+          tags: ['close-proof', `idempotency:${concurrent.closeEvidenceWrite?.idempotencyKey}`],
+          idempotencyKey: concurrent.closeEvidenceWrite?.idempotencyKey,
+          actor: concurrent.actor,
+          closeEvidenceSnapshot: concurrent.closeEvidence.closeEvidenceSnapshot
+        });
       }
     });
 
@@ -1643,60 +1703,49 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close execute evidence');
     completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
 
-    const report = createTaskCloseReport(root, task.id, 'execute');
     const before = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
-    executeTaskCloseEvidence(root, report);
+    const transaction = createTaskCloseTransactionReport(root, task.id);
     const after = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+    const audit = createTaskAuditCloseReport(root, task.id);
 
-    expect(report.ok).toBe(true);
-    expect(report.closeEvidence.appended).toBe(true);
-    expect(report.lifecycle).toMatchObject({
-      reportPhase: 'close-execute',
-      nextPhaseAfterSuccess: 'post-close-audit',
-      closePhase: { writes: 'close-evidence-only' },
-      auditPhase: { command: `hadara task status --task ${task.id} --detail full --json`, writes: 'none' }
+    expect(transaction.ok).toBe(true);
+    expect(transaction.writeSummary).toMatchObject({
+      evidenceAppends: 2,
+      closeProofAppended: true
     });
-    expect(report.closeEvidence.sourceHash).toBe(report.validation.validatedBeforeCloseEvidenceSourceHash);
-    expect(after.split(/\r?\n/).filter(Boolean).length).toBe(before.split(/\r?\n/).filter(Boolean).length + 1);
+    expect(after.split(/\r?\n/).filter(Boolean).length).toBe(before.split(/\r?\n/).filter(Boolean).length + 2);
     expect(after).toContain('"kind":"command-log"');
     expect(after).toContain('"Task close validation for ' + task.id);
-    expect(report.closeEvidence.markdownPath).toBe(`tasks/${task.id}-close-execute-evidence/EVIDENCE.md`);
-    expect(report.closeEvidence.evidencePath).toBe(`tasks/${task.id}-close-execute-evidence/evidence.jsonl`);
     const closeRecord = JSON.parse(after.trim().split(/\r?\n/).at(-1) ?? '{}');
     expect(closeRecord).toMatchObject({
       schemaVersion: 'hadara.evidence.v2',
-      idempotencyKey: report.closeEvidenceWrite?.idempotencyKey,
-      closeEvidenceSnapshot: report.closeEvidence.closeEvidenceSnapshot,
+      closeEvidenceSnapshot: expect.any(Object),
       actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null }
     });
-    expect(report.closeEvidenceWrite?.executeRecheck).toEqual({ performed: true, duplicateFound: false, action: 'append' });
-    expect(closeRecord.tags).toEqual(expect.arrayContaining(['close-proof', `idempotency:${report.closeEvidenceWrite?.idempotencyKey}`]));
-    expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
-    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task status --task ${task.id} --detail full --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
-    expect(report.nextActions[0]).not.toHaveProperty('message');
+    expect(closeRecord.tags).toEqual(expect.arrayContaining(['close-proof', `idempotency:${closeRecord.idempotencyKey}`]));
+    expect(audit.auditVerdict.verdict).toBe('closed-valid');
   });
 
   it('does not append duplicate close evidence for the same source and report hash', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close duplicate evidence');
     completeTask(root, task.id, task.dir);
-    const firstReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, firstReport);
+    markStateDocsCurrent(root, task.id);
+    const firstReport = createTaskCloseTransactionReport(root, task.id);
     const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
-    const duplicateReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, duplicateReport);
+    const duplicateReport = createTaskCloseTransactionReport(root, task.id);
     const afterDuplicate = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
-    expect(duplicateReport.closeEvidenceWrite).toMatchObject({
-      idempotencyKey: firstReport.closeEvidenceWrite?.idempotencyKey,
-      duplicateFound: true,
-      duplicateAction: 'no-op'
+    expect(firstReport.ok).toBe(true);
+    expect(duplicateReport.ok).toBe(true);
+    expect(duplicateReport.writeSummary).toMatchObject({
+      executedWrites: 0,
+      closeProofAppended: false,
+      idempotentNoop: true
     });
-    expect(duplicateReport.closeEvidence.planned).toBe(false);
-    expect(duplicateReport.closeEvidence.appended).toBe(false);
-    expect(duplicateReport.nextActions).toContainEqual(expect.objectContaining({ id: 'close-evidence-duplicate-noop', writeBoundary: 'read-only' }));
     expect(afterDuplicate).toBe(afterFirst);
     const audit = createTaskAuditCloseReport(root, task.id);
     expect(audit.closeEvidenceAudit).toMatchObject({
@@ -1707,31 +1756,29 @@ describe('task close report', () => {
     });
   });
 
-  it('rechecks evidence immediately before append and no-ops a stale same-hash execute report', () => {
+  it('refuses a stale reviewed plan after close proof already exists without appending a duplicate', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close race recheck');
     completeTask(root, task.id, task.dir);
-    const staleExecuteReport = createTaskCloseReport(root, task.id, 'execute');
-    const firstReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, firstReport);
+    markStateDocsCurrent(root, task.id);
+    const stalePlan = createTaskClosePlanReport(root, task.id, { executeRequested: false });
+    const firstReport = createTaskCloseTransactionReport(root, task.id);
     const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
-    executeTaskCloseEvidence(root, staleExecuteReport);
+    const staleExecuteReport = createTaskCloseTransactionReport(root, task.id, {
+      dryRun: false,
+      planHash: stalePlan.planHash
+    });
     const afterStaleExecute = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
-    expect(staleExecuteReport.closeEvidenceWrite).toMatchObject({
-      idempotencyKey: firstReport.closeEvidenceWrite?.idempotencyKey,
-      duplicateFound: true,
-      duplicateAction: 'no-op',
-      executeRecheck: {
-        performed: true,
-        duplicateFound: true,
-        action: 'no-op'
-      }
+    expect(firstReport.ok).toBe(true);
+    expect(staleExecuteReport.ok).toBe(false);
+    expect(staleExecuteReport.writeSummary).toMatchObject({
+      executedWrites: 0,
+      closeProofAppended: false,
+      idempotentNoop: false
     });
-    expect(staleExecuteReport.closeEvidence.planned).toBe(false);
-    expect(staleExecuteReport.closeEvidence.appended).toBe(false);
-    expect(staleExecuteReport.nextActions).toContainEqual(expect.objectContaining({ id: 'close-evidence-duplicate-noop', writeBoundary: 'read-only' }));
+    expect(staleExecuteReport.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_PLAN_PLAN_HASH_MISMATCH' }));
     expect(afterStaleExecute).toBe(afterFirst);
     const audit = createTaskAuditCloseReport(root, task.id);
     expect(audit.closeEvidenceAudit).toMatchObject({
@@ -1744,13 +1791,12 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close supersedes evidence');
     completeTask(root, task.id, task.dir);
-    const firstReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, firstReport);
+    markStateDocsCurrent(root, task.id);
+    const firstReport = createTaskCloseTransactionReport(root, task.id);
     const firstRecord = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/).at(-1) ?? '{}');
 
     fs.appendFileSync(path.join(task.dir, 'TASK.md'), '\n<!-- close-source drift for supersede fixture -->\n', 'utf8');
-    const secondReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, secondReport);
+    const secondReport = createTaskCloseTransactionReport(root, task.id);
     const records = fs
       .readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')
       .trim()
@@ -1758,12 +1804,9 @@ describe('task close report', () => {
       .map((line) => JSON.parse(line));
     const secondRecord = records.at(-1);
 
-    expect(secondReport.closeEvidenceWrite).toMatchObject({
-      duplicateFound: false,
-      duplicateAction: 'append',
-      supersedes: [firstRecord.id]
-    });
-    expect(secondRecord.tags).toEqual(expect.arrayContaining([`supersedes:${firstRecord.id}`, `idempotency:${secondReport.closeEvidenceWrite?.idempotencyKey}`]));
+    expect(secondReport.ok).toBe(true);
+    expect(secondReport.writeSummary.closeProofAppended).toBe(true);
+    expect(secondRecord.tags).toEqual(expect.arrayContaining([`supersedes:${firstRecord.id}`, `idempotency:${secondRecord.idempotencyKey}`]));
     const audit = createTaskAuditCloseReport(root, task.id);
     expect(audit.latestCloseEvidence?.id).toBe(secondRecord.id);
     expect(audit.closeEvidenceAudit).toMatchObject({
@@ -1783,8 +1826,8 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close audit evidence');
     completeTask(root, task.id, task.dir);
-    const closeReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, closeReport);
+    markStateDocsCurrent(root, task.id);
+    const closeTransaction = createTaskCloseTransactionReport(root, task.id);
 
     const audit = createTaskAuditCloseReport(root, task.id);
     expect(audit).toMatchObject({
@@ -1795,14 +1838,11 @@ describe('task close report', () => {
       summary: { closeEvidenceRecords: 1, blockers: 0 }
     });
     expect(audit.nextActions).toEqual([]);
-    expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
-    expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
-    expect(audit.latestCloseEvidence?.slotRegistryHash).toBe(closeReport.validation.slotRegistryHash);
-    expect(audit.latestCloseEvidence?.slotRegistryVersion).toBe(closeReport.validation.slotRegistryVersion);
-    expect(audit.latestCloseEvidence?.closeEvidenceSnapshot).toEqual(closeReport.closeEvidence.closeEvidenceSnapshot);
-    expect(audit.currentCloseEvidenceSnapshot).toEqual(closeReport.closeEvidence.closeEvidenceSnapshot);
-    expect(audit.currentSlotRegistryHash).toBe(closeReport.validation.slotRegistryHash);
-    expect(audit.currentSlotRegistryVersion).toBe(closeReport.validation.slotRegistryVersion);
+    expect(closeTransaction.ok).toBe(true);
+    expect(audit.latestCloseEvidence?.validationReportHash).toMatch(/^sha256:/);
+    expect(audit.latestCloseEvidence?.sourceHash).toMatch(/^sha256:/);
+    expect(audit.latestCloseEvidence?.slotRegistryHash).toMatch(/^sha256:/);
+    expect(audit.latestCloseEvidence?.closeEvidenceSnapshot).toEqual(audit.currentCloseEvidenceSnapshot);
     expect(audit.closeEvidenceAudit).toMatchObject({
       latestCloseEvidenceId: expect.stringMatching(new RegExp(`^ev:${task.id}:`)),
       supersededCloseEvidenceIds: [],
@@ -1817,10 +1857,10 @@ describe('task close report', () => {
       reportHashMatches: true,
       sourceHashMatches: true,
       slotRegistryHashMatches: true,
-      recordedValidationReportHash: closeReport.validation.validatedBeforeCloseEvidenceReportHash,
-      recordedSourceHash: closeReport.validation.validatedBeforeCloseEvidenceSourceHash,
-      recordedSlotRegistryHash: closeReport.validation.slotRegistryHash,
-      recordedSlotRegistryVersion: closeReport.validation.slotRegistryVersion,
+      recordedValidationReportHash: audit.currentValidationReportHash,
+      recordedSourceHash: audit.currentSourceHash,
+      recordedSlotRegistryHash: audit.currentSlotRegistryHash,
+      recordedSlotRegistryVersion: audit.currentSlotRegistryVersion,
       currentValidationReportHash: audit.currentValidationReportHash,
       currentSourceHash: audit.currentSourceHash,
       currentSlotRegistryHash: audit.currentSlotRegistryHash,
@@ -1863,8 +1903,9 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close snapshot drift');
     completeTask(root, task.id, task.dir);
-    const closeReport = createTaskCloseReport(root, task.id, 'execute');
-    executeTaskCloseEvidence(root, closeReport);
+    markStateDocsCurrent(root, task.id);
+    const closeReport = createTaskCloseTransactionReport(root, task.id);
+    expect(closeReport.ok).toBe(true);
 
     appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Post-close validation failed.', result: 'failed', visibility: 'public', category: 'validation' });
     const drift = createTaskAuditCloseReport(root, task.id);

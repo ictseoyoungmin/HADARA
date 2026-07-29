@@ -663,7 +663,7 @@ function hashObject(value: unknown): string {
   return hashText(JSON.stringify(value));
 }
 
-export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseReport, guard?: TaskCloseProofAppendGuard): void {
+export function executeGuardedTaskCloseEvidence(projectRoot: string, report: TaskCloseReport, guard: TaskCloseProofAppendGuard): void {
   if (report.closeEvidenceWrite?.duplicateAction === 'no-op') {
     report.closeEvidence.appended = false;
     return;
@@ -731,9 +731,18 @@ interface PersistedTaskLocalExpectedWrite {
   afterHash?: string;
 }
 
-function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseReport, guard?: TaskCloseProofAppendGuard): void {
+function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseReport, guard: TaskCloseProofAppendGuard): void {
   const task = findTaskCapsule(projectRoot, report.taskId);
-  if (!task) return;
+  if (!task) {
+    throw new TaskCloseProofAppendRevalidationError({
+      severity: 'error',
+      code: 'TASK_CLOSE_PROOF_APPEND_TASK_MISSING',
+      message: `Task Capsule disappeared before proof append for ${report.taskId}; refusing to append close proof.`,
+      path: toPortablePath(path.relative(projectRoot, path.join(projectRoot, guard.markerPath))),
+      fixHint: 'Inspect the task-close operation marker and restore or intentionally clean up the missing Task Capsule before retrying close.',
+      example: `hadara task close --task ${report.taskId} --json`
+    });
+  }
 
   const actualSourceHash = hashCloseRelevantSource(projectRoot, task.dir);
   const expectedSourceHash = report.validation.validatedBeforeCloseEvidenceSourceHash;
@@ -748,11 +757,7 @@ function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseR
     });
   }
 
-  const marker = guard ? readRequiredCloseOperationMarker(projectRoot, report.taskId, guard) : readPersistedCloseOperationMarker(projectRoot, report.taskId);
-  if (!marker) {
-    if (guard) throwProofAppendGuardIssue(projectRoot, report.taskId, guard, 'TASK_CLOSE_PROOF_APPEND_MARKER_MISSING', 'Task close operation marker is missing before proof append.');
-    return;
-  }
+  const marker = readRequiredCloseOperationMarker(projectRoot, report.taskId, guard);
   const taskLocalWrites = marker.expectedWrites
     .map((write, index) => ({ write, sequence: index + 1 }))
     .filter((entry) => entry.write.writeBoundary === 'task-local');
@@ -835,24 +840,6 @@ function throwProofAppendGuardIssue(
     fixHint: 'Inspect the local task-close operation marker and rerun task close only after the recovery state is understood.',
     example: `hadara task close --task ${taskId} --json`
   });
-}
-
-function readPersistedCloseOperationMarker(
-  projectRoot: string,
-  taskId: string
-): { expectedWrites: PersistedTaskLocalExpectedWrite[] } | null {
-  const markerPath = path.join(projectRoot, '.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`);
-  try {
-    const parsed = JSON.parse(fs.readFileSync(markerPath, 'utf8')) as { expectedWrites?: unknown };
-    if (!Array.isArray(parsed.expectedWrites)) return null;
-    return {
-      expectedWrites: parsed.expectedWrites.filter((write): write is PersistedTaskLocalExpectedWrite =>
-        Boolean(write && typeof write === 'object' && typeof (write as PersistedTaskLocalExpectedWrite).path === 'string')
-      )
-    };
-  } catch {
-    return null;
-  }
 }
 
 function classifyPersistedTaskLocalWrite(

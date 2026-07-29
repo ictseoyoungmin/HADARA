@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 399,
+  "rev": 401,
   "profile": "governed",
   "currentRelease": "0.5.0-rc.1",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0734",
-    "title": "Close plan guarded write integration"
+    "id": "T-0735",
+    "title": "Close plan final contract cleanup"
   },
   "activeTask": null,
   "nextWork": null,

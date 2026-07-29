@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0734 Close plan guarded write integration | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0735 Close plan final contract cleanup | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0734 completes the final reviewer-limited task-close hardening after T-0733. Proof append now receives an explicit operation-marker guard from the write-capable transaction and refuses to append proof if the marker is missing, malformed, mismatched by operation identity/hash/write set/proof idempotency, not `proof-pending`, or internally write-set-inconsistent. Guarded task-local writes are now a top-level `closePlan.guardedWrites` component; public close-plan `steps` no longer include `sync`, operation/recovery expected writes use `guarded-writes`, the legacy `CloseBookkeepingReport` helper is gone, and command registry exposes `task-close-guarded-writes`. Validation passed focused close/schema/current-state tests, TypeScript no-emit, built command registry inspection, and final `npm run check`.
+T-0735 completes the final task-close contract cleanup after T-0734. Public close-plan reports now directly expose the guarded write set as `writes` plus `writeSetHash` instead of a nested guarded-write report identity; the old guarded-write schema/command/status/formatter surface is gone. Proof append is reachable only through a transaction marker guard (`executeGuardedTaskCloseEvidence`), direct close-plan execute without that guard fails closed, and task disappearance during readiness/proof append returns structured `TASK_CLOSE_PROOF_APPEND_TASK_MISSING` instead of a raw evidence exception. Operation `closeBasisHash` is distinct from the final source hash, while source drift remains checked through the persisted final-source field. Workflow docs and init templates now describe the proof-last order. Validation passed focused task-close/source/registry/workflow docs tests, TypeScript no-emit, and full `npm run check`.
 
 ## Previous Handoff
 

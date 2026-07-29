@@ -18,9 +18,7 @@ import {
 
 export type CloseGuardedWriteMode = 'dry-run' | 'execute';
 
-export interface CloseGuardedWritePlan {
-  schemaVersion: 'hadara.task.close_plan.guard_writes.v1';
-  command: 'task.close-plan.guard-writes';
+export interface TaskCloseWritePlan {
   ok: boolean;
   mode: CloseGuardedWriteMode;
   taskId: string;
@@ -31,11 +29,7 @@ export interface CloseGuardedWritePlan {
     title: string;
     capsule: string;
   };
-  status: {
-    taskStatus: string | null;
-    taskBoardStatus: string | null;
-    taskBoardPresent: boolean;
-  };
+  writeSetHash: string;
   summary: {
     plannedWrites: number;
     appliedWrites: number;
@@ -49,6 +43,8 @@ export interface CloseGuardedWritePlan {
   primaryNextAction?: CloseGuardedWriteNextAction;
   issues: CloseGuardedWriteIssue[];
 }
+
+export type CloseGuardedWritePlan = TaskCloseWritePlan;
 
 export type CloseGuardedWriteNextAction = TaskLifecycleNextAction;
 
@@ -103,14 +99,12 @@ export function createCloseGuardedWritePlan(projectRoot: string, taskId: string,
   const issues: CloseGuardedWriteIssue[] = [];
   if (!task) {
     return {
-      schemaVersion: 'hadara.task.close_plan.guard_writes.v1',
-      command: 'task.close-plan.guard-writes',
       ok: false,
       mode,
       taskId,
       projectRoot,
       actor,
-      status: { taskStatus: null, taskBoardStatus: null, taskBoardPresent: false },
+      writeSetHash: hashCloseGuardedWriteSet([]),
       summary: { plannedWrites: 0, appliedWrites: 0, advisoryOnly: 0, stateDocsPending: 0 },
       writes: [],
       advisories: [],
@@ -180,8 +174,6 @@ export function createCloseGuardedWritePlan(projectRoot: string, taskId: string,
   const nextActions = createGuardedWriteNextActions(taskId, mode, writes, stateDocs, issues);
 
   return {
-    schemaVersion: 'hadara.task.close_plan.guard_writes.v1',
-    command: 'task.close-plan.guard-writes',
     ok: !issues.some((issue) => issue.severity === 'error'),
     mode,
     taskId,
@@ -192,11 +184,7 @@ export function createCloseGuardedWritePlan(projectRoot: string, taskId: string,
       title: task.title,
       capsule
     },
-    status: {
-      taskStatus,
-      taskBoardStatus: board.status,
-      taskBoardPresent: board.present
-    },
+    writeSetHash: hashCloseGuardedWriteSet(writes),
     summary: {
       plannedWrites: writes.length,
       appliedWrites: writes.filter((write) => write.applied).length,
@@ -223,6 +211,7 @@ export function executeReviewedCloseGuardedWrites(projectRoot: string, guardedWr
     ...guardedWritePlan,
     mode: 'execute',
     ok: !issues.some((issue) => issue.severity === 'error'),
+    writeSetHash: hashCloseGuardedWriteSet(writes),
     writes,
     nextActions,
     ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
@@ -291,21 +280,6 @@ function createGuardedWriteNextActions(taskId: string, mode: CloseGuardedWriteMo
       stalePlanRisk: 'none'
     })
   ];
-}
-
-export function formatCloseGuardedWritePlan(report: CloseGuardedWritePlan): string {
-  const lines = [`[HADARA] task close guarded-writes ${report.taskId}: ${report.ok ? report.mode : 'blocked'}`];
-  lines.push(`planned=${report.summary.plannedWrites} applied=${report.summary.appliedWrites} advisory=${report.summary.advisoryOnly}`);
-  for (const write of report.writes) {
-    lines.push(`${write.applied ? 'APPLIED' : 'PLANNED'}\t${write.field}\t${write.path}`);
-  }
-  for (const advisory of report.advisories) {
-    lines.push(`ADVISORY\t${advisory.path}\t${advisory.state ?? 'pending'}\t${advisory.reason}`);
-  }
-  for (const issue of report.issues) {
-    lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}`);
-  }
-  return lines.join('\n');
 }
 
 function planWrites(
@@ -911,6 +885,17 @@ function boardRowAfterClose(task: TaskCapsule, capsule: string, board: TaskBoard
 
 function hashContent(content: string): string {
   return `sha256:${crypto.createHash('sha256').update(content).digest('hex')}`;
+}
+
+function hashCloseGuardedWriteSet(writes: CloseGuardedWrite[]): string {
+  return hashContent(JSON.stringify(writes.map((write) => ({
+    path: write.path,
+    action: write.action,
+    field: write.field,
+    expectedBeforeExists: write.expectedBeforeExists,
+    expectedBeforeHash: write.expectedBeforeHash,
+    afterHash: write.afterHash
+  }))));
 }
 
 function toPortablePath(value: string): string {
