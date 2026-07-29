@@ -51,7 +51,7 @@ export function resolveHadaraPaths(input: ResolveHadaraPathsInput = {}): HadaraP
 export function isInside(parent: string, child: string): boolean {
   const normalizedParent = normalizeHadaraPath(parent);
   const normalizedChild = normalizeHadaraPath(child);
-  const relative = path.relative(realpathIfExists(normalizedParent), realpathIfExists(normalizedChild));
+  const relative = path.relative(realpathIfExists(normalizedParent), realpathForContainment(normalizedChild));
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
@@ -75,4 +75,26 @@ function realpathIfExists(value: string): string {
   } catch {
     return value;
   }
+}
+
+function realpathForContainment(value: string): string {
+  try {
+    return fs.realpathSync.native(value);
+  } catch {
+    // For a missing target, resolving the whole child path fails. Resolve the
+    // nearest existing ancestor instead so symlink directories cannot hide an
+    // outside-project destination for newly created files.
+  }
+
+  const missingSegments: string[] = [];
+  let current = value;
+  while (!fs.existsSync(current)) {
+    const next = path.dirname(current);
+    if (next === current) return value;
+    missingSegments.unshift(path.basename(current));
+    current = next;
+  }
+
+  const resolvedAncestor = realpathIfExists(current);
+  return path.join(resolvedAncestor, ...missingSegments);
 }

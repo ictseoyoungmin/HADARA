@@ -766,6 +766,7 @@ export function continuationFromTaskHandoffStep(input: {
   const references = input.requiredReading
     .split(/[;,]/)
     .map((entry) => entry.trim())
+    .map(stripInlineCodeFence)
     .filter((entry) => entry && !PLACEHOLDER_STEP_PATTERN.test(entry))
     .map((entry) => ({ path: entry, required: true }));
   const structuredDisposition = normalizeContinuationDisposition(input.disposition);
@@ -781,6 +782,10 @@ export function continuationFromTaskHandoffStep(input: {
     createCommandAllowed: createTaskAllowed ?? defaultCreateTaskAllowed,
     source: { type: 'work-handoff', workId: input.sourceTaskId, path: `${input.sourceCapsulePath}/HANDOFF.md` }
   };
+}
+
+function stripInlineCodeFence(value: string): string {
+  return value.replace(/^`+/, '').replace(/`+$/, '').trim();
 }
 
 function resolveCompletedTaskContinuationWrite(

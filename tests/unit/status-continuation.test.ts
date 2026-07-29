@@ -11,7 +11,7 @@ import {
   readProjectCurrentState
 } from '../../src/services/project-current-state';
 import { createTaskCreateReport } from '../../src/task/task-create';
-import { createCloseBookkeepingReport } from '../../src/task/close';
+import { createCloseBookkeepingReport } from '../../src/task/close/bookkeeping';
 import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
 
 const roots: string[] = [];
@@ -62,6 +62,21 @@ describe('continuationFromTaskHandoffStep (docx section 1.1/9 promotion helper)'
       createCommandAllowed: true,
       source: { type: 'work-handoff', workId: 'T-0658', path: 'tasks/T-0658-x/HANDOFF.md' }
     });
+  });
+
+  it('strips Markdown inline-code fences from continuation reference paths', () => {
+    const continuation = continuationFromTaskHandoffStep({
+      step: 'Continue close hardening.',
+      reason: 'Reviewer requested another pass.',
+      requiredReading: '`docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md`; `docs/TASK_WORKFLOW_COMMANDS.md`',
+      sourceTaskId: 'T-0731',
+      sourceCapsulePath: 'tasks/T-0731-x'
+    });
+
+    expect(continuation?.references).toEqual([
+      { path: 'docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md', required: true },
+      { path: 'docs/TASK_WORKFLOW_COMMANDS.md', required: true }
+    ]);
   });
 
   it('uses structured disposition/create-task fields instead of phrase inference', () => {

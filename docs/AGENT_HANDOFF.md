@@ -8,7 +8,7 @@ This command-owned projection supports older 0.5.x readers. New sessions use `ha
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.5.0-rc.1 | Portable project state. |
-| Latest Completed Task | T-0732 Close operation reconciliation follow-up hardening | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0733 Close transaction proof and marker hardening | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Compatibility planning hint; never copy it verbatim as a task title. |
@@ -33,7 +33,7 @@ This optional document owns explicit cross-session handoff prose and live warnin
 
 ## Current Handoff
 
-T-0731 hardens reviewer P1 task-close recovery gaps. Operation marker recovery now reads persisted task-local expected writes from the actual filesystem and classifies before/after/conflict/missing-conflict, fails closed on non-prefix/conflict/source drift, preserves previous operation identity/hash fields while resuming safe prefix/all-after/proof-pending states, and exposes completed/pending/conflicting write details in the v3 recovery report/schema. Runtime marker validation now rejects malformed attempts, negative mutation counts, bad journal/step enums, invalid finalSourceHash, and unknown marker properties. The active rc2 Task Close Transaction Specification is registered in `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`. Validation passed no-emit TypeScript, tools typecheck, focused task-close/schema/docs tests, and `npm test`; `npm run build` remains blocked in this workspace by non-writable `dist/` output files and is recorded/resolved as environment evidence, so run Docker sync-build or fix `dist` ownership for release-grade build proof. Remaining P2 design work is bookkeeping-domain removal and closeBasisHash/finalSourceHash separation.
+T-0733 closes the reviewer-identified task-close correctness and contract gaps after T-0732. Proof append now revalidates actual close source hash and persisted task-local expected writes immediately before proof append; operation markers and fast reuse require `writeSetHash === hashObject(expectedWrites)`; missing-target path confinement resolves the nearest existing ancestor to block symlink escapes; proof-pending resume stays in proof-stage semantics; recovery detail does not fabricate completed/pending classifications; persisted/reported operation state separates `closeBasisHash` from `finalSourceHash`; stale current-state continuation data is cleaned; and public close-plan terminology no longer exposes the legacy bookkeeping step/domain. Validation passed focused close/path/schema regressions, TypeScript no-emit, command registry surface check, and final `npm run check`.
 
 ## Previous Handoff
 

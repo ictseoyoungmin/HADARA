@@ -13,11 +13,6 @@ export {
   executeTaskCloseEvidence
 } from './proof';
 export {
-  createCloseBookkeepingReport,
-  executeReviewedCloseBookkeepingPlan,
-  formatCloseBookkeepingReport
-} from './bookkeeping';
-export {
   createTaskAuditCloseReport,
   formatTaskAuditCloseReport
 } from './audit';

@@ -55,7 +55,7 @@ close eligibility 평가
 task ready
 task finish
 task finalize
-task close-bookkeeping
+task close-write-sync
 task audit-close
 task complete
 task lifecycle
@@ -77,11 +77,11 @@ guarded write executor
 따라서 다음과 같은 별도 개념을 사용하지 않는다.
 
 ```text
-bookkeeping required
-bookkeeping satisfied
-bookkeeping blocked
-hadara.task.close_bookkeeping.v1
-task.close-bookkeeping
+sync required
+sync satisfied
+sync blocked
+hadara.task.close_plan.v1#guarded-write-set
+task.close-plan.guard-writes
 ```
 
 대신 close plan이 적용할 명시적인 write set을 가진다.
@@ -405,11 +405,11 @@ Absolute machine-local path, timestamp, process ID, temporary directory는 hash�
 ### 8.3 Aggregate close source hash
 
 ```text
-closeSourceHash =
+closeBasisHash =
   hash(sorted normalized CloseSourceUnit entries)
 ```
 
-`closeSourceHash`는 close-owned status mutation 전후에도 operation identity가 불필요하게 바뀌지 않도록 close basis만을 대상으로 한다.
+`closeBasisHash`는 close-owned status mutation 전후에도 operation identity가 불필요하게 바뀌지 않도록 close basis만을 대상으로 한다. `finalSourceHash`는 lifecycle-owned writes 적용 뒤 close proof 직전에 다시 계산한 실제 최종 source hash다.
 
 ---
 
@@ -475,7 +475,7 @@ planHash =
   hash(
     close contract version
     + taskId
-    + closeSourceHash
+    + closeBasisHash
     + writeSetHash
     + intendedFinalState
     + required lock order
@@ -598,7 +598,7 @@ Operation idempotency와 reviewed plan identity를 구분한다.
 
 ```text
 idempotencyKey =
-  hash(taskId + closeSourceHash + intendedFinalState)
+  hash(taskId + closeBasisHash + intendedFinalState)
 ```
 
 ### 12.2 Plan hash
@@ -635,7 +635,7 @@ interface CloseOperation {
 
   phase: CloseOperationPhase;
 
-  closeSourceHash: string;
+  closeBasisHash: string;
   planHash: string;
   writeSetHash: string;
 
@@ -804,7 +804,7 @@ Target file 자체의 durability를 위한 file/directory fsync는 marker persis
 
 6. 전체 guarded write set 계산
 
-7. closeSourceHash, writeSetHash, planHash 계산
+7. closeBasisHash, writeSetHash, planHash 계산
 
 8. reviewed plan hash 검증
 
@@ -930,7 +930,7 @@ interface TaskCloseProof {
   idempotencyKey: string;
   operationId: string;
 
-  closeSourceHash: string;
+  closeBasisHash: string;
   finalSourceHash: string;
 
   planHash: string;
@@ -1244,7 +1244,7 @@ Read-only eligibility, guarded write plan, plan hash.
 
 Guarded write planning support와 execution.
 
-기존 `bookkeeping.ts`의 필요한 before/after hash, root confinement, temp write, rename 로직은 이곳으로 이동한다.
+기존 close write-sync helper의 필요한 before/after hash, root confinement, temp write, rename 로직은 이곳으로 이동한다.
 
 ### `journal.ts`
 
@@ -1452,7 +1452,7 @@ evidence appends = 0
 | AC-1  | `task close --task T-XXXX --json` 하나로 clean close가 완료된다.                    |
 | AC-2  | Normal happy path에서 caller-supplied plan hash가 필요하지 않다.                     |
 | AC-3  | Public close workflow에 별도 ready, finish, finalize, bookkeeping command가 없다. |
-| AC-4  | `bookkeeping`이 phase, schema, report 또는 command로 존재하지 않는다.                  |
+| AC-4  | legacy `bookkeeping`이 phase, schema, report 또는 command로 존재하지 않는다.                  |
 | AC-5  | 첫 lifecycle mutation 전에 전체 guarded write set이 계산된다.                         |
 | AC-6  | 모든 close route가 fixed lock order를 따른다.                                      |
 | AC-7  | Close basis가 mutation 직전에 content hash로 재검증된다.                              |
@@ -1487,7 +1487,7 @@ duplicate proof append 후 audit로만 걸러냄
 timeout 증가만으로 close 성능 문제 해결
 progress event 수만 줄이고 persistence 결합 유지
 모든 close source를 state rev 하나로 대체
-bookkeeping을 이름만 writes로 변경하고 기존 과도한 책임 유지
+legacy bookkeeping을 이름만 writes로 변경하고 기존 과도한 책임 유지
 advisory 문서를 무조건 close write set에 포함
 schema를 loose object로 만들어 검증 회피
 legacy close command를 co-primary route로 복원

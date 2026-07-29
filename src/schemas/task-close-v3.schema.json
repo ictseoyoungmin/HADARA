@@ -71,13 +71,14 @@
         "operation": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["operationId", "taskId", "idempotencyKey", "intendedFinalState", "phase", "closeSourceHash", "planHash", "writeSetHash", "expectedWrites", "completedSteps", "pendingSteps", "path", "persisted", "createdAt", "updatedAt"],
+          "required": ["operationId", "taskId", "idempotencyKey", "intendedFinalState", "phase", "closeBasisHash", "closeSourceHash", "planHash", "writeSetHash", "expectedWrites", "completedSteps", "pendingSteps", "path", "persisted", "createdAt", "updatedAt"],
           "properties": {
             "operationId": { "type": "string" },
             "taskId": { "type": "string" },
             "idempotencyKey": { "type": "string" },
             "intendedFinalState": { "const": "closed-valid" },
             "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
+            "closeBasisHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
             "closeSourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
             "planFingerprint": { "type": "string" },
             "planHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
@@ -188,6 +189,7 @@
         "operationId": { "type": "string" },
         "phase": { "enum": ["planned", "applying", "verifying", "proof-pending", "closed-valid", "blocked", "recovery-required"] },
         "resumable": { "type": "boolean" },
+        "classificationAvailable": { "type": "boolean" },
         "completedWrites": {
           "type": "array",
           "items": { "$ref": "#/$defs/recoveryWrite" }
@@ -270,7 +272,7 @@
         }
       ],
       "properties": {
-        "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
+        "step": { "enum": ["sync", "ready", "close", "audit-close"] },
         "path": { "type": "string" },
         "writeBoundary": { "enum": ["task-local", "evidence-append"] },
         "action": { "enum": ["update", "insert"] },
@@ -290,7 +292,7 @@
       "required": ["seq", "step", "phase", "status", "writeBoundary", "mutated", "at"],
       "properties": {
         "seq": { "type": "integer", "minimum": 1 },
-        "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
+        "step": { "enum": ["sync", "ready", "close", "audit-close"] },
         "phase": { "enum": ["intent", "outcome"] },
         "status": { "enum": ["start", "executed", "satisfied", "blocked", "skipped"] },
         "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
@@ -305,7 +307,7 @@
       "additionalProperties": false,
       "required": ["step", "path", "writeBoundary", "status", "sequence"],
       "properties": {
-        "step": { "enum": ["bookkeeping", "ready", "close", "audit-close"] },
+        "step": { "enum": ["sync", "ready", "close", "audit-close"] },
         "path": { "type": "string" },
         "writeBoundary": { "enum": ["task-local", "evidence-append"] },
         "status": { "enum": ["before", "after", "conflict", "missing-conflict", "pending"] },

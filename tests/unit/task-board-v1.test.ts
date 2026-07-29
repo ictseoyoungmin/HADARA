@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createCloseBookkeepingReport } from '../../src/task/close';
+import { createCloseBookkeepingReport } from '../../src/task/close/bookkeeping';
 import { normalizeCloseSummary, parseTaskBoard, renderTaskTargets } from '../../src/task/task-board';
 
 const roots: string[] = [];

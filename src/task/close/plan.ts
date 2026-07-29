@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
 import { appendEvidenceWithResult, EvidenceAppendResult } from '../../evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseReport } from './proof';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, TaskAuditCloseReport, TaskCloseIssue, TaskCloseNextAction, TaskCloseProofAppendRevalidationError, TaskCloseReport } from './proof';
 import { createCloseBookkeepingReport, executeReviewedCloseBookkeepingPlan, CloseBookkeepingReport } from './bookkeeping';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction } from '../lifecycle-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../authoring-guidance';
@@ -25,7 +25,7 @@ const FINISH_RESOLVABLE_BLOCKER_CODES = new Set([
 export function isCloseBookkeepingResolvableBlocker(code: string): boolean {
   return FINISH_RESOLVABLE_BLOCKER_CODES.has(code);
 }
-export type TaskClosePlanStepId = 'bookkeeping' | 'ready' | 'close' | 'audit-close';
+export type TaskClosePlanStepId = 'sync' | 'ready' | 'close' | 'audit-close';
 export type TaskClosePlanStepStatus = 'satisfied' | 'required' | 'blocked' | 'pending' | 'unknown';
 
 export interface TaskClosePlanReport {
@@ -229,7 +229,7 @@ export function createTaskClosePlanReport(projectRoot: string, taskId: string, o
   }
   const report = reviewed.review;
   const steps = reviewed.steps;
-  const bookkeepingRequired = steps.some((step) => step.id === 'bookkeeping' && step.status === 'required');
+  const bookkeepingRequired = steps.some((step) => step.id === 'sync' && step.status === 'required');
   const preflightBlockers = bookkeepingRequired && report.authoringGuidance.status !== 'needs-authoring'
     ? createAutoClosePlanPreflightBlockers(projectRoot, taskId, actor).filter(isDryRunPreflightBlocker)
     : [];
@@ -280,7 +280,7 @@ function executeAutoClosePlan(
   // Board bookkeeping blockers are owned and resolved by the bookkeeping step;
   // the manual flow executes through them, so --auto must not refuse on
   // them while a required bookkeeping step is part of the reviewed plan.
-  const bookkeepingRequired = reviewed.steps.some((step) => step.id === 'bookkeeping' && step.status === 'required');
+  const bookkeepingRequired = reviewed.steps.some((step) => step.id === 'sync' && step.status === 'required');
   const preflightBlockers = bookkeepingRequired ? createAutoClosePlanPreflightBlockers(projectRoot, taskId, actor) : [];
   if (preflightBlockers.length > 0) return createAutoPreflightBlockedReport(taskId, review, preflightBlockers);
 
@@ -423,7 +423,7 @@ function createAutoPreflightBlockedReport(taskId: string, review: TaskClosePlanR
     preflightBlockers
   );
   const steps = review.steps.map((step): TaskClosePlanStep => {
-    if (step.id === 'bookkeeping' && step.status === 'required') {
+    if (step.id === 'sync' && step.status === 'required') {
       return {
         ...step,
         status: 'pending',
@@ -438,7 +438,7 @@ function createAutoPreflightBlockedReport(taskId: string, review: TaskClosePlanR
       return {
         ...step,
         status: 'blocked',
-        summary: 'Resolve done-level preflight blockers before bookkeeping writes.',
+        summary: 'Resolve done-level preflight blockers before close write-sync writes.',
         command: `hadara task status --task ${taskId} --detail full --json`
       };
     }
@@ -542,7 +542,7 @@ function executeTaskClosePlan(
 
   let reports = initialReports;
   let steps = initialSteps;
-  let bookkeepingStep = steps.find((step) => step.id === 'bookkeeping');
+  let bookkeepingStep = steps.find((step) => step.id === 'sync');
   if (bookkeepingStep?.status === 'required') {
     // Verify close would succeed against a virtual post-bookkeeping snapshot
     // before writing TASK.md/Task Board Done. The
@@ -561,10 +561,10 @@ function executeTaskClosePlan(
         steps,
         initialIssues,
         currentPlanHash,
-        { requestedPlanHash, currentPlanHash, planHashMatched: true, executedSteps: [], stoppedAt: 'bookkeeping' },
+        { requestedPlanHash, currentPlanHash, planHashMatched: true, executedSteps: [], stoppedAt: 'sync' },
         initialReports
       );
-      emitClosePlanProgress(onProgress, bookkeepingStep.id, 'blocked', 'Close would not succeed after bookkeeping; bookkeeping was not applied.', false);
+      emitClosePlanProgress(onProgress, bookkeepingStep.id, 'blocked', 'Close would not succeed after close write sync; close write sync was not applied.', false);
       return createAutoPreflightBlockedReport(taskId, refusalReview, preflightBlockers);
     }
     const virtualReports = createVirtualCloseReports(projectRoot, taskId, actor, reports.bookkeeping);
@@ -588,11 +588,11 @@ function executeTaskClosePlan(
     const bookkeepingReport = executeReviewedCloseBookkeepingPlan(projectRoot, reports.bookkeeping, faultHooks);
     executedSteps.push(createExecutedStep(bookkeepingStep, bookkeepingReport.ok, bookkeepingReport, bookkeepingReport.ok ? 'executed' : 'blocked'));
     emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
-    if (!bookkeepingReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'bookkeeping');
-    emitClosePlanProgress(onProgress, 'refresh', 'start', 'Recomputing close plan state after bookkeeping.');
+    if (!bookkeepingReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'sync');
+    emitClosePlanProgress(onProgress, 'refresh', 'start', 'Recomputing close plan state after close write sync.');
     reports = createClosePlanReports(projectRoot, taskId, actor);
     steps = createSteps(taskId, reports);
-    emitClosePlanProgress(onProgress, 'refresh', 'satisfied', 'ClosePlan state refreshed after bookkeeping.', true);
+    emitClosePlanProgress(onProgress, 'refresh', 'satisfied', 'ClosePlan state refreshed after close write sync.', true);
     faultHooks?.afterWritesPersisted?.();
   } else if (bookkeepingStep?.status === 'satisfied') {
     executedSteps.push(createExecutedStep(bookkeepingStep, true, reports.bookkeeping, 'satisfied'));
@@ -626,7 +626,22 @@ function executeTaskClosePlan(
       readinessEvidence = appendTaskClosePlanReadinessEvidence(projectRoot, taskId, actor, closeReport);
       faultHooks?.afterReadinessEvidenceAppend?.();
     }
-    if (closeReport.ok) executeTaskCloseEvidence(projectRoot, closeReport);
+    if (closeReport.ok) {
+      try {
+        executeTaskCloseEvidence(projectRoot, closeReport);
+      } catch (error) {
+        if (!(error instanceof TaskCloseProofAppendRevalidationError)) throw error;
+        closeReport.ok = false;
+        closeReport.closeEvidence.planned = false;
+        closeReport.closeEvidence.appended = false;
+        closeReport.issues.push(error.issue);
+        closeReport.summary = {
+          blockers: closeReport.issues.filter((issue) => issue.severity === 'error').length,
+          warnings: closeReport.issues.filter((issue) => issue.severity === 'warning').length,
+          nextActions: closeReport.nextActions.length
+        };
+      }
+    }
     executedSteps.push(
       createExecutedStep(
         closeStep,
@@ -637,7 +652,7 @@ function executeTaskClosePlan(
       )
     );
     emitClosePlanStepProgress(onProgress, executedSteps[executedSteps.length - 1]!);
-    if (!closeReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence);
+    if (!closeReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close', readinessEvidence, closeReport.issues);
     emitClosePlanProgress(onProgress, 'refresh', 'start', 'Recomputing close plan state after close evidence.');
     reports = createClosePlanReports(projectRoot, taskId, actor);
     steps = createSteps(taskId, reports);
@@ -718,11 +733,12 @@ function createPostExecutionReport(
   reviewedPlanHash: string,
   executedSteps: TaskClosePlanExecutedStep[],
   stoppedAt?: TaskClosePlanStepId,
-  readinessEvidence?: TaskClosePlanReadinessEvidence
+  readinessEvidence?: TaskClosePlanReadinessEvidence,
+  executionIssues: TaskClosePlanIssue[] = []
 ): TaskClosePlanReport {
   const reports = createClosePlanReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
-  const issues = collectIssues(taskId, reports);
+  const issues = mergeClosePlanIssues(collectIssues(taskId, reports), executionIssues);
   const nextAction = createPrimaryNextAction(taskId, steps, issues, reviewedPlanHash);
   const finalAudit = reports.audit?.auditVerdict.verdict === 'closed-valid';
   const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
@@ -925,20 +941,20 @@ function createSteps(taskId: string, reports: ClosePlanReports): TaskClosePlanSt
   const auditStatus = closeEvidenceIsCurrent ? 'satisfied' : closeStatus === 'required' ? 'pending' : reports.audit ? (reports.audit.auditVerdict.closeEvidenceFound ? 'required' : 'pending') : 'pending';
   return [
     {
-      id: 'bookkeeping',
+      id: 'sync',
       status: bookkeepingStatus,
-      summary: bookkeepingStatus === 'required' ? 'Apply bounded close bookkeeping.' : bookkeepingStatus === 'satisfied' ? 'Close bookkeeping is current.' : 'Bookkeeping blockers must be resolved.',
+      summary: bookkeepingStatus === 'required' ? 'Apply bounded close write sync.' : bookkeepingStatus === 'satisfied' ? 'Close write sync is current.' : 'Close write-sync blockers must be resolved.',
       command: bookkeepingStatus === 'required' ? `hadara task close --task ${taskId} --execute --auto --json` : `hadara task status --task ${taskId} --detail full --json`,
       mode: bookkeepingStatus === 'required' ? 'execute' : 'dry-run',
       writeBoundary: bookkeepingStatus === 'required' ? 'task-local' : 'read-only',
       expectedWritePaths: reports.bookkeeping.writes.map((write) => write.path),
       alreadySatisfied: bookkeepingStatus === 'satisfied',
-      sourceReport: 'hadara.task.close_bookkeeping.v1'
+      sourceReport: 'hadara.task.close_plan.v1#guarded-write-set'
     },
     {
       id: 'ready',
       status: readyStatus,
-      summary: readyStatus === 'satisfied' ? 'Done-level readiness passed.' : readyStatus === 'pending' ? 'Ready waits for bookkeeping.' : 'Run readiness and resolve blockers.',
+      summary: readyStatus === 'satisfied' ? 'Done-level readiness passed.' : readyStatus === 'pending' ? 'Ready waits for close write sync.' : 'Run readiness and resolve blockers.',
       command: `hadara task status --task ${taskId} --detail full --json`,
       mode: 'read-only',
       writeBoundary: 'read-only',
@@ -1025,7 +1041,7 @@ function deriveClosePlanState(steps: TaskClosePlanStep[], issues: TaskClosePlanI
   if (reports?.audit?.auditVerdict.closeEvidenceFound && reports.audit.auditVerdict.verdict !== 'closed-valid') return 'closed-stale';
   const close = steps.find((step) => step.id === 'close');
   const ready = steps.find((step) => step.id === 'ready');
-  const bookkeeping = steps.find((step) => step.id === 'bookkeeping');
+  const bookkeeping = steps.find((step) => step.id === 'sync');
   if (bookkeeping?.status === 'satisfied' && ready?.status === 'satisfied' && close?.status === 'required') return 'ready-to-close';
   return 'in-progress';
 }
@@ -1134,7 +1150,7 @@ function isCloseDriftIssue(issue: TaskClosePlanIssue): boolean {
 
 function summarizeSteps(steps: TaskClosePlanStep[], reports?: ClosePlanReports): TaskClosePlanReport['summary'] {
   const evaluatedReports = evaluatedReportNames(steps, reports);
-  const skippedReports = ['bookkeeping', 'ready', 'close', 'audit-close'].filter((name) => !evaluatedReports.includes(name));
+  const skippedReports = ['sync', 'ready', 'close', 'audit-close'].filter((name) => !evaluatedReports.includes(name));
   const deferredChecks = deferredChecksForPlan(steps);
   return {
     steps: steps.length,
@@ -1176,7 +1192,7 @@ function countExecutedTargetFileWrites(step: TaskClosePlanStep, report: unknown,
 }
 
 function isCloseBookkeepingReport(value: unknown): value is CloseBookkeepingReport {
-  return Boolean(value && typeof value === 'object' && (value as CloseBookkeepingReport).schemaVersion === 'hadara.task.close_bookkeeping.v1');
+  return Boolean(value && typeof value === 'object' && (value as CloseBookkeepingReport).schemaVersion === 'hadara.task.close_plan.guard_writes.v1');
 }
 
 export function didClosePlanExecutedStepMutate(step: TaskClosePlanExecutedStep): boolean {
@@ -1206,7 +1222,7 @@ function hashReport(report: unknown): string {
 }
 
 function reportKeyForStep(stepId: TaskClosePlanStepId): keyof ClosePlanReports {
-  if (stepId === 'bookkeeping') return 'bookkeeping';
+  if (stepId === 'sync') return 'bookkeeping';
   if (stepId === 'ready') return 'ready';
   if (stepId === 'close') return 'close';
   return 'audit';
@@ -1217,8 +1233,8 @@ function getBookkeepingStatus(bookkeeping: CloseBookkeepingReport): TaskClosePla
 }
 
 function evaluatedReportNames(steps: TaskClosePlanStep[], reports?: ClosePlanReports): string[] {
-  if (reports) return ['bookkeeping', ...(reports.ready ? ['ready'] : []), ...(reports.close ? ['close'] : []), ...(reports.audit ? ['audit-close'] : [])];
-  const evaluated = new Set<string>(['bookkeeping']);
+  if (reports) return ['sync', ...(reports.ready ? ['ready'] : []), ...(reports.close ? ['close'] : []), ...(reports.audit ? ['audit-close'] : [])];
+  const evaluated = new Set<string>(['sync']);
   for (const step of steps) {
     if (step.id === 'ready' && step.status !== 'pending') evaluated.add('ready');
     if (step.id === 'close' && step.status !== 'pending') evaluated.add('close');
@@ -1242,7 +1258,7 @@ function fallbackStep(taskId: string, id: TaskClosePlanStepId): TaskClosePlanSte
     id,
     status: 'unknown',
     summary: 'Step state could not be determined.',
-    command: id === 'bookkeeping' || id === 'close' ? `hadara task close --task ${taskId} --execute --auto --json` : `hadara task status --task ${taskId} --detail full --json`,
+    command: id === 'sync' || id === 'close' ? `hadara task close --task ${taskId} --execute --auto --json` : `hadara task status --task ${taskId} --detail full --json`,
     mode: 'read-only',
     writeBoundary: 'read-only',
     expectedWritePaths: [],

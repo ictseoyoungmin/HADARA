@@ -9,6 +9,7 @@ import { createHarnessValidateReport, HarnessValidateResult } from '../../servic
 import type { RemediationHint } from '../../harness/validate';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../../services/protocol-consistency';
 import type { HadaraActorContext } from '../../core/actor-context';
+import { isInside } from '../../core/paths';
 import { parseTaskBoard } from '../task-board';
 import { parseMarkdownRows, readMarkdownSection } from '../../services/markdown-table';
 import { analyzeAcceptanceReadiness } from '../acceptance';
@@ -81,6 +82,13 @@ export interface TaskCloseEvidenceWrite {
     duplicateFound: boolean;
     action: 'no-op' | 'append';
   };
+}
+
+export class TaskCloseProofAppendRevalidationError extends Error {
+  constructor(public readonly issue: TaskCloseIssue) {
+    super(issue.message);
+    this.name = 'TaskCloseProofAppendRevalidationError';
+  }
 }
 
 export interface TaskCloseLifecycleGuidance {
@@ -644,6 +652,7 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
     report.closeEvidence.appended = false;
     return;
   }
+  revalidateCloseProofAppendState(projectRoot, report);
   const task = findTaskCapsule(projectRoot, report.taskId);
   const recheckedWrite = task
     ? createCloseEvidenceWritePlan(
@@ -696,6 +705,90 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
   if (task) {
     report.closeEvidence.evidencePath = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl')));
   }
+}
+
+interface PersistedTaskLocalExpectedWrite {
+  path: string;
+  writeBoundary: string;
+  expectedBeforeExists?: boolean;
+  expectedBeforeHash?: string;
+  afterHash?: string;
+}
+
+function revalidateCloseProofAppendState(projectRoot: string, report: TaskCloseReport): void {
+  const task = findTaskCapsule(projectRoot, report.taskId);
+  if (!task) return;
+
+  const actualSourceHash = hashCloseRelevantSource(projectRoot, task.dir);
+  const expectedSourceHash = report.validation.validatedBeforeCloseEvidenceSourceHash;
+  if (actualSourceHash !== expectedSourceHash) {
+    throw new TaskCloseProofAppendRevalidationError({
+      severity: 'error',
+      code: 'TASK_CLOSE_PROOF_APPEND_SOURCE_HASH_CHANGED',
+      message: `Close source changed before proof append for ${report.taskId}; refusing to append stale close proof.`,
+      path: toPortablePath(path.relative(projectRoot, task.dir)),
+      fixHint: 'Rerun task close so validation and close proof are computed from the current filesystem state.',
+      example: `hadara task close --task ${report.taskId} --json`
+    });
+  }
+
+  const marker = readPersistedCloseOperationMarker(projectRoot, report.taskId);
+  if (!marker) return;
+  const taskLocalWrites = marker.expectedWrites
+    .map((write, index) => ({ write, sequence: index + 1 }))
+    .filter((entry) => entry.write.writeBoundary === 'task-local');
+  const notAfter = taskLocalWrites
+    .map(({ write, sequence }) => ({ sequence, status: classifyPersistedTaskLocalWrite(projectRoot, write) }))
+    .filter((entry) => entry.status !== 'after');
+  if (notAfter.length > 0) {
+    throw new TaskCloseProofAppendRevalidationError({
+      severity: 'error',
+      code: 'TASK_CLOSE_PROOF_APPEND_EXPECTED_WRITES_NOT_AFTER',
+      message: `Task-local expected writes were not all applied before proof append for ${report.taskId}; refusing to append stale close proof.`,
+      path: toPortablePath(path.relative(projectRoot, path.join(projectRoot, '.hadara', 'local', 'task-close', `${safeFilePart(report.taskId)}.json`))),
+      fixHint: 'Rerun task close and inspect recovery details if the operation cannot resume safely.',
+      example: `hadara task close --task ${report.taskId} --json`
+    });
+  }
+}
+
+function readPersistedCloseOperationMarker(
+  projectRoot: string,
+  taskId: string
+): { expectedWrites: PersistedTaskLocalExpectedWrite[] } | null {
+  const markerPath = path.join(projectRoot, '.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`);
+  try {
+    const parsed = JSON.parse(fs.readFileSync(markerPath, 'utf8')) as { expectedWrites?: unknown };
+    if (!Array.isArray(parsed.expectedWrites)) return null;
+    return {
+      expectedWrites: parsed.expectedWrites.filter((write): write is PersistedTaskLocalExpectedWrite =>
+        Boolean(write && typeof write === 'object' && typeof (write as PersistedTaskLocalExpectedWrite).path === 'string')
+      )
+    };
+  } catch {
+    return null;
+  }
+}
+
+function classifyPersistedTaskLocalWrite(
+  projectRoot: string,
+  write: PersistedTaskLocalExpectedWrite
+): 'before' | 'after' | 'conflict' | 'missing-conflict' {
+  if (write.writeBoundary !== 'task-local') return 'conflict';
+  if (typeof write.expectedBeforeExists !== 'boolean' || typeof write.expectedBeforeHash !== 'string' || typeof write.afterHash !== 'string') return 'conflict';
+  const absolutePath = path.resolve(projectRoot, write.path);
+  if (!isInside(projectRoot, absolutePath)) return 'conflict';
+  const exists = fs.existsSync(absolutePath);
+  if (!exists && write.expectedBeforeExists) return 'missing-conflict';
+  const content = exists ? fs.readFileSync(absolutePath, 'utf8') : '';
+  const currentHash = hashText(content);
+  if (currentHash === write.afterHash) return 'after';
+  if (exists === write.expectedBeforeExists && currentHash === write.expectedBeforeHash) return 'before';
+  return exists ? 'conflict' : 'missing-conflict';
+}
+
+function safeFilePart(value: string): string {
+  return value.replace(/[^A-Za-z0-9._-]/g, '_');
 }
 
 export interface TaskAuditCloseReport {

@@ -108,7 +108,7 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
     decision: 'Close composes finish, readiness, proof append, and audit.',
     commands: ['task.close', 'task.audit-close'],
-    rule: '`task close` preserves the proof boundaries internally: close bookkeeping, done-level readiness checks, close evidence append, and post-close audit.',
+    rule: '`task close` preserves the proof boundaries internally: close write sync, done-level readiness checks, close evidence append, and post-close audit.',
     evidence: '0.5.0 close-first lifecycle default.'
   },
   {

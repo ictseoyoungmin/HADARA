@@ -17,7 +17,7 @@ import {
 import { createStateProjectionReport } from '../../src/services/state-projection';
 import { createOpsStatusReport } from '../../src/services/operations-status-service';
 import { createTaskCreateReport } from '../../src/task/task-create';
-import { createCloseBookkeepingReport } from '../../src/task/close';
+import { createCloseBookkeepingReport } from '../../src/task/close/bookkeeping';
 
 function tempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-current-state-'));

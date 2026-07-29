@@ -48,12 +48,12 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
 
   if (!input.closed && input.authoringStatus === 'current' && input.evidenceRecords > 0 && !input.closePlanOk && hasOnlyFinishBookkeepingBlockers(input.issues)) {
     upsert(actions, {
-      id: 'close-auto-bookkeeping',
+      id: 'close-auto-sync',
       kind: 'command',
       required: true,
       priority: 'now',
       command: `hadara task close --task ${input.taskId} --json`,
-      message: 'Only finish bookkeeping remains; run guarded task close to sync task status, Task Board, readiness evidence, and close proof.',
+      message: 'Only finish sync remains; run guarded task close to sync task status, Task Board, readiness evidence, and close proof.',
       sourceIssueCodes: ['HARNESS_TASK_BOARD_STATUS_NOT_DONE'],
       loopBoundary: true
     });

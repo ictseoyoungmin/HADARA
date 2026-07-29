@@ -19,8 +19,8 @@ import {
 export type CloseBookkeepingMode = 'dry-run' | 'execute';
 
 export interface CloseBookkeepingReport {
-  schemaVersion: 'hadara.task.close_bookkeeping.v1';
-  command: 'task.close-bookkeeping';
+  schemaVersion: 'hadara.task.close_plan.guard_writes.v1';
+  command: 'task.close-plan.guard-writes';
   ok: boolean;
   mode: CloseBookkeepingMode;
   taskId: string;
@@ -103,8 +103,8 @@ export function createCloseBookkeepingReport(projectRoot: string, taskId: string
   const issues: CloseBookkeepingIssue[] = [];
   if (!task) {
     return {
-      schemaVersion: 'hadara.task.close_bookkeeping.v1',
-      command: 'task.close-bookkeeping',
+      schemaVersion: 'hadara.task.close_plan.guard_writes.v1',
+      command: 'task.close-plan.guard-writes',
       ok: false,
       mode,
       taskId,
@@ -180,8 +180,8 @@ export function createCloseBookkeepingReport(projectRoot: string, taskId: string
   const nextActions = createBookkeepingNextActions(taskId, mode, writes, stateDocs, issues);
 
   return {
-    schemaVersion: 'hadara.task.close_bookkeeping.v1',
-    command: 'task.close-bookkeeping',
+    schemaVersion: 'hadara.task.close_plan.guard_writes.v1',
+    command: 'task.close-plan.guard-writes',
     ok: !issues.some((issue) => issue.severity === 'error'),
     mode,
     taskId,
@@ -212,15 +212,15 @@ export function createCloseBookkeepingReport(projectRoot: string, taskId: string
   };
 }
 
-export function executeReviewedCloseBookkeepingPlan(projectRoot: string, bookkeepingPlan: CloseBookkeepingReport, faultHooks?: CloseBookkeepingFaultHooks): CloseBookkeepingReport {
-  const writes = bookkeepingPlan.writes.map((write) => ({ ...write, applied: false }));
-  const issues = [...bookkeepingPlan.issues];
+export function executeReviewedCloseBookkeepingPlan(projectRoot: string, syncPlan: CloseBookkeepingReport, faultHooks?: CloseBookkeepingFaultHooks): CloseBookkeepingReport {
+  const writes = syncPlan.writes.map((write) => ({ ...write, applied: false }));
+  const issues = [...syncPlan.issues];
   if (!issues.some((issue) => issue.severity === 'error')) {
     applyCloseBookkeepingWrites(projectRoot, writes, issues, faultHooks);
   }
-  const nextActions = createBookkeepingNextActions(bookkeepingPlan.taskId, 'execute', writes, bookkeepingPlan.stateDocs, issues);
+  const nextActions = createBookkeepingNextActions(syncPlan.taskId, 'execute', writes, syncPlan.stateDocs, issues);
   return {
-    ...bookkeepingPlan,
+    ...syncPlan,
     mode: 'execute',
     ok: !issues.some((issue) => issue.severity === 'error'),
     writes,
@@ -228,7 +228,7 @@ export function executeReviewedCloseBookkeepingPlan(projectRoot: string, bookkee
     ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues,
     summary: {
-      ...bookkeepingPlan.summary,
+      ...syncPlan.summary,
       plannedWrites: writes.length,
       appliedWrites: writes.filter((write) => write.applied).length
     }
@@ -239,10 +239,10 @@ function createBookkeepingNextActions(taskId: string, mode: CloseBookkeepingMode
   if (issues.some((issue) => issue.severity === 'error')) {
     return [
       createTaskLifecycleNextAction({
-        id: 'resolve-bookkeeping-blockers',
+        id: 'resolve-sync-blockers',
         kind: 'review',
         required: true,
-        message: 'Resolve bookkeeping blockers before applying task status bookkeeping.',
+        message: 'Resolve close write-sync blockers before applying task status sync.',
         writeBoundary: 'read-only',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -253,10 +253,10 @@ function createBookkeepingNextActions(taskId: string, mode: CloseBookkeepingMode
   if (mode === 'dry-run' && writes.length > 0) {
     return [
       createTaskLifecycleNextAction({
-        id: 'execute-bookkeeping',
+        id: 'execute-sync',
         required: true,
         command: `hadara task close --task ${taskId} --json`,
-        message: 'Apply bounded task status and Task Board bookkeeping through guarded task close.',
+        message: 'Apply bounded task status and Task Board sync through guarded task close.',
         writeBoundary: 'task-local',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -294,7 +294,7 @@ function createBookkeepingNextActions(taskId: string, mode: CloseBookkeepingMode
 }
 
 export function formatCloseBookkeepingReport(report: CloseBookkeepingReport): string {
-  const lines = [`[HADARA] task bookkeeping ${report.taskId}: ${report.ok ? report.mode : 'blocked'}`];
+  const lines = [`[HADARA] task close sync ${report.taskId}: ${report.ok ? report.mode : 'blocked'}`];
   lines.push(`planned=${report.summary.plannedWrites} applied=${report.summary.appliedWrites} advisory=${report.summary.advisoryOnly}`);
   for (const write of report.writes) {
     lines.push(`${write.applied ? 'APPLIED' : 'PLANNED'}\t${write.field}\t${write.path}`);
@@ -318,18 +318,18 @@ function planWrites(
   issues: CloseBookkeepingIssue[]
 ): CloseBookkeepingWrite[] {
   const writes: CloseBookkeepingWrite[] = [];
-  const bookkeepingTimestamp = formatLocalMinuteTimestamp();
-  const bookkeepingRequired = taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done');
-  if (bookkeepingRequired) {
+  const syncTimestamp = formatLocalMinuteTimestamp();
+  const syncRequired = taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done');
+  if (syncRequired) {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
-    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done', bookkeepingTimestamp));
+    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done', syncTimestamp));
     const nextStatusHistoryStatus = latestStatusHistoryStatus(nextTaskContent);
     if (nextTaskContent === taskContent || (statusHistoryStatus !== null && nextStatusHistoryStatus !== 'Done')) {
       issues.push({
         severity: 'error',
-        code: 'TASK_CLOSE_BOOKKEEPING_TASK_STATUS_REPLACE_FAILED',
-        message: 'TASK.md does not contain the expected metadata/status/history frames for bounded bookkeeping sync.',
+        code: 'TASK_CLOSE_SYNC_TASK_STATUS_REPLACE_FAILED',
+        message: 'TASK.md does not contain the expected metadata/status/history frames for bounded close write sync.',
         path: toPortablePath(path.relative(projectRoot, taskPath))
       });
     } else {
@@ -351,9 +351,9 @@ function planWrites(
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (fs.existsSync(handoffPath)) {
     const handoffContent = fs.readFileSync(handoffPath, 'utf8');
-    const shouldSyncHandoff = bookkeepingRequired || /^## Identity\s*$/m.test(handoffContent);
+    const shouldSyncHandoff = syncRequired || /^## Identity\s*$/m.test(handoffContent);
     const nextHandoffContent = shouldSyncHandoff
-      ? normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, bookkeepingTimestamp))
+      ? normalizeAtomicTextDocument(syncHandoffIdentity(handoffContent, task, syncTimestamp))
       : normalizeAtomicTextDocument(handoffContent);
     if (nextHandoffContent !== normalizeAtomicTextDocument(handoffContent)) {
       writes.push({
@@ -375,7 +375,7 @@ function planWrites(
     issues.push({
       severity: 'error',
       code: 'TASK_BOARD_TABLE_FRAME_MISSING',
-      message: 'docs/TASK_BOARD.md is missing the canonical table frame; refusing bounded bookkeeping sync.',
+      message: 'docs/TASK_BOARD.md is missing the canonical table frame; refusing bounded close write sync.',
       path: 'docs/TASK_BOARD.md'
     });
     return writes;
@@ -404,7 +404,7 @@ function planWrites(
     issues.push({
       severity: 'error',
       code: 'TASK_BOARD_ROW_DUPLICATE',
-      message: `docs/TASK_BOARD.md contains multiple rows for ${task.id}; refusing bounded bookkeeping sync.`,
+      message: `docs/TASK_BOARD.md contains multiple rows for ${task.id}; refusing bounded close write sync.`,
       path: 'docs/TASK_BOARD.md'
     });
     return writes;
@@ -417,7 +417,7 @@ function planWrites(
     if (afterContent === beforeContent) {
       issues.push({
         severity: 'error',
-        code: 'TASK_CLOSE_BOOKKEEPING_TASK_BOARD_REPLACE_FAILED',
+        code: 'TASK_CLOSE_SYNC_TASK_BOARD_REPLACE_FAILED',
         message: `docs/TASK_BOARD.md row for ${task.id} could not be replaced safely.`,
         path: 'docs/TASK_BOARD.md'
       });
@@ -446,7 +446,7 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
     for (const write of writes) {
       const absolutePath = path.resolve(projectRoot, write.path);
       if (!isInside(projectRoot, absolutePath)) {
-        issues.push({ severity: 'error', code: 'TASK_CLOSE_BOOKKEEPING_PATH_OUTSIDE_PROJECT', message: `Refusing to write outside project: ${write.path}`, path: write.path });
+        issues.push({ severity: 'error', code: 'TASK_CLOSE_SYNC_PATH_OUTSIDE_PROJECT', message: `Refusing to write outside project: ${write.path}`, path: write.path });
         continue;
       }
 
@@ -455,8 +455,8 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
       if (existed !== write.expectedBeforeExists || hashContent(current) !== write.expectedBeforeHash) {
         issues.push({
           severity: 'error',
-          code: 'TASK_CLOSE_BOOKKEEPING_WRITE_CONFLICT',
-          message: `${write.path} changed after bookkeeping planning; rerun dry-run before executing.`,
+          code: 'TASK_CLOSE_SYNC_WRITE_CONFLICT',
+          message: `${write.path} changed after close write-sync planning; rerun dry-run before executing.`,
           path: write.path
         });
         continue;
@@ -466,8 +466,8 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
       if (next === current) {
         issues.push({
           severity: 'error',
-          code: 'TASK_CLOSE_BOOKKEEPING_NOOP_WRITE',
-          message: `${write.path} did not change after applying planned bookkeeping write.`,
+          code: 'TASK_CLOSE_SYNC_NOOP_WRITE',
+          message: `${write.path} did not change after applying planned close write-sync write.`,
           path: write.path
         });
         continue;
@@ -475,7 +475,7 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
       if (hashContent(next) !== write.afterHash) {
         issues.push({
           severity: 'error',
-          code: 'TASK_CLOSE_BOOKKEEPING_AFTER_HASH_MISMATCH',
+          code: 'TASK_CLOSE_SYNC_AFTER_HASH_MISMATCH',
           message: `${write.path} planned after hash does not match generated content.`,
           path: write.path
         });
@@ -484,7 +484,7 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
 
       faultHooks?.beforeWrite?.(prepared.length, write);
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
-      const tmpPath = path.join(path.dirname(absolutePath), `.hadara-task-close-bookkeeping-${process.pid}-${Date.now()}-${prepared.length}-${path.basename(absolutePath)}.tmp`);
+      const tmpPath = path.join(path.dirname(absolutePath), `.hadara-task-close-sync-${process.pid}-${Date.now()}-${prepared.length}-${path.basename(absolutePath)}.tmp`);
       fs.writeFileSync(tmpPath, next, { encoding: 'utf8', flag: 'wx' });
       fsyncFile(tmpPath);
       prepared.push({ write, absolutePath, tmpPath, existed, original: current });
@@ -508,13 +508,13 @@ export function applyCloseBookkeepingWrites(projectRoot: string, writes: CloseBo
         else if (fs.existsSync(item.absolutePath)) fs.rmSync(item.absolutePath, { force: true });
         item.write.applied = false;
       } catch {
-        issues.push({ severity: 'warning', code: 'TASK_CLOSE_BOOKKEEPING_ROLLBACK_INCOMPLETE', message: `Rollback failed for ${item.write.path}.`, path: item.write.path });
+        issues.push({ severity: 'warning', code: 'TASK_CLOSE_SYNC_ROLLBACK_INCOMPLETE', message: `Rollback failed for ${item.write.path}.`, path: item.write.path });
       }
     }
     issues.push({
       severity: 'error',
-      code: 'TASK_CLOSE_BOOKKEEPING_ATOMIC_WRITE_FAILED',
-      message: `Atomic task bookkeeping write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
+      code: 'TASK_CLOSE_SYNC_ATOMIC_WRITE_FAILED',
+      message: `Atomic task close sync write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
     });
   }
 }
@@ -600,7 +600,7 @@ function stateDoc(
       present: true,
       mentionsTask,
       state: 'current',
-      reason: `${baseReason} The registered managed checkpoint is projected by this bookkeeping transaction.`,
+      reason: `${baseReason} The registered managed checkpoint is projected by this close write-sync transaction.`,
       recommendation
     };
   }

@@ -47,6 +47,17 @@ describe('resolveHadaraPaths', () => {
     expect(isInside(repo, path.join(repo, 'linked-outside', 'secret.txt'))).toBe(false);
   });
 
+  it('detects symlink escape for missing child targets', () => {
+    const root = tempDir();
+    const repo = path.join(root, 'repo');
+    const outside = path.join(root, 'outside');
+    fs.mkdirSync(repo);
+    fs.mkdirSync(outside);
+    fs.symlinkSync(outside, path.join(repo, 'linked-outside'), 'dir');
+
+    expect(isInside(repo, path.join(repo, 'linked-outside', 'new-state.json'))).toBe(false);
+  });
+
   it('normalizes Windows drive paths without losing drive boundaries', () => {
     expect(normalizeHadaraPath('C:\\Projects\\demo\\..\\demo\\src')).toBe('C:\\Projects\\demo\\src');
   });

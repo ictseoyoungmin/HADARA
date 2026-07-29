@@ -10,7 +10,7 @@ import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvid
 import { createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskClosePlanReport } from '../../src/task/close';
-import { createCloseBookkeepingReport } from '../../src/task/close';
+import { createCloseBookkeepingReport } from '../../src/task/close/bookkeeping';
 import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 
 const roots: string[] = [];
@@ -93,7 +93,7 @@ describe('task close report', () => {
     expect(report.transaction.operation?.planHash).toBe(report.transaction.planHash);
     expect(report.source.closePlan.execution?.requestedPlanHash).toBe(report.transaction.planHash);
     expect(fs.existsSync(path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`))).toBe(false);
-    expect(report.writeSummary.executedSteps).toEqual(['bookkeeping', 'ready', 'close', 'audit-close']);
+    expect(report.writeSummary.executedSteps).toEqual(['sync', 'ready', 'close', 'audit-close']);
     expect(report.primaryNextAction).toBeUndefined();
     expect(report.nextActions).toEqual([]);
     expect(report.operatorGuidance).toContain('do not run task status');
@@ -342,7 +342,7 @@ describe('task close report', () => {
 
     const report = createTaskCloseTransactionReport(root, task.id, {
       onProgress(event) {
-        if (replaced || event.step !== 'bookkeeping' || event.phase !== 'executed') return;
+        if (replaced || event.step !== 'sync' || event.phase !== 'executed') return;
         replaced = true;
         fs.rmSync(lockDir, { recursive: true, force: true });
         fs.mkdirSync(lockDir, { recursive: true });
@@ -414,14 +414,15 @@ describe('task close report', () => {
     expect(report.ok).toBe(true);
     expect(report.transaction.operation).toMatchObject({
       intendedFinalState: 'closed-valid',
+      closeBasisHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       closeSourceHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       planFingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       writeSetHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/)
     });
-    expect(report.transaction.operation?.closeSourceHash).toBe(report.transaction.operation?.finalSourceHash);
+    expect(report.transaction.operation?.closeSourceHash).toBe(report.transaction.operation?.closeBasisHash);
     expect(expectedWrites).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        step: 'bookkeeping',
+        step: 'sync',
         path: 'docs/TASK_BOARD.md',
         expectedBeforeExists: true,
         expectedBeforeHash: expect.stringMatching(/^sha256:/),
@@ -669,7 +670,7 @@ describe('task close report', () => {
 
     const report = createTaskCloseTransactionReport(root, task.id, {
       onProgress(event) {
-        if (event.step !== 'bookkeeping' || event.phase !== 'executed' || mutated) return;
+        if (event.step !== 'sync' || event.phase !== 'executed' || mutated) return;
         mutated = true;
         fs.writeFileSync(path.join(task.dir, 'TASK.md'), fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'), 'utf8');
       }
@@ -683,7 +684,7 @@ describe('task close report', () => {
       taskId: task.id,
       phase: 'recovery-required',
       persisted: true,
-      completedSteps: ['ready', 'bookkeeping'],
+      completedSteps: ['ready', 'sync'],
       pendingSteps: ['close', 'audit-close'],
       mutationSummary: {
         executedWrites: 1,
@@ -692,8 +693,8 @@ describe('task close report', () => {
       }
     });
     expect(report.transaction.operation?.stepJournal).toEqual(expect.arrayContaining([
-      expect.objectContaining({ step: 'bookkeeping', phase: 'intent', status: 'start', mutated: false }),
-      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'executed', mutated: true }),
+      expect.objectContaining({ step: 'sync', phase: 'intent', status: 'start', mutated: false }),
+      expect.objectContaining({ step: 'sync', phase: 'outcome', status: 'executed', mutated: true }),
       expect.objectContaining({ step: 'ready', phase: 'outcome', status: 'satisfied', mutated: false }),
       expect.objectContaining({ step: 'close', phase: 'outcome', status: 'blocked', mutated: false })
     ]));
@@ -703,7 +704,7 @@ describe('task close report', () => {
     expect(persisted).toMatchObject({
       taskId: task.id,
       phase: 'recovery-required',
-      completedSteps: ['ready', 'bookkeeping'],
+      completedSteps: ['ready', 'sync'],
       mutationSummary: {
         executedWrites: 1,
         closeProofAppended: false,
@@ -729,7 +730,7 @@ describe('task close report', () => {
 
     const partial = createTaskCloseTransactionReport(root, task.id, {
       onProgress(event) {
-        if (event.step !== 'bookkeeping' || event.phase !== 'executed' || mutated) return;
+        if (event.step !== 'sync' || event.phase !== 'executed' || mutated) return;
         mutated = true;
         fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'), 'utf8');
       }
@@ -887,6 +888,39 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
   });
 
+  it('fails closed when marker writeSetHash no longer matches persisted expectedWrites', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction marker hash binding');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
+
+    expect(() => createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterOperationPrepared() {
+          throw new Error('stop after operation marker');
+        }
+      }
+    })).toThrow('stop after operation marker');
+
+    const marker = JSON.parse(fs.readFileSync(operationPath, 'utf8'));
+    marker.expectedWrites[0].path = `${marker.expectedWrites[0].path}.tampered`;
+    fs.writeFileSync(operationPath, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
+    const before = snapshotFiles(root);
+
+    const report = createTaskCloseTransactionReport(root, task.id);
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({ ok: false, mode: 'execute-refused', readOnly: true });
+    expect(report.recovery?.classificationAvailable).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_OPERATION_MARKER_INVALID',
+      message: expect.stringContaining('writeSetHash does not match expectedWrites')
+    }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
   it('fails closed when a proof-pending marker retries after close-source drift instead of skipping drift detection', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof-pending drift');
@@ -919,6 +953,38 @@ describe('task close report', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'TASK_CLOSE_OPERATION_RECOVERY_REQUIRED',
       message: expect.stringContaining('close source hash changed')
+    }));
+    expect(closeProofCount(task.dir)).toBe(0);
+    expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
+  });
+
+  it('rechecks actual close source after final verification before appending proof', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close transaction proof append source race');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    let mutated = false;
+
+    const report = createTaskCloseTransactionReport(root, task.id, {
+      faultHooks: {
+        afterFinalVerification() {
+          mutated = true;
+          fs.appendFileSync(taskPath, '\n<!-- close-source drift after final verification -->\n', 'utf8');
+        }
+      }
+    });
+
+    expect(mutated).toBe(true);
+    expect(report).toMatchObject({
+      ok: false,
+      mode: 'execute',
+      writeSummary: {
+        closeProofAppended: false
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_CLOSE_PROOF_APPEND_SOURCE_HASH_CHANGED'
     }));
     expect(closeProofCount(task.dir)).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
@@ -984,7 +1050,7 @@ describe('task close report', () => {
     expect(report.ok).toBe(false);
     expect(report.transaction.operation?.phase).toBe('blocked');
     expect(report.transaction.operation?.stepJournal).toContainEqual(
-      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'blocked', mutated: false })
+      expect.objectContaining({ step: 'sync', phase: 'outcome', status: 'blocked', mutated: false })
     );
     expect(closeProofCount(task.dir)).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
@@ -1023,7 +1089,7 @@ describe('task close report', () => {
     });
     expect(report.transaction.operation?.phase).toBe('blocked');
     expect(report.transaction.operation?.stepJournal).toContainEqual(
-      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'blocked', mutated: false })
+      expect.objectContaining({ step: 'sync', phase: 'outcome', status: 'blocked', mutated: false })
     );
     expect(closeProofCount(task.dir)).toBe(0);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
@@ -1258,7 +1324,7 @@ describe('task close report', () => {
       expect.objectContaining({ step: 'ready', phase: 'outcome', status: 'satisfied', mutated: false }),
       expect.objectContaining({ step: 'close', phase: 'intent', status: 'start', mutated: false }),
       expect.objectContaining({ step: 'close', phase: 'outcome', status: 'executed', mutated: true, writeOutcome: 'appended' }),
-      expect.objectContaining({ step: 'bookkeeping', phase: 'outcome', status: 'executed', mutated: true })
+      expect.objectContaining({ step: 'sync', phase: 'outcome', status: 'executed', mutated: true })
     ]));
     expect(fs.existsSync(operationPath)).toBe(true);
 
@@ -1299,7 +1365,7 @@ describe('task close report', () => {
           ...report.transaction.operation,
           stepJournal: [{
             seq: 1,
-            step: 'bookkeeping',
+            step: 'sync',
             phase: 'intent',
             status: 'not-real',
             writeBoundary: 'read-only',
@@ -1333,7 +1399,7 @@ describe('task close report', () => {
         idempotentNoop: true
       }
     });
-    expect(retry.writeSummary.executedSteps).toEqual(['bookkeeping', 'ready', 'close', 'audit-close']);
+    expect(retry.writeSummary.executedSteps).toEqual(['sync', 'ready', 'close', 'audit-close']);
     expect(retry.primaryNextAction).toBeUndefined();
     expect(retry.nextActions).toEqual([]);
     expect(afterRetry).toBe(afterFirst);
