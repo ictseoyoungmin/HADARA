@@ -24,13 +24,19 @@ try {
   });
 
   const run = (args: string[]): CommandResult => {
-    const output = execFileSync('hadara', args, {
-      cwd: project,
-      env: { ...process.env, PATH: path.join(prefix, 'bin') + path.delimiter + process.env.PATH, HADARA_PROJECT_ROOT: project },
-      encoding: 'utf8',
-      maxBuffer: 16 * 1024 * 1024
-    });
-    return JSON.parse(output) as CommandResult;
+    try {
+      const output = execFileSync('hadara', args, {
+        cwd: project,
+        env: { ...process.env, PATH: path.join(prefix, 'bin') + path.delimiter + process.env.PATH, HADARA_PROJECT_ROOT: project },
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024
+      });
+      return JSON.parse(output) as CommandResult;
+    } catch (error) {
+      const output = (error as { stdout?: string | Buffer }).stdout;
+      if (typeof output === 'string' && output.trim()) return JSON.parse(output) as CommandResult;
+      throw error;
+    }
   };
   const assert: (condition: unknown, message: string) => asserts condition = (condition, message) => {
     if (!condition) throw new Error(message);
@@ -180,7 +186,9 @@ Installed RC2 lifecycle passed through reviewed close, audit, and idempotent ret
   assert(typeof closeDryRun.planHash === 'string' && closeDryRun.planHash.startsWith('sha256:'), 'close plan hash missing');
   const closeExecute = run(['task', 'close', '--task', taskId, '--execute', '--plan-hash', String(closeDryRun.planHash), '--json']);
   assert(closeExecute.ok === true && closeExecute.closeState === 'closed-valid' && closeExecute.terminal === true, 'reviewed close did not reach closed-valid');
-  const retry = run(['task', 'close', '--task', taskId, '--execute', '--plan-hash', String(closeDryRun.planHash), '--json']);
+  const retryDryRun = run(['task', 'close', '--task', taskId, '--dry-run', '--json']);
+  assert(typeof retryDryRun.planHash === 'string' && retryDryRun.planHash.startsWith('sha256:'), 'idempotent retry plan hash missing');
+  const retry = run(['task', 'close', '--task', taskId, '--execute', '--plan-hash', String(retryDryRun.planHash), '--json']);
   assert(retry.ok === true && retry.closeState === 'closed-valid' && retry.terminal === true, 'idempotent close retry failed');
   const audit = run(['task', 'status', '--task', taskId, '--detail', 'full', '--json']);
   assert(containsClosedValid(audit), 'audit status did not expose closed-valid');

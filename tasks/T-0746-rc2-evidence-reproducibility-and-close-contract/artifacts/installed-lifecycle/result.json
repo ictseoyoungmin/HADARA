@@ -1,0 +1,33 @@
+{
+  "version": "passed",
+  "initPlan": "passed",
+  "initApply": "passed",
+  "taskCreate": "passed",
+  "validationEvidence": "passed",
+  "closeDryRun": "passed",
+  "closeExecute": "passed",
+  "auditClose": "closed-valid",
+  "idempotentRetry": "passed",
+  "freshSessionStatus": "no-stale-recommendation",
+  "installedVersion": "0.5.0-rc.2",
+  "taskId": "T-0001",
+  "validationEvidenceId": "ev:T-0001:d0d8fc73565446bcb433da99",
+  "closePlanStatus": "executable-with-deferred-checks",
+  "validationOutputPreview": {
+    "mode": "file",
+    "stdoutBytes": 40,
+    "stderrBytes": 0,
+    "stdoutPreview": "installed substantive validation passed\n",
+    "stderrPreview": "",
+    "stdoutTruncated": false,
+    "stderrTruncated": false,
+    "previewLimitBytes": 16384,
+    "previewMode": "redacted",
+    "redacted": false,
+    "redactionFindingCount": 0,
+    "omittedBytes": 0,
+    "controlSequenceFindingCount": 0,
+    "controlCharactersStripped": false,
+    "fallbackUsed": false
+  }
+}

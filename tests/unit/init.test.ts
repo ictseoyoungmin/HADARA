@@ -172,7 +172,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('JSON evidence responses include `evidence.appendLock` so lock contention and wait time are visible when it happens.');
     expect(workflow).toContain('independent `validation run` or `evidence add-command` calls may run in parallel');
     expect(workflow).not.toContain('Do not start multiple validation/evidence writes');
-    expect(workflow).toContain('A handoff `Next Recommended Step` is one input and must not be copied verbatim as a task title.');
+    expect(workflow).toContain('A handoff `Post-Close Continuation` or legacy `Next Recommended Step` is one input and must not be copied verbatim as a task title.');
     expect(workflow).toContain('| Run and record validation | `hadara validation run --task T-XXXX --check "..." -- <command>` | Executes the command and records evidence without editing `TASK.md` by default. |');
     expect(workflow).toContain('| Run, record, and sync task row | `hadara validation run --task T-XXXX --check "..." --update-task -- <command>` |');
     expect(workflow).toContain('| Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |');
