@@ -6,9 +6,9 @@
 |---|---|
 | ID | T-0746 |
 | Title | RC2 Evidence Reproducibility and Close Contract |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-01T23:55 |
-| Updated | 2026-08-01T23:55 |
+| Updated | 2026-08-02T00:20 |
 
 ## Last Completed
 

@@ -17,6 +17,7 @@ Do not hand-edit this file.
 | ev:T-0746:3e67d4a475db4724a6f022c0 | passed | validation | Validation "Full npm run check" passed; failureClass: none; command: npm run check; argvHash: sha256:698d6dd5422de2503349def717b72b78035aad247ef33cb92b78a6b2f2ca956a; exitCode: 0; signal: null; durationMs: 35855; stdoutHash: sha256:f99f3c645c062019ff1bafb116927b4fce3683c148dcd3aad78c1760bfeb6a7b; stderrHash: sha256:1b865a631d7a2d4fc0ad18adc9ecd4d62c080f43661ded013cc3738ec3f27bfe |
 | ev:T-0746:abc691b4fded41f382ab13e5 | passed | validation | Validation "Package core and consumer smoke" passed; failureClass: none; command: node --import tsx tools/dev-surfaces.ts smoke package --execute --from tasks/T-0746-rc2-evidence-reproducibility-and-close-contract/artifacts/installed-lifecycle/hadara-0.5.0-rc.2.tgz --source-root . --evidence-root . --smoke-project-root /tmp/hadara-t0746-package-consumer --json; argvHash: sha256:c7c2bf18b08acca6f6233d5d2150118795e5b791e090593b16e2516d8fe404ed; exitCode: 0; signal: null; durationMs: 1916; stdoutHash: sha256:5d0fa3819bbe093de45ec9f874b37f0fd0fc428765e9717c5d43b6670816cd6b; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
 | ev:T-0746:ee9c789b06bb4faf8a7a3bf2 | passed | validation | Validation "Handoff phase contract" passed; failureClass: none; command: npm test -- --run tests/unit/task-selection.test.ts tests/unit/task-selection-continuation.test.ts tests/unit/task-close-source.test.ts tests/unit/task-capsule.test.ts tests/unit/mcp-tools.test.ts; argvHash: sha256:0df863fffd329b8520abd0df623d656530b6fe4de89961e868f3d8f1b7c82181; exitCode: 0; signal: null; durationMs: 2546; stdoutHash: sha256:26bc51797b46535f3a1b964905472cc0d1f9d07e29d80932f516d296f797b0cd; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0746:eba5664cc22441a1a94194f5 | passed | validation | Task closePlan done-level readiness for T-0746 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:66fff888ff635e3b6d70856c0ed1469465645a0fa816d29db084048ebfe22891 |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -24,6 +25,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0746:0d83b1ba32e44beb9ff6bc4a |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence
