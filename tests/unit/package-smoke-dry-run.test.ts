@@ -411,14 +411,25 @@ describe('package smoke local execution', () => {
         return { status: 0, stdout: 'added 1 package', stderr: '', elapsedMs: 12 };
       }
       if (args[0] === 'doctor') {
-        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 13 };
+        const initialized = fs.existsSync(path.join(options.cwd, 'docs', 'HADARA_WORKFLOW.md'));
+        return {
+          status: initialized ? 0 : 1,
+          stdout: JSON.stringify({ ok: initialized }),
+          stderr: initialized ? '' : 'project is not initialized',
+          elapsedMs: 13
+        };
       }
       if (args[0] === 'commands') {
         return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
       }
       if (args[0] === 'init') {
-        writeGeneratedWorkflowFixture(options.cwd);
-        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
+        if (args.includes('--execute')) writeGeneratedWorkflowFixture(options.cwd);
+        return {
+          status: 0,
+          stdout: JSON.stringify(args.includes('--execute') ? { ok: true } : { ok: true, planHash: 'sha256:test-init-plan' }),
+          stderr: '',
+          elapsedMs: 6
+        };
       }
       if (args[0] === 'smoke') {
         return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 14 };
@@ -470,9 +481,9 @@ describe('package smoke local execution', () => {
       'plan-workspace',
       'npm-pack',
       'install-cli',
+      'generated-init-docs',
       'doctor',
       'command-surface-drift',
-      'generated-init-docs',
       'cleanup'
     ]);
     expect(report.steps.every((step) => step.status === 'passed')).toBe(true);
@@ -489,12 +500,16 @@ describe('package smoke local execution', () => {
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain(workspace);
     expect(encoded).not.toContain('npm notice');
-    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'commands', 'init']);
+    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'init', 'init', 'doctor', 'commands']);
     expect(calls.find((call) => call.args[0] === 'doctor')?.args).toEqual(['doctor', '--json']);
-    expect(calls.find((call) => call.args[0] === 'init')?.args).toEqual(['init', '--profile', 'standard', '--json']);
+    expect(calls.filter((call) => call.args[0] === 'init').map((call) => call.args)).toEqual([
+      ['init', '--profile', 'standard', '--json'],
+      ['init', '--profile', 'standard', '--execute', '--plan-hash', 'sha256:test-init-plan', '--json']
+    ]);
     const initCall = calls.find((call) => call.args[0] === 'init');
     expect(initCall?.cwd).not.toBe(workspace);
-    expect(initCall?.cwd).toContain('init-docs-project');
+    expect(initCall?.cwd).toContain('smoke-project');
+    expect(initCall?.cwd).toBe(calls.find((call) => call.args[0] === 'doctor')?.cwd);
     expect(calls.find((call) => call.args[0] === 'pack')?.env?.NPM_CONFIG_CACHE).toContain('npm-cache');
     expect(calls.find((call) => call.args[0] === 'install')?.env?.NPM_CONFIG_CACHE).toContain('npm-cache');
     expect(calls.find((call) => call.args[0] === 'doctor')?.env?.HADARA_PROJECT_ROOT).toBeUndefined();

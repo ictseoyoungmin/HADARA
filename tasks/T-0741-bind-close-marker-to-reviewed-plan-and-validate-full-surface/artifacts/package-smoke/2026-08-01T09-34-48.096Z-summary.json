@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-01T09:34:48.094Z",
+  "taskId": "T-0741",
+  "category": "package-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageSmoke.v1",
+    "command": "package.smoke",
+    "mode": "local",
+    "ok": false,
+    "provider": {
+      "ecosystem": "npm",
+      "smokeProfile": "npm-package-smoke",
+      "command": "package.smoke"
+    },
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Package-smoke commands inherit the current environment network behavior.",
+        "HADARA does not enforce OS-level network isolation for local package tooling."
+      ]
+    }
+  },
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "validate-source",
+      "label": "Validate package source",
+      "status": "passed",
+      "summary": "Package source metadata was checked without exposing package contents."
+    },
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable workspace",
+      "status": "passed",
+      "summary": "Disposable package-smoke workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 946,
+      "summary": "npm pack produced a temporary package tarball."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1222,
+      "summary": "Package installed into an isolated temporary prefix."
+    },
+    {
+      "id": "generated-init-docs",
+      "label": "Generated init docs current UX check",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 96,
+      "summary": "Installed init stdout capture was empty; installed template bundle exposes current task close and slice guidance without stale removed command instructions."
+    },
+    {
+      "id": "doctor",
+      "label": "Installed HADARA doctor",
+      "status": "failed",
+      "exitCode": 7,
+      "elapsedMs": 50,
+      "summary": "Installed doctor did not return an ok JSON report."
+    },
+    {
+      "id": "command-surface-drift",
+      "label": "Command surface drift vs source registry",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 46,
+      "summary": "Installed command surface stdout capture was empty; source registry ids and installed routing parity hold."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "PACKAGE_SMOKE_PROJECT_ALIAS_ROOTS",
+      "message": "`--project` is treated as both sourceRoot and evidenceRoot for compatibility; use --source-root and --evidence-root to make release root roles explicit."
+    },
+    {
+      "severity": "warning",
+      "code": "PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED",
+      "message": "Installed init stdout capture was empty; installed template bundle was inspected instead of generated docs.",
+      "stepId": "generated-init-docs"
+    },
+    {
+      "severity": "error",
+      "code": "PACKAGE_SMOKE_DOCTOR_FAILED",
+      "message": "Installed hadara doctor failed or returned non-ok JSON.",
+      "stepId": "doctor"
+    },
+    {
+      "severity": "warning",
+      "code": "PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED",
+      "message": "Installed command registry stdout capture was empty; source registry ids were used while installed dispatcher routing parity was still checked.",
+      "stepId": "command-surface-drift"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

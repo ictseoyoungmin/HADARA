@@ -741,5 +741,5 @@
 | T-0738 | Release blocker registry and safety hotfixes | Done | tasks/T-0738-release-blocker-registry-and-safety-hotfixes | |
 | T-0739 | Harden close guard validation output and continuation consumption | Done | tasks/T-0739-harden-close-guard-validation-output-and-continuation-consumptio | |
 | T-0740 | Harden validation argv contract and proof authority | Done | tasks/T-0740-harden-validation-argv-contract-and-proof-authority | |
-| T-0741 | Bind close marker to reviewed plan and validate full surface | In Progress | tasks/T-0741-bind-close-marker-to-reviewed-plan-and-validate-full-surface | |
-| T-0742 | Clear retired state contracts and smoke routing drift | Done | tasks/T-0742-clear-retired-state-contracts-and-smoke-routing-drift | Active source/tools/test fixtures now use Task Board and task-local HANDOFF; obsolete global-state/readiness fixtures removed; focused 239-test suite, task-close 57-test suite, host full check, and clean-checkout smoke pass; final task close pending. |
+| T-0741 | Bind close marker to reviewed plan and validate full surface | Done | tasks/T-0741-bind-close-marker-to-reviewed-plan-and-validate-full-surface | |
+| T-0742 | Clear retired state contracts and smoke routing drift | Done | tasks/T-0742-clear-retired-state-contracts-and-smoke-routing-drift | Active source/tools/test fixtures now use Task Board and task-local HANDOFF; obsolete global-state/readiness fixtures removed; focused 239-test suite, task-close 57-test suite, host full check, and clean-checkout smoke passed; task closed-valid. |

@@ -351,6 +351,58 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
         if (install.status === 0) {
           fs.mkdirSync(smokeProjectPath, { recursive: true });
           const commandEnv = installPathEnv(installPrefix);
+          const initDocsWorkspace = smokeProjectPath;
+          const initArgs = ['init', '--profile', 'standard', '--json'];
+          let initDocs = runner(installedBin, initArgs, {
+            cwd: initDocsWorkspace,
+            timeoutMs,
+            env: commandEnv
+          });
+          let initCommand = 'hadara init --profile standard --json';
+          const installedMain = installedMainJsPath(installPrefix);
+          if (initDocs.status === 0 && !initDocs.timedOut && initDocs.stdout.trim() === '' && installedMain) {
+            initDocs = runner(process.execPath, [installedMain, ...initArgs], {
+              cwd: initDocsWorkspace,
+              timeoutMs,
+              env: commandEnv
+            });
+            initCommand = 'node <installed-package>/dist/cli/main.js init --profile standard --json';
+          }
+          const initPlanHash = readInitPlanHash(initDocs.stdout);
+          if (initDocs.status === 0 && initPlanHash) {
+            const executeArgs = ['init', '--profile', 'standard', '--execute', '--plan-hash', initPlanHash, '--json'];
+            let executedInit = runner(installedBin, executeArgs, {
+              cwd: initDocsWorkspace,
+              timeoutMs,
+              env: commandEnv
+            });
+            if (executedInit.status === 0 && !executedInit.timedOut && executedInit.stdout.trim() === '' && installedMain) {
+              executedInit = runner(process.execPath, [installedMain, ...executeArgs], {
+                cwd: initDocsWorkspace,
+                timeoutMs,
+                env: commandEnv
+              });
+            }
+            initDocs = executedInit;
+            initCommand = `${initCommand} + hadara init --profile standard --execute --plan-hash <plan-hash> --json`;
+          }
+          const initDocsStep = commandStep(
+            'generated-init-docs',
+            'Generated init docs current UX check',
+            `${initCommand} + generated docs sanity checks`,
+            initDocs
+          );
+          const initDocsEvaluation = evaluateGeneratedInitDocs(initDocs, initDocsWorkspace, installPrefix);
+          initDocsStep.status = initDocsEvaluation.ok ? 'passed' : 'failed';
+          initDocsStep.summary = initDocsEvaluation.summary;
+          if (initDocsEvaluation.fallbackUsed) {
+            initDocsStep.fallbackUsed = true;
+            initDocsStep.fallbackReason = initDocsEvaluation.fallbackReason;
+          }
+          for (const issue of initDocsEvaluation.issues) issues.push(issue);
+          steps.push(initDocsStep);
+
+          // Doctor must inspect the initialized disposable consumer project.
           const doctor = runner(installedBin, ['doctor', '--json'], {
             cwd: smokeProjectPath,
             timeoutMs,
@@ -413,29 +465,6 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           }
           for (const issue of drift.issues) issues.push(issue);
           steps.push(surfaceStep);
-
-          const initDocsWorkspace = path.join(workspaceSetup.path, 'init-docs-project');
-          fs.mkdirSync(initDocsWorkspace, { recursive: true });
-          const initDocs = runner(installedBin, ['init', '--profile', 'standard', '--json'], {
-            cwd: initDocsWorkspace,
-            timeoutMs,
-            env: installPathEnv(installPrefix)
-          });
-          const initDocsStep = commandStep(
-            'generated-init-docs',
-            'Generated init docs current UX check',
-            'hadara init --profile standard --json + generated docs sanity checks',
-            initDocs
-          );
-          const initDocsEvaluation = evaluateGeneratedInitDocs(initDocs, initDocsWorkspace, installPrefix);
-          initDocsStep.status = initDocsEvaluation.ok ? 'passed' : 'failed';
-          initDocsStep.summary = initDocsEvaluation.summary;
-          if (initDocsEvaluation.fallbackUsed) {
-            initDocsStep.fallbackUsed = true;
-            initDocsStep.fallbackReason = initDocsEvaluation.fallbackReason;
-          }
-          for (const issue of initDocsEvaluation.issues) issues.push(issue);
-          steps.push(initDocsStep);
 
         } else {
           steps.push(
@@ -1453,18 +1482,25 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
     }
   }
 
-  const requiredSnippets = [
-    'hadara task close --task T-XXXX --json',
-    '## Slice State',
-    'hadara slice add --id M1',
-    'hadara slice render --json'
-  ];
+  const requiredSnippets = ['hadara task close --task T-XXXX --json'];
   for (const snippet of requiredSnippets) {
     if (workflow.includes(snippet)) continue;
     issues.push({
       severity: 'error',
       code: 'PACKAGE_SMOKE_INIT_DOCS_MISSING_CURRENT_GUIDANCE',
       message: `Generated workflow docs are missing current guidance snippet: ${snippet}.`,
+      stepId
+    });
+  }
+  const currentGuidanceSets = [
+    ['## Document Routing', '## Ownership'],
+    ['## Slice State', 'hadara slice add --id M1', 'hadara slice render --json']
+  ];
+  if (!currentGuidanceSets.some((snippets) => snippets.every((snippet) => workflow.includes(snippet)))) {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_INIT_DOCS_MISSING_CURRENT_GUIDANCE',
+      message: 'Generated workflow docs are missing the current Init v1 routing/ownership guidance.',
       stepId
     });
   }
@@ -1525,6 +1561,15 @@ function readInstalledInitTemplateBundle(installPrefix: string): string | null {
     return fs.readFileSync(templatePath, 'utf8');
   } catch {
     return null;
+  }
+}
+
+function readInitPlanHash(stdout: string): string | undefined {
+  try {
+    const report = JSON.parse(stdout) as { planHash?: unknown };
+    return typeof report.planHash === 'string' && report.planHash.length > 0 ? report.planHash : undefined;
+  } catch {
+    return undefined;
   }
 }
 

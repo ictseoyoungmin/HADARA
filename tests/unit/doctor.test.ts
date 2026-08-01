@@ -86,4 +86,21 @@ describe('CLI doctor report', () => {
     expect(formatDoctorReport(report)).toContain('docs/:       missing');
     expect(formatDoctorReport(report)).toContain('.hadara/context/HADARA_CONTEXT.md: missing');
   });
+
+  it('accepts the Init v1 READ_MAP as the project context fallback', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'tasks'), { recursive: true });
+    fs.mkdirSync(path.join(root, '.hadara', 'context'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), '# READ_MAP\n', 'utf8');
+
+    const report = createDoctorReport(resolveHadaraPaths({ projectRoot: root }));
+
+    expect(report.ok).toBe(true);
+    expect(report.checks).toContainEqual({
+      id: 'project-context',
+      status: 'ok',
+      path: path.join(root, '.hadara', 'context', 'READ_MAP.md')
+    });
+  });
 });

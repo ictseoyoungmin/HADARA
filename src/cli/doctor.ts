@@ -44,10 +44,11 @@ export interface DoctorReportOptions {
 }
 
 export function createDoctorReport(paths: HadaraPaths, nodeVersion = process.version, options: DoctorReportOptions = {}): DoctorReport {
+  const projectContextPath = resolveProjectContextPath(paths);
   const checks: DoctorCheck[] = [
     pathCheck('docs', paths.projectDocsDir),
     pathCheck('tasks', paths.projectTasksDir),
-    pathCheck('project-context', `${paths.projectContextDir}/HADARA_CONTEXT.md`)
+    pathCheck('project-context', projectContextPath)
   ];
   // FD-012 ownership-contract check: the generated slices projection must
   // match its canonical state; hand edits are surfaced here instead of
@@ -92,6 +93,14 @@ export function createDoctorReport(paths: HadaraPaths, nodeVersion = process.ver
     },
     checks
   };
+}
+
+function resolveProjectContextPath(paths: HadaraPaths): string {
+  const contextPath = path.join(paths.projectContextDir, 'HADARA_CONTEXT.md');
+  if (fs.existsSync(contextPath)) return contextPath;
+  const readMapPath = path.join(paths.projectContextDir, 'READ_MAP.md');
+  if (fs.existsSync(readMapPath)) return readMapPath;
+  return contextPath;
 }
 
 export function formatDoctorReport(report: DoctorReport): string {
