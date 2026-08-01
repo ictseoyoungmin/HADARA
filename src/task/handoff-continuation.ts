@@ -39,8 +39,10 @@ export function isConsumedDoneContinuation(input: {
 }
 
 function hasCloseReviewIntent(step: string): boolean {
-  return /\b(?:close|finalize|closed-valid|close-proof|audit-close)\b/i.test(step)
-    || /\breview(?:ed|ing)?\b[^.\n]{0,100}\b(?:close|finalize|audit)\b/i.test(step);
+  return /\b(?:closed-valid|close-proof|audit-close)\b/i.test(step)
+    || /\bhadara\s+task\s+(?:close|finalize)\b/i.test(step)
+    || /\b(?:review(?:ed|ing)?|execute|run|perform|append|record|inspect)\b[^.\n]{0,100}\b(?:close|finalize|audit)\b/i.test(step)
+    || /\bclose\b\s+(?:the|this|same|already|target|task|plan|proof|transaction|operation|dry-run|command|process)\b/i.test(step);
 }
 
 const PLACEHOLDER_STEP_PATTERN = /^(tbd|step|)$/i;

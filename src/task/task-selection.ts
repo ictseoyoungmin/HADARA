@@ -4,6 +4,7 @@ import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-tab
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
 import { continuationFromTaskHandoffStep, isConsumedDoneContinuation } from './handoff-continuation';
+import { readHandoffContinuationSection } from './handoff-sections';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';
@@ -215,7 +216,7 @@ function recommendationFromLatestDoneHandoff(projectRoot: string, boardRows: Boa
 }
 
 function readStructuredHandoffNextStep(content: string): { step: string; reason: string; requiredReading: string; disposition?: string; createTask?: string } | null {
-  const rows = parseMarkdownRows(readMarkdownSection(content, '## Next Recommended Step'));
+  const rows = parseMarkdownRows(readHandoffContinuationSection(content, 'post-close').content);
   const header = rows[0] ?? [];
   const data = rows.find((row, index) => index > 0 && row.some(Boolean));
   if (!data) return null;

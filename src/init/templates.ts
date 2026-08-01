@@ -185,7 +185,7 @@ hadara task status --task T-XXXX --json
 
 Use \`task status --json\` to decide what to work on when no task is selected. Use \`task create\` only when no suitable capsule exists. Use \`task status --task T-XXXX --json\` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use \`task close --task T-XXXX --dry-run --json\` or \`task status --task T-XXXX --detail full --json\` when you need close-grade readiness diagnostics.
 
-Task selection is a review decision, not title generation. Current human or reviewer instructions have highest priority. Then read the routed project state, governed handoff when present, development/roadmap sources, Task Board, and the previous capsule handoff. A handoff \`Next Recommended Step\` is one input and must not be copied verbatim as a task title. If a new capsule is still warranted, choose a short behavior-focused title. If planned work is exhausted, review for design gaps or useful optimization and propose a next step or ask the reviewer instead of manufacturing work.
+Task selection is a review decision, not title generation. Current human or reviewer instructions have highest priority. Then read the routed project state, governed handoff when present, development/roadmap sources, Task Board, and the previous capsule handoff. A handoff \`Post-Close Continuation\` or legacy \`Next Recommended Step\` is one input and must not be copied verbatim as a task title. If a new capsule is still warranted, choose a short behavior-focused title. If planned work is exhausted, review for design gaps or useful optimization and propose a next step or ask the reviewer instead of manufacturing work.
 
 ## Task Context
 
@@ -357,7 +357,7 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 | Treating read-routing as validation. | Use read models only for guidance; run real checks separately. |
 | Recording evidence for checks that were not run. | Record only real execution results, including failed or blocked checks. |
 | Running close from memory without current docs. | Use \`task close --json\` after close-source docs are current, or review fresh \`task close --dry-run\` output and copy its current plan hash for external review flows. |
-| Putting same-capsule chores in \`HANDOFF.md\` Next Recommended Step. | Use that section for next capsule or global-state recommendations. |
+| Mixing same-capsule close chores into post-close HANDOFF guidance. | Put close prerequisites in \`Pre-Close Operator Action\` and reserve \`Post-Close Continuation\` for guidance that remains true after Done. |
 
 ## Design Source Documents and Read Maps
 
@@ -723,7 +723,7 @@ Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`
 | Shared state docs | Optional registered documents. Close does not create or maintain global state projections. |
 | \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
-Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board bookkeeping is projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing close-source documents requires rerunning task close.
+Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board bookkeeping is projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, keep close prerequisites in \`Pre-Close Operator Action\` and convert \`Post-Close Continuation\` into guidance that remains true after this task closes. \`TASK.md\` \`Close Summary\` records the completed outcome only. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing close-source documents requires rerunning task close.
 
 ## Documentation Timing and Write Coordination
 
@@ -820,7 +820,7 @@ ${requiredReadingRows.map(formatTableRow).join('\n')}
 - Keep Task Capsule docs current as work changes; do not defer all documentation until after implementation.
 - Keep generated or project-owned \`docs/\` files current when a task changes their subject. Use \`hadara docs add <type>\` for optional docs, or create Markdown directly and register it with \`hadara docs register\`.
 - The selected init profile intentionally omits some overview and governance documents. Their absence is not a defect. Add optional documents only for a concrete project need, never merely to imitate a larger profile.
-- Current human or reviewer instructions override persisted \`Next Recommended Step\` prose when they conflict. Treat handoff next steps as review input, read the routed current/project/development sources, and choose a concise task title yourself only after deciding that a new capsule is still appropriate.
+- Current human or reviewer instructions override persisted \`Next Recommended Step\` prose when they conflict. Treat \`Pre-Close Operator Action\` and \`Post-Close Continuation\` as phase-specific handoff input, read the routed current/project/development sources, and choose a concise task title yourself only after deciding that a new capsule is still appropriate.
 - When planned milestone work is exhausted and no explicit instruction remains, review the result and either propose a justified next step, identify a planning flaw or optimization, or ask the reviewer what to do next. Do not turn stale handoff prose into an automatic task.
 - A successful \`task close\` result with \`closed-valid\` is terminal for that capsule. Report it and stop; do not run \`task status\` merely to confirm close or discover another capsule unless the current human/reviewer instruction explicitly requires continued work.
 - Do not execute destructive commands.

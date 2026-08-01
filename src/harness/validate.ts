@@ -7,6 +7,7 @@ import { createEvidenceLintReport } from '../services/evidence-lint';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
 import { parseTaskBoard } from '../task/task-board';
 import { findTaskCapsule, isTaskCapsuleScaffoldContent, TaskCapsule } from '../task/task-capsule';
+import { readHandoffContinuationSection } from '../task/handoff-sections';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
 export type HarnessValidationLevel = 'draft' | 'done';
@@ -640,7 +641,7 @@ function isChangeSummaryLines(value: string): boolean {
 function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
   validateMarkdownFile(projectRoot, task, issues, 'HANDOFF.md', [
     { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Last Completed'] },
-    { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Next Recommended Step'] }
+    { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Post-Close Continuation', '## Pre-Close Operator Action', '## Next Recommended Step'] }
   ]);
 }
 
@@ -1247,21 +1248,22 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
 
   const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
   const lastCompleted = readSectionBody(handoffPath, '## Last Completed').trim();
-  const nextStep = readSectionBody(handoffPath, '## Next Recommended Step').trim();
+  const handoffContent = fs.readFileSync(handoffPath, 'utf8');
+  const nextStep = readHandoffContinuationSection(handoffContent, 'post-close').content.trim();
   if (isPlaceholderSection(lastCompleted) || isPlaceholderSection(nextStep)) {
     issues.push({
       severity: 'error',
       code: 'HANDOFF_PLACEHOLDER',
       message: 'Done-level validation requires non-placeholder handoff sections.',
       path: relativePath,
-      heading: 'Last Completed / Next Recommended Step',
-      fixHint: 'Replace HANDOFF.md placeholder rows with concrete last-completed work and next-step guidance.',
-      example: '| Continue with T-0002. | T-0001 is closed-valid. | docs/TASK_BOARD.md |',
+      heading: 'Last Completed / Post-Close Continuation',
+      fixHint: 'Replace HANDOFF.md placeholder rows with concrete last-completed work and post-close continuation guidance.',
+      example: '| No continuation. | terminal | no | Close proof is current. | docs/TASK_BOARD.md |',
       remediationHint: {
         path: relativePath,
-        heading: 'Last Completed / Next Recommended Step',
-        requiredChange: 'Replace handoff placeholders with concrete last-completed and next recommended step rows.',
-        example: '| Continue with T-0002. | T-0001 is closed-valid. | docs/TASK_BOARD.md |',
+        heading: 'Last Completed / Post-Close Continuation',
+        requiredChange: 'Replace handoff placeholders with concrete last-completed and post-close continuation rows.',
+        example: '| No continuation. | terminal | no | Close proof is current. | docs/TASK_BOARD.md |',
         blocking: true
       }
     });

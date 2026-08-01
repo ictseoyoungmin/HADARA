@@ -7,6 +7,7 @@ import { isInside } from '../../core/paths';
 import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../../services/markdown-table';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
 import { findTaskCapsule, TaskCapsule } from '../task-capsule';
+import { readHandoffContinuationSection } from '../handoff-sections';
 import {
   defaultTaskBoard,
   formatTaskBoardRow,
@@ -582,7 +583,9 @@ function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured:
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
   const content = fs.readFileSync(handoffPath, 'utf8');
-  const rows = parseMarkdownRowsUnderHeading(content, '## Next Recommended Step');
+  const phase = readTaskStatus(task).trim().toLowerCase() === 'done' ? 'post-close' : 'pre-close';
+  const section = readHandoffContinuationSection(content, phase);
+  const rows = parseMarkdownRowsUnderHeading(content, section.heading);
   const header = rows[0] ?? [];
   const structured = header.some((cell) => /^disposition$/i.test(cell)) || header.some((cell) => /^create task$/i.test(cell));
   const dataRows = structured ? rows.slice(1) : rows;
@@ -609,7 +612,9 @@ function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured:
 function validateHandoffNextStepTable(task: TaskCapsule): CloseGuardedWriteIssue | null {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
-  const section = readMarkdownSection(fs.readFileSync(handoffPath, 'utf8'), '## Next Recommended Step');
+  const content = fs.readFileSync(handoffPath, 'utf8');
+  const phase = readTaskStatus(task).trim().toLowerCase() === 'done' ? 'post-close' : 'pre-close';
+  const section = readHandoffContinuationSection(content, phase).content;
   const lines = section.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.startsWith('|') && line.endsWith('|'));
   if (lines.length === 0) return null;
   const cells = (line: string): string[] => line.slice(1, -1).split('|').map((cell) => cell.trim());
@@ -631,7 +636,7 @@ function validateHandoffNextStepTable(task: TaskCapsule): CloseGuardedWriteIssue
   return {
     severity: 'error',
     code: 'HANDOFF_NEXT_STEP_TABLE_MALFORMED',
-    message: 'HANDOFF.md Next Recommended Step must use a recognized header, an immediate divider row, and consistently sized data rows.',
+    message: 'HANDOFF.md continuation section must use a recognized header, an immediate divider row, and consistently sized data rows.',
     path: 'HANDOFF.md'
   };
 }

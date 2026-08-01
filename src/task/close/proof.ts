@@ -16,6 +16,10 @@ import { analyzeAcceptanceReadiness } from '../acceptance';
 import { findTaskCapsule } from '../task-capsule';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
 import type { CloseGuardedWrite } from './guardedWrites';
+import type { TaskCloseIssue } from './model';
+import { readHandoffContinuationSection } from '../handoff-sections';
+
+export type { TaskCloseIssue } from './model';
 
 export type TaskCloseMode = 'dry-run' | 'execute';
 
@@ -130,17 +134,6 @@ export interface TaskCloseLifecycleGuidance {
 }
 
 export type TaskCloseNextAction = TaskLifecycleNextAction;
-
-export interface TaskCloseIssue {
-  severity: 'error' | 'warning' | 'info';
-  code: string;
-  message: string;
-  path?: string;
-  heading?: string;
-  fixHint?: string;
-  example?: string;
-  remediationHint?: RemediationHint;
-}
 
 export interface TaskCloseOptions {
   actor?: HadaraActorContext;
@@ -329,7 +322,8 @@ export function collectCloseSourceQualityIssues(projectRoot: string, taskDir: st
     const handoffPath = path.join(taskDir, 'HANDOFF.md');
     try {
       const handoff = fs.readFileSync(handoffPath, 'utf8');
-      const handoffRows = parseMarkdownRows(readMarkdownSection(handoff, '## Next Recommended Step'));
+      const handoffSection = readHandoffContinuationSection(handoff, 'post-close');
+      const handoffRows = parseMarkdownRows(handoffSection.content);
       const handoffHeader = handoffRows[0] ?? [];
       const stepIndex = handoffHeader.findIndex((entry) => entry.trim().toLowerCase() === 'step');
       const dispositionIndex = handoffHeader.findIndex((entry) => entry.trim().toLowerCase() === 'disposition');
@@ -342,7 +336,7 @@ export function collectCloseSourceQualityIssues(projectRoot: string, taskDir: st
           code: 'HANDOFF_PRE_CLOSE_ACTION_STALE_AFTER_DONE',
           message: 'Done task HANDOFF still requests close or close review; replace it with terminal continuation guidance.',
           path: toPortablePath(path.relative(projectRoot, handoffPath)),
-          heading: '## Next Recommended Step'
+          heading: handoffSection.heading
         });
       }
     } catch {
@@ -706,6 +700,8 @@ function handoffSummarySnapshot(handoffPath: string): Record<string, string> {
   return {
     present: 'true',
     lastCompleted: normalizeSnapshotText(readMarkdownSection(content, '## Last Completed')),
+    preCloseOperatorAction: normalizeSnapshotText(readHandoffContinuationSection(content, 'pre-close').content),
+    postCloseContinuation: normalizeSnapshotText(readHandoffContinuationSection(content, 'post-close').content),
     nextRecommendedStep: normalizeSnapshotText(readMarkdownSection(content, '## Next Recommended Step')),
     carryForwardWarnings: normalizeSnapshotText(readMarkdownSection(content, '## Carry Forward Warnings'))
   };

@@ -1,8 +1,8 @@
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
-import type { CloseGuardedWrite } from './guardedWrites';
-import type { TaskClosePlanReport } from './plan';
-import type { TaskCloseIssue, TaskCloseReport } from './proof';
+import type { RemediationHint } from '../../harness/validate';
+import type { TaskAuthoringGuidance } from '../authoring-guidance';
+import type { CloseGuardedWritePlan } from './guardedWrites';
 
 export type TaskCloseExecutionStepId = 'ready' | 'close' | 'audit-close' | 'guarded-writes';
 export type TaskCloseOperationPhase = 'planned' | 'applying' | 'verifying' | 'proof-pending' | 'closed-valid' | 'blocked' | 'recovery-required';
@@ -23,8 +23,8 @@ export interface TaskCloseExpectedWrite {
   step: TaskCloseExecutionStepId;
   path: string;
   writeBoundary: 'task-local' | 'evidence-append';
-  action?: CloseGuardedWrite['action'];
-  field?: CloseGuardedWrite['field'];
+  action?: 'update' | 'insert';
+  field?: 'task-status' | 'task-handoff-identity' | 'task-board-row';
   expectedBeforeExists?: boolean;
   expectedBeforeHash?: string;
   afterHash?: string;
@@ -120,6 +120,116 @@ export interface TaskCloseMarkerPersistenceSummary {
   fileFsyncs: number;
   directoryFsyncs: number;
   unchangedSkips: number;
+}
+
+export type TaskClosePlanMode = 'dry-run' | 'execute' | 'execute-refused';
+export type TaskClosePlanStepId = 'ready' | 'close' | 'audit-close';
+export type TaskClosePlanExecutionStepId = TaskClosePlanStepId | 'guarded-writes';
+export type TaskClosePlanStepStatus = 'satisfied' | 'required' | 'blocked' | 'pending' | 'unknown';
+
+export interface TaskClosePlanIssue {
+  severity: 'error' | 'warning' | 'info';
+  code: string;
+  message: string;
+  path?: string;
+  fixHint?: string;
+  example?: string;
+}
+
+export interface TaskClosePlanStep {
+  id: TaskClosePlanStepId;
+  status: TaskClosePlanStepStatus;
+  summary: string;
+  command: string;
+  mode: 'dry-run' | 'execute' | 'read-only';
+  writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
+  expectedWritePaths: string[];
+  alreadySatisfied: boolean;
+  sourceReport: string;
+}
+
+export interface TaskClosePlanExecution {
+  requestedPlanHash?: string;
+  currentPlanHash?: string;
+  planHashMatched: boolean;
+  executedSteps: TaskClosePlanExecutedStep[];
+  stoppedAt?: TaskClosePlanExecutionStepId;
+}
+
+export interface TaskClosePlanReadinessEvidence {
+  attempted: boolean;
+  reason: 'close-required' | 'blocked';
+  id?: string;
+  existing?: boolean;
+  jsonlAppended?: boolean;
+  markdownAppended?: boolean;
+  summary?: string;
+}
+
+export interface TaskClosePlanExecutedStep {
+  id: TaskClosePlanExecutionStepId;
+  status: 'executed' | 'satisfied' | 'blocked' | 'skipped';
+  command: string;
+  ok: boolean;
+  reportHash: string;
+  summary: string;
+  writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
+  fileWrites?: number;
+  writeOutcome?: 'appended' | 'existing-noop' | 'blocked';
+}
+
+export interface TaskClosePlanReport {
+  schemaVersion: 'hadara.task.close_plan.v1';
+  command: 'task.close-plan';
+  ok: boolean;
+  state: 'blocked' | 'ready-to-close' | 'closed-valid' | 'closed-stale' | 'in-progress';
+  planStatus: 'blocked' | 'executable' | 'executable-with-deferred-checks' | 'satisfied' | 'pending';
+  blockingIssues: TaskClosePlanIssue[];
+  deferredChecks: TaskClosePlanStepId[];
+  partialExecutionRisk: boolean;
+  pendingWrites: Array<{
+    step: TaskClosePlanExecutionStepId;
+    writeBoundary: TaskClosePlanStep['writeBoundary'];
+    paths: string[];
+  }>;
+  readOnly: boolean;
+  mode: TaskClosePlanMode;
+  taskId: string;
+  generatedAt: string;
+  actor: HadaraActorContext;
+  planHash?: string;
+  summary: {
+    steps: number;
+    required: number;
+    blocked: number;
+    satisfied: number;
+    executeSupported: boolean;
+    deferredChecks?: TaskClosePlanStepId[];
+    partialExecutionRisk?: boolean;
+    evaluatedReports?: string[];
+    skippedReports?: string[];
+  };
+  writeSetHash: string;
+  writes: CloseGuardedWritePlan['writes'];
+  steps: TaskClosePlanStep[];
+  execution?: TaskClosePlanExecution;
+  readinessEvidence?: TaskClosePlanReadinessEvidence;
+  authoringGuidance: TaskAuthoringGuidance;
+  diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
+  primaryNextAction?: HadaraNextAction;
+  nextActions: HadaraNextAction[];
+  issues: TaskClosePlanIssue[];
+}
+
+export interface TaskCloseIssue {
+  severity: 'error' | 'warning' | 'info';
+  code: string;
+  message: string;
+  path?: string;
+  heading?: string;
+  fixHint?: string;
+  example?: string;
+  remediationHint?: RemediationHint;
 }
 
 export interface TaskCloseTransactionReport {

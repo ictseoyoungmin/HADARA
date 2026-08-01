@@ -9,8 +9,32 @@ import { assertTaskCloseProofAppendGuardAuthorityBeforeMutation, createTaskAudit
 import { createCloseGuardedWritePlan, executeReviewedCloseGuardedWrites, CloseGuardedWritePlan } from './guardedWrites';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction } from '../lifecycle-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../authoring-guidance';
+import type {
+  TaskClosePlanExecution,
+  TaskClosePlanExecutionStepId,
+  TaskClosePlanExecutedStep,
+  TaskClosePlanIssue,
+  TaskClosePlanMode,
+  TaskClosePlanReadinessEvidence,
+  TaskClosePlanReport,
+  TaskClosePlanStep,
+  TaskClosePlanStepId,
+  TaskClosePlanStepStatus
+} from './model';
 
-export type TaskClosePlanMode = 'dry-run' | 'execute' | 'execute-refused';
+export type {
+  TaskClosePlanExecution,
+  TaskClosePlanExecutionStepId,
+  TaskClosePlanExecutedStep,
+  TaskClosePlanIssue,
+  TaskClosePlanMode,
+  TaskClosePlanReadinessEvidence,
+  TaskClosePlanReport,
+  TaskClosePlanStep,
+  TaskClosePlanStepId,
+  TaskClosePlanStepStatus
+} from './model';
+
 
 // Done-level blockers that the close-plan guarded write set is
 // defined to resolve (TASK.md/Task Board status cells). --auto treats these
@@ -24,103 +48,6 @@ const FINISH_RESOLVABLE_BLOCKER_CODES = new Set([
 
 export function isCloseGuardedWriteResolvableBlocker(code: string): boolean {
   return FINISH_RESOLVABLE_BLOCKER_CODES.has(code);
-}
-export type TaskClosePlanStepId = 'ready' | 'close' | 'audit-close';
-export type TaskClosePlanExecutionStepId = TaskClosePlanStepId | 'guarded-writes';
-export type TaskClosePlanStepStatus = 'satisfied' | 'required' | 'blocked' | 'pending' | 'unknown';
-
-export interface TaskClosePlanReport {
-  schemaVersion: 'hadara.task.close_plan.v1';
-  command: 'task.close-plan';
-  ok: boolean;
-  state: 'blocked' | 'ready-to-close' | 'closed-valid' | 'closed-stale' | 'in-progress';
-  planStatus: 'blocked' | 'executable' | 'executable-with-deferred-checks' | 'satisfied' | 'pending';
-  blockingIssues: TaskClosePlanIssue[];
-  deferredChecks: TaskClosePlanStepId[];
-  partialExecutionRisk: boolean;
-  pendingWrites: Array<{
-    step: TaskClosePlanExecutionStepId;
-    writeBoundary: TaskClosePlanStep['writeBoundary'];
-    paths: string[];
-  }>;
-  readOnly: boolean;
-  mode: TaskClosePlanMode;
-  taskId: string;
-  generatedAt: string;
-  actor: HadaraActorContext;
-  planHash?: string;
-  summary: {
-    steps: number;
-    required: number;
-    blocked: number;
-    satisfied: number;
-    executeSupported: boolean;
-    deferredChecks?: TaskClosePlanStepId[];
-    partialExecutionRisk?: boolean;
-    evaluatedReports?: string[];
-    skippedReports?: string[];
-  };
-  writeSetHash: string;
-  writes: CloseGuardedWritePlan['writes'];
-  steps: TaskClosePlanStep[];
-  execution?: TaskClosePlanExecution;
-  readinessEvidence?: TaskClosePlanReadinessEvidence;
-  authoringGuidance: TaskAuthoringGuidance;
-  diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
-  primaryNextAction?: HadaraNextAction;
-  nextActions: HadaraNextAction[];
-  issues: TaskClosePlanIssue[];
-}
-
-export interface TaskClosePlanStep {
-  id: TaskClosePlanStepId;
-  status: TaskClosePlanStepStatus;
-  summary: string;
-  command: string;
-  mode: 'dry-run' | 'execute' | 'read-only';
-  writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
-  expectedWritePaths: string[];
-  alreadySatisfied: boolean;
-  sourceReport: string;
-}
-
-export interface TaskClosePlanIssue {
-  severity: 'error' | 'warning' | 'info';
-  code: string;
-  message: string;
-  path?: string;
-  fixHint?: string;
-  example?: string;
-}
-
-export interface TaskClosePlanExecution {
-  requestedPlanHash?: string;
-  currentPlanHash?: string;
-  planHashMatched: boolean;
-  executedSteps: TaskClosePlanExecutedStep[];
-  stoppedAt?: TaskClosePlanExecutionStepId;
-}
-
-export interface TaskClosePlanReadinessEvidence {
-  attempted: boolean;
-  reason: 'close-required' | 'blocked';
-  id?: string;
-  existing?: boolean;
-  jsonlAppended?: boolean;
-  markdownAppended?: boolean;
-  summary?: string;
-}
-
-export interface TaskClosePlanExecutedStep {
-  id: TaskClosePlanExecutionStepId;
-  status: 'executed' | 'satisfied' | 'blocked' | 'skipped';
-  command: string;
-  ok: boolean;
-  reportHash: string;
-  summary: string;
-  writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
-  fileWrites?: number;
-  writeOutcome?: 'appended' | 'existing-noop' | 'blocked';
 }
 
 export interface TaskClosePlanProgressEvent {

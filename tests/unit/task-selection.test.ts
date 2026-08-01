@@ -171,16 +171,35 @@ describe('task selection recommendation', () => {
 
   it('consumes a Done handoff that asks to close an already Done target task', () => {
     const root = tempProject({ developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |'] });
-    const source = createTaskCapsule(root, 'Source Task');
     const target = createTaskCapsule(root, 'Target Task');
-    updateTaskBoardStatus(root, source.id, 'Done');
+    const source = createTaskCapsule(root, 'Source Task');
     updateTaskBoardStatus(root, target.id, 'Done');
+    updateTaskBoardStatus(root, source.id, 'Done');
     writeHandoffNextStep(source.dir, `Review the ${target.id} close dry-run plan before executing it.`);
 
     const report = createTaskSelectionReport(root);
 
     expect(report.recommendations).toEqual([]);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SELECTION_NO_RECOMMENDATION' }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('keeps a historical T-0001 reference actionable when it is not close guidance', () => {
+    const root = tempProject({ developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |'] });
+    const task = createTaskCapsule(root, 'Improve close diagnostics');
+    updateTaskBoardStatus(root, task.id, 'Done');
+    writeHandoffNextStep(task.dir, 'Use T-0001 as historical reference and create a new task to improve close diagnostics.', 'actionable', 'yes');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: 'TBD',
+      title: 'Use T-0001 as historical reference and create a new task to improve close diagnostics.',
+      sourceKind: 'task-handoff-continuation',
+      createCommand: "hadara task create 'Use T-0001 as historical reference and create a new task to improve close diagnostics.'",
+      createCommandAllowed: true
+    });
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'TASK_SELECTION_NO_RECOMMENDATION' }));
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
@@ -479,7 +498,7 @@ function writeDevelopmentSlices(root: string, rows: string[]): void {
   );
 }
 
-function writeHandoffNextStep(taskDir: string, step: string): void {
+function writeHandoffNextStep(taskDir: string, step: string, disposition = 'waiting-for-operator', createTask = 'no'): void {
   fs.writeFileSync(
     path.join(taskDir, 'HANDOFF.md'),
     [
@@ -489,7 +508,7 @@ function writeHandoffNextStep(taskDir: string, step: string): void {
       '',
       '| Step | Disposition | Create Task | Reason | Required Reading |',
       '|---|---|---|---|---|',
-      `| ${step} | waiting-for-operator | no | Close guidance is already satisfied. | docs/TASK_BOARD.md |`,
+      `| ${step} | ${disposition} | ${createTask} | Close guidance is already satisfied. | docs/TASK_BOARD.md |`,
       ''
     ].join('\n'),
     'utf8'

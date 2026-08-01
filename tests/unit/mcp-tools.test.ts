@@ -102,7 +102,8 @@ describe('MCP read tools', () => {
     });
     expect(payload.files['TASK.md']).toContain('# T-0001 MCP task read');
     expect(Object.keys(payload.files).sort()).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
-    expect(payload.files['HANDOFF.md']).toContain('## Next Recommended Step');
+    expect(payload.files['HANDOFF.md']).toContain('## Pre-Close Operator Action');
+    expect(payload.files['HANDOFF.md']).toContain('## Post-Close Continuation');
   });
 
   it('excludes private task read evidence unless explicitly requested', () => {

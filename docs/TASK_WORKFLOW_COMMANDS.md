@@ -129,11 +129,15 @@ Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Tr
 
 Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board close-plan guarded writes are projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. `HANDOFF.md` may be updated during the task as a work-in-progress checkpoint. Before close, reread it and convert it into close-time handoff: keep only guidance that remains true after this task closes. After `task close --json` reaches close proof, changing close-source documents requires rerunning task close.
 
-Task-local `HANDOFF.md` `## Next Recommended Step` is machine-readable continuation input. New capsules should use this table shape:
+Task-local `HANDOFF.md` has two machine-readable continuation phases. New capsules should use `## Pre-Close Operator Action` for work that must happen before proof-last close and `## Post-Close Continuation` for guidance that remains true after the task is Done:
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Start the next capsule title. | actionable | yes | Why this is the next work. | `docs/TASK_WORKFLOW_COMMANDS.md`; task-specific plan |
+| Complete the reviewed close. | actionable | no | Finish validation and close-source docs before proof-last close. | `docs/TASK_WORKFLOW_COMMANDS.md`; task-specific plan |
+
+After close, replace the pre-close action with a terminal or genuinely actionable post-close continuation. Selection and close diagnostics read `Post-Close Continuation` for Done tasks. `## Next Recommended Step` remains a legacy read fallback for older capsules and must not be used to mix pre-close execution instructions into a post-close handoff.
+
+`TASK.md` `## Close Summary` is the completed outcome only. Phrases such as “ready for reviewed close” belong in `Pre-Close Operator Action`, not in the close summary or post-close continuation.
 
 `Disposition` controls continuation semantics. Use `actionable` when a new task may be created, `waiting-for-operator` when a human must act before task creation, `blocked` when progress is blocked, `terminal` when no further work is queued, and `unresolved` when the next step is intentionally unclear. `Create Task` controls whether `task status` may emit a task-create command. Legacy three-column rows remain readable for older capsules, but new capsules must not rely on phrase detection such as "no further work" to encode terminal state.
 

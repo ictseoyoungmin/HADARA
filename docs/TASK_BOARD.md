@@ -746,3 +746,4 @@
 | T-0743 | Reduce legacy status surface and decompose close modules | Done | tasks/T-0743-reduce-legacy-status-surface-and-decompose-close-modules | |
 | T-0744 | Freeze RC2 contract and complete Init v1 release acceptance | Done | tasks/T-0744-freeze-rc2-contract-and-complete-init-v1-release-acceptance | |
 | T-0745 | RC2 Post-Freeze Integrity Correction | Done | tasks/T-0745-rc2-post-freeze-integrity-correction | |
+| T-0746 | RC2 Evidence Reproducibility and Close Contract | Draft | tasks/T-0746-rc2-evidence-reproducibility-and-close-contract | |
