@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -10,6 +11,7 @@ interface CommandResult {
 const tarball = readOption('--tarball') ?? process.env.HADARA_TARBALL;
 const resultPath = readOption('--result');
 if (!tarball) throw new Error('installed lifecycle smoke requires --tarball <path> or HADARA_TARBALL');
+const provenance = buildProvenance(tarball);
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-installed-lifecycle-'));
 const prefix = path.join(root, 'prefix');
@@ -200,6 +202,23 @@ Installed RC2 lifecycle passed through reviewed close, audit, and idempotent ret
   assert(doctor.ok === true, 'installed doctor failed');
 
   const result = {
+    schemaVersion: 'hadara.installedLifecycleSmoke.v1',
+    generatedAt: new Date().toISOString(),
+    sourceCommit: provenance.sourceCommit,
+    tarball: provenance.tarball,
+    helper: provenance.helper,
+    packageManifestHash: provenance.packageManifestHash,
+    steps: {
+      initPlan: 'passed',
+      initApply: 'passed',
+      taskCreate: 'passed',
+      validationEvidence: 'passed',
+      closeDryRun: 'passed',
+      closeExecute: 'passed',
+      auditClose: 'closed-valid',
+      idempotentRetry: 'passed',
+      freshSessionStatus: 'no-stale-recommendation'
+    },
     version: 'passed',
     initPlan: 'passed',
     initApply: 'passed',
@@ -228,4 +247,40 @@ Installed RC2 lifecycle passed through reviewed close, audit, and idempotent ret
 function readOption(name: string): string | undefined {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : undefined;
+}
+
+function buildProvenance(tarballPath: string): {
+  sourceCommit: string;
+  tarball: { path: string; sha256: string; byteLength: number };
+  helper: { path: string; sha256: string };
+  packageManifestHash: string;
+} {
+  const absoluteTarball = path.resolve(tarballPath);
+  const tarballBytes = fs.readFileSync(absoluteTarball);
+  const helperBytes = fs.readFileSync(__filename);
+  const packageManifest = execFileSync('tar', ['-xOf', absoluteTarball, 'package/package.json'], { encoding: 'utf8' });
+  const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: process.cwd(), encoding: 'utf8' }).trim();
+  if (!/^[0-9a-f]{40}$/.test(sourceCommit)) throw new Error('installed lifecycle smoke source commit is unavailable');
+  return {
+    sourceCommit,
+    tarball: {
+      path: displayPath(absoluteTarball),
+      sha256: hashBytes(tarballBytes),
+      byteLength: tarballBytes.byteLength
+    },
+    helper: {
+      path: displayPath(path.resolve(__filename)),
+      sha256: hashBytes(helperBytes)
+    },
+    packageManifestHash: hashBytes(Buffer.from(packageManifest, 'utf8'))
+  };
+}
+
+function displayPath(absolutePath: string): string {
+  const relative = path.relative(process.cwd(), absolutePath).split(path.sep).join('/');
+  return relative && !relative.startsWith('../') && relative !== '..' ? relative : `<external>/${path.basename(absolutePath)}`;
+}
+
+function hashBytes(value: Buffer): string {
+  return `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 }
