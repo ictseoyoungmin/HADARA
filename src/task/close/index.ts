@@ -1,7 +1,7 @@
 export {
-  createTaskCloseTransactionReport,
-  formatTaskCloseTransactionReport
+  createTaskCloseTransactionReport
 } from './execute';
+export { formatTaskCloseTransactionReport } from './report';
 export {
   createTaskClosePlanReport,
   createReviewedTaskClosePlan,

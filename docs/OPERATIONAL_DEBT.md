@@ -45,7 +45,7 @@ Read-only surfaces:
 
 - `node --import tsx tools/dev-surfaces.ts debt list --json`
 - `node --import tsx tools/dev-surfaces.ts debt show <id> --json`
-- `hadara status --json` includes debt aggregate counts.
+- `hadara status --compat v1 --json` includes legacy debt aggregate counts; the primary lifecycle uses `hadara task status --json`.
 - `node --import tsx tools/dev-surfaces.ts release gate --mode advisory --json` is the default current release gate. Open high-severity debt would emit a warning check and `ok: true`.
 - `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt would emit an error check and `ok: false`; with OD-0003 and OD-0008 mitigated, strict mode can pass when all other documented readiness checks pass.
 

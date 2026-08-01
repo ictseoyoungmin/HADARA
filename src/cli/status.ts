@@ -1,10 +1,8 @@
 import {
   createOpsStatusReport,
-  createOpsStatusStateReport,
-  createOpsStatusSummaryReport,
   formatOpsStatusReport
 } from '../services/operations-status-service';
-import { CliArgsError, getFlag, getIntegerOption, getStringOption } from './args';
+import { CliArgsError, getFlag, getStringOption } from './args';
 import { handleTaskCommand } from './task';
 
 export interface StatusCommandInput {
@@ -24,39 +22,16 @@ function printStatus(input: StatusCommandInput): void {
     throw new CliArgsError('CLI_OPTION_INVALID_VALUE', 'status baseline promote was removed before 0.5 stable; record validation in the Task Capsule and update project-authored state deliberately.');
   }
 
-  const detail = getStringOption(input.args, '--detail', 'fast');
-  if (detail !== 'fast' && detail !== 'full') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--detail must be fast or full');
   const compat = getStringOption(input.args, '--compat');
   if (compat && compat !== 'v1') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--compat must be v1');
-  const stateIssueLimit = getIntegerOption(input.args, '--state-issue-limit', { fallback: 10, min: 0, max: 100 }) ?? 10;
-
-  if (getFlag(input.args, '--state-only')) {
-    const report = createOpsStatusStateReport(input.projectRoot, stateIssueLimit);
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log([
-        '[HADARA] Status State',
-        `consistent: ${report.stateConsistency.consistent}`,
-        `issues: errors ${report.stateConsistency.issueCounts.error}, warnings ${report.stateConsistency.issueCounts.warning}, info ${report.stateConsistency.issueCounts.info}`,
-        `latestDoneTaskId: ${report.stateConsistency.latestDoneTaskId ?? 'none'}`,
-        `activeTaskIds: ${report.stateConsistency.activeTaskIds.join(', ') || 'none'}`
-      ].join('\n'));
-    }
-    return;
-  }
-
-  if (getFlag(input.args, '--summary-json')) {
-    const report = createOpsStatusSummaryReport(input.projectRoot, {
-      includeStateConsistency: getFlag(input.args, '--include-state'),
-      stateIssueLimit,
-      maxTextLength: 240
-    });
-    console.log(JSON.stringify(report, null, 2));
-    return;
-  }
 
   if (!compat) {
+    if (getFlag(input.args, '--state-only') || getFlag(input.args, '--summary-json') || getFlag(input.args, '--state-issue-limit')) {
+      throw new CliArgsError(
+        'CLI_OPTION_INVALID_VALUE',
+        'Top-level status diagnostics were retired from the primary lifecycle. Use `hadara task status --json` or the explicit `hadara status --compat v1 --json` route.'
+      );
+    }
     handleTaskCommand({
       args: ['task', 'status', ...input.args.slice(1)],
       projectRoot: input.projectRoot,
@@ -65,6 +40,9 @@ function printStatus(input: StatusCommandInput): void {
     return;
   }
 
+  const detail = getStringOption(input.args, '--detail', 'fast');
+  if (detail !== 'fast' && detail !== 'full') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--detail must be fast or full');
+  const stateIssueLimit = 10;
   const report = createOpsStatusReport(input.projectRoot, detail === 'full'
     ? { includeStateConsistency: true, stateIssueLimit }
     : {

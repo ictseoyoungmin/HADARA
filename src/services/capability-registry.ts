@@ -1502,8 +1502,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'status',
-    command: 'hadara status [--json] [--detail fast|full] [--compat v1] [--summary-json] [--state-only] [--state-issue-limit <n>]',
-    summary: 'Deprecated 0.5.x compatibility alias for hadara task status; explicit legacy status diagnostics remain temporarily available.',
+    command: 'hadara status [--json] [--detail fast|full] [--compat v1]',
+    summary: 'Deprecated 0.5.x compatibility alias for hadara task status; legacy project/global diagnostics are no longer primary.',
     canonical: false,
     aliasFor: 'task.status',
     appearsInDefaultHelp: false,
@@ -1520,8 +1520,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: ['docs/TASK_BOARD.md'],
     examples: [
       example('Use the compatibility alias', 'hadara status --json', 'Only while migrating a 0.5.x caller to hadara task status.'),
-      example('Read compact status', 'hadara status --summary-json', 'When automation needs the smallest status payload.'),
-      example('Read state advisory', 'hadara status --state-only --json', 'When checking state consistency after state.verify removal.'),
       example('Read v1 compatibility status', 'hadara status --compat v1 --detail full --json', 'When legacy full-detail debt, known-problem, and state diagnostics are needed.')
     ],
     related: ['doctor', 'status'],

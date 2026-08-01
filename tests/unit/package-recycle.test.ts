@@ -121,7 +121,7 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v3', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();
@@ -197,7 +197,7 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task status --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v3', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context graph --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
@@ -231,7 +231,7 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'status --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task status --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v3', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
       if (joined === 'context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();

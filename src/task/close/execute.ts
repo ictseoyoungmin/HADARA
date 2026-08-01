@@ -6,7 +6,22 @@ import type { HadaraNextAction } from '../../core/next-action';
 import { ensureDir } from '../../core/fs';
 import { isInside } from '../../core/paths';
 import { startMonotonicTimer } from '../../core/timing';
-import { createReviewedTaskClosePlan, createTaskClosePlanReport, didClosePlanExecutedStepMutate, formatTaskClosePlanReport, type ReviewedTaskClosePlan, type TaskClosePlanExecutedStep, type TaskClosePlanExecutionStepId, type TaskClosePlanOptions, type TaskClosePlanProgressEvent, type TaskClosePlanReport, type TaskClosePlanStepId } from './plan';
+import {
+  fsyncDirectoryBestEffort,
+  hashContent,
+  hashObject,
+  safeFilePart,
+  toPortablePath
+} from './filesystem-adapter';
+import {
+  createProofAppendGuardFromOperation,
+  persistCloseOperation,
+  readCloseOperation
+} from './operation-marker';
+import { createCloseOperationBasis, type CloseOperationBasis } from './write-set';
+import { isCloseTransactionReport } from './report';
+import { createRecoveryReport } from './recovery';
+import { createReviewedTaskClosePlan, createTaskClosePlanReport, didClosePlanExecutedStepMutate, type ReviewedTaskClosePlan, type TaskClosePlanExecutedStep, type TaskClosePlanExecutionStepId, type TaskClosePlanOptions, type TaskClosePlanProgressEvent, type TaskClosePlanReport, type TaskClosePlanStepId } from './plan';
 import { defaultTaskLifecycleActor } from '../lifecycle-next-actions';
 import type { CloseGuardedWrite } from './guardedWrites';
 import type { TaskCloseProofAppendGuard, TaskCloseReport } from './proof';
@@ -348,34 +363,6 @@ export function createTaskCloseTransactionReport(
   return withTaskCloseTransactionLocks(projectRoot, taskId, run, options.lockTimeoutMs, options.faultHooks);
 }
 
-export function formatTaskCloseTransactionReport(
-  report: TaskCloseTransactionReport,
-  options: { detail?: 'compact' | 'full' } = {}
-): string {
-  const lines = [
-    `[HADARA] task close ${report.taskId}: ${report.ok ? 'ok' : 'blocked'}`,
-    `state\t${report.closeState}`,
-    `terminal\t${report.terminal}`,
-    `guidance\t${report.operatorGuidance}`,
-    `mode\t${report.mode}`,
-    `strategy\t${report.transaction.strategy}`,
-    `writes\tplanned=${report.writeSummary.plannedWrites} executed=${report.writeSummary.executedWrites}`,
-    `closeProofAppended\t${report.writeSummary.closeProofAppended}`,
-    ''
-  ];
-  if (report.recovery?.action.command) {
-    lines.push(`next\t${report.recovery.action.command}`);
-  } else if (report.primaryNextAction?.command) {
-    lines.push(`next\t${report.primaryNextAction.command}`);
-  }
-  if (report.issues.length > 0) {
-    lines.push('', 'Issues:');
-    for (const issue of report.issues) lines.push(`- [${issue.severity}] ${issue.code}: ${issue.message}`);
-  }
-  if (options.detail === 'full') lines.push('', 'Close plan source:', formatTaskClosePlanReport(report.source.closePlan));
-  return lines.join('\n');
-}
-
 function fromClosePlanReport(
   projectRoot: string,
   taskId: string,
@@ -456,30 +443,6 @@ function fromClosePlanReport(
   };
 }
 
-function createRecoveryReport(
-  operation: TaskCloseOperationState | undefined,
-  action: HadaraNextAction,
-  reconciliation?: CloseOperationMarkerReconciliation,
-  resumable = true
-): NonNullable<TaskCloseTransactionReport['recovery']> {
-  const classificationAvailable = Boolean(reconciliation);
-  const completedWrites = reconciliation?.completedWrites ?? [];
-  const pendingWrites = reconciliation?.pendingWrites ?? [];
-  const conflictingWrites = reconciliation?.conflictingWrites ?? [];
-  return {
-    required: true,
-    ...(operation?.operationId ? { operationId: operation.operationId } : {}),
-    ...(operation?.phase ? { phase: operation.phase } : {}),
-    resumable,
-    classificationAvailable,
-    completedWrites,
-    pendingWrites,
-    conflictingWrites,
-    primaryAction: action,
-    action
-  };
-}
-
 function withTaskCloseTransactionLocks<T>(
   projectRoot: string,
   taskId: string,
@@ -497,7 +460,7 @@ function withTaskCloseTransactionLocks<T>(
     for (const spec of lockSpecs) acquired.push(acquireCloseLock(projectRoot, taskId, spec.name, spec.pathParts, timeoutMs));
     faultHooks?.afterLocksAcquired?.();
     const report = fn();
-    if (isTaskCloseReport(report)) {
+    if (isCloseTransactionReport(report)) {
       report.transaction.locks = acquired.map((entry) => entry.diagnostic);
     }
     return report;
@@ -1021,14 +984,6 @@ function createCloseOperationMarkerBlockedReport(
   };
 }
 
-interface CloseOperationBasis {
-  expectedWrites: TaskCloseExpectedWrite[];
-  writeSetHash: string;
-  closeBasisHash: string;
-  finalSourceHash: string;
-  planFingerprint: string;
-}
-
 interface CloseOperationMarkerReconciliation {
   issue: TaskClosePlanReport['issues'][number] | null;
   operation?: TaskCloseOperationState;
@@ -1038,30 +993,6 @@ interface CloseOperationMarkerReconciliation {
   completedWrites: TaskCloseRecoveryWrite[];
   pendingWrites: TaskCloseRecoveryWrite[];
   conflictingWrites: TaskCloseRecoveryWrite[];
-}
-
-function createCloseOperationBasis(reviewedPlan: ReviewedTaskClosePlan): CloseOperationBasis {
-  const expectedWrites = createExpectedWrites(reviewedPlan);
-  const writeSetHash = hashObject(expectedWrites);
-  const planFingerprint = hashObject({
-    taskId: reviewedPlan.review.taskId,
-    steps: reviewedPlan.steps.map((step) => ({ id: step.id, status: step.status, expectedWritePaths: step.expectedWritePaths })),
-    issues: reviewedPlan.issues.map((issue) => ({ severity: issue.severity, code: issue.code, path: issue.path ?? null })),
-    writeSetHash
-  });
-  const finalSourceHash = reviewedPlan.reports.close?.validation.validatedBeforeCloseEvidenceSourceHash ?? planFingerprint;
-  return {
-    expectedWrites,
-    writeSetHash,
-    closeBasisHash: hashObject({
-      kind: 'task-close-operation-basis.v1',
-      taskId: reviewedPlan.review.taskId,
-      finalSourceHash,
-      readinessReportHash: reviewedPlan.reports.close?.validation.validatedBeforeCloseEvidenceReportHash ?? null
-    }),
-    finalSourceHash,
-    planFingerprint
-  };
 }
 
 function reconcileCloseOperationMarker(
@@ -1316,88 +1247,6 @@ function createCloseOperation(
   };
 }
 
-function createProofAppendGuardFromOperation(operation: TaskCloseOperationState | undefined): TaskCloseProofAppendGuard | undefined {
-  if (!operation) return undefined;
-  return {
-    markerPath: operation.path,
-    taskId: operation.taskId,
-    operationId: operation.operationId,
-    operationIdempotencyKey: operation.idempotencyKey,
-    closeBasisHash: operation.closeBasisHash,
-    planHash: operation.planHash,
-    writeSetHash: operation.writeSetHash,
-    expectedWrites: operation.expectedWrites.map((write) => ({ ...write })),
-    proofIdempotencyKey: operation.proof?.idempotencyKey
-  };
-}
-
-function createExpectedWrites(reviewedPlan: ReviewedTaskClosePlan): TaskCloseExpectedWrite[] {
-  const guardedWritesWrites: TaskCloseExpectedWrite[] = reviewedPlan.reports.guardedWrites.writes.map((write) => ({
-    step: 'guarded-writes',
-    path: write.path,
-    writeBoundary: 'task-local',
-    action: write.action,
-    field: write.field,
-    expectedBeforeExists: write.expectedBeforeExists,
-    expectedBeforeHash: write.expectedBeforeHash,
-    afterHash: write.afterHash
-  }));
-  const closeReport = reviewedPlan.reports.close;
-  const evidencePath = reviewedPlan.reports.guardedWrites.task?.capsule
-    ? `${reviewedPlan.reports.guardedWrites.task.capsule}/evidence.jsonl`
-    : reviewedPlan.review.pendingWrites.find((write) => write.step === 'close' && write.writeBoundary === 'evidence-append')?.paths[0];
-  const evidenceWrites: TaskCloseExpectedWrite[] = closeReport?.ok && evidencePath
-    ? [
-        createReadinessEvidenceExpectedWrite(evidencePath, closeReport),
-        createCloseProofExpectedWrite(evidencePath, closeReport)
-      ]
-    : [];
-  return [...guardedWritesWrites, ...evidenceWrites];
-}
-
-function createReadinessEvidenceExpectedWrite(evidencePath: string, closeReport: TaskCloseReport): TaskCloseExpectedWrite {
-  const validationHash = closeReport.validation.validatedBeforeCloseEvidenceReportHash;
-  const sourceHash = closeReport.validation.validatedBeforeCloseEvidenceSourceHash;
-  const idempotencyKey = `task-close-plan-readiness:${closeReport.taskId}:${validationHash}:${sourceHash}`;
-  return {
-    step: 'close',
-    path: evidencePath,
-    writeBoundary: 'evidence-append',
-    appendKind: 'readiness-evidence',
-    appendOrder: 1,
-    idempotencyKey,
-    recordHash: hashObject({
-      kind: 'readiness-evidence',
-      taskId: closeReport.taskId,
-      validationHash,
-      sourceHash,
-      idempotencyKey
-    })
-  };
-}
-
-function createCloseProofExpectedWrite(evidencePath: string, closeReport: TaskCloseReport): TaskCloseExpectedWrite {
-  const validationHash = closeReport.validation.validatedBeforeCloseEvidenceReportHash;
-  const sourceHash = closeReport.validation.validatedBeforeCloseEvidenceSourceHash;
-  const idempotencyKey = closeReport.closeEvidenceWrite?.idempotencyKey ?? hashObject({ taskId: closeReport.taskId, validationHash, sourceHash });
-  return {
-    step: 'close',
-    path: evidencePath,
-    writeBoundary: 'evidence-append',
-    appendKind: 'close-proof',
-    appendOrder: 2,
-    idempotencyKey,
-    recordHash: hashObject({
-      kind: 'close-proof',
-      taskId: closeReport.taskId,
-      validationHash,
-      sourceHash,
-      idempotencyKey,
-      result: closeReport.closeEvidence.result
-    })
-  };
-}
-
 function markOperationVerifying(operation: TaskCloseOperationState): TaskCloseOperationState {
   return {
     ...operation,
@@ -1421,33 +1270,6 @@ function markOperationProofPending(operation: TaskCloseOperationState, closeRepo
     },
     updatedAt: new Date().toISOString()
   };
-}
-
-function readCloseOperation(projectRoot: string, taskId: string): TaskCloseOperationState | null {
-  const absolutePath = path.join(projectRoot, '.hadara', 'local', 'task-close', `${safeFilePart(taskId)}.json`);
-  try {
-    const parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8')) as TaskCloseOperationState;
-    if (parsed.taskId !== taskId) return null;
-    return { ...parsed, path: toPortablePath(path.relative(projectRoot, absolutePath)), persisted: true };
-  } catch {
-    return null;
-  }
-}
-
-function persistCloseOperation(projectRoot: string, operation: TaskCloseOperationState): { operation: TaskCloseOperationState; persistence: Pick<TaskCloseMarkerPersistenceSummary, 'contentWrites' | 'fileFsyncs' | 'directoryFsyncs' | 'unchangedSkips'> } {
-  const absolutePath = path.join(projectRoot, operation.path);
-  ensureDir(path.dirname(absolutePath));
-  const existing = readJsonObject(absolutePath);
-  const semanticCandidate = { ...operation, persisted: true };
-  if (existing && jsonSemanticallyEqualIgnoringUpdatedAt(existing, semanticCandidate)) {
-    return {
-      operation: { ...semanticCandidate, updatedAt: typeof existing.updatedAt === 'string' ? existing.updatedAt : operation.updatedAt },
-      persistence: { contentWrites: 0, fileFsyncs: 0, directoryFsyncs: 0, unchangedSkips: 1 }
-    };
-  }
-  const persisted = { ...semanticCandidate, updatedAt: new Date().toISOString() };
-  const persistence = writeJsonAtomic(absolutePath, persisted);
-  return { operation: persisted, persistence };
 }
 
 function updateCloseOperationFromClosePlan(operation: TaskCloseOperationState, closePlan: TaskClosePlanReport): TaskCloseOperationState {
@@ -1708,18 +1530,6 @@ function normalizeOperationForReport(projectRoot: string, operation: TaskCloseOp
   };
 }
 
-function isTaskCloseReport(value: unknown): value is TaskCloseTransactionReport {
-  return Boolean(value && typeof value === 'object' && (value as TaskCloseTransactionReport).schemaVersion === 'hadara.task.close.v3');
-}
-
-function toPortablePath(value: string): string {
-  return value.split(path.sep).join('/');
-}
-
-function safeFilePart(value: string): string {
-  return value.replace(/[^A-Za-z0-9._-]/g, '_');
-}
-
 function sleepSync(ms: number): void {
   const signal = new Int32Array(new SharedArrayBuffer(4));
   Atomics.wait(signal, 0, 0, ms);
@@ -1740,58 +1550,4 @@ function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | und
     summary: action.summary.replace(/\bclosePlan\b/gi, 'task close'),
     ...(publicCloseWrite ? { writeBoundary: 'task-close-transaction' as const } : {})
   };
-}
-
-function hashObject(value: unknown): string {
-  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex')}`;
-}
-
-function hashContent(value: string): string {
-  return `sha256:${crypto.createHash('sha256').update(value, 'utf8').digest('hex')}`;
-}
-
-function readJsonObject(absolutePath: string): Record<string, unknown> | null {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : null;
-  } catch {
-    return null;
-  }
-}
-
-function jsonSemanticallyEqualIgnoringUpdatedAt(left: Record<string, unknown>, right: Record<string, unknown>): boolean {
-  return JSON.stringify({ ...left, updatedAt: '' }) === JSON.stringify({ ...right, updatedAt: '' });
-}
-
-function writeJsonAtomic(absolutePath: string, value: unknown): Pick<TaskCloseMarkerPersistenceSummary, 'contentWrites' | 'fileFsyncs' | 'directoryFsyncs' | 'unchangedSkips'> {
-  const tempPath = `${absolutePath}.${process.pid}.${Date.now()}.${crypto.randomUUID()}.tmp`;
-  const payload = `${JSON.stringify(value, null, 2)}\n`;
-  if (fs.existsSync(absolutePath) && fs.readFileSync(absolutePath, 'utf8') === payload) {
-    return { contentWrites: 0, fileFsyncs: 0, directoryFsyncs: 0, unchangedSkips: 1 };
-  }
-  const fd = fs.openSync(tempPath, 'wx');
-  try {
-    fs.writeFileSync(fd, payload, 'utf8');
-    fs.fsyncSync(fd);
-  } finally {
-    fs.closeSync(fd);
-  }
-  fs.renameSync(tempPath, absolutePath);
-  let directoryFsyncs = 0;
-  try {
-    fsyncDirectoryBestEffort(path.dirname(absolutePath));
-    directoryFsyncs = 1;
-  } catch {
-    // Directory fsync is best-effort across platforms/filesystems.
-  }
-  return { contentWrites: 1, fileFsyncs: 1, directoryFsyncs, unchangedSkips: 0 };
-}
-
-function fsyncDirectoryBestEffort(dirPath: string): void {
-  const dirFd = fs.openSync(dirPath, 'r');
-  try {
-    fs.fsyncSync(dirFd);
-  } finally {
-    fs.closeSync(dirFd);
-  }
 }

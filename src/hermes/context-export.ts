@@ -77,7 +77,7 @@ Agents must:
 4. Keep task-local TASK.md and HANDOFF.md current before stopping.
 5. Respect policy decisions for shell/file/git operations.
 6. Treat docs/TASK_BOARD.md and task-local HANDOFF.md as the compact continuation state.
-7. Prefer stable HADARA read surfaces before scraping raw files: use hadara task status --json for next-work selection and hadara status --json for diagnostics.
+7. Prefer stable HADARA read surfaces before scraping raw files: use hadara task status --json for next-work selection and hadara task status --task <task-id> --detail full --json for selected-task diagnostics.
 8. Use hadara.task.list and hadara.task.read, or hadara task list --json and hadara task status --task <task-id> --json, for task state.
 9. Use hadara.policy.evaluate and hadara.harness.validate, or their CLI JSON equivalents, for policy and validation state.
 10. Use hadara.context.export for in-memory MCP context export; only hadara hermes export-context writes .hadara/context/HADARA_CONTEXT.md.

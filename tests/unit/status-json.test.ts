@@ -364,16 +364,14 @@ describe('Operations Status JSON', () => {
     expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleStatusCommand({ args: ['status', '--compat', 'v1', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleStatusCommand({ args: ['status', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(handleStatusCommand({ args: ['status', '--state-only', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(handleStatusCommand({ args: ['status', '--summary-json'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(handleStatusCommand({ args: ['status', '--compat', 'v1', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(() => handleStatusCommand({ args: ['status', '--state-only', '--json'], projectRoot: root, jsonOutput: true })).toThrow('Top-level status diagnostics were retired');
+    expect(() => handleStatusCommand({ args: ['status', '--summary-json'], projectRoot: root, jsonOutput: false })).toThrow('Top-level status diagnostics were retired');
 
     const first = JSON.parse(String(log.mock.calls[0]?.[0]));
     const compat = JSON.parse(String(log.mock.calls[1]?.[0]));
     const full = JSON.parse(String(log.mock.calls[2]?.[0]));
-    const stateOnly = JSON.parse(String(log.mock.calls[3]?.[0]));
-    const summary = JSON.parse(String(log.mock.calls[4]?.[0]));
-    const compatFull = JSON.parse(String(log.mock.calls[5]?.[0]));
+    const compatFull = JSON.parse(String(log.mock.calls[3]?.[0]));
     expect(first.schemaVersion).toBe('hadara.task.status.summary.v1');
     expect(first.command).toBe('task.status');
     expect(first.detailCommand).toBe('hadara task status --detail full --json');
@@ -403,28 +401,6 @@ describe('Operations Status JSON', () => {
       issues: expect.any(Array)
     });
     expect(compatFull.handoff.knownProblems).toEqual([]);
-    expect(stateOnly).toMatchObject({
-      schemaVersion: 'hadara.ops.statusState.v1',
-      command: 'status.state',
-      ok: true,
-      stateConsistency: {
-        mode: 'advisory',
-        strictBlocking: false,
-        issueCounts: expect.any(Object),
-        issues: expect.any(Array)
-      }
-    });
-    expect(summary).toMatchObject({
-      schemaVersion: 'hadara.ops.statusSummary.v1',
-      command: 'status.summary',
-      ok: true,
-      tasks: {
-        counts: expect.any(Object),
-        lastCompleted: [],
-        nextRecommended: null
-      }
-    });
-    expect(summary.stateConsistency).toBeUndefined();
   });
 
   it('does not keep validation-baseline mutation under the deprecated status alias', () => {

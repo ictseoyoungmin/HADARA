@@ -214,7 +214,6 @@ hadara evidence list --task T-0001 --json
 hadara task status --task T-0001 --detail full --json
 hadara task close --task T-0001 --json
 hadara status --compat v1 --json
-hadara status --state-only --json
 hadara status --detail full --json
 hadara protocol doctor --json
 ```

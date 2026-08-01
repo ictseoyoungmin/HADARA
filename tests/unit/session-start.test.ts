@@ -84,8 +84,7 @@ describe('session start', () => {
     expect(report.lifecycle.diagnosticCommands).toEqual(expect.arrayContaining([
       'hadara context cache status --json',
       `hadara context graph --task ${task.id} --json`,
-      `hadara docs read-map --task ${task.id} --json`,
-      'hadara status --json'
+      `hadara docs read-map --task ${task.id} --json`
     ]));
     expect(report.guidance.commands).toEqual(expect.arrayContaining([
       expect.objectContaining({

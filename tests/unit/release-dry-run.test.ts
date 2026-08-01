@@ -793,7 +793,7 @@ function writeReleaseReadinessFiles(root: string): void {
       'npm run build',
       'npm run check',
       'node dist/cli/main.js doctor --json',
-      'node dist/cli/main.js status --json',
+      'node dist/cli/main.js task status --json',
       'node dist/cli/main.js release gate --mode strict --json',
       'no packaging or release execution',
       'Executable Package Smoke Artifact Boundary',

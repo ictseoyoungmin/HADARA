@@ -73,7 +73,7 @@ describe('CLI Hermes JSON reports', () => {
     expect(output).toContain('## docs/ROADMAP.md');
     expect(output).toContain('## docs/DEVELOPMENT_SLICES.md');
     expect(output).toContain('hadara task status --json');
-    expect(output).toContain('hadara status --json');
+    expect(output).toContain('hadara task status --task <task-id> --detail full --json');
     expect(output).toContain('hadara.task.list');
     expect(output).toContain('hadara.task.read');
     expect(output).toContain('hadara.policy.evaluate');

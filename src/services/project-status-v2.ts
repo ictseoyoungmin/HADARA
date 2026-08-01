@@ -243,7 +243,7 @@ function buildPrimaryNextAction(input: {
       id: 'create-recommended-task',
       kind: 'create',
       command: recommendation.createCommand,
-      message: 'Create the recommended Task Capsule, then rerun `hadara status --json`.',
+      message: 'Create the recommended Task Capsule, then rerun `hadara task status --json`.',
       writeBoundary: 'task-local',
       risk: 'low',
       requiresReview: false,
@@ -251,7 +251,7 @@ function buildPrimaryNextAction(input: {
     };
   }
   if (input.health !== 'ok') {
-    return readOnlyCommandAction('inspect-status-full', 'hadara status --detail full --json', 'Inspect degraded status diagnostics.');
+    return readOnlyCommandAction('inspect-status-full', 'hadara task status --detail full --json', 'Inspect degraded task-status diagnostics.');
   }
   return null;
 }

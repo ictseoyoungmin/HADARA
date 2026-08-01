@@ -347,8 +347,7 @@ function lifecycleForSessionStart(taskId: string | undefined, contextPack: Conte
       : hadaraCommand('context graph --json'),
     taskId
       ? hadaraCommand(`docs read-map --task ${taskId} --json`)
-      : hadaraCommand('task status --json'),
-    hadaraCommand('status --json')
+      : hadaraCommand('task status --json')
   ];
 
   return {

@@ -88,14 +88,14 @@ describe('clean checkout smoke', () => {
       },
       issues: []
     });
-    expect(report.steps.map((step) => step.id)).toEqual(['copy-source', 'npm-ci', 'build', 'check', 'doctor', 'ops-status', 'release-gate-strict', 'cleanup']);
+    expect(report.steps.map((step) => step.id)).toEqual(['copy-source', 'npm-ci', 'build', 'check', 'doctor', 'task-status', 'release-gate-strict', 'cleanup']);
     expect(report.steps.every((step) => step.status === 'passed')).toBe(true);
     expect(calls.map((call) => call.args.join(' '))).toEqual([
       'ci',
       'run build',
       'run check',
       'dist/cli/main.js doctor --json --project .',
-      'dist/cli/main.js status --json --project .',
+      'dist/cli/main.js task status --json --project .',
       '--import tsx tools/dev-surfaces.ts release gate --mode strict --json --project .'
     ]);
     expect(fs.existsSync(checkout)).toBe(false);

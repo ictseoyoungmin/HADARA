@@ -353,14 +353,14 @@ function checkCleanCheckoutPolicy(
     'node dist/cli/main.js release gate --mode strict --json'
   ]);
   const ok =
-    includesAll(releaseReadiness, ['npm ci', 'npm run check', 'doctor --json', 'status --json']) &&
+    includesAll(releaseReadiness, ['npm ci', 'npm run check', 'doctor --json', 'task status --json']) &&
     includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']) &&
     includesAll(releaseReadiness, [
       'Clean Checkout Package Smoke Plan',
       'npm ci',
       'npm run build',
       'node dist/cli/main.js doctor --json',
-      'node dist/cli/main.js status --json',
+      'node dist/cli/main.js task status --json',
       'no packaging or release execution'
     ]) &&
     strictGateCommandDocumented;

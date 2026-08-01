@@ -491,9 +491,9 @@ function runInstalledSmokes(input: {
     });
     pushJsonSmokeStep(input, {
       id: 'status-ingress',
-      label: 'Verify project status ingress read model',
-      command: 'hadara status --json',
-      args: ['status', '--json'],
+      label: 'Verify task status selection ingress',
+      command: 'hadara task status --json',
+      args: ['task', 'status', '--json'],
       cwd: disposableProject
     });
     pushTaskCloseSmokeStep(input, {
@@ -840,10 +840,10 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
     },
     {
       id: 'status-ingress',
-      label: 'Verify project status ingress read model',
-      command: 'hadara status --json',
+      label: 'Verify task status selection ingress',
+      command: 'hadara task status --json',
       status: 'planned',
-      summary: 'Would verify status-first project/session ingress in the disposable project.'
+      summary: 'Would verify task status as the primary project/session ingress in the disposable project.'
     },
     {
       id: 'task-close',
@@ -896,7 +896,7 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('init-project', 'Initialize disposable project with installed CLI', 'hadara init --json', 'Skipped because package install failed.'),
     skippedStep('task-create', 'Create disposable task with installed CLI', 'hadara task create <title> --json', 'Skipped because package install failed.'),
     skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because package install failed.'),
-    skippedStep('status-ingress', 'Verify project status ingress read model', 'hadara status --json', 'Skipped because package install failed.'),
+    skippedStep('status-ingress', 'Verify task status selection ingress', 'hadara task status --json', 'Skipped because package install failed.'),
     skippedStep('task-close', 'Verify task close dry-run report', 'hadara task close --task <task-id> --dry-run --json', 'Skipped because package install failed.'),
     skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json', 'Skipped because package install failed.')
   ];
