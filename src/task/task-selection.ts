@@ -3,7 +3,7 @@ import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
-import { continuationFromTaskHandoffStep } from './handoff-continuation';
+import { continuationFromTaskHandoffStep, isConsumedDoneContinuation } from './handoff-continuation';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';
@@ -180,6 +180,10 @@ function recommendationFromLatestDoneHandoff(projectRoot: string, boardRows: Boa
   if (!fs.existsSync(handoffPath)) return null;
   const nextStep = readStructuredHandoffNextStep(fs.readFileSync(handoffPath, 'utf8'));
   if (!nextStep) return null;
+  const doneTaskIds = new Set(boardRows
+    .filter((candidate) => candidate.status.trim().toLowerCase().startsWith('done'))
+    .map((candidate) => candidate.taskId.toUpperCase()));
+  if (isConsumedDoneContinuation({ step: nextStep.step, sourceTaskId: row.taskId, doneTaskIds })) return null;
   const capsulePath = toPortablePath(path.relative(projectRoot, capsule.dir));
   const continuation = continuationFromTaskHandoffStep({
     ...nextStep,

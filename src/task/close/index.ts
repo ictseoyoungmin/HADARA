@@ -9,6 +9,7 @@ export {
   isCloseGuardedWriteResolvableBlocker
 } from './plan';
 export {
+  collectCloseSourceQualityIssues,
   createTaskCloseReport
 } from './proof';
 export {

@@ -156,6 +156,34 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
+  it('consumes a latest Done handoff that asks to close the same task', () => {
+    const root = tempProject({ developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |'] });
+    const task = createTaskCapsule(root, 'Already Closed Task');
+    updateTaskBoardStatus(root, task.id, 'Done');
+    writeHandoffNextStep(task.dir, `Review the ${task.id} close dry-run plan hash, then execute the reviewed close plan.`);
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations).toEqual([]);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SELECTION_NO_RECOMMENDATION' }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('consumes a Done handoff that asks to close an already Done target task', () => {
+    const root = tempProject({ developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |'] });
+    const source = createTaskCapsule(root, 'Source Task');
+    const target = createTaskCapsule(root, 'Target Task');
+    updateTaskBoardStatus(root, source.id, 'Done');
+    updateTaskBoardStatus(root, target.id, 'Done');
+    writeHandoffNextStep(source.dir, `Review the ${target.id} close dry-run plan before executing it.`);
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations).toEqual([]);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SELECTION_NO_RECOMMENDATION' }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
   it('ignores generic operator-priority handoff guidance instead of using it as a task title', () => {
     const root = tempProject({
       handoffNextStep: 'Select the next capsule from operator priority or fresh diagnostic evidence.',
@@ -447,6 +475,23 @@ function writeDevelopmentSlices(root: string, rows: string[]): void {
   fs.writeFileSync(
     path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
     ['# DEVELOPMENT_SLICES', '', '| # | Name | Task | Objective | Status / Evidence |', '|---|---|---|---|---|', ...rows, ''].join('\n'),
+    'utf8'
+  );
+}
+
+function writeHandoffNextStep(taskDir: string, step: string): void {
+  fs.writeFileSync(
+    path.join(taskDir, 'HANDOFF.md'),
+    [
+      '# Handoff',
+      '',
+      '## Next Recommended Step',
+      '',
+      '| Step | Disposition | Create Task | Reason | Required Reading |',
+      '|---|---|---|---|---|',
+      `| ${step} | waiting-for-operator | no | Close guidance is already satisfied. | docs/TASK_BOARD.md |`,
+      ''
+    ].join('\n'),
     'utf8'
   );
 }

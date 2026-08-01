@@ -1,7 +1,7 @@
-export type {
+import type {
   TaskCloseOperationAttempt,
   TaskCloseOperationPhase,
   TaskCloseOperationState,
   TaskCloseOperationStepJournalEntry,
   TaskCloseTransactionLockDiagnostics
-} from './execute';
+} from './model';

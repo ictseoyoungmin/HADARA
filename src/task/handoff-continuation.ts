@@ -21,6 +21,28 @@ export interface TaskHandoffContinuation {
   source: TaskHandoffContinuationSource;
 }
 
+/**
+ * A completed capsule's HANDOFF is continuation input, not a second close
+ * queue. Once it asks to close/review a task that is already Done, selection
+ * must consume it instead of presenting it as fresh work.
+ */
+export function isConsumedDoneContinuation(input: {
+  step: string;
+  sourceTaskId: string;
+  doneTaskIds: ReadonlySet<string>;
+}): boolean {
+  const step = input.step.trim();
+  if (!step || !hasCloseReviewIntent(step)) return false;
+  const referencedTaskIds = new Set([...step.matchAll(/\bT-\d{4}\b/gi)].map((match) => match[0].toUpperCase()));
+  if (referencedTaskIds.has(input.sourceTaskId.toUpperCase())) return true;
+  return [...referencedTaskIds].some((taskId) => input.doneTaskIds.has(taskId));
+}
+
+function hasCloseReviewIntent(step: string): boolean {
+  return /\b(?:close|finalize|closed-valid|close-proof|audit-close)\b/i.test(step)
+    || /\breview(?:ed|ing)?\b[^.\n]{0,100}\b(?:close|finalize|audit)\b/i.test(step);
+}
+
 const PLACEHOLDER_STEP_PATTERN = /^(tbd|step|)$/i;
 
 // Narrow terminal detection: a no-work sentence must contain both negation and work

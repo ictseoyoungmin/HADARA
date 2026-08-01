@@ -1,6 +1,6 @@
 import { hashObject } from './filesystem-adapter';
 import type { ReviewedTaskClosePlan } from './plan';
-import type { TaskCloseExpectedWrite } from './execute';
+import type { TaskCloseExpectedWrite } from './model';
 import type { TaskCloseReport } from './proof';
 
 export interface CloseOperationBasis {

@@ -3,7 +3,7 @@ import type {
   TaskCloseOperationState,
   TaskCloseRecoveryWrite,
   TaskCloseTransactionReport
-} from './execute';
+} from './model';
 
 export interface CloseRecoveryClassification {
   completedWrites: TaskCloseRecoveryWrite[];

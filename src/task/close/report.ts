@@ -1,5 +1,5 @@
 import { formatTaskClosePlanReport, type TaskClosePlanReport } from './plan';
-import type { TaskCloseTransactionReport } from './execute';
+import type { TaskCloseTransactionReport } from './model';
 
 /** Presentation-only formatting for the transaction report. */
 export function formatTaskCloseTransactionReport(

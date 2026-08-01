@@ -188,6 +188,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const slotRegistryVersion = slotRegistry.slotRegistryVersion == null ? 'unknown' : String(slotRegistry.slotRegistryVersion);
   const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}; slotRegistryVersion ${slotRegistryVersion}; slotRegistryHash ${slotRegistry.slotRegistryHash}.`;
 
+  collectCloseSourceQualityIssues(projectRoot, task.dir, issues);
   collectBlockingIssues(validation, evidenceLint, protocolDoctor, issues);
   const ok = !issues.some((issue) => issue.severity === 'error');
   const closeEvidenceWrite = createCloseEvidenceWritePlan(path.join(task.dir, 'evidence.jsonl'), taskId, sourceHash, validationReportHash, ok);
@@ -264,6 +265,67 @@ function collectBlockingIssues(validation: HarnessValidateResult, evidenceLint: 
     if (issue.severity !== 'error') continue;
     issues.push({ severity: 'error', code: `PROTOCOL_${issue.code}`, message: issue.message, path: issue.path });
   }
+}
+
+export function collectCloseSourceQualityIssues(projectRoot: string, taskDir: string, issues: TaskCloseIssue[]): void {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  let content: string;
+  try {
+    content = fs.readFileSync(taskPath, 'utf8');
+  } catch {
+    return;
+  }
+
+  const closeSummary = readMarkdownSection(content, '## Close Summary').trim();
+  if (!closeSummary) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_SUMMARY_EMPTY',
+      message: 'TASK.md Close Summary is empty; record the capsule outcome before close.',
+      path: toPortablePath(path.relative(projectRoot, taskPath)),
+      heading: '## Close Summary'
+    });
+  }
+
+  const risksSection = readMarkdownSection(content, '## Risks / Follow-ups');
+  if (hasUnstructuredSectionProse(risksSection)) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_SUMMARY_MISPLACED',
+      message: 'TASK.md contains prose after the Risks / Follow-ups table; move close outcome text into Close Summary.',
+      path: toPortablePath(path.relative(projectRoot, taskPath)),
+      heading: '## Risks / Follow-ups'
+    });
+  }
+
+  const validationRows = parseMarkdownRows(readMarkdownSection(content, '## Validation'));
+  const header = validationRows[0] ?? [];
+  const checkIndex = header.findIndex((entry) => entry.trim().toLowerCase() === 'check');
+  if (checkIndex >= 0) {
+    const seen = new Set<string>();
+    for (const row of validationRows.slice(1)) {
+      const check = (row[checkIndex] ?? '').trim();
+      if (!check || /^tbd$/i.test(check)) continue;
+      if (seen.has(check)) {
+        issues.push({
+          severity: 'warning',
+          code: 'TASK_VALIDATION_ROW_DUPLICATE',
+          message: `TASK.md Validation contains duplicate check row: ${check}.`,
+          path: toPortablePath(path.relative(projectRoot, taskPath)),
+          heading: '## Validation'
+        });
+      }
+      seen.add(check);
+    }
+  }
+}
+
+function hasUnstructuredSectionProse(section: string): boolean {
+  return section
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .some((line) => !line.startsWith('|') && !/^<!--/.test(line) && !/^[-: ]+$/.test(line));
 }
 
 function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, closeEvidenceWrite?: TaskCloseEvidenceWrite): TaskCloseNextAction[] {

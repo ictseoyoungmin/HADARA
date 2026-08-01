@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
 import { appendEvidenceWithResult } from '../../src/evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, createTaskCloseTransactionReport } from '../../src/task/close';
+import { collectCloseSourceQualityIssues, createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, createTaskCloseTransactionReport } from '../../src/task/close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { assertSchema } from '../../src/core/schema';
 
@@ -69,12 +69,37 @@ describe('task close source', () => {
     const close = createTaskCloseReport(root, task.id, 'execute');
     expect(close.validation.validatedBeforeCloseEvidenceSourceHash).toBe(closeSource.sourceHash);
     const transaction = createTaskCloseTransactionReport(root, task.id);
-    expect(transaction.issues).toEqual([]);
+    expect(transaction.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'TASK_CLOSE_SUMMARY_EMPTY', severity: 'warning' })
+    ]));
     expect(transaction.ok).toBe(true);
 
     const audit = createTaskAuditCloseReport(root, task.id);
     expect(audit.currentSourceHash).toBe(createTaskCloseSourceReport(root, task.id).sourceHash);
     expect(audit.auditVerdict.sourceHashMatches).toBe(true);
+  });
+
+  it('reports empty or misplaced close summaries and duplicate validation rows', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close source quality');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const content = fs.readFileSync(taskPath, 'utf8')
+      .replace('| TBD | Yes | Not Run | Not executed. | TBD |', [
+        '| Focused check | Yes | Passed | First result. | ev:one |',
+        '| Focused check | Yes | Passed | Duplicate result. | ev:two |'
+      ].join('\n'))
+      .replace('\n## History\n', '\n## Close Summary\n\n\n## History\n')
+      .replace('\n## Close Summary\n', '\nMisplaced close outcome.\n\n## Close Summary\n');
+    fs.writeFileSync(taskPath, content, 'utf8');
+    const issues: Array<{ code?: string }> = [];
+
+    collectCloseSourceQualityIssues(root, task.dir, issues as never);
+
+    expect(issues.map((issue) => issue.code)).toEqual(expect.arrayContaining([
+      'TASK_CLOSE_SUMMARY_EMPTY',
+      'TASK_CLOSE_SUMMARY_MISPLACED',
+      'TASK_VALIDATION_ROW_DUPLICATE'
+    ]));
   });
 
   it('routes task close-source through the CLI', () => {
@@ -126,9 +151,12 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace(/## Validation\n\n[\s\S]*?(?=## Inputs \/ Constraints)/, `## Validation\n\n| Check | Gate | Status | Detail | Evidence |\n|---|---|---|---|---|\n| Fixture | Yes | Passed | Fixture. | ${evidenceId} |\n\n`)
       .replace(/## Changes\n\n[\s\S]*?(?=## Risks \/ Follow-ups)/, '## Changes\n\n| Area | Summary |\n|---|---|\n| src/task/close/proof.ts | Fixture. |\n\n')
       .replace(/## Risks \/ Follow-ups\n\n[\s\S]*?(?=## Close Summary)/, '## Risks / Follow-ups\n\n| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Follow-up | None. | Deferred | docs/TASK_BOARD.md |\n\n')
-      .replace(/## History\n\n[\s\S]*$/, '## History\n\n| Date | State | Note |\n|---|---|---|\n| 2026-07-29 | Draft | Initial task scaffold. |\n| 2026-06-30 | Done | Fixture complete. |\n'),
+      .replace(/\n## History\n/, '\n## Close Summary\n\nFixture close summary.\n\n## History\n')
+      .replace(/## History\n\n[\s\S]*$/, '## History\n\n| Date | State | Note |\n|---|---|---|\n| 2026-07-29 | Draft | Initial task scaffold. |\n| 2026-06-30 | Done | Fixture complete. |\n')
+      .replace(/\s*$/, '\n\n## Close Summary\n\nFixture close summary.\n'),
     'utf8'
   );
+  fs.appendFileSync(path.join(taskDir, 'TASK.md'), '\n## Close Summary\n\nFixture close summary.\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), `# Handoff
 
 ## Identity

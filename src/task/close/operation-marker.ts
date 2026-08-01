@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../../core/fs';
 import type { TaskCloseProofAppendGuard } from './proof';
-import type { TaskCloseMarkerPersistenceSummary, TaskCloseOperationState } from './execute';
+import type { TaskCloseMarkerPersistenceSummary, TaskCloseOperationState } from './model';
 import {
   jsonSemanticallyEqualIgnoringUpdatedAt,
   readJsonObject,
