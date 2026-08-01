@@ -318,6 +318,42 @@ export function collectCloseSourceQualityIssues(projectRoot: string, taskDir: st
       seen.add(check);
     }
   }
+
+  const identityRows = parseMarkdownRows(readMarkdownSection(content, '## Identity'));
+  const identityHeader = identityRows[0] ?? [];
+  const statusIndex = identityHeader.findIndex((entry) => entry.trim().toLowerCase() === 'field');
+  const identityStatus = statusIndex >= 0
+    ? (identityRows.slice(1).find((row) => (row[statusIndex] ?? '').trim().toLowerCase() === 'status')?.[statusIndex + 1] ?? '').trim()
+    : '';
+  if (/^done$/i.test(identityStatus)) {
+    const handoffPath = path.join(taskDir, 'HANDOFF.md');
+    try {
+      const handoff = fs.readFileSync(handoffPath, 'utf8');
+      const handoffRows = parseMarkdownRows(readMarkdownSection(handoff, '## Next Recommended Step'));
+      const handoffHeader = handoffRows[0] ?? [];
+      const stepIndex = handoffHeader.findIndex((entry) => entry.trim().toLowerCase() === 'step');
+      const dispositionIndex = handoffHeader.findIndex((entry) => entry.trim().toLowerCase() === 'disposition');
+      const nextRow = handoffRows.find((row, index) => index > 0 && row.some(Boolean));
+      const nextStep = stepIndex >= 0 ? (nextRow?.[stepIndex] ?? '').trim() : '';
+      const disposition = dispositionIndex >= 0 ? (nextRow?.[dispositionIndex] ?? '').trim().toLowerCase() : '';
+      if (nextStep && isCloseReviewGuidance(nextStep) && disposition !== 'terminal') {
+        issues.push({
+          severity: 'warning',
+          code: 'HANDOFF_PRE_CLOSE_ACTION_STALE_AFTER_DONE',
+          message: 'Done task HANDOFF still requests close or close review; replace it with terminal continuation guidance.',
+          path: toPortablePath(path.relative(projectRoot, handoffPath)),
+          heading: '## Next Recommended Step'
+        });
+      }
+    } catch {
+      // Missing HANDOFF is reported by the broader task protocol checks.
+    }
+  }
+}
+
+function isCloseReviewGuidance(step: string): boolean {
+  return /\b(?:close|finalize|closed-valid|close-proof|audit-close)\b/i.test(step)
+    || /\breview(?:ed|ing)?\b[^.\n]{0,100}\b(?:close|finalize|audit)\b/i.test(step);
 }
 
 function hasUnstructuredSectionProse(section: string): boolean {
@@ -430,8 +466,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
     createTaskLifecycleNextAction({
       id: 'run-done-validation',
       required: true,
-      command: `hadara harness validate --task ${taskId} --level done --json`,
-      message: 'Verify done-level readiness before closing.',
+      command: `hadara task status --task ${taskId} --detail full --json`,
+      message: 'Inspect task-scoped readiness and validation gaps before closing; record substantive checks with validation run.',
       writeBoundary: 'read-only',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,

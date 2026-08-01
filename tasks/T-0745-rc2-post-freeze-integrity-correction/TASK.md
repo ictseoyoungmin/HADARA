@@ -58,6 +58,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Focused selection and close-source tests | Yes | Passed | exit 0 in 2544ms | ev:T-0745:7d9e9c79f31c45db838f065d |
 | Source typecheck and close import audit | Yes | Passed | exit 0 in 38ms | ev:T-0745:18c8451c3eac4a9fab68750f |
 | Full npm check and built RC2 version | Yes | Passed | Host npm run check passed: build, tools typecheck, public 129 files/1045 tests, HADARA-dev 16 files/135 tests. | ev:T-0745:f3c6bc253834417ca770650d |
+| Close-source quality and lifecycle guidance | Yes | Passed | exit 0 in 2151ms | ev:T-0745:fd9e384ea52641eaa75d1cd9 |
 
 ## Inputs / Constraints
 

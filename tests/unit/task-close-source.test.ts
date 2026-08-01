@@ -102,6 +102,28 @@ describe('task close source', () => {
     ]));
   });
 
+  it('reports a non-terminal close instruction left in a Done task handoff', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Done handoff stale');
+    completeTask(root, task.id, task.dir);
+    const handoffPath = path.join(task.dir, 'HANDOFF.md');
+    fs.writeFileSync(
+      handoffPath,
+      fs.readFileSync(handoffPath, 'utf8').replace(
+        '| None. | terminal | no | Done. | docs/TASK_BOARD.md |',
+        '| Review the T-0745 close plan and execute it. | waiting-for-operator | no | Close proof remains. | docs/TASK_BOARD.md |'
+      ),
+      'utf8'
+    );
+
+    const issues: Array<{ code?: string }> = [];
+    collectCloseSourceQualityIssues(root, task.dir, issues as never);
+
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'HANDOFF_PRE_CLOSE_ACTION_STALE_AFTER_DONE' })
+    ]));
+  });
+
   it('routes task close-source through the CLI', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close source CLI');
