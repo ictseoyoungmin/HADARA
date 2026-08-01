@@ -6,9 +6,9 @@
 |---|---|
 | ID | T-0747 |
 | Title | RC2 Current-Head Re-freeze |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-02T01:11 |
-| Updated | 2026-08-02T01:11 |
+| Updated | 2026-08-02T01:26 |
 
 ## Last Completed
 

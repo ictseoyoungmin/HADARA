@@ -21,6 +21,7 @@ Do not hand-edit this file.
 | ev:T-0747:0829598d30214f39981e4992 | passed | release | Clean-checkout smoke passed with reduced public evidence. |
 | ev:T-0747:11bcad3ce81548f1b745a04f | passed | validation | Validation "Current-head strict release gate after artifact refresh" passed; failureClass: none; command: node --import tsx tools/dev-surfaces.ts release gate --mode strict --json; argvHash: sha256:aeea76264717f5615450101edf499fc22e0d7b5a73bd4e4ddf449fd6fb329767; exitCode: 0; signal: null; durationMs: 878; stdoutHash: sha256:d8f4ec99697e5da10283dae41b65422d095f3be32e813bfa03fe4a742b17b808; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
 | ev:T-0747:ec137d9a275d4421bf983f79 | passed | validation | Validation "Current-head release dry-run" passed; failureClass: none; command: node --import tsx tools/dev-surfaces.ts release dry-run --json; argvHash: sha256:561bc7ac596120bcefdf8d827a631f07973b1b94605afb66af074d64ce61209d; exitCode: 0; signal: null; durationMs: 928; stdoutHash: sha256:5e5002924fbc177024907e56ac189a50ec4670eefa14aeb05de9c886f9847514; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0747:1ec98cb70e244321b7bf5189 | passed | validation | Task closePlan done-level readiness for T-0747 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:a38315319585615c7005fe1fbf231431784fc81da2f222bb314aacaf6861707a |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -28,6 +29,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0747:695f951cc1a249878307d937 |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence
