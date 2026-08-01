@@ -1,0 +1,1134 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.manifest.v1",
+  "package": {
+    "name": "hadara",
+    "version": "0.5.0-rc.2",
+    "private": false,
+    "license": "MIT",
+    "description": "Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and guarded handoffs.",
+    "keywords": [
+      "ai",
+      "agent",
+      "agents",
+      "coding-agent",
+      "developer-tools",
+      "cli",
+      "workflow",
+      "automation",
+      "task-management",
+      "evidence",
+      "handoff",
+      "mcp",
+      "hadara"
+    ],
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/ictseoyoungmin/HADARA.git"
+    },
+    "homepage": "https://github.com/ictseoyoungmin/HADARA#readme",
+    "bugs": {
+      "url": "https://github.com/ictseoyoungmin/HADARA/issues"
+    }
+  },
+  "tarball": {
+    "fileName": "hadara-0.5.0-rc.2.tgz",
+    "hash": "sha256:a6a96c6ada134db087954553ca2076eb085181369dc8b897f9c4ffc9385128e5"
+  },
+  "files": [
+    {
+      "path": "LICENSE",
+      "byteLength": 1070
+    },
+    {
+      "path": "README.md",
+      "byteLength": 15817
+    },
+    {
+      "path": "dist/agent/evidence.js",
+      "byteLength": 1950
+    },
+    {
+      "path": "dist/agent/loop.js",
+      "byteLength": 4301
+    },
+    {
+      "path": "dist/cli/actor.js",
+      "byteLength": 927
+    },
+    {
+      "path": "dist/cli/args.js",
+      "byteLength": 4304
+    },
+    {
+      "path": "dist/cli/commands.js",
+      "byteLength": 1349
+    },
+    {
+      "path": "dist/cli/context.js",
+      "byteLength": 3217
+    },
+    {
+      "path": "dist/cli/docs.js",
+      "byteLength": 13579
+    },
+    {
+      "path": "dist/cli/doctor.js",
+      "byteLength": 6552
+    },
+    {
+      "path": "dist/cli/errors.js",
+      "byteLength": 2219
+    },
+    {
+      "path": "dist/cli/evidence-json.js",
+      "byteLength": 3469
+    },
+    {
+      "path": "dist/cli/evidence.js",
+      "byteLength": 14970
+    },
+    {
+      "path": "dist/cli/harness.js",
+      "byteLength": 1754
+    },
+    {
+      "path": "dist/cli/help.js",
+      "byteLength": 7889
+    },
+    {
+      "path": "dist/cli/hermes-json.js",
+      "byteLength": 1208
+    },
+    {
+      "path": "dist/cli/hermes.js",
+      "byteLength": 1099
+    },
+    {
+      "path": "dist/cli/init.js",
+      "byteLength": 10805
+    },
+    {
+      "path": "dist/cli/install.js",
+      "byteLength": 1595
+    },
+    {
+      "path": "dist/cli/legacy-boundary.js",
+      "byteLength": 4414
+    },
+    {
+      "path": "dist/cli/main.js",
+      "byteLength": 9681
+    },
+    {
+      "path": "dist/cli/mcp.js",
+      "byteLength": 509
+    },
+    {
+      "path": "dist/cli/policy-json.js",
+      "byteLength": 875
+    },
+    {
+      "path": "dist/cli/policy.js",
+      "byteLength": 1207
+    },
+    {
+      "path": "dist/cli/project-state.js",
+      "byteLength": 1512
+    },
+    {
+      "path": "dist/cli/protocol.js",
+      "byteLength": 6231
+    },
+    {
+      "path": "dist/cli/schema.js",
+      "byteLength": 1467
+    },
+    {
+      "path": "dist/cli/session.js",
+      "byteLength": 1789
+    },
+    {
+      "path": "dist/cli/slice.js",
+      "byteLength": 3834
+    },
+    {
+      "path": "dist/cli/status-json.js",
+      "byteLength": 551
+    },
+    {
+      "path": "dist/cli/status.js",
+      "byteLength": 3215
+    },
+    {
+      "path": "dist/cli/task-json.js",
+      "byteLength": 683
+    },
+    {
+      "path": "dist/cli/task.js",
+      "byteLength": 18466
+    },
+    {
+      "path": "dist/cli/tools.js",
+      "byteLength": 1018
+    },
+    {
+      "path": "dist/cli/tui.js",
+      "byteLength": 3262
+    },
+    {
+      "path": "dist/cli/validation.js",
+      "byteLength": 6576
+    },
+    {
+      "path": "dist/cli/version.js",
+      "byteLength": 1359
+    },
+    {
+      "path": "dist/context/code-graph-extractor.js",
+      "byteLength": 4099
+    },
+    {
+      "path": "dist/context/code-index.js",
+      "byteLength": 49889
+    },
+    {
+      "path": "dist/context/context-cache-store.js",
+      "byteLength": 47784
+    },
+    {
+      "path": "dist/context/context-graph-builder.js",
+      "byteLength": 22872
+    },
+    {
+      "path": "dist/context/context-graph.js",
+      "byteLength": 1168
+    },
+    {
+      "path": "dist/context/context-pack.js",
+      "byteLength": 31570
+    },
+    {
+      "path": "dist/context/context-slice-boundary.js",
+      "byteLength": 1658
+    },
+    {
+      "path": "dist/context/context-slice.js",
+      "byteLength": 19264
+    },
+    {
+      "path": "dist/context/document-extractors.js",
+      "byteLength": 9271
+    },
+    {
+      "path": "dist/context/evidence-extractors.js",
+      "byteLength": 8882
+    },
+    {
+      "path": "dist/context/extractor-contract.js",
+      "byteLength": 7287
+    },
+    {
+      "path": "dist/context/project-kind.js",
+      "byteLength": 929
+    },
+    {
+      "path": "dist/context/registry-extractors.js",
+      "byteLength": 7934
+    },
+    {
+      "path": "dist/context/release-extractors.js",
+      "byteLength": 8313
+    },
+    {
+      "path": "dist/context/session-start.js",
+      "byteLength": 18089
+    },
+    {
+      "path": "dist/context/source-manifest.js",
+      "byteLength": 25418
+    },
+    {
+      "path": "dist/context/state-projection.js",
+      "byteLength": 9294
+    },
+    {
+      "path": "dist/context/task-extractors.js",
+      "byteLength": 8300
+    },
+    {
+      "path": "dist/core/actor-context.js",
+      "byteLength": 2635
+    },
+    {
+      "path": "dist/core/audit.js",
+      "byteLength": 1403
+    },
+    {
+      "path": "dist/core/events.js",
+      "byteLength": 2315
+    },
+    {
+      "path": "dist/core/fs.js",
+      "byteLength": 4787
+    },
+    {
+      "path": "dist/core/invocation-fs-memo.js",
+      "byteLength": 5505
+    },
+    {
+      "path": "dist/core/local-time.js",
+      "byteLength": 686
+    },
+    {
+      "path": "dist/core/next-action.js",
+      "byteLength": 484
+    },
+    {
+      "path": "dist/core/paths.js",
+      "byteLength": 3653
+    },
+    {
+      "path": "dist/core/plan-context.js",
+      "byteLength": 999
+    },
+    {
+      "path": "dist/core/redaction.js",
+      "byteLength": 6102
+    },
+    {
+      "path": "dist/core/schema.js",
+      "byteLength": 22005
+    },
+    {
+      "path": "dist/core/timing.js",
+      "byteLength": 404
+    },
+    {
+      "path": "dist/core/workspace.js",
+      "byteLength": 2137
+    },
+    {
+      "path": "dist/evidence/evidence.js",
+      "byteLength": 25900
+    },
+    {
+      "path": "dist/evidence/normalizer.js",
+      "byteLength": 7195
+    },
+    {
+      "path": "dist/evidence/private-manifest.js",
+      "byteLength": 4209
+    },
+    {
+      "path": "dist/evidence/semantics.js",
+      "byteLength": 13697
+    },
+    {
+      "path": "dist/harness/validate.js",
+      "byteLength": 74462
+    },
+    {
+      "path": "dist/hermes/context-export.js",
+      "byteLength": 5463
+    },
+    {
+      "path": "dist/index.js",
+      "byteLength": 1413
+    },
+    {
+      "path": "dist/init/adoption.js",
+      "byteLength": 35996
+    },
+    {
+      "path": "dist/init/doctor.js",
+      "byteLength": 13212
+    },
+    {
+      "path": "dist/init/files.js",
+      "byteLength": 2979
+    },
+    {
+      "path": "dist/init/model.js",
+      "byteLength": 19655
+    },
+    {
+      "path": "dist/init/planner.js",
+      "byteLength": 24886
+    },
+    {
+      "path": "dist/init/profile.js",
+      "byteLength": 3198
+    },
+    {
+      "path": "dist/init/project.js",
+      "byteLength": 2867
+    },
+    {
+      "path": "dist/init/report.js",
+      "byteLength": 550
+    },
+    {
+      "path": "dist/init/safety.js",
+      "byteLength": 5799
+    },
+    {
+      "path": "dist/init/scaffold.js",
+      "byteLength": 1896
+    },
+    {
+      "path": "dist/init/templates.js",
+      "byteLength": 54434
+    },
+    {
+      "path": "dist/init/transaction.js",
+      "byteLength": 21646
+    },
+    {
+      "path": "dist/init/types.js",
+      "byteLength": 77
+    },
+    {
+      "path": "dist/init/upgrade.js",
+      "byteLength": 13563
+    },
+    {
+      "path": "dist/mcp/server.js",
+      "byteLength": 5238
+    },
+    {
+      "path": "dist/mcp/tool-dispatch.js",
+      "byteLength": 6317
+    },
+    {
+      "path": "dist/mcp/tool-registry.js",
+      "byteLength": 6180
+    },
+    {
+      "path": "dist/mcp/tool-schemas.js",
+      "byteLength": 982
+    },
+    {
+      "path": "dist/policy/command-risk.js",
+      "byteLength": 1790
+    },
+    {
+      "path": "dist/policy/permission-matrix.js",
+      "byteLength": 2224
+    },
+    {
+      "path": "dist/policy/policy.js",
+      "byteLength": 1659
+    },
+    {
+      "path": "dist/policy/preflight.js",
+      "byteLength": 1457
+    },
+    {
+      "path": "dist/policy/presets.js",
+      "byteLength": 1620
+    },
+    {
+      "path": "dist/policy/tokenizer.js",
+      "byteLength": 1511
+    },
+    {
+      "path": "dist/providers/fallback-executor.js",
+      "byteLength": 1522
+    },
+    {
+      "path": "dist/providers/mock-provider.js",
+      "byteLength": 1640
+    },
+    {
+      "path": "dist/providers/provider-contract.js",
+      "byteLength": 77
+    },
+    {
+      "path": "dist/providers/provider-preparation.js",
+      "byteLength": 8950
+    },
+    {
+      "path": "dist/providers/scripted-provider.js",
+      "byteLength": 2557
+    },
+    {
+      "path": "dist/schemas/active-run-projection.schema.json",
+      "byteLength": 2965
+    },
+    {
+      "path": "dist/schemas/active-run-resume.schema.json",
+      "byteLength": 2753
+    },
+    {
+      "path": "dist/schemas/actor-context.schema.json",
+      "byteLength": 658
+    },
+    {
+      "path": "dist/schemas/clean-checkout-smoke.schema.json",
+      "byteLength": 5171
+    },
+    {
+      "path": "dist/schemas/close-source.schema.json",
+      "byteLength": 1504
+    },
+    {
+      "path": "dist/schemas/code-index.schema.json",
+      "byteLength": 7023
+    },
+    {
+      "path": "dist/schemas/context-cache-record.schema.json",
+      "byteLength": 1880
+    },
+    {
+      "path": "dist/schemas/context-cache-status.schema.json",
+      "byteLength": 6904
+    },
+    {
+      "path": "dist/schemas/context-cache-warm.schema.json",
+      "byteLength": 11076
+    },
+    {
+      "path": "dist/schemas/context-export.schema.json",
+      "byteLength": 1369
+    },
+    {
+      "path": "dist/schemas/context-graph.schema.json",
+      "byteLength": 11726
+    },
+    {
+      "path": "dist/schemas/context-pack.schema.json",
+      "byteLength": 11325
+    },
+    {
+      "path": "dist/schemas/context-slice.schema.json",
+      "byteLength": 3748
+    },
+    {
+      "path": "dist/schemas/context-source-manifest.schema.json",
+      "byteLength": 4929
+    },
+    {
+      "path": "dist/schemas/dev-docker-check.schema.json",
+      "byteLength": 6000
+    },
+    {
+      "path": "dist/schemas/docs-complete-spec.schema.json",
+      "byteLength": 3613
+    },
+    {
+      "path": "dist/schemas/docs-doctor.schema.json",
+      "byteLength": 2880
+    },
+    {
+      "path": "dist/schemas/docs-explain.schema.json",
+      "byteLength": 2899
+    },
+    {
+      "path": "dist/schemas/docs-inbox.schema.json",
+      "byteLength": 1950
+    },
+    {
+      "path": "dist/schemas/docs-list.schema.json",
+      "byteLength": 2961
+    },
+    {
+      "path": "dist/schemas/docs-mark.schema.json",
+      "byteLength": 3603
+    },
+    {
+      "path": "dist/schemas/docs-patch-plan.schema.json",
+      "byteLength": 2897
+    },
+    {
+      "path": "dist/schemas/docs-read-map.schema.json",
+      "byteLength": 3983
+    },
+    {
+      "path": "dist/schemas/docs-register.schema.json",
+      "byteLength": 3357
+    },
+    {
+      "path": "dist/schemas/docs-registry-mutation.schema.json",
+      "byteLength": 2858
+    },
+    {
+      "path": "dist/schemas/docs-registry-v3.schema.json",
+      "byteLength": 2191
+    },
+    {
+      "path": "dist/schemas/docs-required-reading.schema.json",
+      "byteLength": 2659
+    },
+    {
+      "path": "dist/schemas/event.schema.json",
+      "byteLength": 865
+    },
+    {
+      "path": "dist/schemas/evidence-lint.schema.json",
+      "byteLength": 2986
+    },
+    {
+      "path": "dist/schemas/evidence-list.schema.json",
+      "byteLength": 6361
+    },
+    {
+      "path": "dist/schemas/evidence-migration-preview.schema.json",
+      "byteLength": 6035
+    },
+    {
+      "path": "dist/schemas/evidence-projection.schema.json",
+      "byteLength": 1481
+    },
+    {
+      "path": "dist/schemas/feature-smoke.schema.json",
+      "byteLength": 2482
+    },
+    {
+      "path": "dist/schemas/harness-validate.schema.json",
+      "byteLength": 2177
+    },
+    {
+      "path": "dist/schemas/init-adoption.schema.json",
+      "byteLength": 4851
+    },
+    {
+      "path": "dist/schemas/init-documents.schema.json",
+      "byteLength": 3685
+    },
+    {
+      "path": "dist/schemas/init-plan.schema.json",
+      "byteLength": 3060
+    },
+    {
+      "path": "dist/schemas/init-project.schema.json",
+      "byteLength": 1177
+    },
+    {
+      "path": "dist/schemas/init-report.schema.json",
+      "byteLength": 3866
+    },
+    {
+      "path": "dist/schemas/install-plan.schema.json",
+      "byteLength": 3711
+    },
+    {
+      "path": "dist/schemas/next-action.schema.json",
+      "byteLength": 1500
+    },
+    {
+      "path": "dist/schemas/package-recycle.schema.json",
+      "byteLength": 8358
+    },
+    {
+      "path": "dist/schemas/package-smoke.schema.json",
+      "byteLength": 8328
+    },
+    {
+      "path": "dist/schemas/plan-context.schema.json",
+      "byteLength": 797
+    },
+    {
+      "path": "dist/schemas/private-evidence.schema.json",
+      "byteLength": 2131
+    },
+    {
+      "path": "dist/schemas/project-current-state.schema.json",
+      "byteLength": 5238
+    },
+    {
+      "path": "dist/schemas/project-status.schema.json",
+      "byteLength": 4070
+    },
+    {
+      "path": "dist/schemas/protocol-consistency.schema.json",
+      "byteLength": 5726
+    },
+    {
+      "path": "dist/schemas/protocol-migration.schema.json",
+      "byteLength": 4703
+    },
+    {
+      "path": "dist/schemas/protocol-remediation.schema.json",
+      "byteLength": 2996
+    },
+    {
+      "path": "dist/schemas/provider-call.schema.json",
+      "byteLength": 1650
+    },
+    {
+      "path": "dist/schemas/provider-config.schema.json",
+      "byteLength": 2043
+    },
+    {
+      "path": "dist/schemas/release-artifact-manifest.schema.json",
+      "byteLength": 1906
+    },
+    {
+      "path": "dist/schemas/release-artifact.schema.json",
+      "byteLength": 7684
+    },
+    {
+      "path": "dist/schemas/release-closeout.schema.json",
+      "byteLength": 1807
+    },
+    {
+      "path": "dist/schemas/release-dry-run.schema.json",
+      "byteLength": 14679
+    },
+    {
+      "path": "dist/schemas/release-gate.schema.json",
+      "byteLength": 1668
+    },
+    {
+      "path": "dist/schemas/release-publish.schema.json",
+      "byteLength": 4588
+    },
+    {
+      "path": "dist/schemas/runtime-version.schema.json",
+      "byteLength": 2137
+    },
+    {
+      "path": "dist/schemas/schema-index.json",
+      "byteLength": 28455
+    },
+    {
+      "path": "dist/schemas/schema-vocabulary.schema.json",
+      "byteLength": 2290
+    },
+    {
+      "path": "dist/schemas/session-start.schema.json",
+      "byteLength": 9913
+    },
+    {
+      "path": "dist/schemas/slice-report.schema.json",
+      "byteLength": 3207
+    },
+    {
+      "path": "dist/schemas/smoke-evidence-summary.schema.json",
+      "byteLength": 3364
+    },
+    {
+      "path": "dist/schemas/state-projection.schema.json",
+      "byteLength": 3927
+    },
+    {
+      "path": "dist/schemas/status-baseline-promote.schema.json",
+      "byteLength": 3408
+    },
+    {
+      "path": "dist/schemas/task-audit-close.schema.json",
+      "byteLength": 3732
+    },
+    {
+      "path": "dist/schemas/task-close-v3.schema.json",
+      "byteLength": 17519
+    },
+    {
+      "path": "dist/schemas/task-close.schema.json",
+      "byteLength": 7515
+    },
+    {
+      "path": "dist/schemas/task-context.schema.json",
+      "byteLength": 5290
+    },
+    {
+      "path": "dist/schemas/task-create.schema.json",
+      "byteLength": 1607
+    },
+    {
+      "path": "dist/schemas/task-selection-status.schema.json",
+      "byteLength": 5172
+    },
+    {
+      "path": "dist/schemas/task-selection.schema.json",
+      "byteLength": 1388
+    },
+    {
+      "path": "dist/schemas/task-status-v2.schema.json",
+      "byteLength": 4904
+    },
+    {
+      "path": "dist/schemas/task-status.schema.json",
+      "byteLength": 4716
+    },
+    {
+      "path": "dist/schemas/task-workbench.schema.json",
+      "byteLength": 10523
+    },
+    {
+      "path": "dist/schemas/tools-list.schema.json",
+      "byteLength": 3236
+    },
+    {
+      "path": "dist/schemas/validation-run-v2.schema.json",
+      "byteLength": 7221
+    },
+    {
+      "path": "dist/schemas/validation-run.schema.json",
+      "byteLength": 6938
+    },
+    {
+      "path": "dist/schemas/write-preflight.schema.json",
+      "byteLength": 1616
+    },
+    {
+      "path": "dist/services/active-run-state.js",
+      "byteLength": 9380
+    },
+    {
+      "path": "dist/services/capability-registry.js",
+      "byteLength": 94726
+    },
+    {
+      "path": "dist/services/command-surface-drift.js",
+      "byteLength": 3267
+    },
+    {
+      "path": "dist/services/controlled-vocabulary.js",
+      "byteLength": 12542
+    },
+    {
+      "path": "dist/services/developer-surface-placeholders.js",
+      "byteLength": 3583
+    },
+    {
+      "path": "dist/services/docs-add.js",
+      "byteLength": 8165
+    },
+    {
+      "path": "dist/services/docs-cleanup.js",
+      "byteLength": 17168
+    },
+    {
+      "path": "dist/services/docs-registry.js",
+      "byteLength": 70692
+    },
+    {
+      "path": "dist/services/evidence-lint.js",
+      "byteLength": 20147
+    },
+    {
+      "path": "dist/services/evidence-list.js",
+      "byteLength": 9011
+    },
+    {
+      "path": "dist/services/evidence-migration.js",
+      "byteLength": 11644
+    },
+    {
+      "path": "dist/services/handoff-summary-parser.js",
+      "byteLength": 3796
+    },
+    {
+      "path": "dist/services/harness-service.js",
+      "byteLength": 349
+    },
+    {
+      "path": "dist/services/install-plan.js",
+      "byteLength": 8416
+    },
+    {
+      "path": "dist/services/lifecycle-guide.js",
+      "byteLength": 8640
+    },
+    {
+      "path": "dist/services/managed-sections.js",
+      "byteLength": 14776
+    },
+    {
+      "path": "dist/services/markdown-table.js",
+      "byteLength": 2913
+    },
+    {
+      "path": "dist/services/operations-status-service.js",
+      "byteLength": 15529
+    },
+    {
+      "path": "dist/services/policy-service.js",
+      "byteLength": 1022
+    },
+    {
+      "path": "dist/services/project-current-state.js",
+      "byteLength": 44192
+    },
+    {
+      "path": "dist/services/project-read-model.js",
+      "byteLength": 1491
+    },
+    {
+      "path": "dist/services/project-state-update.js",
+      "byteLength": 7123
+    },
+    {
+      "path": "dist/services/project-status-v2.js",
+      "byteLength": 10019
+    },
+    {
+      "path": "dist/services/protocol-consistency.js",
+      "byteLength": 37459
+    },
+    {
+      "path": "dist/services/protocol-migration.js",
+      "byteLength": 24259
+    },
+    {
+      "path": "dist/services/protocol-profile.js",
+      "byteLength": 10918
+    },
+    {
+      "path": "dist/services/protocol-remediation.js",
+      "byteLength": 15776
+    },
+    {
+      "path": "dist/services/runtime-version.js",
+      "byteLength": 5416
+    },
+    {
+      "path": "dist/services/slices-state.js",
+      "byteLength": 17813
+    },
+    {
+      "path": "dist/services/state-projection.js",
+      "byteLength": 22673
+    },
+    {
+      "path": "dist/services/task-read-model.js",
+      "byteLength": 3812
+    },
+    {
+      "path": "dist/services/task-selection-status-v2.js",
+      "byteLength": 9376
+    },
+    {
+      "path": "dist/services/task-status-v2.js",
+      "byteLength": 13582
+    },
+    {
+      "path": "dist/services/task-workbench.js",
+      "byteLength": 41686
+    },
+    {
+      "path": "dist/services/tools-list.js",
+      "byteLength": 1201
+    },
+    {
+      "path": "dist/services/validation-run.js",
+      "byteLength": 31710
+    },
+    {
+      "path": "dist/services/workbench-next-actions.js",
+      "byteLength": 9531
+    },
+    {
+      "path": "dist/services/write-preflight.js",
+      "byteLength": 7575
+    },
+    {
+      "path": "dist/status/adapters/git-metadata.js",
+      "byteLength": 1757
+    },
+    {
+      "path": "dist/status/adapters/json-document.js",
+      "byteLength": 2096
+    },
+    {
+      "path": "dist/status/adapters/markdown-section.js",
+      "byteLength": 1200
+    },
+    {
+      "path": "dist/status/adapters/markdown-table.js",
+      "byteLength": 1312
+    },
+    {
+      "path": "dist/status/adapters/task-capsule.js",
+      "byteLength": 1850
+    },
+    {
+      "path": "dist/status/dag/evaluate.js",
+      "byteLength": 3161
+    },
+    {
+      "path": "dist/status/dag/fixtures/generic-governed.js",
+      "byteLength": 1610
+    },
+    {
+      "path": "dist/status/dag/schema.js",
+      "byteLength": 77
+    },
+    {
+      "path": "dist/status/dag/validate.js",
+      "byteLength": 3216
+    },
+    {
+      "path": "dist/status/model.js",
+      "byteLength": 1399
+    },
+    {
+      "path": "dist/status/predicates.js",
+      "byteLength": 1798
+    },
+    {
+      "path": "dist/status/sources/project-current-state-source.js",
+      "byteLength": 1356
+    },
+    {
+      "path": "dist/status/transformers.js",
+      "byteLength": 1463
+    },
+    {
+      "path": "dist/task/acceptance.js",
+      "byteLength": 7729
+    },
+    {
+      "path": "dist/task/authoring-guidance.js",
+      "byteLength": 5811
+    },
+    {
+      "path": "dist/task/close/audit.js",
+      "byteLength": 491
+    },
+    {
+      "path": "dist/task/close/bookkeeping.js",
+      "byteLength": 38201
+    },
+    {
+      "path": "dist/task/close/execute.js",
+      "byteLength": 60603
+    },
+    {
+      "path": "dist/task/close/filesystem-adapter.js",
+      "byteLength": 2977
+    },
+    {
+      "path": "dist/task/close/guardedWrites.js",
+      "byteLength": 35467
+    },
+    {
+      "path": "dist/task/close/index.js",
+      "byteLength": 2612
+    },
+    {
+      "path": "dist/task/close/journal.js",
+      "byteLength": 77
+    },
+    {
+      "path": "dist/task/close/model.js",
+      "byteLength": 77
+    },
+    {
+      "path": "dist/task/close/operation-marker.js",
+      "byteLength": 2818
+    },
+    {
+      "path": "dist/task/close/plan.js",
+      "byteLength": 60221
+    },
+    {
+      "path": "dist/task/close/proof.js",
+      "byteLength": 65926
+    },
+    {
+      "path": "dist/task/close/recovery.js",
+      "byteLength": 813
+    },
+    {
+      "path": "dist/task/close/report.js",
+      "byteLength": 1654
+    },
+    {
+      "path": "dist/task/close/source.js",
+      "byteLength": 512
+    },
+    {
+      "path": "dist/task/close/types.js",
+      "byteLength": 77
+    },
+    {
+      "path": "dist/task/close/write-set.js",
+      "byteLength": 4206
+    },
+    {
+      "path": "dist/task/handoff-continuation.js",
+      "byteLength": 5012
+    },
+    {
+      "path": "dist/task/handoff-sections.js",
+      "byteLength": 1305
+    },
+    {
+      "path": "dist/task/lifecycle-next-actions.js",
+      "byteLength": 1093
+    },
+    {
+      "path": "dist/task/task-board.js",
+      "byteLength": 5471
+    },
+    {
+      "path": "dist/task/task-capsule.js",
+      "byteLength": 21084
+    },
+    {
+      "path": "dist/task/task-create.js",
+      "byteLength": 3939
+    },
+    {
+      "path": "dist/task/task-selection.js",
+      "byteLength": 14169
+    },
+    {
+      "path": "dist/task/task-templates.js",
+      "byteLength": 6750
+    },
+    {
+      "path": "dist/tools/fake-shell.js",
+      "byteLength": 2055
+    },
+    {
+      "path": "dist/tui/cache.js",
+      "byteLength": 11408
+    },
+    {
+      "path": "dist/tui/constants.js",
+      "byteLength": 1915
+    },
+    {
+      "path": "dist/tui/layout.js",
+      "byteLength": 4659
+    },
+    {
+      "path": "dist/tui/markdown.js",
+      "byteLength": 12596
+    },
+    {
+      "path": "dist/tui/read-model-worker.js",
+      "byteLength": 922
+    },
+    {
+      "path": "dist/tui/read-model.js",
+      "byteLength": 28121
+    },
+    {
+      "path": "dist/tui/snapshot.js",
+      "byteLength": 27359
+    },
+    {
+      "path": "dist/tui/state.js",
+      "byteLength": 11042
+    },
+    {
+      "path": "dist/tui/terminal.js",
+      "byteLength": 18826
+    },
+    {
+      "path": "dist/tui/theme.js",
+      "byteLength": 2574
+    },
+    {
+      "path": "package.json",
+      "byteLength": 833
+    }
+  ],
+  "releaseMutationExecuted": false,
+  "publishExecuted": false,
+  "githubReleaseCreated": false
+}

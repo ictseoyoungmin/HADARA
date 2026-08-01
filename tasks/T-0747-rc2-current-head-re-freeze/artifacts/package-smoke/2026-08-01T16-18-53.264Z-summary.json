@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-01T16:18:53.262Z",
+  "taskId": "T-0747",
+  "category": "package-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageSmoke.v1",
+    "command": "package.smoke",
+    "mode": "local",
+    "ok": false,
+    "provider": {
+      "ecosystem": "npm",
+      "smokeProfile": "npm-package-smoke",
+      "command": "package.smoke"
+    },
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Package-smoke commands inherit the current environment network behavior.",
+        "HADARA does not enforce OS-level network isolation for local package tooling."
+      ]
+    }
+  },
+  "execution": {
+    "npmPackExecuted": false,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "validate-source",
+      "label": "Validate package source",
+      "status": "passed",
+      "summary": "Package source metadata was checked without exposing package contents."
+    },
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable workspace",
+      "status": "passed",
+      "summary": "Disposable package-smoke workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "status": "skipped",
+      "summary": "Skipped because a package artifact source was provided."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1280,
+      "summary": "Package installed into an isolated temporary prefix."
+    },
+    {
+      "id": "generated-init-docs",
+      "label": "Generated init docs current UX check",
+      "status": "failed",
+      "exitCode": 6,
+      "elapsedMs": 77,
+      "summary": "Generated init docs could not be created for inspection."
+    },
+    {
+      "id": "doctor",
+      "label": "Installed HADARA doctor",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 51,
+      "summary": "Installed hadara doctor returned an ok reduced JSON report."
+    },
+    {
+      "id": "command-surface-drift",
+      "label": "Command surface drift vs source registry",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 48,
+      "summary": "Installed command surface matches the source registry and installed routing parity holds."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "PACKAGE_SMOKE_INIT_DOCS_FAILED",
+      "message": "Installed `hadara init --profile standard --json` failed or did not return an ok JSON report.",
+      "stepId": "generated-init-docs"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

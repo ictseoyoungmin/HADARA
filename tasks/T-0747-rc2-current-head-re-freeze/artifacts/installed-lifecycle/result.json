@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "hadara.installedLifecycleSmoke.v1",
+  "generatedAt": "2026-08-01T16:17:37.545Z",
+  "sourceCommit": "503546e05b6e020387759f301658bfeba715b44f",
+  "tarball": {
+    "path": "<external>/hadara-0.5.0-rc.2.tgz",
+    "sha256": "sha256:a6a96c6ada134db087954553ca2076eb085181369dc8b897f9c4ffc9385128e5",
+    "byteLength": 451150
+  },
+  "helper": {
+    "path": "tools/dev-surface/installed-lifecycle-smoke.ts",
+    "sha256": "sha256:9ff8ed89a1fc06ddb7dbc6979857d15173edbb22468e25d031523fbb8e3940bc"
+  },
+  "packageManifestHash": "sha256:615deeac02a667ff7f4688b08be04f2b4d16205ef5b75da678163949d1686e7d",
+  "steps": {
+    "initPlan": "passed",
+    "initApply": "passed",
+    "taskCreate": "passed",
+    "validationEvidence": "passed",
+    "closeDryRun": "passed",
+    "closeExecute": "passed",
+    "auditClose": "closed-valid",
+    "idempotentRetry": "passed",
+    "freshSessionStatus": "no-stale-recommendation"
+  },
+  "version": "passed",
+  "initPlan": "passed",
+  "initApply": "passed",
+  "taskCreate": "passed",
+  "validationEvidence": "passed",
+  "closeDryRun": "passed",
+  "closeExecute": "passed",
+  "auditClose": "closed-valid",
+  "idempotentRetry": "passed",
+  "freshSessionStatus": "no-stale-recommendation",
+  "installedVersion": "0.5.0-rc.2",
+  "taskId": "T-0001",
+  "validationEvidenceId": "ev:T-0001:0fdca57f9af74ac7a81c2414",
+  "closePlanStatus": "executable-with-deferred-checks",
+  "validationOutputPreview": {
+    "mode": "file",
+    "stdoutBytes": 40,
+    "stderrBytes": 0,
+    "stdoutPreview": "installed substantive validation passed\n",
+    "stderrPreview": "",
+    "stdoutTruncated": false,
+    "stderrTruncated": false,
+    "previewLimitBytes": 16384,
+    "previewMode": "redacted",
+    "redacted": false,
+    "redactionFindingCount": 0,
+    "omittedBytes": 0,
+    "controlSequenceFindingCount": 0,
+    "controlCharactersStripped": false,
+    "fallbackUsed": false
+  }
+}
