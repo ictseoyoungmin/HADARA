@@ -59,9 +59,9 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | Source | Role | State | Notes |
 |---|---|---|---|
-| Reviewer findings for T-0745 | requirement | active | Forward-fix all five findings; do not mutate the closed T-0745 source capsule. |
-| `docs/TASK_WORKFLOW_COMMANDS.md` | contract | active | Use `validation run`, reviewed `task close`, and task-local evidence. |
-| `docs/RC2_CONTRACT_FREEZE.md` | release-boundary | active | RC2 remains frozen; this task only repairs contract integrity and evidence reproducibility. |
+| Reviewer findings for T-0745 | reference | active | Forward-fix all five findings; do not mutate the closed T-0745 source capsule. |
+| `docs/TASK_WORKFLOW_COMMANDS.md` | constraint | active | Use `validation run`, reviewed `task close`, and task-local evidence. |
+| `docs/RC2_CONTRACT_FREEZE.md` | constraint | active | RC2 remains frozen; this task only repairs contract integrity and evidence reproducibility. |
 
 ## Changes
 

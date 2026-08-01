@@ -119,7 +119,7 @@ try {
 
 | Source | Role | State | Notes |
 |---|---|---|---|
-| Local RC2 tarball | artifact | reviewed | Installed package under test. |
+| Local RC2 tarball | reference | review | Installed package under test. |
 
 ## Changes
 
