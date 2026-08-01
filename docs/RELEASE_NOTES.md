@@ -1,10 +1,10 @@
 # RELEASE_NOTES
 
-## 0.5.0-rc.2 planned scope
+## 0.5.0-rc.2
 
-Planned next release candidate. The scope is the current `0.5.0-rc.1` line plus reviewer-fix
+Source candidate and contract-freeze line based on `0.5.0-rc.1`. This line carries the reviewer-fix
 capsules that harden RC2 trust after the developer-surface reduction. Broader DAG/status redesign
-work is out of scope unless a later capsule explicitly restores it across shared docs.
+work remains out of scope.
 
 Required before rc.2 release readiness:
 
@@ -18,6 +18,10 @@ Required before rc.2 release readiness:
   evaluated release/debt results when those developer-only checks are unavailable.
 - Fresh validation evidence and dogfood must be rerun on current HEAD before rc.2 release
   readiness is promoted beyond the current T-0678 rollup.
+- T-0743 reduced the legacy status surface to an explicit compatibility route and decomposed close
+  filesystem, marker, write-set, recovery, and report responsibilities without adding a new schema.
+- T-0744 owns the remaining RC2 document ownership, Init v1 stage 6~8 acceptance, installed
+  dogfood, and contract-freeze record. This source candidate is not a publish operation.
 
 ## 0.5.0-rc.1
 

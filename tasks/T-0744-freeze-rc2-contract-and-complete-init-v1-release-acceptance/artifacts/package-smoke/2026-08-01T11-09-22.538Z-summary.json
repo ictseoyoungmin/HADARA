@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-01T11:09:22.536Z",
+  "taskId": "T-0744",
+  "category": "package-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageSmoke.v1",
+    "command": "package.smoke",
+    "mode": "local",
+    "ok": true,
+    "provider": {
+      "ecosystem": "npm",
+      "smokeProfile": "npm-package-smoke",
+      "command": "package.smoke"
+    },
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Package-smoke commands inherit the current environment network behavior.",
+        "HADARA does not enforce OS-level network isolation for local package tooling."
+      ]
+    }
+  },
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "validate-source",
+      "label": "Validate package source",
+      "status": "passed",
+      "summary": "Package source metadata was checked without exposing package contents."
+    },
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable workspace",
+      "status": "passed",
+      "summary": "Disposable package-smoke workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1297,
+      "summary": "npm pack produced a temporary package tarball."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1150,
+      "summary": "Package installed into an isolated temporary prefix."
+    },
+    {
+      "id": "generated-init-docs",
+      "label": "Generated init docs current UX check",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 126,
+      "summary": "Generated init workflow docs expose current task close and slice guidance without stale removed command instructions."
+    },
+    {
+      "id": "doctor",
+      "label": "Installed HADARA doctor",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 57,
+      "summary": "Installed hadara doctor returned an ok reduced JSON report."
+    },
+    {
+      "id": "command-surface-drift",
+      "label": "Command surface drift vs source registry",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 60,
+      "summary": "Installed command surface matches the source registry and installed routing parity holds."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "PACKAGE_SMOKE_PROJECT_ALIAS_ROOTS",
+      "message": "`--project` is treated as both sourceRoot and evidenceRoot for compatibility; use --source-root and --evidence-root to make release root roles explicit."
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

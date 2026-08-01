@@ -1,16 +1,29 @@
 # ROADMAP
 
-## Current Baseline: v0.4.3 Local-first Evidence Control Plane
+## Current Baseline: v0.5.0-rc.2 RC2 Contract Freeze
 
-Published and consumer-recycled `hadara@0.4.3` consolidates the 0.4.2 baseline around structured current state, semantic currentness, measured workflow friction, and fast session resume.
+`0.5.0-rc.2` is the current source candidate. The RC2 line consolidates the Init v1 contracts,
+task-local continuation, evidence/close proof, and developer-surface reduction before any publish
+mutation. The published `0.5.0-rc.1` remains historical release context.
 
-The immediate roadmap is consolidation rather than capability expansion. HADARA's product boundary is portable current state and evidence integrity across human and agent sessions; a full controller, default real-provider runtime, cloud queue, broad write-capable MCP, and a separate browser dashboard surface remain outside the current release line.
+The immediate roadmap is contract verification rather than capability expansion. HADARA's product
+boundary is portable task-local state and evidence integrity across human and agent sessions; a full
+controller, default real-provider runtime, cloud queue, broad write-capable MCP, and browser dashboard
+remain outside the current release line.
 
 ## Active Program: Init v1 Redesign
 
-Current human direction prioritizes the frozen Init v1 design and acceptance contracts under `docs/archive/retired-2026-07-26/specs/0.5/redesign/` before RC2 release promotion. The program uses eight appropriately sized capsules: contract/characterization; core model/planner; safe apply transaction; re-init/upgrade ownership; Task Board/close projection; document routing; legacy compatibility isolation; and full installed-package acceptance. Exact field-by-field legacy migration remains gated on its separately frozen migration specification; new Init v1 projects must not create legacy core artifacts.
+Current human direction prioritizes the frozen Init v1 design and acceptance contracts under
+`docs/archive/retired-2026-07-26/specs/0.5/redesign/` before RC2 release promotion. The program uses
+eight capsules: contract/characterization; core model/planner; safe apply transaction; re-init/upgrade
+ownership; Task Board/close projection; document routing; legacy compatibility isolation; and full
+installed-package acceptance. Exact field-by-field legacy migration remains gated on its separately
+frozen migration specification; new Init v1 projects must not create legacy core artifacts.
 
-T-0699 completed the canonical model and planner. T-0700 completed reviewed safe apply, and T-0701 hardened rollback against concurrent external edits. T-0702 restored the cross-cutting release, evidence, Docker, task-state, dependency, rollback-test, and TUI trust baseline. T-0703 completed checksum-preserving re-init and configuration-preserving managed upgrade ownership. The next program gate is Task Board and Close Projection; release promotion remains deferred until the final installed-package acceptance capsule passes.
+T-0699 through T-0706 completed the Init v1 implementation boundaries through mutation authority;
+T-0743 completed the RC2 status/close runtime reduction. T-0744 is the final source acceptance capsule
+for document routing, legacy isolation, installed dogfood, release readiness, and the explicit RC2
+contract freeze. Release promotion remains deferred until its evidence and close proof pass.
 
 ## Current Release Sequence
 
@@ -18,6 +31,7 @@ T-0699 completed the canonical model and planner. T-0700 completed reviewed safe
 |---|---|---|---|
 | v0.4.3 | Can one local project stay current, resumable, and measurable without command growth? | Structured current-state canon; managed Markdown projections; docs-doctor currentness verdict; seven-metric basic/standard/governed workflow matrix; installed-package release smoke. | No new public command and no controller/provider/runtime expansion. |
 | v0.4.4 | Does the evidence-control workflow hold outside HADARA's own repository and authors? | Three external repositories of different shapes; 20–30 real capsules per repository; workers or agents without HADARA-developer intervention; wrong next-work and removed-command/version drift tracked as zero-tolerance defects. | External validation and usability fixes only; advanced commands must remain unnecessary for ordinary work. |
+| v0.5.0-rc.2 | Are Init v1 routing, legacy isolation, close proof, and installed package acceptance coherent on the current source? | Docs registry parse/schema/render, source and built CLI checks, package/consumer and clean-checkout smokes, strict release gate, release dry-run, and contract-freeze record. | No new schema/provider/publication mutation; publish remains a separate operator capsule. |
 
 The normal success path remains `task status` → real validation/evidence → guarded `task close`. v0.4.4 should measure where basic, standard, and governed users leave that path, and how often they ignore or correct CLI recommendations, before any capability expansion is reconsidered.
 

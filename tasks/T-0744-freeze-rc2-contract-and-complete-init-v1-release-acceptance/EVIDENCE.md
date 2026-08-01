@@ -1,0 +1,35 @@
+# EVIDENCE
+
+This file is a human-readable projection from `evidence.jsonl`.
+
+Do not hand-edit this file.
+
+## Validation Evidence
+
+<!-- hadara:slot evidence.validation-summary -->
+| Evidence ID | Outcome | Category | Summary |
+|---|---|---|---|
+| ev:T-0744:e48bb4bc80294487bf81a8a2 | passed | validation | Validation "Docs registry and Init v1 routing focused tests" passed; failureClass: none; command: ./node_modules/.bin/vitest run tests/unit/docs-registry.test.ts tests/unit/docs-doctor.test.ts tests/unit/legacy-boundary.test.ts tests/unit/init-v1-model.test.ts tests/unit/init-v1-transaction.test.ts tests/unit/package-smoke-schema.test.ts; argvHash: sha256:103cf99f742aa3ea933fa3463aff8488e2f578c3faf933103bab29757c6a3f42; exitCode: 0; signal: null; durationMs: 9379; stdoutHash: sha256:485939a91e0b638cdc58ae851e30d4587210272b51b4bd88650e152e499c8b85; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0744:a06194bb2d0f42459f9383b6 | passed | validation | Validation "RC2 active metadata and ownership audit" passed; failureClass: none; command: node -e const fs=require('fs'); const files=['package.json','package-lock.json','README.md','docs/ROADMAP.md','docs/RELEASE_NOTES.md','docs/RELEASE_READINESS.md','docs/DEVELOPMENT_SLICES.md','docs/RC2_CONTRACT_FREEZE.md']; const text=files.map(p=>fs.readFileSync(p,'utf8')).join('\n'); const checks={version:text.includes('0.5.0-rc.2'),freeze:text.includes('RC2 Contract Freeze'),sliceOwner:text.includes('contract is owned by '),noEphemeralSlice:!text.includes('26497664485')&&!text.includes('run #109')}; console.log(JSON.stringify(checks)); if(Object.values(checks).some(v=>!v)) process.exit(1);; argvHash: sha256:bf2b2da81850c365eb0d4fe8681ed3f41deb14a8cc71c637b6e21252330d2a6c; exitCode: 0; signal: null; durationMs: 45; stdoutHash: sha256:82930b7aec2e3c118f7cd81f8d0cfdc65ce3a074b3542e6bb8260b5bfcd94108; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0744:1e67969cd7af4e3b81d83542 | passed | validation | Validation "Docs registry parse schema render and retired path audit" passed; failureClass: none; command: node -e const fs=require('fs'); const r=JSON.parse(fs.readFileSync('.hadara/docs-registry.json','utf8')); const projection=fs.readFileSync('docs/DOC_REGISTRY.md','utf8'); const retired=['.hadara/state/current.json','docs/AGENT_HANDOFF.md','docs/PROJECT_STATE.md']; if(r.schemaVersion!=='hadara.docs.registry.v1'//!Array.isArray(r.documents)//retired.some(p=>r.documents.some(d=>d.path===p))//retired.some(p=>projection.includes(p))) process.exit(1); console.log('repository docs registry parse/schema/render and retired-path audit passed');; argvHash: sha256:f3ff0ac9b6ed4cfa787d87869480c2a94f3d545b4d329e5a2ed7c6908b5010c1; exitCode: 0; signal: null; durationMs: 37; stdoutHash: sha256:1f6f27fbc324001292dbe821a7739992bf3051f696a9ef2adf5d89d158db6e16; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0744:8d9b7b4bf9cb41ee88a22a35 | passed | validation | Validation "Full npm check and built RC2 version" passed; failureClass: none; command: npm run check; argvHash: sha256:698d6dd5422de2503349def717b72b78035aad247ef33cb92b78a6b2f2ca956a; exitCode: 0; signal: null; durationMs: 36305; stdoutHash: sha256:ae2b93daf4911dd5261fbbe6ae2bb2644203062e099822676b522ce303eb5968; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0744:a8e96b353a084d61ad17ad0f | passed | release | Package smoke local passed with reduced public evidence. |
+| ev:T-0744:9010215284804dc1b03951ae | passed | validation | Validation "Host package consumer smoke" passed; failureClass: none; command: node --import tsx tools/dev-surfaces.ts smoke package --execute --attach-evidence --task T-0744 --json; argvHash: sha256:a23e376deff3f99c9cd6bde05df137cf52f2c86c2c0b6da531142326172f2189; exitCode: 0; signal: null; durationMs: 3266; stdoutHash: sha256:6e0fbb680756487490ae5366089ab56c50b62be1afd120f75d06c073f1ebe6dd; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+<!-- /hadara:slot -->
+
+## Close Proof
+
+<!-- hadara:slot evidence.close-proof -->
+| Check | Result | Evidence |
+|---|---|---|
+<!-- /hadara:slot -->
+
+## Failed / Blocked / Residual Evidence
+
+<!-- hadara:slot evidence.residuals -->
+| Evidence ID | Outcome | Summary | Disposition | Reference |
+|---|---|---|---|---|
+| ev:T-0744:c62ccc618d2d4faaae986468 | failed | Validation "Docs registry parse schema render and retired path audit" failed; failureClass: assertion; command: bash -lc set -e; node dist/cli/main.js docs doctor --scope registry --json; node dist/cli/main.js docs render --json; node -e "const fs=require(\"fs\"); const r=JSON.parse(fs.readFileSync(\".hadara/docs-registry.json\",\"utf8\")); const projection=fs.readFileSync(\"docs/DOC_REGISTRY.md\",\"utf8\"); const retired=[\".hadara/state/current.json\",\"docs/AGENT_HANDOFF.md\",\"docs/PROJECT_STATE.md\"]; if(r.schemaVersion!==\"hadara.docs.registry.v1\"//!Array.isArray(r.documents)//retired.some(p=>r.documents.some(d=>d.path===p))//retired.some(p=>projection.includes(\"`\"+p+\"`\"))) process.exit(1); console.log(\"repository docs registry parse/schema/render and retired-path audit passed\");"; argvHash: sha256:31127f3f07cdb7007e3d73705bf98c1c103008a1886f255ec7cbea18e382492e; exitCode: 1; signal: null; durationMs: 276; stdoutHash: sha256:8b1bdff4cadb18d61e125edad17dfff2e4ab9aa7b3b969517c5b4d9272f4ff1b; stderrHash: sha256:ba380028d86253051f4c6a0775e9283f3ee9b79a3c70f57b58d88c4ce36a1bfc | Unresolved | evidence.jsonl |
+| ev:T-0744:b0a001ba23974c9fab065621 | failed | Clean-checkout smoke failed with reduced public evidence. | Unresolved | evidence.jsonl |
+| ev:T-0744:96b587018dc147bea5265668 | failed | Validation "Host clean-checkout smoke" failed; failureClass: assertion; command: node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --attach-evidence --task T-0744 --json; argvHash: sha256:881ff526bf02e055eb0d35b968aef72408c22c7a10ff1d35796935a9aa7ef4e9; exitCode: 6; signal: null; durationMs: 69093; stdoutHash: sha256:0790c1ae4eab11fe464286910f5da8336d3fa3d31608b9d36470423dbad6db20; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 | Unresolved | evidence.jsonl |
+<!-- /hadara:slot -->
