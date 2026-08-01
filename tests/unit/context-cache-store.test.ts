@@ -307,12 +307,12 @@ describe('context cache store', () => {
         content: '# T-0001 Cached graph fixture\n\nChanged task body\n'
       },
       {
-        path: 'docs/PROJECT_STATE.md',
-        content: '# PROJECT_STATE\n\nChanged project state\n'
+        path: 'docs/DEVELOPMENT_SLICES.md',
+        content: '# DEVELOPMENT_SLICES\n\nChanged development slices\n'
       },
       {
-        path: 'docs/AGENT_HANDOFF.md',
-        content: '# AGENT_HANDOFF\n\nChanged handoff\n'
+        path: 'tasks/T-0001-cached-graph-fixture/HANDOFF.md',
+        content: '# HANDOFF\n\nChanged task continuation\n'
       },
       {
         path: 'tasks/T-0001-cached-graph-fixture/evidence.jsonl',
@@ -812,8 +812,8 @@ function graphCoreFixtureProject(): string {
     '| T-0001 | Cached graph fixture | In Progress | tasks/T-0001-cached-graph-fixture | |',
     ''
   ].join('\n'));
-  write(root, 'docs/PROJECT_STATE.md', '# PROJECT_STATE\n\nActive task: T-0001\n');
-  write(root, 'docs/AGENT_HANDOFF.md', '# AGENT_HANDOFF\n\nActive task: T-0001\n');
+  write(root, 'docs/DEVELOPMENT_SLICES.md', '# DEVELOPMENT_SLICES\n\nActive task: T-0001\n');
+  write(root, 'tasks/T-0001-cached-graph-fixture/HANDOFF.md', '# HANDOFF\n\nActive task: T-0001\n');
   write(root, 'tasks/T-0001-cached-graph-fixture/TASK.md', [
     '# T-0001 Cached graph fixture',
     '',

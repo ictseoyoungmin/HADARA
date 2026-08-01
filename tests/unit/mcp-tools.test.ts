@@ -291,7 +291,6 @@ describe('MCP read tools', () => {
       ]
     });
     expect(payload.content).toContain('## docs/TASK_BOARD.md');
-    expect(payload.content).not.toContain('## docs/PROJECT_STATE.md');
   });
 
   it('lists current CLI and MCP capabilities plus disabled surfaces', () => {

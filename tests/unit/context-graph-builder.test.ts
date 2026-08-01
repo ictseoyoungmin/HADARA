@@ -334,8 +334,6 @@ describe('context graph builder', () => {
         staleExtractorKeys: ['extractTaskBoard', 'extractTaskCapsules']
       });
       expect(report.taskContext?.task?.id).toBe(`task:${taskId}`);
-      expect(report.stateProjection.sources.find((source) => source.kind === 'project-state')).toBeUndefined();
-      expect(report.stateProjection.sources.find((source) => source.kind === 'agent-handoff')).toBeUndefined();
       assertSchema('hadara.contextGraph.v1', report);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

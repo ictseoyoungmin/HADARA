@@ -29,7 +29,7 @@ describe('runtime schema validation', () => {
         schemaVersion: 'hadara.plan_context.v1',
         planId: 'plan_1234',
         generatedAt: '2026-06-05T00:00:00.000Z',
-        affectedFiles: ['docs/AGENT_HANDOFF.md'],
+        affectedFiles: ['docs/TASK_BOARD.md'],
         beforeHash: 'sha256:abc',
         idempotencyKey: 'handoff:T-0253',
         reviewed: false
@@ -82,7 +82,7 @@ describe('runtime schema validation', () => {
       activeRun: null,
       resumePrompt: {
         summary: 'No active run is currently recorded.',
-        mustRead: ['docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md'],
+        mustRead: ['docs/TASK_BOARD.md'],
         nextActions: ['Pick or create one Task Capsule before implementation.'],
         constraints: ['Attach evidence before marking work Done.']
       },

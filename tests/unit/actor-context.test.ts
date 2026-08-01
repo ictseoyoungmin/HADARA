@@ -56,14 +56,14 @@ describe('Phase 6 multi-agent command context contract', () => {
     expect(
       createHadaraPlanContext({
         generatedAt: '2026-06-05T00:00:00.000Z',
-        affectedFiles: ['docs/AGENT_HANDOFF.md'],
+        affectedFiles: ['docs/TASK_BOARD.md'],
         beforeHash: 'sha256:abc',
         idempotencyKey: 'task-close-bookkeeping:T-0253'
       })
     ).toEqual({
-      planId: 'plan_f0fdb914728c9a25',
+      planId: 'plan_8e159d7a97477a01',
       generatedAt: '2026-06-05T00:00:00.000Z',
-      affectedFiles: ['docs/AGENT_HANDOFF.md'],
+      affectedFiles: ['docs/TASK_BOARD.md'],
       beforeHash: 'sha256:abc',
       idempotencyKey: 'task-close-bookkeeping:T-0253',
       reviewed: false

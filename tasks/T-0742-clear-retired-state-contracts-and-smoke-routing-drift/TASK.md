@@ -6,9 +6,9 @@
 |---|---|
 | ID | T-0742 |
 | Title | Clear retired state contracts and smoke routing drift |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-07-29T23:14 |
-| Updated | 2026-07-30T00:14 |
+| Updated | 2026-08-01T16:30 |
 
 Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> --json` for controlled values before replacing scaffold tokens.
 
@@ -37,29 +37,31 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | 1 | Audit the T-0741 failed full-check output and identify stale tests/src references to retired `PROJECT_STATE.md`, `AGENT_HANDOFF.md`, and `.hadara/state/current.json` current-state behavior. | Done |
 | 2 | Remove retired current-state code/tests or replace them with Task Board/task-capsule/HANDOFF based contracts. | Done |
 | 3 | Resolve public smoke command routing drift and installed package init/doctor smoke failures. | Done |
-| 4 | Rerun focused stale-contract suites, full `npm run check`, package smoke, and clean-checkout smoke; record evidence. | Blocked |
+| 4 | Rerun focused stale-contract suites, full `npm run check`, package smoke, and clean-checkout smoke; record evidence. | Done |
 | 5 | Return to T-0741 and rerun its full validation/close path after this blocker clears. | Blocked |
 
 ## Acceptance
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | Full `npm run check` passes after stale retired-state/current-doc contracts are updated or removed. | Met | ev:T-0742:8b3665e282ac474ba36f5d9c | Full validation output |
-| AC-2 | No source or test contract treats `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, or `.hadara/state/current.json` as default required current-state/continuation inputs; compatibility-only references are explicitly named as such. | Partial | ev:T-0742:8b3665e282ac474ba36f5d9c | `src/` scan is clean; `tests/` still contains legacy/negative/compatibility fixtures that mention retired paths. |
+| AC-1 | Full `npm run check` passes after stale retired-state/current-doc contracts are updated or removed. | Met | ev:T-0742:c2eead5b03a84763be90667b | Full validation output |
+| AC-2 | No source or test contract treats `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, or `.hadara/state/current.json` as default required current-state/continuation inputs; compatibility-only references are explicitly named as such. | Met | ev:T-0742:c2eead5b03a84763be90667b | `src/`, `tools/`, and active fixtures are clean; the only remaining test literals are named retired-path negative regressions in `docs-registry.test.ts`. |
 | AC-3 | Public CLI and command registry agree for package/clean-checkout smoke: advertised commands either route successfully or the registry/docs advertise the actual supported dev-surface path. | Met | ev:T-0742:dac14efe7f2d4f3cb8fa15ad | `src/services/capability-registry.ts`, `docs/CLI_JSON_CONTRACT.md`, release gate marker tests |
 | AC-4 | Package smoke passes through the supported release/package surface with evidence recorded. | Met | ev:T-0742:dac14efe7f2d4f3cb8fa15ad | Repo-local package smoke dry-run and core smoke passed. |
-| AC-5 | Clean-checkout consumer smoke passes with evidence recorded. | Blocked | ev:T-0742:b8217fe938994c6191597997 | Sandbox blocked `npm ci` at esbuild postinstall `spawnSync EPERM`; escalated rerun was unavailable. |
+| AC-5 | Clean-checkout consumer smoke passes with evidence recorded. | Met | ev:T-0742:a15c69b19321422796f1661e | Host smoke passed `npm ci`, build, full check, built CLI doctor/status, strict release gate, cleanup, and reduced public evidence attachment. |
 
 ## Validation
 
 | Check | Gate | Status | Detail | Evidence |
 |---|---|---|---|---|
-| Focused stale state-contract suites | Yes | Passed | Focused MCP/Hermes/TUI/docs/context/readiness subsets passed during cleanup and are covered by full check. | ev:T-0742:8b3665e282ac474ba36f5d9c |
-| Full npm check | Yes | Passed | `npm run check` passed: public suite 128 passed / 1 skipped; hadara-dev suite 16 passed / 1 skipped. | ev:T-0742:8b3665e282ac474ba36f5d9c |
+| Focused stale state-contract suites | Yes | Passed | 17 affected files and 239 tests passed after removing retired global-state fixtures and updating Task Board/task-local continuation inputs. | ev:T-0742:c2eead5b03a84763be90667b |
+| Task-close fixture cleanup regression | Yes | Passed | `tests/unit/task-close.test.ts` passed 57 tests after removing the obsolete global-state fixture helper and calls. | ev:T-0742:8c99e66968c74cb7b2e03b0e |
+| Full npm check | Yes | Passed | `npm run check` passed: public suite 128 files passed / 1 skipped, 1033 tests passed / 8 skipped; hadara-dev suite 16 files passed, 134 tests passed / 1 skipped. | ev:T-0742:c2eead5b03a84763be90667b |
 | Package smoke | Yes | Passed | `node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json` passed; `smoke run --profile core --json` passed. | ev:T-0742:dac14efe7f2d4f3cb8fa15ad |
-| Consumer clean-checkout smoke | Yes | Blocked | `node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --json` failed in sandbox at `npm ci` because esbuild postinstall `spawnSync` returned `EPERM`; sandbox-external rerun approval was rejected by usage limit. | ev:T-0742:b8217fe938994c6191597997 |
+| Consumer clean-checkout smoke | Yes | Passed | Host `node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --attach-evidence --task T-0742 --json` passed copy, `npm ci`, build, full check, built CLI doctor/status, strict release gate, cleanup, and reduced evidence attachment. | ev:T-0742:a15c69b19321422796f1661e |
+| Host clean-checkout resolution note | Yes | Passed | Host rerun resolved the earlier sandbox/fixture failures; the final smoke report is `ok: true` with all executable steps passed. | ev:T-0742:5be767e38405466092c27563 |
 | Capsule draft validation | Yes | Passed | `harness validate --task T-0742 --level draft --json` and `git diff --check` passed after handoff semantic cleanup. | ev:T-0742:e523944f299d45d2a9ec3f89 |
-| Close dry-run | No | Blocked | `task close --task T-0742 --dry-run --json` is blocked only by unfinished AC-2/AC-5 and final Done history; no HANDOFF semantic conflict remains. | ev:T-0742:d21c637c6a7642049b0fbf2d |
+| Close dry-run | No | Not Run | Re-run after the final acceptance and History updates; close-source docs are ready for done-level review. | |
 
 ## Inputs / Constraints
 
@@ -86,12 +88,12 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 |---|---|---|---|---|
 | RF-1 | Risk | This task can grow too broad if it attempts to redesign status architecture instead of retiring/updating stale contracts needed for validation. | Closed | Scope |
 | RF-2 | Follow-up | After this task passes full check and smoke, return to T-0741 and rerun its full validation/close sequence. | Open | tasks/T-0741-bind-close-marker-to-reviewed-plan-and-validate-full-surface |
-| RF-3 | Follow-up | If the reviewer requires zero textual legacy mentions in tests, split a smaller fixture-only cleanup capsule; current source contracts are clean and full validation passes. | Open | `rg "PROJECT_STATE|AGENT_HANDOFF|.hadara/state/current.json" tests` |
-| RF-4 | Follow-up | Rerun clean-checkout smoke outside this sandbox or in Docker/ext4 where esbuild postinstall execution is allowed. | Open | ev:T-0742:b8217fe938994c6191597997 |
+| RF-3 | Follow-up | Retired-path literals remain only in explicitly named `docs-registry.test.ts` negative regressions that prove the paths stay unregistered; no current-state or continuation behavior depends on them. | Closed | tests/unit/docs-registry.test.ts |
+| RF-4 | Follow-up | Rerun clean-checkout smoke outside this sandbox or in Docker/ext4 where esbuild postinstall execution is allowed. | Closed | ev:T-0742:a15c69b19321422796f1661e |
 
 ## Close Summary
 
-T-0742 removed retired global-state contracts from current source behavior and current docs/read routing, made full validation pass, and corrected smoke/package registry docs to the actual repo-local `tools/dev-surfaces.ts` command surface. Clean-checkout consumer smoke is the only unresolved gate; it was blocked by sandbox `EPERM` while executing esbuild during `npm ci`, not by a HADARA assertion failure.
+T-0742 removed retired global-state contracts from current source behavior and current docs/read routing, made full validation pass, corrected smoke/package registry docs to the actual repo-local `tools/dev-surfaces.ts` command surface, and passed the host clean-checkout consumer smoke. The earlier sandbox `EPERM` and host-only stale fixture failures are resolved.
 
 
 ## History
@@ -100,3 +102,5 @@ T-0742 removed retired global-state contracts from current source behavior and c
 |---|---|---|
 | 2026-07-29 | Draft | Initial task scaffold. |
 | 2026-07-30 | In Progress | Retired-state source contracts and repo-local smoke routing drift cleaned; full check passed; clean-checkout smoke blocked by sandbox EPERM. |
+| 2026-08-01 | In Progress | Removed remaining active test/development fixtures that created retired global-state docs; focused suite and full `npm run check` passed. Rechecked close dry-run; only AC-5 and final Done history remain blocked. |
+| 2026-08-01 | Done | Host clean-checkout smoke passed after removing stale handoff/readiness fixtures; all acceptance criteria are met and the capsule is ready for task close. |

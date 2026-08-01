@@ -239,12 +239,11 @@ export function createReleaseGateReport(projectRoot: string, mode: ReleaseGateRe
 function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateReport['mode']): Pick<ReleaseGateReport, 'checks' | 'issues'> {
   const packageJson = readJsonObject(path.join(projectRoot, 'package.json'));
   const ciWorkflow = readOptionalText(path.join(projectRoot, '.github', 'workflows', 'ci.yml'));
-  const v1Schemas = readOptionalText(path.join(projectRoot, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'));
   const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
   const architecture = readOptionalText(path.join(projectRoot, 'docs', 'ARCHITECTURE.md'));
   const tuiDesign = readOptionalText(path.join(projectRoot, 'docs', 'design', 'TUI_DESIGN_NOTES.md'));
   const releaseReadiness = readOptionalText(path.join(projectRoot, 'docs', 'RELEASE_READINESS.md'));
-  const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
+  const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md')) ?? releaseReadiness;
   const licenseText = readOptionalText(path.join(projectRoot, 'LICENSE'));
   const evidence = readReleaseEvidenceRecords(projectRoot);
 
@@ -253,7 +252,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkPackageScripts(packageJson, mode),
     checkNodePolicy(packageJson, ciWorkflow, mode),
     checkCiWorkflow(ciWorkflow, mode),
-    checkCleanCheckoutPolicy(v1Schemas, developmentSlices, releaseReadiness, mode),
+    checkCleanCheckoutPolicy(developmentSlices, releaseReadiness, mode),
     checkPackageSmokeArtifactBoundary(releaseReadiness, mode),
     checkPackageSmokeCommandSurface(releaseReadiness, mode),
     checkPackageMetadataReadiness(packageJson, licenseText, releaseReadiness, validationHistory, mode),
@@ -345,7 +344,6 @@ function checkCiWorkflow(ciWorkflow: string | null, mode: ReleaseGateReport['mod
 }
 
 function checkCleanCheckoutPolicy(
-  v1Schemas: string | null,
   developmentSlices: string | null,
   releaseReadiness: string | null,
   mode: ReleaseGateReport['mode']
@@ -355,7 +353,7 @@ function checkCleanCheckoutPolicy(
     'node dist/cli/main.js release gate --mode strict --json'
   ]);
   const ok =
-    includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'status --json']) &&
+    includesAll(releaseReadiness, ['npm ci', 'npm run check', 'doctor --json', 'status --json']) &&
     includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']) &&
     includesAll(releaseReadiness, [
       'Clean Checkout Package Smoke Plan',

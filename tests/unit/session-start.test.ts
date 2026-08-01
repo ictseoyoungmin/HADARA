@@ -234,7 +234,7 @@ describe('session start', () => {
       execute: true,
       generatedAt: '2026-06-19T12:09:00.000Z'
     });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# changed after warm\n');
+    fs.appendFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '\n<!-- changed after warm -->\n');
     const before = snapshotProject(root);
 
     const report = buildSessionStartReport({

@@ -54,8 +54,6 @@ describe('context source manifest', () => {
     expect(classifyContextSourcePath('docs/TASK_BOARD.md')).toBe('task-board');
     expect(classifyContextSourcePath('tasks/T-0001-example/TASK.md')).toBe('task-capsule');
     expect(classifyContextSourcePath('tasks/T-0001-example/evidence.jsonl')).toBe('evidence');
-    expect(classifyContextSourcePath('docs/PROJECT_STATE.md')).toBe('managed-section-source');
-    expect(classifyContextSourcePath('docs/AGENT_HANDOFF.md')).toBe('managed-section-source');
     expect(classifyContextSourcePath('src/context/source-manifest.ts')).toBe('source-file');
     expect(classifyContextSourcePath('tests/unit/source-manifest.test.ts')).toBe('test-file');
     expect(classifyContextSourcePath('README.md')).toBeUndefined();
@@ -67,8 +65,6 @@ describe('context source manifest', () => {
   it('builds a schema-valid metadata-first manifest without reading content by default', () => {
     const root = createTempProject();
     writeFile(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
-    writeFile(root, 'docs/PROJECT_STATE.md', '# PROJECT_STATE\n');
-    writeFile(root, 'docs/AGENT_HANDOFF.md', '# AGENT_HANDOFF\n');
     writeFile(root, 'docs/specs/0.3.3/context-routing/example.md', '# Spec\n');
     writeFile(root, '.hadara/docs-registry.json', '{"schemaVersion":"test"}\n');
     writeFile(root, 'tasks/T-0001-example/TASK.md', '# T-0001 Example\n');
@@ -88,15 +84,13 @@ describe('context source manifest', () => {
     expect(manifest.schemaVersion).toBe('hadara.context.sourceManifest.v1');
     expect(manifest.cacheVersion).toBe('c6.1-source-manifest-v1');
     expect(manifest.summary).toMatchObject({
-      sourceCount: 10,
+      sourceCount: 8,
       hashedSourceCount: 0,
       skippedSourceCount: 0,
       generatedByCommand: 'test'
     });
     expect(manifest.sources.map((source) => source.path)).toEqual([
       '.hadara/docs-registry.json',
-      'docs/AGENT_HANDOFF.md',
-      'docs/PROJECT_STATE.md',
       'docs/specs/0.3.3/context-routing/example.md',
       'docs/TASK_BOARD.md',
       'package.json',
@@ -258,8 +252,7 @@ describe('context source manifest', () => {
 
   it('keeps extractor-key mapping deterministic for cache invalidation planning', () => {
     expect(extractorKeysForContextSource('src/context/source-manifest.ts', 'source-file')).toEqual(['codeIndex']);
-    expect(extractorKeysForContextSource('docs/AGENT_HANDOFF.md', 'managed-section-source')).toEqual(['extractManagedSections', 'extractDecisions']);
-    expect(extractorKeysForContextSource('docs/PROJECT_STATE.md', 'managed-section-source')).toEqual(['extractManagedSections', 'extractDecisions']);
+    expect(extractorKeysForContextSource('docs/TASK_BOARD.md', 'task-board')).toEqual(['extractTaskBoard']);
     expect(extractorKeysForContextSource('docs/RELEASE_READINESS.md', 'release-doc')).toEqual(['extractReleaseReadiness', 'extractManagedSections']);
   });
 });

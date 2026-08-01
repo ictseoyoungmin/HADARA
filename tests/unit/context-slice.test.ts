@@ -279,7 +279,7 @@ describe('context slice report', () => {
     const deniedPaths = [
       '.hadara/local/cache/context/source-manifest.json',
       '.hadara/tmp/generated.txt',
-      '.hadara/run/current.json',
+      '.hadara/run/derived-state.json',
       '.hadara/private-state.txt',
       '.hadara/local/tui/state.json'
     ];

@@ -58,18 +58,8 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
     'utf8'
   );
   fs.writeFileSync(
-    path.join(root, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'),
-    ['npm ci', 'npm run check', 'node dist/cli/main.js doctor --json', 'node dist/cli/main.js status --json'].join('\n'),
-    'utf8'
-  );
-  fs.writeFileSync(
     path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
     ['clean checkout smoke', 'contextPath: null', 'without writing generated context files'].join('\n'),
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'PROJECT_STATE.md'),
-    'Compact current release, task, intent, problem, and validation projection.\n',
     'utf8'
   );
   fs.writeFileSync(
@@ -89,6 +79,7 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
       'Clean Checkout Package Smoke Plan',
       'npm ci',
       'npm run build',
+      'npm run check',
       'node dist/cli/main.js doctor --json',
       'node dist/cli/main.js status --json',
       'node dist/cli/main.js release gate --mode strict --json',
@@ -116,6 +107,8 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
       'The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`',
       'Remote CI observation',
       'local Docker validation remains the primary reproducible check',
+      'GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123',
+      'actions/runs/123',
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation:',
@@ -205,11 +198,6 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
       'Raw logs and private paths must stay temporary or private/local',
       'The release gate must not execute install matrix smoke'
     ].join('\n'),
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
-    ['GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123', 'hadara.packageSmoke.v1 evidence recorded'].join('\n'),
     'utf8'
   );
   writeReleaseEvidenceRecords(root);

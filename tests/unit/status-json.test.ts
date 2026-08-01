@@ -86,11 +86,6 @@ describe('Operations Status JSON', () => {
       '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0677 | Structured Continuation Semantics and rc2 Baseline Rollup | Done | tasks/T-0677-x | |\n',
       'utf8'
     );
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      '# AGENT_HANDOFF\n\n## Next Recommended Step\n\nNo follow-up work is queued.\n',
-      'utf8'
-    );
     const report = createProjectStatusV2Report(root);
 
     expect(report.phase).toBe('idle');
@@ -302,23 +297,6 @@ describe('Operations Status JSON', () => {
     expect(report.issues).toEqual([]);
   });
 
-  it('does not require AGENT_HANDOFF for governed or registered profiles', () => {
-    const governed = tempProject();
-    writeProfileProjectDocs(governed, 'governed');
-
-    const governedReport = createOpsStatusReport(governed, { includeDebt: false, taskStatusSource: 'task-board' });
-
-    expect(governedReport.issues).not.toContainEqual(expect.objectContaining({ code: 'AGENT_HANDOFF_MISSING' }));
-    expect(governedReport.issues).not.toContainEqual(expect.objectContaining({ code: 'DEVELOPMENT_SLICES_MISSING' }));
-
-    const standardWithRegisteredHandoff = tempProject();
-    writeProfileProjectDocs(standardWithRegisteredHandoff, 'standard', ['docs/AGENT_HANDOFF.md']);
-
-    const registeredReport = createOpsStatusReport(standardWithRegisteredHandoff, { includeDebt: false, taskStatusSource: 'task-board' });
-
-    expect(registeredReport.issues).not.toContainEqual(expect.objectContaining({ code: 'AGENT_HANDOFF_MISSING' }));
-  });
-
   it('degrades instead of failing when active run local state is malformed', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -355,12 +333,6 @@ describe('Operations Status JSON', () => {
   it('uses default phase and falls back to validation history', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: release-hardening\n', 'utf8');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      '# AGENT_HANDOFF\n\n## Current State\n\n- Handoff exists.\n',
-      'utf8'
-    );
     fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
     fs.writeFileSync(
@@ -382,120 +354,6 @@ describe('Operations Status JSON', () => {
       latestDoneLevelValidation: 'Docker node dist/cli/main.js harness validate --task T-0053 --level done --json returned ok true'
     });
     expect(report.issues).toEqual([]);
-  });
-
-  it('parses table-first Project State current phase rows', () => {
-    const root = tempProject();
-    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(
-      path.join(root, 'docs', 'PROJECT_STATE.md'),
-      [
-        '# PROJECT_STATE',
-        '',
-        '## Current Phase',
-        '',
-        '| Field | Value |',
-        '|---|---|',
-        '| Phase | bootstrap-development |',
-        '| Status | initialized |'
-      ].join('\n'),
-      'utf8'
-    );
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Ready.\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
-
-    const report = createOpsStatusReport(root);
-
-    expect(report.project.phase).toBe('bootstrap-development');
-  });
-
-  it('ignores legacy handoff validation and uses validation history', () => {
-    const root = tempProject();
-    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: dashboard-refresh\n', 'utf8');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      [
-        '# AGENT_HANDOFF',
-        '',
-        '## Current State',
-        '',
-        '| Area | State | Notes |',
-        '|---|---|---|',
-        '| Branch | main | current |',
-        '',
-        '## Next Recommended Step',
-        '',
-        '| Step | Reason | Done Evidence |',
-        '|---|---|---|',
-        '| Continue | current task | evidence |',
-        '',
-        '## Validation Baseline',
-        '',
-        '| Check | Latest Evidence | Notes |',
-        '|---|---|---|',
-        '| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 586 tests during T-0224. | Current |'
-      ].join('\n'),
-      'utf8'
-    );
-    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '- Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed.\n', 'utf8');
-
-    const report = createOpsStatusReport(root);
-
-    expect(report.validation.latestFullCheck).toBe('Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed');
-  });
-
-  it('does not parse legacy handoff table sections into status', () => {
-    const root = tempProject();
-    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: table-parser\n', 'utf8');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      [
-        '# AGENT_HANDOFF',
-        '',
-        '## Current State',
-        '',
-        '| Area | State | Notes |',
-        '|---|---|---|',
-        '| Branch | main | table fixture |',
-        '',
-        '## Current Known Problems',
-        '',
-        '| Issue | Impact | Next Step |',
-        '|---|---|---|',
-        '| None | None | Continue |',
-        '',
-        '## Next Recommended Step',
-        '',
-        '| Step | Reason | Done Evidence |',
-        '|---|---|---|',
-        '| Continue | table parser works | status evidence |',
-        '',
-        '## Validation Baseline',
-        '',
-        '| Check | Latest Evidence | Notes |',
-        '|---|---|---|',
-        '| Latest full check | Docker sync-build passed | fixture |',
-        '| Latest done-level validation | harness validate passed | fixture |'
-      ].join('\n'),
-      'utf8'
-    );
-    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
-
-    const report = createOpsStatusReport(root);
-
-    expect(report.handoff.currentState).toEqual([]);
-    expect(report.handoff.nextRecommendedStep).toEqual([]);
-    expect(report.tasks.nextRecommended).toBe(null);
-    expect(report.validation.latestFullCheck).toBe(null);
-    expect(report.validation.latestDoneLevelValidation).toBe(null);
   });
 
   it('aliases default status to task status and keeps legacy diagnostics explicit', () => {
@@ -738,45 +596,6 @@ describe('Operations Status JSON', () => {
 
 function writeProjectDocs(root: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, 'docs', 'PROJECT_STATE.md'),
-    `# PROJECT_STATE
-
-## Current Phase
-
-Phase 0 / Phase 1 boundary.
-`,
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    `# AGENT_HANDOFF
-
-## Current State
-
-- MCP guard layer is complete.
-
-## Last 3 Completed Tasks
-
-- T-0050 MCP Write Audit Log: done.
-- T-0051 MCP Phase/Mode Config: done.
-- T-0052 MCP Evidence Attach Approval Record: done.
-
-## Current Known Problems
-
-- Docker is the working validation path for now.
-
-## Next Recommended Step
-
-1. Do T-0053 Operations Status JSON before dashboard implementation.
-
-## Validation Baseline
-
-- Latest full check: Docker npm ci && npm run check passed with 27 test files and 142 tests.
-- Latest done-level validation: T-0052 ok.
-`,
-    'utf8'
-  );
   writeCanonicalTaskBoard(root);
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
 }
@@ -796,28 +615,10 @@ function writeProfileProjectDocs(root: string, profile: 'basic' | 'standard' | '
       registryVersion: 1,
       projectProfile: profile,
       documents: [
-        { path: 'docs/PROJECT_STATE.md', status: 'canonical' },
         { path: 'docs/TASK_BOARD.md', status: 'canonical' },
         ...extraRegisteredDocs.map((docPath) => ({ path: docPath, status: 'canonical' }))
       ]
     }, null, 2)}\n`,
-    'utf8'
-  );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'PROJECT_STATE.md'),
-    [
-      '# PROJECT_STATE',
-      '',
-      '## Metadata',
-      '',
-      '| Field | Value |',
-      '|---|---|',
-      `| HADARA Profile | ${profile} |`,
-      '',
-      '## Current Phase',
-      '',
-      'Phase: initialized'
-    ].join('\n'),
     'utf8'
   );
   writeCanonicalTaskBoard(root);

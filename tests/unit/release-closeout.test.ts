@@ -26,8 +26,6 @@ describe('release closeout read-only plan', () => {
     const task = createTaskCapsule(root, 'Release publish');
     write(root, 'docs/RELEASE_READINESS.md', `# Release Readiness\n\n0.3.4 ${task.id} readiness and publish verified.\n`);
     write(root, 'docs/RELEASE_NOTES.md', '# Release Notes\n\n0.3.4 shipped.\n');
-    write(root, 'docs/PROJECT_STATE.md', `# Project State\n\n${task.id} closeout mentions task but not version.\n`);
-    write(root, 'docs/AGENT_HANDOFF.md', '# Handoff\n\nNo release closeout yet.\n');
     write(root, 'docs/DEVELOPMENT_SLICES.md', `# Slices\n\n${task.id} 0.3.4 done.\n`);
     completeTask(task.dir, task.id, '0.3.4');
     fs.rmSync(path.join(task.dir, 'HANDOFF.md'), { force: true });
@@ -43,17 +41,15 @@ describe('release closeout read-only plan', () => {
       taskId: task.id,
       readOnly: true,
       input: { version: '0.3.4', taskId: task.id },
-      summary: { files: 9, suggestedFragments: 4 },
+      summary: { files: 7, suggestedFragments: 3 },
       issues: []
     });
     expect(report.surfaces).toContainEqual(expect.objectContaining({ path: 'docs/RELEASE_READINESS.md', status: 'current', role: 'source-readiness' }));
-    expect(report.surfaces).toContainEqual(expect.objectContaining({ path: 'docs/PROJECT_STATE.md', status: 'stale', missingSignals: ['0.3.4'] }));
     expect(report.surfaces).toContainEqual(expect.objectContaining({ path: `tasks/${task.id}-release-publish/HANDOFF.md`, status: 'missing' }));
     expect(report.suggestedFragments.map((fragment) => fragment.path)).toEqual([
       'docs/RELEASE_READINESS.md',
       'docs/RELEASE_NOTES.md',
-      'docs/PROJECT_STATE.md',
-      'docs/AGENT_HANDOFF.md'
+      `tasks/${task.id}/HANDOFF.md`
     ]);
     expect(validateSchema('hadara.releaseCloseout.v1', report).ok).toBe(true);
   });

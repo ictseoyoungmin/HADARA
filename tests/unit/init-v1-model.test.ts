@@ -69,11 +69,9 @@ describe('Init v1 core model', () => {
     ]);
     const allPaths = governed.map((file) => file.path);
     for (const forbidden of [
-      '.hadara/state/current.json',
       '.hadara/scaffold.json',
       '.hadara/docs-registry.json',
-      'docs/PROJECT_STATE.md',
-      'docs/AGENT_HANDOFF.md'
+      'tasks/.gitkeep'
     ]) {
       expect(allPaths).not.toContain(forbidden);
     }

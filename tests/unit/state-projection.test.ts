@@ -218,35 +218,6 @@ describe('state consistency projection', () => {
 });
 
 function writeSharedState(root: string, latestTaskId: string): void {
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE
-
-## Metadata
-
-| Field | Value |
-|---|---|
-| HADARA Profile | governed |
-| Latest Completed Task | ${latestTaskId} Projection fixture |
-| Active Task | None |
-
-## Current Status
-
-- Latest completed task is ${latestTaskId}.
-`, 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
-
-## Current State
-
-| Area | State | Notes |
-|---|---|---|
-| Latest Completed Task | ${latestTaskId} Projection fixture | Fixture. |
-| Active / Next Task | Phase 8.5 | Fixture. |
-
-## Last 3 Completed Tasks
-
-| Task | Summary | Evidence |
-|---|---|---|
-| ${latestTaskId} Projection fixture | Fixture. | Fixture. |
-`, 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), `# DEVELOPMENT_SLICES
 
 | Order | Slice | Capsule | Purpose | Done Evidence |
@@ -268,10 +239,10 @@ function writeDocsRegistry(root: string): void {
   fs.writeFileSync(path.join(root, '.hadara', 'docs-registry.json'), `${JSON.stringify({
     schemaVersion: 'hadara.docs.registry.v1',
     registryVersion: 1,
-    projectProfile: 'governed',
-    documents: [
-      { path: 'docs/PROJECT_STATE.md', status: 'canonical' },
-      { path: 'docs/AGENT_HANDOFF.md', status: 'canonical' }
+      projectProfile: 'governed',
+      documents: [
+      { path: 'docs/TASK_BOARD.md', status: 'canonical' },
+      { path: 'docs/DEVELOPMENT_SLICES.md', status: 'canonical' }
     ]
   }, null, 2)}\n`, 'utf8');
 }
@@ -341,8 +312,6 @@ function currentSourceHash(root: string, taskDir: string): string {
 function snapshotProject(root: string): Record<string, string> {
   const files = [
     'docs/TASK_BOARD.md',
-    'docs/PROJECT_STATE.md',
-    'docs/AGENT_HANDOFF.md',
     'docs/DEVELOPMENT_SLICES.md',
     'docs/RELEASE_READINESS.md',
     '.hadara/docs-registry.json'

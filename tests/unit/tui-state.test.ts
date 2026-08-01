@@ -290,35 +290,6 @@ describe('TUI interaction state', () => {
 
 function writeProjectDocs(root: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 0 / Phase 1 boundary.\n', 'utf8');
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      '- TUI state tests are running.',
-      '',
-      '## Current Known Problems',
-      '',
-      '- Docker is the working validation path for now.',
-      '',
-      '## Last 3 Completed Tasks',
-      '',
-      '- T-0104 TUI Snapshot Polish: complete.',
-      '',
-      '## Next Recommended Step',
-      '',
-      '- Continue TUI interactive state.',
-      '',
-      '## Validation Baseline',
-      '',
-      '- Latest full check: Docker npm run check passed',
-      '- Latest done-level validation: T-0104 ok'
-    ].join('\n'),
-    'utf8'
-  );
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
 }

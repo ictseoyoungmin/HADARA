@@ -15,8 +15,6 @@ function tempProject(): string {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.mkdirSync(path.join(root, 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(root, '.hadara', 'context'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 0 / Phase 1 boundary.\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Test state.\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
   fs.writeFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), '# HADARA Context\n', 'utf8');
   return root;

@@ -139,7 +139,6 @@ describe('single active run state', () => {
 
   it('separates active-run report schema assertion failures from malformed local state', () => {
     const root = tempProject();
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- T-999 is active.\n', 'utf8');
     writeActiveRunManifest(root, {
       schemaVersion: 'hadara.active_run.v1',
       runId: 'run-schema-invalid',
@@ -237,7 +236,6 @@ describe('single active run state', () => {
   it('warns when an existing task has an empty manifest capsule path', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Empty capsule active run');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
     writeActiveRunManifest(root, {
       schemaVersion: 'hadara.active_run.v1',
       runId: 'run-empty-capsule',

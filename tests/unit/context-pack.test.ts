@@ -134,22 +134,6 @@ describe('context pack', () => {
       projectProfile: 'basic',
       documents: [
         {
-          path: 'docs/PROJECT_STATE.md',
-          title: 'PROJECT_STATE',
-          owner: 'hadara-docs',
-          kind: 'project-state',
-          status: 'canonical',
-          scope: 'project',
-          profiles: ['basic'],
-          readWhen: ['session-start'],
-          requiredReading: true,
-          updateOwner: 'mixed',
-          updatedByCommands: [],
-          managedSections: [],
-          closeSourceRole: 'included',
-          supersedes: []
-        },
-        {
           path: 'docs/TASK_BOARD.md',
           title: 'TASK_BOARD',
           owner: 'hadara-docs',
@@ -167,7 +151,11 @@ describe('context pack', () => {
         }
       ]
     })}\n`, 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\nConsumer project.\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n\nConsumer project.\n',
+      'utf8'
+    );
     const task = createTaskCapsule(root, 'Consumer context pack task');
 
     const report = buildContextPackReport({ projectRoot: root, taskId: task.id, generatedAt });
@@ -177,7 +165,6 @@ describe('context pack', () => {
     expect(stateIssueCodes).not.toContain('STATE_RELEASE_EVIDENCE_STALE');
     expect(stateIssuePaths).not.toContain('src/services/capability-registry.ts');
     expect(stateIssuePaths).not.toContain('docs/RELEASE_READINESS.md');
-    expect(stateIssuePaths).not.toContain('docs/AGENT_HANDOFF.md');
     assertSchema('hadara.contextPack.v1', report);
   });
 
@@ -553,7 +540,7 @@ function sampleGraphReport(options: { includeCode?: boolean } = {}): ContextGrap
     edge('REFERENCES_DOC', `task:${taskId}`, 'doc:docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md', 'Active task references the C3 spec.', 'explicit'),
     edge('DESCRIBES_COMMAND', 'doc:docs/IMPLEMENTATION_SOP.md', 'command:task.close', 'SOP describes task.close.', 'explicit'),
     edge('HAS_EVIDENCE', `task:${taskId}`, `ev:${taskId}:aaaaaaaaaaaaaaaaaaaaaaaa`, 'Task has validation evidence.', 'explicit'),
-    edge('HAS_KNOWN_PROBLEM', 'doc:docs/AGENT_HANDOFF.md', 'known-problem:fixture', 'Handoff records known problem.', 'explicit'),
+    edge('HAS_KNOWN_PROBLEM', 'doc:docs/TASK_BOARD.md', 'known-problem:fixture', 'Task Board records known problem.', 'explicit'),
     ...(includeCode ? [
       edge('IMPLEMENTS_COMMAND', 'file:src/cli/context.ts', 'command:context.graph', 'Context CLI implements context graph.', 'derived'),
       edge('TESTS_FILE', 'file:tests/unit/context-pack.test.ts', 'file:src/context/context-pack.ts', 'Context pack tests cover context pack source.', 'derived'),
@@ -738,11 +725,11 @@ function knownProblemNode(): ContextGraphNode {
     id: 'known-problem:fixture',
     type: 'KnownProblem',
     label: 'Known problem fixture',
-    path: 'docs/AGENT_HANDOFF.md',
+    path: 'docs/TASK_BOARD.md',
     source: {
-      path: 'docs/AGENT_HANDOFF.md',
-      extractor: 'extractAgentHandoff',
-      hash: 'sha256:handoff'
+      path: 'docs/TASK_BOARD.md',
+      extractor: 'extractTaskBoard',
+      hash: 'sha256:task-board'
     }
   };
 }

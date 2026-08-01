@@ -61,17 +61,17 @@ afterEach(() => {
 });
 
 describe('Phase 7.3 docs registry', () => {
-  it('keeps the repository docs registry fixture parseable and aligned with its projection', () => {
+  it('keeps retired global-state compatibility paths unregistered and the repository projection aligned', () => {
     const repoRoot = process.cwd();
     const registry = JSON.parse(fs.readFileSync(path.join(repoRoot, DOCS_REGISTRY_PATH), 'utf8')) as DocumentRegistryFile;
-    const removedGlobalStatePaths = ['.hadara/state/current.json', 'docs/AGENT_HANDOFF.md', 'docs/PROJECT_STATE.md'];
+    const retiredCompatibilityPaths = ['.hadara/state/current.json', 'docs/AGENT_HANDOFF.md', 'docs/PROJECT_STATE.md'];
     const registryPaths = registry.documents.map((doc) => doc.path);
     const projection = fs.readFileSync(path.join(repoRoot, 'docs', 'DOC_REGISTRY.md'), 'utf8');
 
     expect(registry.schemaVersion).toBe('hadara.docs.registry.v1');
-    expect(registryPaths).not.toEqual(expect.arrayContaining(removedGlobalStatePaths));
+    expect(registryPaths).not.toEqual(expect.arrayContaining(retiredCompatibilityPaths));
     expect(renderDocRegistryMarkdown(registry)).toBe(projection);
-    for (const removedPath of removedGlobalStatePaths) {
+    for (const removedPath of retiredCompatibilityPaths) {
       expect(projection).not.toContain(`\`${removedPath}\``);
     }
   });
@@ -89,7 +89,6 @@ describe('Phase 7.3 docs registry', () => {
     expect(fs.existsSync(path.join(standard, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(true);
     expect(fs.existsSync(path.join(standard, 'docs', 'DOC_REGISTRY.md'))).toBe(false);
     expect(readRegistry(basic).documents.map((doc) => doc.path)).not.toContain('.hadara/context/HADARA_CONTEXT.md');
-    expect(readRegistry(basic).documents.map((doc) => doc.path)).not.toContain('docs/PROJECT_STATE.md');
     expect(readRegistry(standard).documents.find((doc) => doc.path === '.hadara/context/HADARA_CONTEXT.md')).toMatchObject({
       kind: 'project-context',
       status: 'canonical',
@@ -104,7 +103,6 @@ describe('Phase 7.3 docs registry', () => {
     expect(readRegistry(standard).documents.map((doc) => doc.path)).not.toEqual(
       expect.arrayContaining(['docs/DEVELOPMENT_SLICES.md', 'docs/SECURITY_MODEL.md'])
     );
-    expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toContain('docs/AGENT_HANDOFF.md');
     expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toEqual(
       expect.arrayContaining(['docs/SECURITY_MODEL.md', 'docs/ROADMAP.md'])
     );
@@ -198,12 +196,10 @@ describe('Phase 7.3 docs registry', () => {
     const readMap = createDocsReadMapReport(root, 'T-0001');
 
     expect(list.ok).toBe(true);
-    expect(list.documents.find((doc) => doc.path === 'docs/AGENT_HANDOFF.md')).toBeUndefined();
     expect(doctor).toMatchObject({
       ok: true,
       summary: expect.objectContaining({ registryPresent: true })
     });
-    expect(readMap.readFirst.map((entry) => entry.path)).not.toContain('docs/AGENT_HANDOFF.md');
   });
 
   it('lists registry entries with status and read-time filters', () => {

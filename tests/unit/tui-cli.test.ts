@@ -269,35 +269,6 @@ class MemoryOutput extends Writable implements TuiTerminalOutput {
 
 function writeProjectDocs(root: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 0 / Phase 1 boundary.\n', 'utf8');
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      '- TUI CLI task is current.',
-      '',
-      '## Current Known Problems',
-      '',
-      '- Docker is the working validation path for now.',
-      '',
-      '## Last 3 Completed Tasks',
-      '',
-      '- T-0106 TUI Raw Terminal Shell: complete.',
-      '',
-      '## Next Recommended Step',
-      '',
-      '- Continue public TUI CLI entry point.',
-      '',
-      '## Validation Baseline',
-      '',
-      '- Latest full check: Docker npm run check passed',
-      '- Latest done-level validation: T-0106 ok'
-    ].join('\n'),
-    'utf8'
-  );
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
 }

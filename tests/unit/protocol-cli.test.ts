@@ -15,8 +15,7 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, '.hadara', 'scaffold.json'), `${JSON.stringify({ profile: 'basic' }, null, 2)}\n`, 'utf8');
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nNo active task yet.\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
   fs.writeFileSync(
     path.join(dir, 'docs', 'HADARA_WORKFLOW.md'),
     workflowDocContent(),
@@ -68,7 +67,6 @@ describe('protocol CLI command handler', () => {
   it('prints JSON for protocol doctor --task', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI protocol');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive: ${task.id}\n`, 'utf8');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     const handled = handleProtocolCommand({
@@ -111,7 +109,6 @@ describe('protocol CLI command handler', () => {
   it('prints JSON for protocol doctor --scope docs', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Docs CLI protocol');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive: ${task.id}\n`, 'utf8');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     const handled = handleProtocolCommand({
@@ -166,7 +163,6 @@ describe('protocol CLI command handler', () => {
   it('prints JSON for protocol doctor --scope all', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'All CLI protocol');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive: ${task.id}\n`, 'utf8');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     const handled = handleProtocolCommand({

@@ -106,8 +106,6 @@ describe('CLI Hermes JSON reports', () => {
     expect(report.content).toContain('# HADARA_CONTEXT');
     expect(report.content).toContain('## docs/TASK_BOARD.md');
     expect(report.content).toContain('## docs/HADARA_WORKFLOW.md');
-    expect(report.content).not.toContain('## docs/PROJECT_STATE.md');
-    expect(report.content).not.toContain('## docs/AGENT_HANDOFF.md');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
   });
 

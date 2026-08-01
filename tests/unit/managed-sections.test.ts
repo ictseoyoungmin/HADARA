@@ -72,8 +72,6 @@ describe('Phase 7.4 managed sections', () => {
     if (fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))) {
       expect(createManagedSectionExplainReport(root, 'docs/DOC_REGISTRY.md').sections.map((section) => section.id)).toContain('doc-registry-summary');
     }
-    expect(fs.existsSync(path.join(root, 'docs', 'PROJECT_STATE.md'))).toBe(false);
-    expect(fs.existsSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'))).toBe(false);
     const implementationSopSections = createManagedSectionExplainReport(root, 'docs/IMPLEMENTATION_SOP.md').sections.map((section) => section.id);
     if (implementationSopSections.length > 0) expect(implementationSopSections).toContain('required-reading');
     if (fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))) {

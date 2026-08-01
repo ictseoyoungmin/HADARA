@@ -438,30 +438,7 @@ function tempProject(options: { handoffNextStep?: string; developmentRows?: stri
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-selection-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      '| Area | State | Notes |',
-      '|---|---|---|',
-      '| Active / Next Task | T-0181 Task Next Recommendation | Fixture. |',
-      '',
-      ...(options.handoffNextStep
-        ? [
-            '## Next Recommended Step',
-            '',
-            '| Step | Reason | Done Evidence |',
-            '|---|---|---|',
-            `| ${options.handoffNextStep} | Fixture handoff priority. | TBD |`,
-            ''
-          ]
-        : [])
-    ].join('\n'),
-    'utf8'
-  );
+  void options.handoffNextStep;
   if (options.developmentRows) writeDevelopmentSlices(root, options.developmentRows);
   return root;
 }

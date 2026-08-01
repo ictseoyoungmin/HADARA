@@ -22,12 +22,6 @@ function tempProject(): string {
   writeScaffoldProfile(dir, 'basic');
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n', 'utf8');
   fs.writeFileSync(
-    path.join(dir, 'docs', 'AGENT_HANDOFF.md'),
-    '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State |\n|---|---|\n| Active / Next Task | none |\n',
-    'utf8'
-  );
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
-  fs.writeFileSync(
     path.join(dir, 'docs', 'TASK_BOARD.md'),
     '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n',
     'utf8'
@@ -48,11 +42,6 @@ describe('Docs protocol consistency report', () => {
   it('returns an all-scoped report that aggregates docs, profile, and active-task diagnostics', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'All protocol');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      `# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | none | none |\n| Active / Next Task | ${task.id} | active |\n`,
-      'utf8'
-    );
 
     const report = createAllProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
@@ -87,7 +76,7 @@ describe('Docs protocol consistency report', () => {
     writeProfileMetadata(root, 'basic');
     fs.writeFileSync(
       path.join(root, 'AGENTS.md'),
-      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n',
+      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/TASK_BOARD.md` | Every session | Current task routing. |\n',
       'utf8'
     );
 
@@ -134,11 +123,6 @@ describe('Docs protocol consistency report', () => {
   it('returns a stable docs-scoped report for an in-sync project', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Docs protocol');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      `# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | none | none |\n| Active / Next Task | ${task.id} | active |\n`,
-      'utf8'
-    );
 
     const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
@@ -197,11 +181,6 @@ describe('Docs protocol consistency report', () => {
     markTaskDone(root, doneTask.id);
     replaceInFile(path.join(activeTask.dir, 'TASK.md'), '| Status | Draft |', '| Status | Active |');
     replaceInFile(path.join(activeTask.dir, 'TASK.md'), '\n## Status\n\nDraft\n', '\n## Status\n\nActive\n');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      `# AGENT_HANDOFF\n\nActive task: ${activeTask.id}\n`,
-      'utf8'
-    );
     replaceInFile(
       path.join(root, 'AGENTS.md'),
       '# AGENTS\n',
@@ -244,16 +223,6 @@ describe('Docs protocol consistency report', () => {
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
     fs.writeFileSync(
-      path.join(root, 'docs', 'PROJECT_STATE.md'),
-      '# PROJECT_STATE\n\n## Current Status\n\n- Active Task: T-9999\n- Latest Completed Task: T-9998\n',
-      'utf8'
-    );
-    fs.writeFileSync(
-      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-      '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | T-9998 | stale |\n| Active / Next Task | T-9999 | stale |\n',
-      'utf8'
-    );
-    fs.writeFileSync(
       path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
       '# DEVELOPMENT_SLICES\n\n| Order | Slice | Capsule | Purpose | Done Evidence |\n|---|---|---|---|---|\n| 1 | Drift | T-0001 | Check drift. | Done: stale evidence. |\n',
       'utf8'
@@ -286,13 +255,8 @@ describe('Profile protocol consistency report', () => {
     const root = tempProject();
     writeProfileDocs(root, 'governed');
     fs.writeFileSync(
-      path.join(root, 'docs', 'PROJECT_STATE.md'),
-      '# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | basic |\n',
-      'utf8'
-    );
-    fs.writeFileSync(
       path.join(root, 'AGENTS.md'),
-      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n',
+      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/TASK_BOARD.md` | Every session | Current task routing. |\n',
       'utf8'
     );
 
@@ -344,20 +308,6 @@ describe('Profile protocol consistency report', () => {
     expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeUndefined();
   });
 
-  it('does not diagnose PROJECT_STATE as missing in full task status for basic', () => {
-    const root = tempProject();
-    fs.rmSync(path.join(root, 'docs', 'PROJECT_STATE.md'));
-    fs.rmSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'));
-    const task = createTaskCapsule(root, 'Basic full status');
-
-    const report = createTaskStatusV2Report(root, task.id, new Date('2026-05-30T00:00:00.000Z'), { detail: 'full' });
-
-    expect(JSON.stringify(report)).not.toContain('PROTOCOL_DOCS_PROJECT_DOC_MISSING');
-    expect(JSON.stringify(report)).not.toContain('PROTOCOL_PROFILE_PROFILE_REQUIRED_DOC_MISSING');
-    expect(JSON.stringify(report)).not.toContain('docs/PROJECT_STATE.md');
-    expect(validateSchema('hadara.task.status.v2', report).ok).toBe(true);
-  });
-
   it('uses declared governed metadata as the target when only standard docs exist', () => {
     const root = tempProject();
     writeScaffoldProfile(root, 'governed');
@@ -374,22 +324,6 @@ describe('Profile protocol consistency report', () => {
     });
     expect(report.issues.map((issue) => issue.code)).toContain('PROFILE_REQUIRED_DOC_MISSING');
     expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toBeTruthy();
-  });
-
-  it('does not infer governed profile from legacy global docs when metadata is missing', () => {
-    const root = tempProject();
-    fs.rmSync(path.join(root, '.hadara', 'scaffold.json'));
-    writeProfileDocs(root, 'governed');
-
-    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
-
-    expect(report.summary.profile).toMatchObject({
-      declared: 'unknown',
-      detected: 'basic',
-      target: 'basic',
-      source: 'metadata-and-docset'
-    });
-    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_MISSING');
   });
 
   it('uses partial governed docs as the target when metadata declares basic', () => {
@@ -427,24 +361,6 @@ describe('Profile protocol consistency report', () => {
     expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
   });
 
-  it('does not use PROJECT_STATE as a profile metadata source', () => {
-    const root = tempProject();
-    fs.rmSync(path.join(root, '.hadara', 'scaffold.json'));
-    writeProfileDocs(root, 'standard');
-    writeProfileMetadata(root, 'standard');
-
-    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
-
-    expect(report.summary.profile).toMatchObject({
-      declared: 'unknown',
-      detected: 'basic',
-      target: 'basic',
-      source: 'metadata-and-docset'
-    });
-    expect(report.issues.map((issue) => issue.code)).not.toContain('PROFILE_METADATA_DRIFT');
-    expect(report.issues.find((issue) => issue.code === 'PROFILE_METADATA_DRIFT')).toBeUndefined();
-  });
-
   it('requires AGENTS profile paths inside the Required Reading table', () => {
     const root = tempProject();
     writeScaffoldProfile(root, 'governed');
@@ -452,7 +368,7 @@ describe('Profile protocol consistency report', () => {
     writeProfileMetadata(root, 'governed');
     fs.writeFileSync(
       path.join(root, 'AGENTS.md'),
-      '# AGENTS\n\nMention `docs/ROADMAP.md` in prose only.\n\n## Required Reading\n\n1. `docs/PROJECT_STATE.md`\n2. `docs/AGENT_HANDOFF.md`\n3. `docs/TASK_BOARD.md`\n4. `docs/HADARA_WORKFLOW.md`\n',
+      '# AGENTS\n\nMention `docs/ROADMAP.md` in prose only.\n\n## Required Reading\n\n1. `docs/TASK_BOARD.md`\n2. `docs/HADARA_WORKFLOW.md`\n',
       'utf8'
     );
 
@@ -471,7 +387,6 @@ describe('Task protocol consistency report', () => {
   it('returns a stable task-scoped report for an in-sync draft capsule', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Protocol draft');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive task: ${task.id}\n`, 'utf8');
 
     const report = createTaskProtocolConsistencyReport(root, task.id, new Date('2026-05-30T00:00:00.000Z'));
 
@@ -675,12 +590,8 @@ function writeScaffoldProfile(root: string, profile: 'basic' | 'standard' | 'gov
   fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), `${JSON.stringify({ profile }, null, 2)}\n`, 'utf8');
 }
 
-function writeSplitProfileMetadata(root: string, projectStateProfile: 'basic' | 'standard' | 'governed', _workflowProfile: 'basic' | 'standard' | 'governed'): void {
-  fs.writeFileSync(
-    path.join(root, 'docs', 'PROJECT_STATE.md'),
-    `# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | ${projectStateProfile} |\n`,
-    'utf8'
-  );
+function writeSplitProfileMetadata(root: string, profile: 'basic' | 'standard' | 'governed', _workflowProfile: 'basic' | 'standard' | 'governed'): void {
+  writeScaffoldProfile(root, profile);
 }
 
 function workflowDocContent(): string {

@@ -39,7 +39,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction clean');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
 
     const report = createTaskCloseTransactionReport(root, task.id);
 
@@ -164,7 +163,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction lock timeout');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
     fs.mkdirSync(lockDir, { recursive: true });
     fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: process.pid, token: 'fixture-live-lock', command: 'test-holder', createdAt: new Date().toISOString() })}\n`, 'utf8');
@@ -212,7 +210,6 @@ describe('task close report', () => {
       const root = tempProject();
       const task = createTaskCapsule(root, `Close transaction ${name} timeout`);
       completeTask(root, task.id, task.dir);
-      markStateDocsCurrent(root, task.id);
       const actualLockDir = lockDir === 'TASK_LOCK'
         ? path.join(root, '.hadara', 'local', 'locks', 'task-close', `${task.id}.lock`)
         : path.join(root, lockDir);
@@ -243,7 +240,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction stale lock reclaim');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
     fs.mkdirSync(lockDir, { recursive: true });
     fs.writeFileSync(
@@ -272,7 +268,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction fresh metadata gap');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
     fs.mkdirSync(lockDir, { recursive: true });
 
@@ -289,7 +284,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction invalid metadata reclaim');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
     fs.mkdirSync(lockDir, { recursive: true });
     fs.writeFileSync(path.join(lockDir, 'lock.json'), '{not json', 'utf8');
@@ -314,7 +308,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction live old lock');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const lockDir = path.join(root, '.hadara', 'local', 'locks', 'task-board.lock');
     fs.mkdirSync(lockDir, { recursive: true });
     const old = new Date(Date.now() - 10 * 60 * 1000).toISOString();
@@ -337,7 +330,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction release ownership');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction release ownership | Done |`, `| ${task.id} | Close transaction release ownership | Draft |`),
@@ -366,7 +358,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction reviewed hash');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const review = createTaskClosePlanReport(root, task.id);
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(
@@ -400,7 +391,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction write intent');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(task.dir, 'TASK.md'),
       fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| Status | Done |', '| Status | Draft |'),
@@ -467,7 +457,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction malformed marker');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     fs.mkdirSync(path.dirname(operationPath), { recursive: true });
     fs.writeFileSync(operationPath, '{not-json', 'utf8');
@@ -501,7 +490,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction invalid marker schema');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
@@ -540,7 +528,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction invalid marker');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     fs.mkdirSync(path.dirname(operationPath), { recursive: true });
     fs.writeFileSync(operationPath, `${JSON.stringify({ taskId: task.id, operationId: 'fixture', planHash: 'sha256:fixture' }, null, 2)}\n`, 'utf8');
@@ -569,7 +556,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction marker mismatch');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
@@ -617,7 +603,6 @@ describe('task close report', () => {
       const root = tempProject();
       const task = createTaskCapsule(root, 'Close transaction minute boundary');
       completeTask(root, task.id, task.dir);
-      markStateDocsCurrent(root, task.id);
       const taskPath = path.join(task.dir, 'TASK.md');
       const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
       fs.writeFileSync(
@@ -666,7 +651,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction partial recovery');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction partial recovery | Done |`, `| ${task.id} | Close transaction partial recovery | Draft |`),
@@ -725,7 +709,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction partial retry');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction partial retry | Done |`, `| ${task.id} | Close transaction partial retry | Draft |`),
@@ -779,7 +762,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction prefix resume');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     // Revert both TASK.md status and the Task Board row to Draft so guarded writes has two
@@ -848,7 +830,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction write set drift');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -898,7 +879,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction marker hash binding');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
@@ -931,7 +911,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof-pending drift');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     const taskPath = path.join(task.dir, 'TASK.md');
 
@@ -968,7 +947,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof append source race');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     let mutated = false;
 
@@ -1000,7 +978,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction missing proof marker');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     let deleted = false;
 
@@ -1032,7 +1009,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction malformed proof marker');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     let corrupted = false;
 
@@ -1064,7 +1040,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction missing task at proof');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     let removed = false;
 
     const report = createTaskCloseTransactionReport(root, task.id, {
@@ -1094,7 +1069,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan guard required');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const dryRun = createTaskClosePlanReport(root, task.id);
 
     const report = createTaskClosePlanReport(root, task.id, {
@@ -1120,7 +1094,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan guard before writes');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1158,7 +1131,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan undefined guard before writes');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1197,7 +1169,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan throwing guard before writes');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1239,7 +1210,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan cached missing marker');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1281,7 +1251,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan cached mismatch marker');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1325,7 +1294,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan stale bound plan hash');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1366,7 +1334,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close plan stale bound write set');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const taskPath = path.join(task.dir, 'TASK.md');
     const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
     fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| Status | Done |', '| Status | Draft |'), 'utf8');
@@ -1408,7 +1375,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction before write fault');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction before write fault | Done |`, `| ${task.id} | Close transaction before write fault | Draft |`),
@@ -1443,7 +1409,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction guarded write hook');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction guarded write hook | Done |`, `| ${task.id} | Close transaction guarded write hook | Draft |`),
@@ -1474,7 +1439,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction fsync fault');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction fsync fault | Done |`, `| ${task.id} | Close transaction fsync fault | Draft |`),
@@ -1513,7 +1477,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction existing noop');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     let raced = false;
 
     const report = createTaskCloseTransactionReport(root, task.id, {
@@ -1566,7 +1529,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof append fault');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
     let interrupted = false;
 
@@ -1610,7 +1572,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof pending fault');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
       faultHooks: {
@@ -1643,7 +1604,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction durable proof pending');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
@@ -1678,7 +1638,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction terminal cleanup fault');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const operationPath = path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`);
 
     expect(() => createTaskCloseTransactionReport(root, task.id, {
@@ -1711,7 +1670,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction proof before guarded writes failure');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     fs.writeFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace(`| ${task.id} | Close transaction proof before guarded writes failure | Done |`, `| ${task.id} | Close transaction proof before guarded writes failure | Draft |`),
@@ -1777,7 +1735,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close schema negative fixture');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
 
     const report = createTaskCloseTransactionReport(root, task.id);
     expect(validateSchema('hadara.task.close.v3', report).ok).toBe(true);
@@ -1805,7 +1762,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction retry');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const first = createTaskCloseTransactionReport(root, task.id);
     expect(first.ok).toBe(true);
     const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
@@ -1834,7 +1790,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI close transaction');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const output: string[] = [];
     const originalLog = console.log;
     console.log = (message?: unknown) => {
@@ -1996,7 +1951,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close execute evidence');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
 
     const before = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
     const transaction = createTaskCloseTransactionReport(root, task.id);
@@ -2025,7 +1979,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close duplicate evidence');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const firstReport = createTaskCloseTransactionReport(root, task.id);
     const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
@@ -2053,7 +2006,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close race recheck');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const stalePlan = createTaskClosePlanReport(root, task.id, { executeRequested: false });
     const firstReport = createTaskCloseTransactionReport(root, task.id);
     const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
@@ -2084,7 +2036,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close supersedes evidence');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const firstReport = createTaskCloseTransactionReport(root, task.id);
     const firstRecord = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/).at(-1) ?? '{}');
 
@@ -2119,7 +2070,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close audit evidence');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const closeTransaction = createTaskCloseTransactionReport(root, task.id);
 
     const audit = createTaskAuditCloseReport(root, task.id);
@@ -2196,7 +2146,6 @@ describe('task close report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close snapshot drift');
     completeTask(root, task.id, task.dir);
-    markStateDocsCurrent(root, task.id);
     const closeReport = createTaskCloseTransactionReport(root, task.id);
     expect(closeReport.ok).toBe(true);
 
@@ -2325,12 +2274,6 @@ function updateTaskBoardDone(root: string, taskId: string): void {
   );
 }
 
-function markStateDocsCurrent(root: string, taskId: string): void {
-  const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
-  const agentHandoffPath = path.join(root, 'docs', 'AGENT_HANDOFF.md');
-  fs.writeFileSync(projectStatePath, `# Project State\n\n${taskId} is current and complete.\n`, 'utf8');
-  fs.writeFileSync(agentHandoffPath, `# Agent Handoff\n\n${taskId} is current and complete.\n`, 'utf8');
-}
 
 function closeProofCount(taskDir: string): number {
   return fs

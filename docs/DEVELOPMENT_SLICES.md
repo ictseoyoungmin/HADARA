@@ -1,6 +1,6 @@
 # DEVELOPMENT_SLICES
 
-HADARA development should proceed in small, evidence-backed slices. Each slice must live in a Task Capsule, run meaningful validation, update `EVIDENCE.md` and `evidence.jsonl`, and refresh `docs/AGENT_HANDOFF.md` before stopping.
+HADARA development should proceed in small, evidence-backed slices. Each slice must live in a Task Capsule, run meaningful validation, update `EVIDENCE.md` and `evidence.jsonl`, and refresh the task-local `HANDOFF.md` before stopping.
 
 | Order | Slice | Capsule | Purpose | Done Evidence |
 |---|---|---|---|---|

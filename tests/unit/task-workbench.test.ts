@@ -17,9 +17,7 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-workbench-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| HADARA Profile | governed |\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Active / Next Task | T-0001 | Fixture. |\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'), '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | State. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Board. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | SOP. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| governed | Heavy |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| docs/PROJECT_STATE.md | Product. |\n\n## Implementation\n\nWork.\n\n## Validation\n\nCheck.\n\n## Session End\n\nUpdate.\n\n## Handoff Compaction\n\nCompact.\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'), ['# IMPLEMENTATION_SOP', '', '## Session Start', '', 'Read the Task Board and selected Task Capsule.', '', '## Required Reading', '', '| Document | When to Read | Purpose |', '|---|---|---|', '| `.hadara/context/HADARA_CONTEXT.md` | Every session | Context routing. |', '| `docs/TASK_BOARD.md` | Every session | Board. |', '| `tasks/T-XXXX/HANDOFF.md` | Resume | Task continuation. |', '| `docs/IMPLEMENTATION_SOP.md` | Every session | SOP. |', '', '## Implementation', '', 'Work.', '', '## Validation', '', 'Check.', '', '## Session End', '', 'Update the selected Task Capsule.', ''].join('\\n'), 'utf8');
   return dir;
 }
 
@@ -760,8 +758,6 @@ describe('task workbench status report', () => {
 function snapshotProject(root: string): Record<string, string> {
   const files = [
     'docs/TASK_BOARD.md',
-    'docs/PROJECT_STATE.md',
-    'docs/AGENT_HANDOFF.md',
     ...fs.readdirSync(path.join(root, 'tasks')).flatMap((taskDir) => [
       `tasks/${taskDir}/TASK.md`,
       `tasks/${taskDir}/EVIDENCE.md`,

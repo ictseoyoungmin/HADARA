@@ -184,7 +184,6 @@ describe('Dogfooding E2E fixture', () => {
       ]
     });
 
-    writeProjectHandoff(root, task.id, fixture);
     markTaskDone(task);
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);

@@ -519,8 +519,8 @@ function runInstalledSmokes(input: {
   pushJsonSmokeStep(input, {
     id: 'context-slice',
     label: 'Verify context slice raw adapter',
-    command: 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json',
-    args: ['context', 'slice', '--path', 'docs/PROJECT_STATE.md', '--from', '1', '--to', '20', '--json'],
+    command: 'hadara context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json',
+    args: ['context', 'slice', '--path', 'docs/TASK_BOARD.md', '--from', '1', '--to', '20', '--json'],
     cwd: disposableProject
   });
 }
@@ -866,7 +866,7 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
     {
       id: 'context-slice',
       label: 'Verify context slice raw adapter',
-      command: 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json',
+      command: 'hadara context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json',
       status: 'planned',
       summary: 'Would verify bounded raw context slicing on initialized docs.'
     },
@@ -898,7 +898,7 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('status-ingress', 'Verify project status ingress read model', 'hadara status --json', 'Skipped because package install failed.'),
     skippedStep('task-close', 'Verify task close dry-run report', 'hadara task close --task <task-id> --dry-run --json', 'Skipped because package install failed.'),
-    skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json', 'Skipped because package install failed.')
+    skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json', 'Skipped because package install failed.')
   ];
 }
 

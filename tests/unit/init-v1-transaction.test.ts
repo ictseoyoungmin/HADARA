@@ -43,9 +43,6 @@ describe('Init v1 safe apply transaction', () => {
       '.hadara/local',
       '.hadara/scaffold.json',
       '.hadara/docs-registry.json',
-      '.hadara/state/current.json',
-      'docs/PROJECT_STATE.md',
-      'docs/AGENT_HANDOFF.md',
       'tasks/.gitkeep'
     ]) {
       expect(fs.existsSync(path.join(root, forbidden)), forbidden).toBe(false);

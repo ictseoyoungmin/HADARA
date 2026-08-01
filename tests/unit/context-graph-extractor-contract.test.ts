@@ -24,13 +24,13 @@ describe('context graph extractor contract helpers', () => {
     expect(normalizeContextGraphPath('./docs\\TASK_BOARD.md')).toBe('docs/TASK_BOARD.md');
     expect(toProjectRelativeContextPath('/workspace/project', '/workspace/project/tasks/T-0344/TASK.md')).toBe('tasks/T-0344/TASK.md');
     expect(createTaskNodeId('T-0344')).toBe('task:T-0344');
-    expect(createDocumentNodeId('./docs\\AGENT_HANDOFF.md')).toBe('doc:docs/AGENT_HANDOFF.md');
-    expect(createManagedSectionNodeId('docs/AGENT_HANDOFF.md', 'current-state')).toBe('section:docs/AGENT_HANDOFF.md#current-state');
+    expect(createDocumentNodeId('./docs\\TASK_BOARD.md')).toBe('doc:docs/TASK_BOARD.md');
+    expect(createManagedSectionNodeId('docs/TASK_BOARD.md', 'task-board')).toBe('section:docs/TASK_BOARD.md#task-board');
     expect(createCommandNodeId('task.close')).toBe('command:task.close');
     expect(createReleaseCheckNodeId('Strict Release Gate')).toBe('release-check:strict-release-gate');
     expect(createDecisionNodeId('tasks/T-0344/DECISIONS.md', 'D-1')).toBe('decision:tasks/T-0344/DECISIONS.md#D-1');
-    expect(createKnownProblemNodeId('docs/AGENT_HANDOFF.md', '  Host npm   missing deps ')).toMatch(/^known-problem:[a-f0-9]{64}$/);
-    expect(createKnownProblemNodeId('docs/AGENT_HANDOFF.md', 'Host npm missing deps')).toBe(createKnownProblemNodeId('./docs/AGENT_HANDOFF.md', 'Host npm missing deps'));
+    expect(createKnownProblemNodeId('docs/TASK_BOARD.md', '  Host npm   missing deps ')).toMatch(/^known-problem:[a-f0-9]{64}$/);
+    expect(createKnownProblemNodeId('docs/TASK_BOARD.md', 'Host npm missing deps')).toBe(createKnownProblemNodeId('./docs/TASK_BOARD.md', 'Host npm missing deps'));
   });
 
   it('hashes source sets independent of input order', () => {

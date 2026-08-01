@@ -47,6 +47,41 @@ docker exec -it hadara-dev bash
 
 `scripts/release/prepare-publish-env.sh <TASK_ID>` is the preferred helper for preparing the ext4 clone and printing the final operator commands. It must keep the GitHub Release note path visible so an npm publish capsule can immediately proceed to a reviewed GitHub Release draft.
 
+## Clean Checkout Package Smoke Plan
+
+The clean-checkout consumer smoke runs from a disposable source copy and keeps consumer validation separate from the source workspace.
+
+- `node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --json` is the supported repo-local smoke command.
+- The sequence is `npm ci`, `npm run build`, `npm run check`, `node dist/cli/main.js doctor --json`, `node dist/cli/main.js status --json`, and `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json`.
+- The smoke must not package, publish, mutate release state, install globally, or perform any other packaging or release execution.
+- Boundary: no packaging or release execution occurs in this smoke.
+- `node dist/cli/main.js release gate --mode strict --json` remains a supported built-CLI compatibility form for the strict read-only gate.
+
+## Executable Package Smoke Artifact Boundary
+
+- Allowed workspace: `/tmp/hadara-package-smoke/<run-id>` or another explicitly selected disposable workspace outside the source checkout.
+- Package artifact paths: `tasks/<task-id>/artifacts/package-smoke/`.
+- Redaction and audit handling: public summaries omit raw package contents, raw npm logs, secrets, private paths, and private store paths.
+- Evidence/report shape: reduced public reports use `hadara.packageSmoke.v1` and record execution, cleanup, and failure boundaries.
+- The release gate performs no package-smoke execution.
+
+## Package Smoke Command Surface
+
+- Dry run: `node --import tsx tools/dev-surfaces.ts smoke package --dry-run --json`.
+- Task evidence: `node --import tsx tools/dev-surfaces.ts smoke package --task <task-id> --json`.
+- Explicit workspace: `node --import tsx tools/dev-surfaces.ts smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json`.
+- Retain temporary output only with `node --import tsx tools/dev-surfaces.ts smoke package --keep-temp --json`.
+- Supported controls include `--timeout <seconds>`, `--attach-evidence`, and `--private-logs`; Package smoke must not be callable from MCP by default.
+- Do not use `release smoke` as the primary command surface.
+- The release gate must not call `node --import tsx tools/dev-surfaces.ts smoke package`.
+- A versioned package input may be checked with `node --import tsx tools/dev-surfaces.ts smoke package --from ./dist-release/hadara-0.5.0-rc.1.tgz --json`.
+
+## Remote CI observation
+
+- Remote CI observation: GitHub Actions CI run #109 on `main` succeeded after the local validation baseline; URL: `https://github.com/ictseoyoungmin/HADARA-dev/actions/runs/26497664485`.
+- The recorded remote observation is distinct from local Docker validation; local Docker validation remains the primary reproducible check.
+- GitHub Actions CI run evidence is retained as a historical release-readiness observation under `actions/runs/26497664485`.
+
 ## Package Metadata Release Readiness
 
 Current package metadata preparation mode:

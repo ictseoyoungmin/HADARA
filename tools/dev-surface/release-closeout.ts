@@ -27,12 +27,12 @@ export interface ReleaseCloseoutReport {
 
 export interface ReleaseCloseoutSurface {
   path: string;
-  kind: 'release-readiness' | 'release-notes' | 'project-state' | 'agent-handoff' | 'task-board' | 'development-slices' | 'task-capsule';
+  kind: 'release-readiness' | 'release-notes' | 'task-board' | 'development-slices' | 'task-capsule';
   status: 'current' | 'stale' | 'missing';
   expectedSignals: string[];
   matchedSignals: string[];
   missingSignals: string[];
-  role: 'source-readiness' | 'publish' | 'github-release' | 'installed-package-recycle' | 'shared-state' | 'capsule';
+  role: 'source-readiness' | 'publish' | 'github-release' | 'installed-package-recycle' | 'task-routing' | 'capsule';
   summary: string;
 }
 
@@ -53,10 +53,8 @@ export interface ReleaseCloseoutIssue {
 const SHARED_FILES: Array<Omit<ReleaseCloseoutSurface, 'status' | 'expectedSignals' | 'matchedSignals' | 'missingSignals' | 'summary'>> = [
   { path: 'docs/RELEASE_READINESS.md', kind: 'release-readiness', role: 'source-readiness' },
   { path: 'docs/RELEASE_NOTES.md', kind: 'release-notes', role: 'publish' },
-  { path: 'docs/PROJECT_STATE.md', kind: 'project-state', role: 'shared-state' },
-  { path: 'docs/AGENT_HANDOFF.md', kind: 'agent-handoff', role: 'shared-state' },
-  { path: 'docs/TASK_BOARD.md', kind: 'task-board', role: 'shared-state' },
-  { path: 'docs/DEVELOPMENT_SLICES.md', kind: 'development-slices', role: 'shared-state' }
+  { path: 'docs/TASK_BOARD.md', kind: 'task-board', role: 'task-routing' },
+  { path: 'docs/DEVELOPMENT_SLICES.md', kind: 'development-slices', role: 'task-routing' }
 ];
 
 const CAPSULE_FILES = ['TASK.md', 'EVIDENCE.md', 'HANDOFF.md'];
@@ -178,16 +176,10 @@ function createSuggestedFragments(version: string | null, taskId: string | null)
       suggestedMarkdown: `## ${displayVersion}\n\n- Summarize user-facing changes.\n- Record npm publish/recycle status and any explicit deferrals.`
     },
     {
-      path: 'docs/PROJECT_STATE.md',
-      sectionHint: 'Follow-up note',
-      purpose: 'Carry forward release state into current project status.',
-      suggestedMarkdown: `${displayTask} follow-up note: ${displayVersion} release closeout state was reviewed. Record readiness, publish, GitHub Release, recycle, and next release-line decision.`
-    },
-    {
-      path: 'docs/AGENT_HANDOFF.md',
-      sectionHint: 'Current State / Last 3 Completed Tasks',
-      purpose: 'Route the next agent after release closeout.',
-      suggestedMarkdown: `| Latest Completed Task | ${displayTask} ${displayVersion} release closeout | Record closeout result and next release-line task. |`
+      path: `tasks/${displayTask}/HANDOFF.md`,
+      sectionHint: 'Next Recommended Step',
+      purpose: 'Route the next agent after release closeout through the task-local continuation contract.',
+      suggestedMarkdown: `| Next Recommended Step | Review ${displayVersion} release closeout and select the next release-line task. |`
     }
   ];
 }

@@ -203,7 +203,6 @@ describe('TUI local cache', () => {
     const sourceReads = countReadsMatching(
       [
         path.join(root, 'docs', 'TASK_BOARD.md'),
-        path.join(root, 'docs', 'AGENT_HANDOFF.md'),
         path.join(root, '.hadara', 'local', 'state', 'active-run.json'),
         path.join(task.dir, 'evidence.jsonl')
       ],
@@ -314,35 +313,7 @@ function appendEvidence(taskDir: string, taskId: string, summary: string, visibi
 
 function writeProjectDocs(root: string, activeTaskId: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 0 / Phase 1 boundary.\n', 'utf8');
-  fs.writeFileSync(
-    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    [
-      '# AGENT_HANDOFF',
-      '',
-      '## Current State',
-      '',
-      `- ${activeTaskId} is current.`,
-      '',
-      '## Current Known Problems',
-      '',
-      '- Docker is the working validation path for now.',
-      '',
-      '## Last 3 Completed Tasks',
-      '',
-      '- T-0108 TUI Native Runtime Docs Assimilation: complete.',
-      '',
-      '## Next Recommended Step',
-      '',
-      '- Continue TUI local cache.',
-      '',
-      '## Validation Baseline',
-      '',
-      '- Latest full check: Docker npm run check passed',
-      '- Latest done-level validation: T-0108 ok'
-    ].join('\n'),
-    'utf8'
-  );
+  void activeTaskId;
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
 }
