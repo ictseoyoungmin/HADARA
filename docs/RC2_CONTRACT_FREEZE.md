@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Release | `0.5.0-rc.2` |
-| State | Candidate; pending T-0744 close evidence |
+| State | Frozen |
 | Owner | T-0744 |
 | Scope | Init v1 stages 6~8 acceptance and RC2 readiness |
 
@@ -26,7 +26,7 @@ The following are explicitly outside this freeze:
 
 ## Required Gate
 
-The state can be changed to `Frozen` only after T-0744 records current-head evidence for source and
-built CLI checks, docs registry parse/schema/render, package/consumer and clean-checkout smokes,
-strict release gate, release dry-run, and installed Init v1 lifecycle/routing acceptance. Publish,
-remote CI, and external release operations remain separate operator-controlled work.
+T-0744 recorded current-head evidence for source and built CLI checks, docs registry parse/schema/render,
+package/consumer and clean-checkout smokes, strict release gate, release dry-run, and installed Init v1
+lifecycle/routing acceptance. The contract is now `Frozen`; publish, remote CI, and external release
+operations remain separate operator-controlled work.

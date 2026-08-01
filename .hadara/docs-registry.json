@@ -2294,9 +2294,37 @@
         "type": "hadara-scaffold",
         "generator": "hadara init"
       }
+    },
+    {
+      "path": "docs/VALIDATION_HISTORY.md",
+      "title": "Validation History",
+      "owner": "project",
+      "kind": "implementation-guide",
+      "status": "historical",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "release-work"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "human-only",
+      "readTier": "historical",
+      "authority": "historical"
     }
   ],
-  "generatedAt": "2026-08-01T11:06:56.182Z",
+  "generatedAt": "2026-08-01T11:15:15.746Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"

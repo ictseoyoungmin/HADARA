@@ -79,8 +79,10 @@ The clean-checkout consumer smoke runs from a disposable source copy and keeps c
 ## External CI Observation Boundary
 
 - Remote CI observations are task evidence, not durable release contract state.
-- The local source/build/check and installed consumer smokes remain the reproducible RC2 gates.
+- The local source/build/check and installed consumer smokes remain the reproducible RC2 gates; local Docker validation remains the primary reproducible check.
 - Do not add run numbers, artifact URLs, or remote log paths to `DEVELOPMENT_SLICES.md` or this active contract section.
+- Historical remote CI provenance is kept in `docs/VALIDATION_HISTORY.md` for the strict gate's
+  compatibility check; it is not evidence that the current RC2 source was accepted by remote CI.
 
 ## Package Metadata Release Readiness
 

@@ -744,4 +744,4 @@
 | T-0741 | Bind close marker to reviewed plan and validate full surface | Done | tasks/T-0741-bind-close-marker-to-reviewed-plan-and-validate-full-surface | |
 | T-0742 | Clear retired state contracts and smoke routing drift | Done | tasks/T-0742-clear-retired-state-contracts-and-smoke-routing-drift | Active source/tools/test fixtures now use Task Board and task-local HANDOFF; obsolete global-state/readiness fixtures removed; focused 239-test suite, task-close 57-test suite, host full check, and clean-checkout smoke passed; task closed-valid. |
 | T-0743 | Reduce legacy status surface and decompose close modules | Done | tasks/T-0743-reduce-legacy-status-surface-and-decompose-close-modules | |
-| T-0744 | Freeze RC2 contract and complete Init v1 release acceptance | Draft | tasks/T-0744-freeze-rc2-contract-and-complete-init-v1-release-acceptance | |
+| T-0744 | Freeze RC2 contract and complete Init v1 release acceptance | Done | tasks/T-0744-freeze-rc2-contract-and-complete-init-v1-release-acceptance | |

@@ -79,4 +79,5 @@ Schema: `hadara.docs.registry.v1`
 | `docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md` | spec | active | only-when-linked | no | project |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
+| `docs/VALIDATION_HISTORY.md` | implementation-guide | historical | release-work | no | project |
 <!-- hadara:managed:end doc-registry-summary -->
