@@ -6,7 +6,7 @@ This repository must be developed using the HADARA protocol.
 
 | Document | When to Read | Purpose |
 |---|---|---|
-| `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |
+| `.hadara/context/READ_MAP.md` | Every session | Generated project-local document read map and routing guide. |
 | `docs/TASK_BOARD.md` | Every session | Task queue and capsule paths. |
 | `docs/HADARA_WORKFLOW.md` | Every session | Workflow rules and command-surface routing. |
 | `docs/DEVELOPMENT_SLICES.md` | Starting, completing, or reclassifying a development slice. | Slice order and status. |
@@ -33,7 +33,7 @@ Use semantic tiers to keep session startup compact:
 | `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
 | `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
 
-`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to `hadara task status --json`, `docs/TASK_BOARD.md`, and the selected Task Capsule before conditional-reference docs. Historical and superseded docs are never default required reading.
+`.hadara/context/READ_MAP.md` is the generated document-routing fallback. The primary ingress is `hadara task status --json`; then read the selected Task Capsule and only the registered or explicitly referenced documents. Historical and superseded docs are never default required reading.
 
 ## Rules
 

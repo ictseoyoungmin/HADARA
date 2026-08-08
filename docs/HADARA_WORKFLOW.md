@@ -12,7 +12,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 
 | Situation | First Action |
 |---|---|
-| New project created | Read `AGENTS.md`, then `.hadara/context/HADARA_CONTEXT.md`, then this Quickstart. |
+| New project created | Read `AGENTS.md`, then `.hadara/context/READ_MAP.md`, then this Quickstart. |
 | Need work to do | Run `hadara task status --json`. |
 | Need a task | Run `hadara task create "task title" --json`, then fill `TASK.md` Goal, Source Documents, Plan, and Acceptance. |
 | Need files to inspect | Use `hadara task status --task T-XXXX --json`, docs read-map, and explicit file reads. |
@@ -54,9 +54,9 @@ Use `hadara init` only when creating a new HADARA project or initializing HADARA
 
 ```bash
 hadara init --json
-hadara init --profile basic --json
-hadara init --profile standard --json
-hadara init --profile governed --json
+hadara init --preset minimal --json
+hadara init --preset standard --json
+hadara init --preset governed --json
 hadara init doctor --json
 ```
 
@@ -78,7 +78,7 @@ After init, review:
 | Step | Document | Purpose |
 |---|---|---|
 | 1 | `AGENTS.md` | Entry rules and required reading. |
-| 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |
+| 2 | `.hadara/context/READ_MAP.md` | Generated compact read routing. |
 | 3 | `docs/TASK_BOARD.md` | Inspectable task index and active-work source. |
 | 4 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
 
@@ -382,7 +382,7 @@ Design source documents may live under `docs/specs/**` or other registered paths
 
 Do not treat every file under `docs/specs/**` as default Required Reading.
 
-Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to `AGENTS.md`, `.hadara/context/HADARA_CONTEXT.md`, or this workflow document.
+Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to `AGENTS.md`, `.hadara/context/READ_MAP.md`, or this workflow document.
 
 ## Authoring Model
 

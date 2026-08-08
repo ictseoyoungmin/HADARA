@@ -64,7 +64,7 @@ export function parseInitProfile(value: string): InitProfile {
 
 export function requiredDocsForProfile(profile: InitProfile): string[] {
   const docs = ['docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-  if (profile === 'standard' || profile === 'governed') docs.unshift('.hadara/context/HADARA_CONTEXT.md');
+  if (profile === 'standard' || profile === 'governed') docs.unshift('.hadara/context/READ_MAP.md');
   return docs;
 }
 

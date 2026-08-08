@@ -9,21 +9,30 @@ import { readProjectText } from './files';
 export function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   const issues: InitIssue[] = [];
   const actions: InitAction[] = [];
+  const initV1 = hasInitV1State(projectRoot);
   const profile = inferProfileFromGeneratedDocs(projectRoot);
-  const requiredCore: Array<{ path: string; code: string }> = [
-    { path: 'AGENTS.md', code: 'INIT_CORE_DOC_MISSING' },
-    { path: '.gitignore', code: 'INIT_GITIGNORE_MISSING' },
-    { path: '.hadara/scaffold.json', code: 'INIT_PROTOCOL_MISSING' },
-    { path: '.hadara/docs-registry.json', code: 'INIT_DOCS_REGISTRY_MISSING' },
-    { path: '.hadara/slot-registry.json', code: 'INIT_SLOT_REGISTRY_MISSING' },
-    { path: 'docs/TASK_BOARD.md', code: 'INIT_CORE_DOC_MISSING' },
-    { path: 'docs/HADARA_WORKFLOW.md', code: 'INIT_WORKFLOW_DOC_MISSING' }
-  ];
-  if (profile === 'standard' || profile === 'governed') {
-    requiredCore.push(
-      { path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' }
-    );
-  }
+  const requiredCore: Array<{ path: string; code: string }> = initV1
+    ? [
+      { path: 'AGENTS.md', code: 'INIT_CORE_DOC_MISSING' },
+      { path: '.gitignore', code: 'INIT_GITIGNORE_MISSING' },
+      { path: '.hadara/project.json', code: 'INIT_PROJECT_CONFIG_MISSING' },
+      { path: '.hadara/documents.json', code: 'INIT_DOCUMENTS_REGISTRY_MISSING' },
+      { path: '.hadara/context/READ_MAP.md', code: 'INIT_READ_MAP_MISSING' },
+      { path: 'docs/TASK_BOARD.md', code: 'INIT_CORE_DOC_MISSING' },
+      { path: 'docs/HADARA_WORKFLOW.md', code: 'INIT_WORKFLOW_DOC_MISSING' }
+    ]
+    : [
+      { path: 'AGENTS.md', code: 'INIT_CORE_DOC_MISSING' },
+      { path: '.gitignore', code: 'INIT_GITIGNORE_MISSING' },
+      { path: '.hadara/scaffold.json', code: 'INIT_PROTOCOL_MISSING' },
+      { path: '.hadara/docs-registry.json', code: 'INIT_DOCS_REGISTRY_MISSING' },
+      { path: '.hadara/slot-registry.json', code: 'INIT_SLOT_REGISTRY_MISSING' },
+      { path: 'docs/TASK_BOARD.md', code: 'INIT_CORE_DOC_MISSING' },
+      { path: 'docs/HADARA_WORKFLOW.md', code: 'INIT_WORKFLOW_DOC_MISSING' },
+      ...((profile === 'standard' || profile === 'governed')
+        ? [{ path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' }]
+        : [])
+    ];
   for (const required of requiredCore) {
     const relativePath = required.path;
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {
@@ -32,7 +41,7 @@ export function createInitDoctorReport(projectRoot: string): InitFollowUpReport 
   }
 
   const scaffold = readProjectText(projectRoot, '.hadara/scaffold.json');
-  if (scaffold !== null) {
+  if (!initV1 && scaffold !== null) {
     try {
       const parsed = JSON.parse(scaffold) as { hadaraProtocol?: unknown };
       if (parsed.hadaraProtocol !== '0.4') {
@@ -42,6 +51,8 @@ export function createInitDoctorReport(projectRoot: string): InitFollowUpReport 
       issues.push({ severity: 'error', code: 'INIT_PROTOCOL_UNSUPPORTED', path: '.hadara/scaffold.json', message: `.hadara/scaffold.json could not be parsed: ${error instanceof Error ? error.message : String(error)}` });
     }
   }
+
+  if (initV1) validateInitV1State(projectRoot, issues);
 
   for (const relativePath of ['HERMES.md', '.hermes.md']) {
     if (fs.existsSync(path.join(projectRoot, relativePath))) {
@@ -62,12 +73,13 @@ export function createInitDoctorReport(projectRoot: string): InitFollowUpReport 
   }
 
   issues.push(...detectEntryDocDuplication(projectRoot));
-  issues.push(...detectRequiredReadingTooBroad(projectRoot));
+  if (!initV1) issues.push(...detectRequiredReadingTooBroad(projectRoot));
   issues.push(...detectProductDefaultLeaks(projectRoot));
-  issues.push(...detectProfileMetadataMismatches(projectRoot));
+  if (!initV1) issues.push(...detectProfileMetadataMismatches(projectRoot));
 
   const projectAuthoredPaths = projectAuthoredRegistryPaths(projectRoot);
   for (const [relativePath, headers] of Object.entries(CANONICAL_TABLE_HEADERS)) {
+    if (initV1) break;
     if (projectAuthoredPaths.has(relativePath)) continue;
     const content = readProjectText(projectRoot, relativePath);
     if (content === null) continue;
@@ -105,13 +117,14 @@ function detectEntryDocDuplication(projectRoot: string): InitIssue[] {
       message: 'AGENTS.md appears to duplicate lifecycle or context command recipes; keep command usage in docs/HADARA_WORKFLOW.md.'
     });
   }
-  const context = readProjectText(projectRoot, '.hadara/context/HADARA_CONTEXT.md');
+  const contextPath = hasInitV1State(projectRoot) ? '.hadara/context/READ_MAP.md' : '.hadara/context/HADARA_CONTEXT.md';
+  const context = readProjectText(projectRoot, contextPath);
   if (context !== null && (context.includes('| Document | When to Read | Purpose |') || context.includes('## Required Reading') || commandRecipeCount(context) >= 2)) {
     issues.push({
       severity: 'warning',
       code: 'INIT_CONTEXT_DUPLICATES_WORKFLOW',
-      path: '.hadara/context/HADARA_CONTEXT.md',
-      message: 'HADARA_CONTEXT.md appears to duplicate Required Reading or command recipes; keep it as a compact routing anchor.'
+      path: contextPath,
+      message: `${contextPath} appears to duplicate Required Reading or command recipes; keep it as a compact routing anchor.`
     });
   }
   return issues;
@@ -235,6 +248,10 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
 }
 
 function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
+  const project = readJsonObject(projectRoot, '.hadara/project.json');
+  if (project?.presetOrigin === 'minimal' || project?.presetOrigin === 'standard' || project?.presetOrigin === 'governed') {
+    return project.presetOrigin === 'minimal' ? 'basic' : project.presetOrigin;
+  }
   const registry = readDocsRegistryForDoctor(projectRoot);
   if (registry?.project?.hadaraProfile === 'basic' || registry?.project?.hadaraProfile === 'standard' || registry?.project?.hadaraProfile === 'governed') {
     return registry.project.hadaraProfile;
@@ -261,10 +278,50 @@ function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
 }
 
 function projectAuthoredRegistryPaths(projectRoot: string): Set<string> {
+  const documents = readJsonObject(projectRoot, '.hadara/documents.json');
+  if (Array.isArray(documents?.documents)) {
+    return new Set(documents.documents
+      .filter((document): document is { path: string; management?: string } => typeof document === 'object' && document !== null && typeof document.path === 'string')
+      .filter((document) => document.management === 'user-authored')
+      .map((document) => document.path));
+  }
   const registry = readDocsRegistryForDoctor(projectRoot);
   const paths = new Set<string>();
   for (const document of registry?.documents ?? []) {
     if (document.owner === 'project' || document.origin?.type === 'project-authored') paths.add(document.path);
   }
   return paths;
+}
+
+function hasInitV1State(projectRoot: string): boolean {
+  return fs.existsSync(path.join(projectRoot, '.hadara', 'project.json'))
+    || fs.existsSync(path.join(projectRoot, '.hadara', 'documents.json'));
+}
+
+function readJsonObject(projectRoot: string, relativePath: string): Record<string, unknown> | null {
+  const content = readProjectText(projectRoot, relativePath);
+  if (content === null) return null;
+  try {
+    const parsed: unknown = JSON.parse(content);
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function validateInitV1State(projectRoot: string, issues: InitIssue[]): void {
+  const project = readJsonObject(projectRoot, '.hadara/project.json');
+  if (project === null) {
+    issues.push({ severity: 'error', code: 'INIT_PROJECT_CONFIG_INVALID', path: '.hadara/project.json', message: '.hadara/project.json must be valid JSON object state.' });
+  } else if (project.schemaVersion !== 'hadara.project.v1') {
+    issues.push({ severity: 'error', code: 'INIT_PROJECT_CONFIG_UNSUPPORTED', path: '.hadara/project.json', message: '.hadara/project.json must declare schemaVersion "hadara.project.v1".' });
+  }
+  const documents = readJsonObject(projectRoot, '.hadara/documents.json');
+  if (documents === null) {
+    issues.push({ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_INVALID', path: '.hadara/documents.json', message: '.hadara/documents.json must be valid JSON object state.' });
+  } else if (documents.schemaVersion !== 'hadara.documents.v1' || !Array.isArray(documents.documents)) {
+    issues.push({ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_UNSUPPORTED', path: '.hadara/documents.json', message: '.hadara/documents.json must declare schemaVersion "hadara.documents.v1" and contain documents.' });
+  }
 }
