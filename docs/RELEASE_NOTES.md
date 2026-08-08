@@ -1,5 +1,13 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.3
+
+Current source candidate after the published `0.5.0-rc.2` line. This release line carries exact
+artifact package smoke binding, strict tarball provenance, corrected RC publication metadata, and
+post-publish consumer verification work. No RC3 publication has occurred yet.
+
+Release evidence must be regenerated from the RC3 source input before publication.
+
 ## 0.5.0-rc.2
 
 Source candidate and contract-freeze line based on `0.5.0-rc.1`. This line carries the reviewer-fix

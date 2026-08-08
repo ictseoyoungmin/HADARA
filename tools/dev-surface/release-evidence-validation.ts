@@ -70,7 +70,7 @@ export function packageTarballMatchesReleaseArtifact(
   packageSmoke: ReleaseDryRunReport['evidence'][number] | undefined,
   releaseArtifact: ReleaseDryRunReport['evidence'][number] | undefined
 ): boolean {
-  if (!packageSmoke || packageSmoke.sourceKind !== 'tarball') return true;
+  if (!packageSmoke || packageSmoke.sourceKind !== 'tarball') return false;
   return Boolean(packageSmoke.tarballSha256 && releaseArtifact?.tarballSha256 && packageSmoke.tarballSha256 === releaseArtifact.tarballSha256);
 }
 

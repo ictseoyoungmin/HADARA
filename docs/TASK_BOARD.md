@@ -754,3 +754,4 @@
 | T-0751 | Record RC2 Publication and Repair Publish Helper | Done | tasks/T-0751-record-rc2-publication-and-repair-publish-helper | |
 | T-0752 | Refresh Dist and Init v1 Repository Guidance | Done | tasks/T-0752-refresh-dist-and-init-v1-repository-guidance | |
 | T-0753 | Repair RC2 Publication Truth and Tarball Provenance | Done | tasks/T-0753-repair-rc2-publication-truth-and-tarball-provenance | |
+| T-0754 | Retarget RC3 and Complete Published RC2 Recycle | Done | tasks/T-0754-retarget-rc3-and-complete-published-rc2-recycle | |

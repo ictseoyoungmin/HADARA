@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-08T09:44:11.710Z",
+  "taskId": "T-0754",
+  "category": "package-recycle",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageRecycle.v1",
+    "command": "package.recycle",
+    "mode": "execute",
+    "ok": false,
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Installed-package recycle uses npm registry/network access only in explicit --execute mode."
+      ]
+    }
+  },
+  "execution": {
+    "npmViewExecuted": true,
+    "npmDistTagExecuted": true,
+    "packageInstallExecuted": true,
+    "installedVersionExecuted": true,
+    "commandSurfaceExecuted": true,
+    "lifecycleHelpExecuted": true,
+    "initExecuted": true,
+    "taskStatusExecuted": false,
+    "taskLifecycleExecuted": false,
+    "contextSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable consumer workspace",
+      "status": "passed",
+      "summary": "Disposable consumer workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-view-version",
+      "label": "Verify registry package version",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 712,
+      "summary": "Registry resolved package version 0.5.0-rc.2."
+    },
+    {
+      "id": "npm-dist-tags",
+      "label": "Verify registry dist-tags",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 514,
+      "summary": "Registry latest dist-tag points to 0.4.6."
+    },
+    {
+      "id": "install-package",
+      "label": "Install package from registry into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1347,
+      "summary": "Package installed into an isolated temporary prefix from the registry."
+    },
+    {
+      "id": "installed-version",
+      "label": "Verify installed CLI version",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 65,
+      "summary": "Installed CLI reports packageVersion 0.5.0-rc.2."
+    },
+    {
+      "id": "command-surface",
+      "label": "Read installed CLI command surface",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 52,
+      "summary": "Installed command surface exposed 59 command ids."
+    },
+    {
+      "id": "help-lifecycle",
+      "label": "Verify lifecycle help from installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 68,
+      "summary": "Verify lifecycle help from installed CLI returned an ok JSON report."
+    },
+    {
+      "id": "init-project",
+      "label": "Initialize disposable project with installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 95,
+      "summary": "Initialize disposable project with installed CLI returned an ok JSON report."
+    },
+    {
+      "id": "task-create",
+      "label": "Create disposable task with installed CLI",
+      "status": "failed",
+      "exitCode": 6,
+      "elapsedMs": 99,
+      "summary": "Installed task create failed or returned no task id."
+    },
+    {
+      "id": "task-status",
+      "label": "Verify task status read model",
+      "status": "skipped",
+      "summary": "Skipped because task creation failed."
+    },
+    {
+      "id": "context-slice",
+      "label": "Verify context slice raw adapter",
+      "status": "failed",
+      "exitCode": 6,
+      "elapsedMs": 84,
+      "summary": "Verify context slice raw adapter failed or returned non-ok JSON."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "PACKAGE_RECYCLE_TASK_CREATE_FAILED",
+      "message": "Installed task create failed or returned no task id.",
+      "stepId": "task-create"
+    },
+    {
+      "severity": "error",
+      "code": "PACKAGE_RECYCLE_CONTEXT_SLICE_FAILED",
+      "message": "Verify context slice raw adapter failed during installed-package recycle.",
+      "stepId": "context-slice"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

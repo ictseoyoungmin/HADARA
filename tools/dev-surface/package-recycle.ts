@@ -449,7 +449,7 @@ function runInstalledSmokes(input: {
   const disposableProject = input.smokeProjectRoot;
   fs.mkdirSync(disposableProject, { recursive: true });
   input.execution.initExecuted = true;
-  pushJsonSmokeStep(input, {
+  pushInitSmokeStep(input, {
     id: 'init-project',
     label: 'Initialize disposable project with installed CLI',
     command: 'hadara init --json',
@@ -525,6 +525,67 @@ function runInstalledSmokes(input: {
   });
 }
 
+function pushInitSmokeStep(
+  input: {
+    runner: PackageRecycleCommandRunner;
+    installedBin: string;
+    installPrefix: string;
+    workspacePath: string;
+    timeoutMs: number;
+    issues: PackageRecycleIssue[];
+    steps: PackageRecycleStep[];
+  },
+  step: { id: string; label: string; command: string; args: string[]; cwd?: string }
+): void {
+  const cwd = step.cwd ?? input.workspacePath;
+  const env = installPathEnv(input.installPrefix);
+  const planning = input.runner(input.installedBin, step.args, {
+    cwd,
+    timeoutMs: input.timeoutMs,
+    env
+  });
+  const reportStep = commandStep(step.id, step.label, step.command, planning);
+  const planned = parseJsonObject(planning.stdout);
+  const planHash = typeof planned?.planHash === 'string' ? planned.planHash : undefined;
+
+  if (!isOkJson(planning)) {
+    failStep(reportStep, planning.timedOut ? `${step.label} timed out.` : `${step.label} failed or returned non-ok JSON.`);
+    input.issues.push({
+      severity: 'error',
+      code: 'PACKAGE_RECYCLE_INIT_PROJECT_FAILED',
+      message: `${step.label} failed during installed-package recycle.`,
+      stepId: step.id
+    });
+    input.steps.push(reportStep);
+    return;
+  }
+
+  // JSON init is deliberately dry-run first. Apply the exact reviewed plan so
+  // subsequent task and context commands exercise a real initialized consumer.
+  if (planHash) {
+    const applied = input.runner(input.installedBin, ['init', '--execute', '--plan-hash', planHash, '--json'], {
+      cwd,
+      timeoutMs: input.timeoutMs,
+      env
+    });
+    if (!isOkJson(applied)) {
+      failStep(reportStep, applied.timedOut ? `${step.label} apply timed out.` : `${step.label} apply failed or returned non-ok JSON.`);
+      input.issues.push({
+        severity: 'error',
+        code: 'PACKAGE_RECYCLE_INIT_PROJECT_APPLY_FAILED',
+        message: `${step.label} reviewed plan could not be applied during installed-package recycle.`,
+        stepId: step.id
+      });
+      input.steps.push(reportStep);
+      return;
+    }
+    reportStep.summary = `${step.label} dry-run plan was applied with its reviewed plan hash.`;
+  } else {
+    reportStep.summary = `${step.label} returned an ok JSON report.`;
+  }
+  input.steps.push(reportStep);
+}
+
 function pushJsonSmokeStep(
   input: {
     runner: PackageRecycleCommandRunner;
@@ -576,7 +637,10 @@ function pushTaskCloseSmokeStep(
   });
   const reportStep = commandStep(step.id, step.label, step.command, result);
   const parsed = parseJsonObject(result.stdout);
-  if (!parsed || parsed.schemaVersion !== 'hadara.task.close.v3' || parsed.mode !== 'dry-run') {
+  const isTaskCloseReport = parsed
+    && (parsed.schemaVersion === 'hadara.task.close.v3' || parsed.schemaVersion === 'hadara.task.close.summary.v1')
+    && parsed.mode === 'dry-run';
+  if (!isTaskCloseReport) {
     failStep(reportStep, result.timedOut ? `${step.label} timed out.` : `${step.label} failed or returned no task close dry-run JSON report.`);
     input.issues.push({
       severity: 'error',

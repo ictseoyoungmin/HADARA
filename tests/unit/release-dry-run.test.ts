@@ -695,6 +695,7 @@ function writePythonSmokeEvidence(root: string, options: { result: 'passed' | 'f
 }
 
 function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', command: string, mode: string, providerEcosystem?: 'npm' | 'python', releaseInputHash = 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'): Record<string, unknown> {
+  const tarballSha256 = 'sha256:' + 'c'.repeat(64);
   return {
     schemaVersion: 'hadara.smokeEvidenceSummary.v1',
     time: '2026-05-28T10:00:00Z',
@@ -706,7 +707,10 @@ function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', comman
       command,
       mode,
       ok: true,
-      source: { releaseInputHash },
+      source: {
+        releaseInputHash,
+        ...(providerEcosystem === 'npm' ? { kind: 'tarball', tarballSha256 } : {})
+      },
       ...(providerEcosystem
         ? {
             provider: {
@@ -773,6 +777,16 @@ function releaseArtifactReport(gitCommit = commit, releaseInputHash = 'sha256:aa
         pathRedacted: true,
         byteLength: 100,
         hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        rawContentIncluded: false
+      },
+      {
+        kind: 'tarball',
+        visibility: 'local',
+        fileName: 'hadara.tgz',
+        relativePath: 'dist-release/hadara.tgz',
+        pathRedacted: true,
+        byteLength: 100,
+        hash: 'sha256:' + 'c'.repeat(64),
         rawContentIncluded: false
       }
     ],
