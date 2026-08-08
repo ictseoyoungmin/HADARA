@@ -307,12 +307,6 @@ function builtCliSteps(): Array<{ id: string; label: string; command: string; ar
       command: 'node dist/cli/main.js task status --json --project <redacted-clean-checkout>',
       args: ['dist/cli/main.js', 'task', 'status', '--json', '--project', '.']
     },
-    {
-      id: 'release-gate-strict',
-      label: 'Built CLI strict release gate',
-      command: 'node --import tsx tools/dev-surfaces.ts release gate --mode strict --json --project <redacted-clean-checkout>',
-      args: ['--import', 'tsx', 'tools/dev-surfaces.ts', 'release', 'gate', '--mode', 'strict', '--json', '--project', '.']
-    }
   ];
 }
 

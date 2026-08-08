@@ -52,7 +52,7 @@ docker exec -it hadara-dev bash
 The clean-checkout consumer smoke runs from a disposable source copy and keeps consumer validation separate from the source workspace.
 
 - `node --import tsx tools/dev-surfaces.ts smoke clean-checkout --execute --json` is the supported repo-local smoke command.
-- The sequence is `npm ci`, `npm run build`, `npm run check`, `node dist/cli/main.js doctor --json`, `node dist/cli/main.js task status --json`, and `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json`.
+- The sequence is `npm ci`, `npm run build`, `npm run check`, `node dist/cli/main.js doctor --json`, and `node dist/cli/main.js task status --json`. Run the strict release gate after clean-checkout evidence is attached from the evidence root; keeping it outside the disposable checkout avoids a self-referential clean-evidence gate.
 - The smoke must not package, publish, mutate release state, install globally, or perform any other packaging or release execution.
 - Boundary: no packaging or release execution occurs in this smoke.
 - `node dist/cli/main.js release gate --mode strict --json` remains a supported built-CLI compatibility form for the strict read-only gate.

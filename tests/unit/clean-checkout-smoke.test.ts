@@ -88,15 +88,14 @@ describe('clean checkout smoke', () => {
       },
       issues: []
     });
-    expect(report.steps.map((step) => step.id)).toEqual(['copy-source', 'npm-ci', 'build', 'check', 'doctor', 'task-status', 'release-gate-strict', 'cleanup']);
+    expect(report.steps.map((step) => step.id)).toEqual(['copy-source', 'npm-ci', 'build', 'check', 'doctor', 'task-status', 'cleanup']);
     expect(report.steps.every((step) => step.status === 'passed')).toBe(true);
     expect(calls.map((call) => call.args.join(' '))).toEqual([
       'ci',
       'run build',
       'run check',
       'dist/cli/main.js doctor --json --project .',
-      'dist/cli/main.js task status --json --project .',
-      '--import tsx tools/dev-surfaces.ts release gate --mode strict --json --project .'
+      'dist/cli/main.js task status --json --project .'
     ]);
     expect(fs.existsSync(checkout)).toBe(false);
     expect(fs.readFileSync(path.join(root, 'src-marker.txt'), 'utf8')).toBe('stable source marker');
@@ -150,7 +149,6 @@ describe('clean checkout smoke', () => {
       stepId: 'npm-ci'
     });
     expect(report.steps).toContainEqual(expect.objectContaining({ id: 'build', status: 'skipped' }));
-    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'release-gate-strict', status: 'skipped' }));
     expect(encoded).not.toContain('/tmp/private');
     expect(validateSchema('hadara.cleanCheckoutSmoke.v1', report).ok).toBe(true);
   });
