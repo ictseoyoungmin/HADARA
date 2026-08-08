@@ -6,23 +6,21 @@
 |---|---|
 | ID | T-0749 |
 | Title | RC2 Final Head Freeze and Publish Readiness |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-08T14:49 |
-| Updated | 2026-08-08T14:49 |
-
-> Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.
+| Updated | 2026-08-08T15:18 |
 
 ## Last Completed
 
 | Item | Evidence |
 |---|---|
-| Release-input hash binding, regression fixtures, RC2 document refresh, and full check | `npm run check`: 128 files passed, 1 skipped; 1039 tests passed, 8 skipped; dev suite: 16 files passed, 135 tests passed, 1 skipped. |
+| Final-head release recycle | Artifact/package/clean-checkout/lifecycle, strict gate, release dry-run, and publish dry-run passed; release input hash is `sha256:4fdc075ee6b68638067925bc233c621212e8543fa3f8be231256bc944eba8c7a`. |
 
 ## Pre-Close Operator Action
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Run final current-head release recycle and review publish dry-run | waiting-for-operator | no | Generate artifact/checksum/manifest, package and clean-checkout smokes, installed lifecycle, strict gate, release dry-run, and publish dry-run; do not publish or commit tarball. | `docs/RELEASE_READINESS.md`, `docs/RC2_CONTRACT_FREEZE.md` |
+| Review final release readiness and publish dry-run | waiting-for-operator | no | All local gates passed; do not publish or commit the disposable tarball. | `docs/RELEASE_READINESS.md`, `docs/RC2_CONTRACT_FREEZE.md` |
 
 ## Post-Close Continuation
 

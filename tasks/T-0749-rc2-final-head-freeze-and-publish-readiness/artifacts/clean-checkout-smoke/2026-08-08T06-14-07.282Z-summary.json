@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-08T06:14:07.281Z",
+  "taskId": "T-0749",
+  "category": "clean-checkout-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.cleanCheckoutSmoke.v1",
+    "command": "smoke.cleanCheckout",
+    "mode": "execute",
+    "ok": true,
+    "source": {
+      "kind": "source-checkout",
+      "displayPath": ".",
+      "pathRedacted": true,
+      "relativePath": ".",
+      "releaseInputHash": "sha256:4fdc075ee6b68638067925bc233c621212e8543fa3f8be231256bc944eba8c7a",
+      "mutated": false
+    }
+  },
+  "execution": {
+    "sourceCopied": true,
+    "dependencyInstallExecuted": true,
+    "buildExecuted": true,
+    "checkExecuted": true,
+    "builtCliSmokeExecuted": true,
+    "packageInstallExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "copy-source",
+      "label": "Copy source checkout",
+      "status": "passed",
+      "summary": "Source checkout was copied into a disposable workspace without including dependency, build, local, or private store directories."
+    },
+    {
+      "id": "npm-ci",
+      "label": "Clean dependency install",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 2038,
+      "summary": "Clean dependency install completed successfully."
+    },
+    {
+      "id": "build",
+      "label": "Build clean checkout",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 6815,
+      "summary": "Build clean checkout completed successfully."
+    },
+    {
+      "id": "check",
+      "label": "Check clean checkout",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 46796,
+      "summary": "Check clean checkout completed successfully."
+    },
+    {
+      "id": "doctor",
+      "label": "Built CLI doctor",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 56,
+      "summary": "Built CLI doctor completed successfully."
+    },
+    {
+      "id": "task-status",
+      "label": "Built CLI task status",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 183,
+      "summary": "Built CLI task status completed successfully."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable clean checkout was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}
