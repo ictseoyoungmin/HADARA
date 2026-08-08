@@ -19,7 +19,6 @@
     "evaluations",
     "primaryNextAction",
     "recommendations",
-    "compatibility",
     "selection",
     "sources",
     "issues"
@@ -97,16 +96,6 @@
         "selectedSourceKind": { "type": ["string", "null"] },
         "sourceExplanation": { "type": "string" },
         "primaryActionId": { "type": ["string", "null"] }
-      }
-    },
-    "compatibility": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["legacySchemaVersion", "legacyCommand", "migration"],
-      "properties": {
-        "legacySchemaVersion": { "const": "hadara.task.status.v1" },
-        "legacyCommand": { "const": "hadara task status --compat v1 --json" },
-        "migration": { "type": "string" }
       }
     },
     "sources": {

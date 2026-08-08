@@ -755,3 +755,4 @@
 | T-0752 | Refresh Dist and Init v1 Repository Guidance | Done | tasks/T-0752-refresh-dist-and-init-v1-repository-guidance | |
 | T-0753 | Repair RC2 Publication Truth and Tarball Provenance | Done | tasks/T-0753-repair-rc2-publication-truth-and-tarball-provenance | |
 | T-0754 | Retarget RC3 and Complete Published RC2 Recycle | Done | tasks/T-0754-retarget-rc3-and-complete-published-rc2-recycle | |
+| T-0755 | Remove Legacy Status and State Surface | Done | tasks/T-0755-remove-legacy-status-and-state-surface | |

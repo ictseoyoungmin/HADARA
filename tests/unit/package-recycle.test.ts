@@ -63,7 +63,6 @@ describe('installed package recycle', () => {
         lifecycleHelpExecuted: false,
         initExecuted: false,
         taskStatusExecuted: false,
-        taskLifecycleExecuted: false,
         contextSmokeExecuted: false,
         releaseMutationExecuted: false,
         publishExecuted: false
@@ -155,7 +154,6 @@ describe('installed package recycle', () => {
       lifecycleHelpExecuted: true,
       initExecuted: true,
       taskStatusExecuted: true,
-      taskLifecycleExecuted: false,
       contextSmokeExecuted: true,
       releaseMutationExecuted: false,
       publishExecuted: false
@@ -216,46 +214,6 @@ describe('installed package recycle', () => {
 
     expect(report.ok).toBe(true);
     expect(calls.some((call) => call.includes('context graph --json'))).toBe(true);
-    expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
-  });
-
-  it('falls back to legacy task lifecycle only when installed task status is unavailable', () => {
-    const root = tempProject();
-    const calls: string[] = [];
-    const runner: PackageRecycleCommandRunner = (command, args) => {
-      calls.push([command, ...args].join(' '));
-      const joined = args.join(' ');
-      if (joined === 'view hadara@latest version --json') return passed('"0.3.3"');
-      if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\n');
-      if (joined.startsWith('install -g --prefix')) return passed('');
-      if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
-      if (joined === 'commands --json') return passed(commandsJson(['task.lifecycle', 'task.close']));
-      if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'init --json') return passed(JSON.stringify({ ok: true, planHash: 'init-plan-hash' }));
-      if (joined === 'init --execute --plan-hash init-plan-hash --json') return passed(JSON.stringify({ ok: true, mode: 'applied' }));
-      if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
-      if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'task status --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'task close --task T-0001 --dry-run --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.close.v3', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
-      if (joined === 'context slice --path docs/TASK_BOARD.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
-      return failed();
-    };
-
-    const report = createPackageRecycleExecuteReport({
-      paths: resolveHadaraPaths({ projectRoot: root }),
-      expectedVersion: '0.3.3',
-      runner
-    });
-
-    expect(report.ok).toBe(true);
-    expect(report.steps.map((step) => step.id)).toContain('task-lifecycle');
-    expect(report.steps.map((step) => step.id)).not.toContain('task-status');
-    expect(report.execution).toMatchObject({
-      commandSurfaceExecuted: true,
-      taskStatusExecuted: false,
-      taskLifecycleExecuted: true
-    });
-    expect(calls.some((call) => call.includes('task lifecycle --task T-0001 --json'))).toBe(true);
     expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
   });
 

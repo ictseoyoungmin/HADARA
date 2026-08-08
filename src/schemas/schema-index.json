@@ -2,25 +2,18 @@
   "schemaVersion": "hadara.schema.index.v1",
   "schemas": [
     {
-      "id": "hadara.project.status.v2",
-      "path": "src/schemas/project-status.schema.json",
-      "status": "fixture",
-      "owner": "status/project",
-      "notes": "Lifecycle-aware project/session ingress status report with explicit health, readiness, evaluation state, primary action, and v1 compatibility metadata."
-    },
-    {
       "id": "hadara.taskSelection.status.v2",
       "path": "src/schemas/task-selection-status.schema.json",
       "status": "fixture",
       "owner": "status/task-selection",
-      "notes": "Lifecycle-aware no-selected-task status report with recommendation source, required reading, primary action, write boundary, and v1 compatibility metadata."
+      "notes": "Lifecycle-aware no-selected-task status report with recommendation source, required reading, primary action, and write boundary."
     },
     {
       "id": "hadara.task.status.v2",
       "path": "src/schemas/task-status-v2.schema.json",
       "status": "fixture",
       "owner": "status/selected-task",
-      "notes": "Lifecycle-aware selected-task status report with phase, health, readiness, evidence/close evaluations, primary action, and workbench v1 compatibility metadata."
+      "notes": "Lifecycle-aware selected-task status report with phase, health, readiness, evidence/close evaluations, and primary action."
     },
     {
       "id": "hadara.actor_context.v1",

@@ -15,7 +15,6 @@ const timeoutMs = numberArg('--timeout-ms', 60_000);
 const killGraceMs = numberArg('--kill-grace-ms', 3_000);
 const profile = String(args.get('--profile') ?? 'fast');
 const fastWorkloads = new Set([
-  'status_ingress',
   'task_status',
   'context_slice_range',
   'context_slice_symbol'
@@ -25,7 +24,6 @@ const fullWorkloads = new Set([
   'cache_warm_dry_run',
   'graph_task',
   'graph_task_include_code',
-  'status_ingress',
   'task_status',
   'context_slice_range',
   'context_slice_symbol'
@@ -87,15 +85,6 @@ const workloads = [
     ]
   },
   {
-    label: 'status_ingress',
-    args: ['status', '--project', projectRoot, '--json'],
-    expect: (data) => [
-      expectEqual(data.schemaVersion, 'hadara.project.status.v2', 'schemaVersion'),
-      expectEqual(data.command, 'status', 'command'),
-      expectEqual(data.scope, 'project', 'scope')
-    ]
-  },
-  {
     label: 'task_status',
     args: ['task', 'status', '--task', taskId, '--project', projectRoot, '--json'],
     expect: (data) => [
@@ -126,8 +115,8 @@ const workloads = [
     label: 'context_slice_symbol',
     args: [
       'context', 'slice',
-      '--path', 'src/services/project-status-v2.ts',
-      '--symbol', 'createProjectStatusV2Report',
+      '--path', 'src/task/task-selection.ts',
+      '--symbol', 'createTaskSelectionReport',
       '--window', '2',
       '--project', projectRoot,
       '--json'

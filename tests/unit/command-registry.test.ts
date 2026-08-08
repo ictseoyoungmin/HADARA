@@ -54,7 +54,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'hermes.detect',
   'hermes.export-context',
   'mcp.serve',
-  'status',
   'install.plan',
   'tui'
 ];

@@ -1,7 +1,6 @@
 import { createTaskCloseSourceReport } from '../task/close';
 import { createTaskCloseTransactionReport, formatTaskCloseTransactionReport, type TaskCloseTransactionReport } from '../task/close';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
-import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport, type TaskStatusSelectionReport, type TaskWorkbenchReport } from '../services/task-workbench';
 import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 import { getActorContextOption } from './actor';
 import { CliArgsError, getFlag, getStringOption } from './args';
@@ -26,51 +25,6 @@ interface TaskCliDiagnostics {
   slow: boolean;
   note?: string;
 }
-
-type TaskStatusSummaryReport =
-  | {
-      schemaVersion: 'hadara.task.status.summary.v1';
-      command: 'task.status';
-      ok: boolean;
-      mode: 'select-work';
-      taskId?: string;
-      phase: string;
-      recommendations: number;
-      primaryNextAction?: unknown;
-      diagnostics?: TaskCliDiagnostics;
-      issues: TaskStatusSelectionReport['issues'];
-    }
-  | {
-      schemaVersion: 'hadara.task.status.summary.v1';
-      command: 'task.status';
-      ok: boolean;
-      mode: 'selected-task';
-      taskId: string;
-      task: {
-        title: string;
-        capsule: string;
-        taskStatus: string;
-        taskBoardStatus: string;
-      };
-      phase: string;
-      readiness: {
-        status: string;
-        ready: boolean;
-        closeProofValid: boolean;
-        summary: string;
-      };
-      counts: {
-        blockers: number;
-        warnings: number;
-        evidenceRecords: number;
-        validationChecks: number;
-        unresolvedValidation: number;
-        nextActions: number;
-      };
-      primaryNextAction?: unknown;
-      diagnostics?: TaskCliDiagnostics;
-      issues: TaskWorkbenchReport['issues'];
-    };
 
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const timer = startMonotonicTimer();
@@ -149,58 +103,32 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'status') {
-    const summaryJsonOutput = getFlag(input.args, '--summary-json');
-    const compat = getStringOption(input.args, '--compat');
-    if (compat && compat !== 'v1') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', 'task status --compat must be v1');
+    if (getFlag(input.args, '--summary-json') || getStringOption(input.args, '--compat')) {
+      throw new CliArgsError('CLI_OPTION_INVALID_VALUE', 'Legacy task status compatibility options were removed; use hadara task status --json or --detail full --json.');
+    }
     const detail = getStringOption(input.args, '--detail');
     if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
     const workbenchOptions = { detail: detail === 'full' ? 'full' as const : 'fast' as const };
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) {
-      if (!compat && !summaryJsonOutput) {
-        const report = createAdaptiveTaskStatusV2Report(input.projectRoot, new Date(), workbenchOptions);
-        attachCliDiagnostics(report, timer, 'task.status');
-        if (input.jsonOutput) {
-          console.log(JSON.stringify(detail === 'full' ? report : createCompactTaskStatusReport(report), null, 2));
-        } else if (report.scope === 'task') {
-          console.log(formatTaskStatusV2Report(report));
-        } else {
-          console.log(formatTaskSelectionStatusV2Report(report));
-        }
-        if (!report.ok) process.exitCode = 6;
-        return true;
-      }
-      const report = withTaskSelectionV1CompatibilityMetadata(createTaskStatusSelectionReport(input.projectRoot));
-      attachCliDiagnostics(report, timer, 'task.status');
-      if (summaryJsonOutput) {
-        console.log(JSON.stringify(createTaskStatusSummaryReport(report), null, 2));
-      } else if (input.jsonOutput) {
-        console.log(JSON.stringify(report, null, 2));
-      } else {
-        console.log(formatTaskStatusSelectionReport(report));
-      }
-      if (!report.ok) process.exitCode = 6;
-      return true;
-    }
-    if (!compat && !summaryJsonOutput) {
-      const report = createTaskStatusV2Report(input.projectRoot, id, new Date(), workbenchOptions);
+      const report = createAdaptiveTaskStatusV2Report(input.projectRoot, new Date(), workbenchOptions);
       attachCliDiagnostics(report, timer, 'task.status');
       if (input.jsonOutput) {
         console.log(JSON.stringify(detail === 'full' ? report : createCompactTaskStatusReport(report), null, 2));
-      } else {
+      } else if (report.scope === 'task') {
         console.log(formatTaskStatusV2Report(report));
+      } else {
+        console.log(formatTaskSelectionStatusV2Report(report));
       }
       if (!report.ok) process.exitCode = 6;
       return true;
     }
-    const report = withTaskWorkbenchV1CompatibilityMetadata(createTaskWorkbenchReport(input.projectRoot, id, new Date(), workbenchOptions));
+    const report = createTaskStatusV2Report(input.projectRoot, id, new Date(), workbenchOptions);
     attachCliDiagnostics(report, timer, 'task.status');
-    if (summaryJsonOutput) {
-      console.log(JSON.stringify(createTaskStatusSummaryReport(report), null, 2));
-    } else if (input.jsonOutput) {
+    if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
-      console.log(formatTaskWorkbenchReport(report));
+      console.log(formatTaskStatusV2Report(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;
@@ -317,91 +245,6 @@ function getRepeatedStringOptions(args: string[], name: string): string[] {
     values.push(value);
   }
   return values;
-}
-
-function withTaskWorkbenchV1CompatibilityMetadata<T extends TaskWorkbenchReport>(report: T): T & {
-  compatibility: {
-    defaultSchemaVersion: 'hadara.task.status.summary.v1';
-    recommendedCommand: string;
-    migration: string;
-  };
-} {
-  return {
-    ...report,
-    compatibility: {
-      defaultSchemaVersion: 'hadara.task.status.summary.v1',
-      recommendedCommand: `hadara task status --task ${report.taskId} --json`,
-      migration: 'This v1 selected-task workbench report is an explicit 0.5.x compatibility route for legacy consumers. New agents should use the default selected-task status v2 report.'
-    }
-  };
-}
-
-function withTaskSelectionV1CompatibilityMetadata<T extends TaskStatusSelectionReport>(report: T): T & {
-  compatibility: {
-    defaultSchemaVersion: 'hadara.task.status.summary.v1';
-    recommendedCommand: 'hadara task status --json';
-    migration: string;
-  };
-} {
-  return {
-    ...report,
-    compatibility: {
-      defaultSchemaVersion: 'hadara.task.status.summary.v1',
-      recommendedCommand: 'hadara task status --json',
-      migration: 'This v1 select-work report is an explicit 0.5.x compatibility route for legacy consumers. New agents should use hadara task status --json.'
-    }
-  };
-}
-
-function createTaskStatusSummaryReport(report: TaskStatusSelectionReport | TaskWorkbenchReport): TaskStatusSummaryReport {
-  if (report.schemaVersion === 'hadara.task.status.v1') {
-    return {
-      schemaVersion: 'hadara.task.status.summary.v1',
-      command: 'task.status',
-      ok: report.ok,
-      mode: 'select-work',
-      phase: report.loop.phase,
-      recommendations: report.summary.recommendations,
-      ...(report.loop.primaryNextAction ? { primaryNextAction: report.loop.primaryNextAction } : {}),
-      ...(report.diagnostics ? { diagnostics: report.diagnostics } : {}),
-      issues: report.issues
-    };
-  }
-
-  return {
-    schemaVersion: 'hadara.task.status.summary.v1',
-    command: 'task.status',
-    ok: report.ok,
-    mode: 'selected-task',
-    taskId: report.taskId,
-    task: {
-      title: report.task.title,
-      capsule: report.task.capsule,
-      taskStatus: report.task.taskStatus,
-      taskBoardStatus: report.task.taskBoardStatus
-    },
-    phase: report.loop.phase,
-    readiness: {
-      status: report.state.readiness.closeProofValid && report.loop.phase === 'closed-valid' ? 'closed-valid' : report.state.readiness.status,
-      ready: report.state.readiness.closeProofValid && report.loop.phase === 'closed-valid' ? true : report.state.ready,
-      closeProofValid: report.state.readiness.closeProofValid,
-      summary:
-        report.state.readiness.closeProofValid && report.loop.phase === 'closed-valid'
-          ? 'A valid close proof exists; compact status treats this capsule as complete without re-running done-level diagnostics.'
-          : report.state.readiness.summary
-    },
-    counts: {
-      blockers: report.summary.blockers,
-      warnings: report.summary.warnings,
-      evidenceRecords: report.summary.evidenceRecords,
-      validationChecks: report.sources.evidenceList.validationAttempts?.checks ?? 0,
-      unresolvedValidation: report.sources.evidenceList.validationAttempts?.unresolvedFailedOrBlocked ?? 0,
-      nextActions: report.summary.nextActions
-    },
-    ...(report.loop.primaryNextAction ? { primaryNextAction: report.loop.primaryNextAction } : {}),
-    ...(report.diagnostics ? { diagnostics: report.diagnostics } : {}),
-    issues: report.issues
-  };
 }
 
 function createTaskLifecycleProgressWriter(taskId: string, commandLabel: string): (event: { step: string; phase: string; summary: string; ok?: boolean }) => void {

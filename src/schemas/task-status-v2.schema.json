@@ -23,7 +23,6 @@
     "primaryNextAction",
     "nextActions",
     "cockpit",
-    "compatibility",
     "sources",
     "issues"
   ],
@@ -93,16 +92,6 @@
             "unresolvedFailedOrBlocked": { "type": "integer" }
           }
         }
-      }
-    },
-    "compatibility": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["legacySchemaVersion", "legacyCommand", "migration"],
-      "properties": {
-        "legacySchemaVersion": { "const": "hadara.task.workbench.v1" },
-        "legacyCommand": { "const": "hadara task status --task <task-id> --compat v1 --json" },
-        "migration": { "type": "string" }
       }
     },
     "sources": {

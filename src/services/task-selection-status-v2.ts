@@ -31,11 +31,6 @@ export interface TaskSelectionStatusV2Report {
     requiredReading: string[];
     operatorGuidance: string | null;
   }>;
-  compatibility: {
-    legacySchemaVersion: 'hadara.task.status.v1';
-    legacyCommand: 'hadara task status --compat v1 --json';
-    migration: string;
-  };
   selection: {
     precedence?: Array<{
       id: string;
@@ -131,11 +126,6 @@ export function createTaskSelectionStatusV2Report(
       requiredReading: item.requiredReading,
       operatorGuidance: item.operatorGuidance ?? null
     })),
-    compatibility: {
-      legacySchemaVersion: 'hadara.task.status.v1',
-      legacyCommand: 'hadara task status --compat v1 --json',
-      migration: 'This v2 task-selection report is the default 0.5.x no-selected-task cockpit. Use the explicit v1 compatibility command only for legacy consumers.'
-    },
     selection: {
       ...(detail === 'full' ? { precedence: taskSelectionPrecedence() } : {}),
       selectedTaskId: recommendation?.taskId ?? null,
@@ -168,7 +158,7 @@ export function formatTaskSelectionStatusV2Report(report: TaskSelectionStatusV2R
     report.primaryNextAction
       ? `next: ${report.primaryNextAction.command ?? report.primaryNextAction.message}`
       : 'next: none',
-    `legacy: ${report.compatibility.legacyCommand}`
+    `source: ${report.selection.selectedSource ?? 'none'}`
   ].join('\n');
 }
 

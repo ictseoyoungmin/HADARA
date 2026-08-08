@@ -18,7 +18,6 @@ describe('context routing e2e smoke script', () => {
     expect(source).toContain('--profile');
     expect(source).toContain('cache_status');
     expect(source).toContain('cache_warm_dry_run');
-    expect(source).toContain('status_ingress');
     expect(source).toContain('task_status');
     expect(source).toContain('context_slice_symbol');
     expect(source).not.toContain('session_start_no_task');
@@ -50,14 +49,13 @@ describe('context routing e2e smoke script', () => {
         profile: 'fast',
         taskId: 'T-9999',
         summary: {
-          workloads: 4,
-          passed: 4,
+          workloads: 3,
+          passed: 3,
           failed: 0,
           cacheFingerprintChanged: false
         }
       });
       expect(report.workloads.map((workload: { label: string }) => workload.label)).toEqual([
-        'status_ingress',
         'task_status',
         'context_slice_range',
         'context_slice_symbol'
@@ -88,8 +86,8 @@ describe('context routing e2e smoke script', () => {
         ok: true,
         profile: 'full',
         summary: {
-          workloads: 8,
-          passed: 8,
+          workloads: 7,
+          passed: 7,
           failed: 0
         }
       });
@@ -100,7 +98,6 @@ describe('context routing e2e smoke script', () => {
         'context_slice_symbol',
         'graph_task',
         'graph_task_include_code',
-        'status_ingress',
         'task_status'
       ]);
     } finally {
@@ -141,17 +138,8 @@ if (command === 'context cache status') {
     command: 'context.graph',
     ok: true,
     taskId,
-    nodes: [{ id: 'task:' + taskId, type: 'Task' }, ...(hasIncludeCode ? [{ id: 'file:src/services/project-status-v2.ts', type: 'SourceFile' }] : [])],
+    nodes: [{ id: 'task:' + taskId, type: 'Task' }, ...(hasIncludeCode ? [{ id: 'file:src/task/task-selection.ts', type: 'SourceFile' }] : [])],
     edges: [],
-    issues: []
-  };
-} else if (args[0] === 'status') {
-  payload = {
-    schemaVersion: 'hadara.project.status.v2',
-    command: 'status',
-    ok: true,
-    scope: 'project',
-    phase: 'select-work',
     issues: []
   };
 } else if (args[0] === 'task' && args[1] === 'status') {
@@ -169,7 +157,7 @@ if (command === 'context cache status') {
     command: 'context.slice',
     ok: true,
     strategy: symbol ? 'symbol-neighborhood' : 'explicit-range',
-    slices: [{ text: symbol ? 'export function createProjectStatusV2Report() {}\\n' : '# Status Plan\\n' }],
+    slices: [{ text: symbol ? 'export function createTaskSelectionReport() {}\\n' : '# Status Plan\\n' }],
     issues: []
   };
 } else {

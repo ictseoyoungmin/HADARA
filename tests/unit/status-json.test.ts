@@ -2,13 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleStatusCommand } from '../../src/cli/status';
 import { assertSchema } from '../../src/core/schema';
 import {
   createOpsStatusReport,
   createOpsStatusSummaryReport
 } from '../../src/services/operations-status-service';
-import { createProjectStatusV2Report } from '../../src/services/project-status-v2';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { writeCanonicalTaskBoard } from '../helpers/task-board';
 
@@ -26,124 +24,6 @@ afterEach(() => {
 });
 
 describe('Operations Status JSON', () => {
-  it('emits lifecycle-aware project status v2 as the default status ingress', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-
-    const report = createProjectStatusV2Report(root);
-
-    assertSchema('hadara.project.status.v2', report);
-    expect(report).toMatchObject({
-      schemaVersion: 'hadara.project.status.v2',
-      command: 'status',
-      ok: true,
-      scope: 'project',
-      health: 'ok',
-      compatibility: {
-        legacySchemaVersion: 'hadara.ops.status.v1',
-        legacyCommand: 'hadara status --compat v1 --json'
-      }
-    });
-    expect(report.readiness).toMatchObject({
-      intent: expect.any(String),
-      status: expect.any(String),
-      reason: expect.any(String)
-    });
-    expect(report.evaluations.length).toBeGreaterThan(0);
-  });
-
-  it('routes active Task Board work to task status', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    const task = createTaskCapsule(root, 'Active task');
-    fs.writeFileSync(
-      path.join(root, 'docs', 'TASK_BOARD.md'),
-      `# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| ${task.id} | Active task | In Progress | ${path.relative(root, task.dir)} | Active. |\n`,
-      'utf8'
-    );
-    const report = createProjectStatusV2Report(root);
-
-    expect(report.phase).toBe('active-work');
-    expect(report.readiness).toMatchObject({
-      intent: 'orient',
-      status: 'ready',
-      reason: 'An active task is selected; inspect selected-task status before editing.'
-    });
-    expect(report.primaryNextAction).toMatchObject({
-      id: 'inspect-recommended-task',
-      command: `hadara task status --task ${task.id} --json`,
-      writeBoundary: 'read-only',
-      writes: false
-    });
-    expect(report.sources).not.toHaveProperty('currentState');
-  });
-
-  it('does not use global handoff continuation when Task Board has no next work', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    fs.writeFileSync(
-      path.join(root, 'docs', 'TASK_BOARD.md'),
-      '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0677 | Structured Continuation Semantics and rc2 Baseline Rollup | Done | tasks/T-0677-x | |\n',
-      'utf8'
-    );
-    const report = createProjectStatusV2Report(root);
-
-    expect(report.phase).toBe('idle');
-    expect(report.readiness).toMatchObject({
-      intent: 'orient',
-      status: 'terminal'
-    });
-    expect(report.primaryNextAction).toBe(null);
-    expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
-  });
-
-  it('routes uninitialized projects to init before task creation recommendations', () => {
-    const root = tempProject();
-
-    const report = createProjectStatusV2Report(root);
-
-    expect(report.phase).toBe('uninitialized');
-    expect(report.primaryNextAction).toMatchObject({
-      id: 'initialize-project',
-      command: 'hadara init --json',
-      writeBoundary: 'project-config',
-      requiresReview: true,
-      writes: true
-    });
-    expect(report.primaryNextAction?.command).not.toContain('task create');
-    expect(assertSchema('hadara.project.status.v2', report)).toBeUndefined();
-  });
-
-  it('honors status --detail full on the default v2 report path', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-
-    const fast = createProjectStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'));
-    const full = createProjectStatusV2Report(root, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
-
-    expect(fast.sources.opsStatusV1.detail).toBe('fast');
-    expect(full.sources.opsStatusV1.detail).toBe('full');
-    expect(full.sources.opsStatusV1).toMatchObject({
-      debt: {
-        evaluation: 'repo-local-only',
-        summary: expect.any(String),
-        open: expect.any(Number),
-        highOpen: expect.any(Number)
-      },
-      stateConsistency: {
-        evaluated: true,
-        consistent: expect.any(Boolean),
-        errors: expect.any(Number),
-        warnings: expect.any(Number)
-      },
-      activeRun: {
-        present: expect.any(Boolean)
-      },
-      knownProblems: expect.any(Number)
-    });
-    expect(assertSchema('hadara.project.status.v2', full)).toBeUndefined();
-  });
-
   it('builds a dashboard-ready status snapshot from project docs and task capsules', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -356,64 +236,6 @@ describe('Operations Status JSON', () => {
     expect(report.issues).toEqual([]);
   });
 
-  it('aliases default status to task status and keeps legacy diagnostics explicit', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(handleStatusCommand({ args: ['status', '--compat', 'v1', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(handleStatusCommand({ args: ['status', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(handleStatusCommand({ args: ['status', '--compat', 'v1', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(() => handleStatusCommand({ args: ['status', '--state-only', '--json'], projectRoot: root, jsonOutput: true })).toThrow('Top-level status diagnostics were retired');
-    expect(() => handleStatusCommand({ args: ['status', '--summary-json'], projectRoot: root, jsonOutput: false })).toThrow('Top-level status diagnostics were retired');
-
-    const first = JSON.parse(String(log.mock.calls[0]?.[0]));
-    const compat = JSON.parse(String(log.mock.calls[1]?.[0]));
-    const full = JSON.parse(String(log.mock.calls[2]?.[0]));
-    const compatFull = JSON.parse(String(log.mock.calls[3]?.[0]));
-    expect(first.schemaVersion).toBe('hadara.task.status.summary.v1');
-    expect(first.command).toBe('task.status');
-    expect(first.detailCommand).toBe('hadara task status --detail full --json');
-    expect(compat.schemaVersion).toBe('hadara.ops.status.v1');
-    expect(compat.command).toBe('ops.status');
-    expect(compat.compatibility).toMatchObject({
-      defaultSchemaVersion: 'hadara.task.status.summary.v1',
-      recommendedCommand: 'hadara task status --json'
-    });
-    expect(compat.stateConsistency).toBeUndefined();
-    expect(compat.handoff.knownProblems).toEqual([]);
-    expect(compat.debtEvaluation).toMatchObject({
-      state: 'not-evaluated'
-    });
-    expect(compat.debt).toMatchObject({
-      total: 0,
-      open: 0,
-      highOpen: 0
-    });
-    expect(full.schemaVersion).toBe('hadara.taskSelection.status.v2');
-    expect(full.command).toBe('task.status');
-    expect(compatFull.schemaVersion).toBe('hadara.ops.status.v1');
-    expect(compatFull.stateConsistency).toMatchObject({
-      mode: 'advisory',
-      strictBlocking: false,
-      issueCounts: expect.any(Object),
-      issues: expect.any(Array)
-    });
-    expect(compatFull.handoff.knownProblems).toEqual([]);
-  });
-
-  it('does not keep validation-baseline mutation under the deprecated status alias', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-
-    expect(() => handleStatusCommand({
-      args: ['status', 'baseline', 'promote', '--json'],
-      projectRoot: root,
-      jsonOutput: true
-    })).toThrow('status baseline promote was removed before 0.5 stable');
-  });
-
   it('can count task board statuses without scanning task capsules', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -445,22 +267,6 @@ describe('Operations Status JSON', () => {
       Done: 1,
       'In Progress': 1,
       'Needs Review': 1
-    });
-  });
-
-  it('uses the active-capsule task cockpit through the deprecated status alias', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    const task = createTaskCapsule(root, 'Status alias active capsule');
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-
-    expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
-      schemaVersion: 'hadara.task.status.summary.v1',
-      command: 'task.status',
-      mode: 'selected-task',
-      taskId: task.id
     });
   });
 

@@ -146,12 +146,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'status': {
-      const { handleStatusCommand } = await import('./status');
-      if (handleStatusCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'context': {
       const { handleContextCommand } = await import('./context');
       if (handleContextCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;

@@ -514,7 +514,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.status',
-    command: 'hadara task status [--task <task-id>] [--detail fast|full] [--compat v1] [--json|--summary-json]',
+    command: 'hadara task status [--task <task-id>] [--detail fast|full] [--json]',
     summary: 'Read the single lifecycle cockpit: the active capsule when one is selected, next-work selection otherwise, an explicit capsule with --task, or heavier diagnostics with --detail full.',
     canonical: true,
     appearsInDefaultHelp: true,
@@ -531,9 +531,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: TASK_DOCS,
     examples: [
       example('Enter the lifecycle', 'hadara task status --json', 'At session start; it selects work or opens the active capsule cockpit.'),
-      example('Read legacy selection report', 'hadara task status --compat v1 --json', 'When a legacy consumer still expects hadara.task.status.v1 select-work output.'),
       example('Inspect capsule status', 'hadara task status --task T-0001 --json', 'At loop boundaries for a selected capsule.'),
-      example('Inspect compact capsule status', 'hadara task status --task T-0001 --summary-json', 'When shell automation or humans only need phase, readiness, counts, and next action.'),
+      example('Inspect compact capsule status', 'hadara task status --task T-0001 --json', 'When shell automation or humans only need phase, readiness, counts, and next action.'),
       example('Inspect full diagnostics', 'hadara task status --task T-0001 --detail full --json', 'When explicit close/protocol diagnostics are needed without finalize planning.')
     ],
     related: ['task.status', 'evidence.list', 'task.close'],
@@ -1498,31 +1497,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: ['docs/MCP_BRIDGE_CONTRACT.md'],
     examples: [example('Start MCP server', 'hadara mcp serve', 'When an MCP client needs HADARA read tools.')],
     related: ['tools.list', 'init.enable-integration'],
-    conflictsWith: []
-  }),
-  commandEntry({
-    id: 'status',
-    command: 'hadara status [--json] [--detail fast|full] [--compat v1]',
-    summary: 'Deprecated 0.5.x compatibility alias for hadara task status; legacy project/global diagnostics are no longer primary.',
-    canonical: false,
-    aliasFor: 'task.status',
-    appearsInDefaultHelp: false,
-    family: 'project-health',
-    scope: 'project',
-    lifecycleStage: 'inspect',
-    requiredness: 'deprecated',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'deprecated',
-    schemaVersion: 'hadara.taskSelection.status.v2',
-    docs: ['docs/TASK_BOARD.md'],
-    examples: [
-      example('Use the compatibility alias', 'hadara status --json', 'Only while migrating a 0.5.x caller to hadara task status.'),
-      example('Read v1 compatibility status', 'hadara status --compat v1 --detail full --json', 'When legacy full-detail debt, known-problem, and state diagnostics are needed.')
-    ],
-    related: ['doctor', 'status'],
     conflictsWith: []
   }),
   commandEntry({

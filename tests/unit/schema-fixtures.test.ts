@@ -73,7 +73,6 @@ describe('schema fixtures', () => {
       'hadara.packageSmoke.v1',
       'hadara.plan_context.v1',
       'hadara.privateEvidence.v1',
-      'hadara.project.status.v2',
       'hadara.project.v1',
       'hadara.protocol.consistency.v1',
       'hadara.protocol.migration.v1',

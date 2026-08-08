@@ -76,7 +76,6 @@
         "lifecycleHelpExecuted",
         "initExecuted",
         "taskStatusExecuted",
-        "taskLifecycleExecuted",
         "contextSmokeExecuted",
         "releaseMutationExecuted",
         "publishExecuted"
@@ -90,7 +89,6 @@
         "lifecycleHelpExecuted": { "type": "boolean" },
         "initExecuted": { "type": "boolean" },
         "taskStatusExecuted": { "type": "boolean" },
-        "taskLifecycleExecuted": { "type": "boolean" },
         "contextSmokeExecuted": { "type": "boolean" },
         "releaseMutationExecuted": { "const": false },
         "publishExecuted": { "const": false }

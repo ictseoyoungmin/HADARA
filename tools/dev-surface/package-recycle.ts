@@ -60,7 +60,6 @@ export interface PackageRecycleReport {
     lifecycleHelpExecuted: boolean;
     initExecuted: boolean;
     taskStatusExecuted: boolean;
-    taskLifecycleExecuted: boolean;
     contextSmokeExecuted: boolean;
     releaseMutationExecuted: false;
     publishExecuted: false;
@@ -138,12 +137,11 @@ type InstalledCommandSurface = {
 };
 
 type TaskReadSmoke = {
-  id: 'task-status' | 'task-lifecycle';
+  id: 'task-status';
   label: string;
   command: string;
   args: (taskId: string) => string[];
   summary: string;
-  compatibility: 'current' | 'legacy';
 };
 
 interface RootRoleSummary {
@@ -477,11 +475,7 @@ function runInstalledSmokes(input: {
   } else {
     createTaskStep.summary = `Disposable task ${taskId} was created.`;
     input.steps.push(createTaskStep);
-    if (taskReadSmoke.compatibility === 'current') {
-      input.execution.taskStatusExecuted = true;
-    } else {
-      input.execution.taskLifecycleExecuted = true;
-    }
+    input.execution.taskStatusExecuted = true;
     pushJsonSmokeStep(input, {
       id: taskReadSmoke.id,
       label: taskReadSmoke.label,
@@ -677,7 +671,6 @@ function createExecutionFlags(): PackageRecycleReport['execution'] {
     lifecycleHelpExecuted: false,
     initExecuted: false,
     taskStatusExecuted: false,
-    taskLifecycleExecuted: false,
     contextSmokeExecuted: false,
     releaseMutationExecuted: false,
     publishExecuted: false
@@ -872,7 +865,7 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
       label: 'Read installed CLI command surface',
       command: 'hadara commands --json',
       status: 'planned',
-      summary: 'Would read the installed CLI command registry to choose current or legacy lifecycle smokes.'
+      summary: 'Would read the installed CLI command registry before running the current task status smoke.'
     },
     {
       id: 'help-lifecycle',
@@ -1000,35 +993,14 @@ function readInstalledCommandSurface(input: {
 }
 
 function selectTaskReadSmoke(surface: InstalledCommandSurface): TaskReadSmoke {
-  if (hasInstalledCommand(surface, 'task.status', 'hadara task status')) {
-    return {
-      id: 'task-status',
-      label: 'Verify task status read model',
-      command: 'hadara task status --task <task-id> --json',
-      args: (taskId: string) => ['task', 'status', '--task', taskId, '--json'],
-      summary: 'Selected current task status smoke from installed command surface.',
-      compatibility: 'current'
-    };
-  }
-
-  if (hasInstalledCommand(surface, 'task.lifecycle', 'hadara task lifecycle')) {
-    return {
-      id: 'task-lifecycle',
-      label: 'Verify legacy task lifecycle read model',
-      command: 'hadara task lifecycle --task <task-id> --json',
-      args: (taskId: string) => ['task', 'lifecycle', '--task', taskId, '--json'],
-      summary: 'Selected legacy task lifecycle smoke because installed command surface does not expose task.status.',
-      compatibility: 'legacy'
-    };
-  }
-
   return {
     id: 'task-status',
     label: 'Verify task status read model',
     command: 'hadara task status --task <task-id> --json',
     args: (taskId: string) => ['task', 'status', '--task', taskId, '--json'],
-    summary: 'Selected current task status smoke because installed command surface was unavailable or incomplete.',
-    compatibility: 'current'
+    summary: hasInstalledCommand(surface, 'task.status', 'hadara task status')
+      ? 'Selected current task status smoke from installed command surface.'
+      : 'Selected current task status smoke; the installed command surface did not expose the expected route.'
   };
 }
 

@@ -55,7 +55,7 @@ This is the normal fast-resume path. Read historical indexes only when the activ
 
 ```bash
 hadara task create "ship the smallest useful change" --json
-hadara task status --task T-0001 --summary-json
+hadara task status --task T-0001 --json
 ```
 
 Then do the work and record evidence:

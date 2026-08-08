@@ -218,11 +218,11 @@ function assertOk(step, result) {
 function measureFirstCorrectFile() {
   const started = performance.now();
   const agents = fs.readFileSync(path.join(projectRoot, 'AGENTS.md'), 'utf8');
-  const expected = '.hadara/state/current.json';
+  const expected = 'docs/TASK_BOARD.md';
   const listedPaths = [...agents.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-  const pathValue = listedPaths.find((candidate) => candidate === expected || candidate === '.hadara/context/HADARA_CONTEXT.md' || candidate === 'docs/PROJECT_STATE.md') ?? null;
+  const pathValue = listedPaths.find((candidate) => candidate === expected || candidate === 'docs/HADARA_WORKFLOW.md') ?? null;
   const correct = pathValue === expected && fs.existsSync(path.join(projectRoot, expected));
-  if (!correct) throw new Error(`Generated onboarding did not route the first current-state read to ${expected}; observed ${pathValue ?? 'none'}.`);
+  if (!correct) throw new Error(`Generated onboarding did not route the first task-state read to ${expected}; observed ${pathValue ?? 'none'}.`);
   fs.readFileSync(path.join(projectRoot, pathValue), 'utf8');
   return {
     path: pathValue,

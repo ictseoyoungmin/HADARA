@@ -59,11 +59,6 @@ export interface TaskStatusV2Report {
       unresolvedFailedOrBlocked: number;
     };
   };
-  compatibility: {
-    legacySchemaVersion: 'hadara.task.workbench.v1';
-    legacyCommand: 'hadara task status --task <task-id> --compat v1 --json';
-    migration: string;
-  };
   sources: {
     detail: 'fast' | 'full';
     workbench?: TaskWorkbenchReport;
@@ -134,11 +129,6 @@ export function createTaskStatusV2Report(
         unresolvedFailedOrBlocked: workbench.sources.evidenceList.validationAttempts?.unresolvedFailedOrBlocked ?? 0
       }
     },
-    compatibility: {
-      legacySchemaVersion: 'hadara.task.workbench.v1',
-      legacyCommand: 'hadara task status --task <task-id> --compat v1 --json',
-      migration: 'This v2 selected-task cockpit is the default 0.5.x task report. Use explicit --compat v1 only for legacy workbench consumers.'
-    },
     sources: {
       detail,
       ...(detail === 'full' ? { workbench } : {}),
@@ -177,7 +167,7 @@ export function formatTaskStatusV2Report(report: TaskStatusV2Report): string {
     report.primaryNextAction
       ? `next: ${report.primaryNextAction.command ?? report.primaryNextAction.message}`
       : 'next: none',
-    `legacy: ${report.compatibility.legacyCommand.replace('<task-id>', report.taskId)}`
+    `source: ${report.sources.workbenchSummary.schemaVersion}`
   ].join('\n');
 }
 
