@@ -58,6 +58,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Strict release gate | Yes | Not Run | All linked evidence hashes match current inputs. | TBD |
 | Release dry-run | Yes | Not Run | Readiness report is current-head clean. | TBD |
 | Publish dry-run | Yes | Not Run | Publish command plans without mutation. | TBD |
+| Full npm check | Yes | Passed | exit 0 in 54478ms | ev:T-0749:4566954aa8e44dd686fa277f |
 
 ## Inputs / Constraints
 
