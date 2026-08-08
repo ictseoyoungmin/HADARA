@@ -1,8 +1,7 @@
 # HADARA 0.5.0-rc.2
 
-HADARA 0.5.0-rc.2 is a release candidate for the Init v1 task-local workflow and evidence-backed
-close transaction line. It supersedes 0.5.0-rc.1 as the current source candidate; publication is
-still operator-controlled.
+HADARA 0.5.0-rc.2 is a public prerelease for the Init v1 task-local workflow and evidence-backed
+close transaction line. It supersedes 0.5.0-rc.1 as the current prerelease candidate.
 
 ## Highlights
 
@@ -27,8 +26,7 @@ status checks.
 ## Boundaries
 
 - This is a prerelease candidate intended for npm `next`.
-- `hadara@latest` remains the published stable line; RC2 publication has not been performed.
-- npm publish, GitHub Release creation, registry mutation, and post-publish recycle remain
-  operator-controlled actions.
-- Publish only after reviewing the current release dry-run and use the tracked note with the
-  publish helper; no tokens or machine-local paths are included in this note.
+- Published to npm on dist-tag `next`; `hadara@latest` remains the stable line at `0.4.6`.
+- This GitHub Release is the prerelease companion for npm `0.5.0-rc.2`.
+- Post-publish installed-package recycle verifies the public artifact separately.
+- No tokens or machine-local paths are included in this note.

@@ -168,6 +168,14 @@ run_dev_surface() {
 "${DEV_SURFACE_CMD[@]}" "$@"
 }
 
+run_hadara_cli() {
+if [[ ! -f "dist/cli/main.js" ]]; then
+echo "dist/cli/main.js does not exist; run npm run build before recording evidence."
+exit 1
+fi
+node dist/cli/main.js "$@"
+}
+
 verify_checksum() {
 local checksum_file="$1"
 local checksum_dir
@@ -567,7 +575,7 @@ exit 1
 fi
 
 echo "npm view verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION}"
-run_dev_surface evidence add-command \
+run_hadara_cli evidence add-command \
   --task "${TASK_ID}" \
   --summary "Published ${PACKAGE_NAME}@${VERSION} to npm and verified npm view returned ${PUBLISHED_VERSION}; GitHub Release draft requested: ${CREATE_GITHUB_DRAFT}." \
   --result passed \
@@ -637,6 +645,10 @@ GH_RELEASE_NOTE_ARGS=(--notes "HADARA ${VERSION} release. See attached tarball, 
 if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then
 GH_RELEASE_NOTE_ARGS=(--notes-file "${GITHUB_RELEASE_NOTE}")
 fi
+GH_PRERELEASE_ARGS=()
+if [[ "${VERSION}" =~ -rc\.[0-9]+$ ]]; then
+GH_PRERELEASE_ARGS=(--prerelease)
+fi
 
 gh release create "${TAG}" \
   "${TARBALL}" \
@@ -645,13 +657,18 @@ gh release create "${TAG}" \
   --title "HADARA ${VERSION}" \
   "${GH_RELEASE_NOTE_ARGS[@]}" \
   --draft \
+  "${GH_PRERELEASE_ARGS[@]}" \
   --verify-tag
 
 echo
 echo "GitHub Release draft created."
 echo "Review it in GitHub UI, then publish the draft manually if everything is correct:"
+if [[ "${VERSION}" =~ -rc\.[0-9]+$ ]]; then
+echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false --prerelease"
+else
 echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false"
-run_dev_surface evidence add-command \
+fi
+run_hadara_cli evidence add-command \
   --task "${TASK_ID}" \
   --summary "Created GitHub Release draft ${TAG} with tarball, checksum, and manifest assets after npm publish." \
   --result passed \

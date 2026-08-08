@@ -10,6 +10,7 @@ import {
   evidenceName,
   evidenceRequirements,
   evidenceSummary,
+  packageTarballMatchesReleaseArtifact,
   validateEvidenceRequirement
 } from './release-evidence-validation';
 import { createProviderAdvisories } from './release-provider-advisories';
@@ -82,11 +83,13 @@ export interface ReleaseDryRunReport {
     category?: string;
     mode?: string;
     providerEcosystem?: string;
+    sourceKind?: string;
     result?: string;
     packageVersion?: string;
     gitCommit?: string;
     releaseInputHash?: string;
     manifestHash?: string;
+    tarballSha256?: string;
   }>;
   plannedSteps: Array<{
     id: string;
@@ -160,6 +163,16 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
   const releaseGate = timeStage(timings, 'strict-release-gate', () => createReleaseGateReport(projectRoot, 'strict'));
   const evidenceRecords = timeStage(timings, 'release-evidence-scan', () => readReleaseEvidenceRecords(projectRoot));
   const evidence = timeStage(timings, 'release-evidence-validation', () => evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement)));
+  const packageSmokeEvidence = evidence.find((item) => item.code === 'PACKAGE_SMOKE_EVIDENCE');
+  const releaseArtifactEvidence = evidence.find((item) => item.code === 'RELEASE_ARTIFACT_EVIDENCE');
+  const tarballProvenanceCheck = {
+    code: 'PACKAGE_TARBALL_PROVENANCE',
+    name: 'Package tarball provenance',
+    status: packageTarballMatchesReleaseArtifact(packageSmokeEvidence, releaseArtifactEvidence) ? ('passed' as const) : ('error' as const),
+    summary: packageTarballMatchesReleaseArtifact(packageSmokeEvidence, releaseArtifactEvidence)
+      ? 'Package smoke tarball SHA-256 matches the release artifact tarball SHA-256.'
+      : 'Package smoke must expose a tarball SHA-256 matching the release artifact tarball SHA-256.'
+  };
   const providerAdvisories = timeStage(timings, 'provider-advisories', () => createProviderAdvisories(evidenceRecords));
   const gitFreshness = createGitFreshnessChecker(projectRoot, gitCommit);
   const releaseTargetConfigurationCheck = createReleaseTargetConfigurationCheck(releaseTargetConfiguration);
@@ -177,6 +190,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       status: evidenceCheckPassed(item, packageMetadata.version, gitCommit, gitFreshness, releaseInputHash) ? ('passed' as const) : ('error' as const),
       summary: evidenceSummary(item, packageMetadata.version, gitCommit, gitFreshness, releaseInputHash)
     })),
+    tarballProvenanceCheck,
     {
       code: 'RELEASE_TARGETS',
       name: 'Release target plan',

@@ -263,13 +263,13 @@ echo
 echo "If npm was already published and only the GitHub Release remains:"
 echo
 echo "  # If a draft already exists and has been reviewed:"
-echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false"
+echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false --prerelease  # for RC versions"
 echo
 echo "  # Or create a draft from the source/workspace repo, then review and publish:"
 echo "  gh release create v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA \\"
 echo "    --target \$(git rev-parse HEAD) --title \"HADARA \$(node -p \"require('./package.json').version\")\" \\"
-echo "    --notes-file tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md --draft"
-echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false"
+echo "    --notes-file tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md --draft --prerelease  # for RC versions"
+echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false --prerelease  # for RC versions"
 echo
 echo "Notes:"
 echo "  - Publish from this clone, not /workspace (the mounted host repo cannot build)."

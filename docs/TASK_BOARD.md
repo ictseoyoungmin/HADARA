@@ -753,3 +753,4 @@
 | T-0750 | RC2 GitHub Release Note Preparation | Done | tasks/T-0750-rc2-github-release-note-preparation | |
 | T-0751 | Record RC2 Publication and Repair Publish Helper | Done | tasks/T-0751-record-rc2-publication-and-repair-publish-helper | |
 | T-0752 | Refresh Dist and Init v1 Repository Guidance | Done | tasks/T-0752-refresh-dist-and-init-v1-repository-guidance | |
+| T-0753 | Repair RC2 Publication Truth and Tarball Provenance | Done | tasks/T-0753-repair-rc2-publication-truth-and-tarball-provenance | |

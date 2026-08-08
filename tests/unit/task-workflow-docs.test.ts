@@ -123,7 +123,7 @@ describe('task workflow command semantics docs', () => {
       expect(doc).toContain('`conditional-reference`');
       expect(doc).toContain('`historical`');
       expect(doc).toContain('`excluded`');
-      expect(doc).toContain('`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point');
+      expect(doc).toContain('`.hadara/context/READ_MAP.md` is the generated document-routing fallback');
       expect(doc).toContain('Historical and superseded docs are never default required reading.');
     }
 

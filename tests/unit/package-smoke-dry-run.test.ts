@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -112,6 +113,18 @@ function writeGeneratedWorkflowFixture(cwd: string, options?: { stale?: boolean 
 }
 
 describe('package smoke dry-run', () => {
+  it('records the input tarball SHA-256 for provenance checks', () => {
+    const root = tempProject();
+    const tarball = path.join(root, 'hadara-0.5.0-rc.2.tgz');
+    fs.writeFileSync(tarball, 'fixture tarball', 'utf8');
+    const report = createPackageSmokeDryRunReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      from: tarball
+    });
+
+    expect(report.source.tarballSha256).toBe(`sha256:${crypto.createHash('sha256').update('fixture tarball').digest('hex')}`);
+  });
+
   it('creates a schema-valid dry-run report without package execution', () => {
     const root = tempProject();
     const report = createPackageSmokeDryRunReport({

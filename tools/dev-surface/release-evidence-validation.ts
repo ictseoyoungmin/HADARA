@@ -36,10 +36,12 @@ export function validateEvidenceRequirement(records: ReleaseEvidenceRecord[], re
     ...(artifact.category ? { category: artifact.category } : {}),
     ...(artifact.mode ? { mode: artifact.mode } : {}),
     ...(artifact.providerEcosystem ? { providerEcosystem: artifact.providerEcosystem } : {}),
+    ...(artifact.sourceKind ? { sourceKind: artifact.sourceKind } : {}),
     ...(artifact.packageVersion ? { packageVersion: artifact.packageVersion } : {}),
     ...(artifact.gitCommit ? { gitCommit: artifact.gitCommit } : {}),
     ...(artifact.releaseInputHash ? { releaseInputHash: artifact.releaseInputHash } : {}),
-    ...(artifact.manifestHash ? { manifestHash: artifact.manifestHash } : {})
+    ...(artifact.manifestHash ? { manifestHash: artifact.manifestHash } : {}),
+    ...(artifact.tarballSha256 ? { tarballSha256: artifact.tarballSha256 } : {})
   };
 }
 
@@ -62,6 +64,14 @@ export function evidenceCheckPassed(
     if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit && !gitFreshness(item)) return false;
   }
   return true;
+}
+
+export function packageTarballMatchesReleaseArtifact(
+  packageSmoke: ReleaseDryRunReport['evidence'][number] | undefined,
+  releaseArtifact: ReleaseDryRunReport['evidence'][number] | undefined
+): boolean {
+  if (!packageSmoke || packageSmoke.sourceKind !== 'tarball') return true;
+  return Boolean(packageSmoke.tarballSha256 && releaseArtifact?.tarballSha256 && packageSmoke.tarballSha256 === releaseArtifact.tarballSha256);
 }
 
 export function evidenceSummary(

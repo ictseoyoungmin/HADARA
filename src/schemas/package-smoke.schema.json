@@ -96,6 +96,8 @@
         "kind": { "type": "string", "enum": ["source-checkout", "tarball", "release-artifact"] },
         "displayPath": { "type": "string", "minLength": 1 },
         "relativePath": { "type": "string", "minLength": 1 },
+        "releaseInputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "tarballSha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "pathRedacted": { "const": true }
       }
     },

@@ -7,6 +7,7 @@ import { createReleaseDryRunReport } from '../../tools/dev-surface/release-dry-r
 import { validateSchema } from '../../src/core/schema';
 import { readPythonProjectPreview } from '../../tools/dev-surface/release-targets';
 import { computeReleaseInputHash } from '../../tools/dev-surface/release-input';
+import { packageTarballMatchesReleaseArtifact } from '../../tools/dev-surface/release-evidence-validation';
 
 const roots: string[] = [];
 const commit = '0123456789abcdef0123456789abcdef01234567';
@@ -28,6 +29,23 @@ afterEach(() => {
 });
 
 describe('release dry-run', () => {
+  it('requires tarball package smoke provenance to match the release artifact', () => {
+    const packageSmoke = {
+      code: 'PACKAGE_SMOKE_EVIDENCE' as const,
+      artifactExists: true,
+      sourceKind: 'tarball',
+      tarballSha256: 'sha256:' + 'a'.repeat(64)
+    };
+    const releaseArtifact = {
+      code: 'RELEASE_ARTIFACT_EVIDENCE' as const,
+      artifactExists: true,
+      tarballSha256: 'sha256:' + 'b'.repeat(64)
+    };
+
+    expect(packageTarballMatchesReleaseArtifact(packageSmoke, releaseArtifact)).toBe(false);
+    expect(packageTarballMatchesReleaseArtifact(packageSmoke, { ...releaseArtifact, tarballSha256: packageSmoke.tarballSha256 })).toBe(true);
+  });
+
   it('cross-checks linked evidence artifacts before reporting release readiness', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);

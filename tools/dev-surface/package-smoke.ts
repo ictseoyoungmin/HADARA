@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -66,6 +67,7 @@ export interface PackageSmokeReport {
     pathRedacted: true;
     relativePath?: string;
     releaseInputHash?: string;
+    tarballSha256?: string;
   };
   steps: Array<{
     id: string;
@@ -1136,12 +1138,17 @@ function createSource(projectRoot: string, from: string | undefined, issues: Pac
     });
   }
 
+  const tarballSha256 = /\.tgz$/i.test(from) && fs.existsSync(absolutePath)
+    ? `sha256:${crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex')}`
+    : undefined;
+
   return {
     kind: inferSourceKind(from),
     displayPath: relativePath ? `./${relativePath}` : '<redacted-package-source>',
     pathRedacted: true,
     ...(relativePath ? { relativePath } : {}),
-    ...(releaseInputHash ? { releaseInputHash } : {})
+    ...(releaseInputHash ? { releaseInputHash } : {}),
+    ...(tarballSha256 ? { tarballSha256 } : {})
   };
 }
 

@@ -27,10 +27,12 @@ export interface ReleaseEvidenceArtifactValidation {
   category?: string;
   mode?: string;
   providerEcosystem?: string;
+  sourceKind?: string;
   packageVersion?: string;
   gitCommit?: string;
   releaseInputHash?: string;
   manifestHash?: string;
+  tarballSha256?: string;
   issues: string[];
 }
 
@@ -73,9 +75,11 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
         category: typeof parsed.category === 'string' ? parsed.category : undefined,
         mode: typeof sourceReport.mode === 'string' ? sourceReport.mode : undefined,
         providerEcosystem: readProviderEcosystem(sourceReport),
+        sourceKind: readSourceKind(sourceReport),
         packageVersion: readOptionalString(parsed.packageVersion) ?? readOptionalString(sourceReport.packageVersion),
         gitCommit: readOptionalString(parsed.gitCommit) ?? readOptionalString(sourceReport.gitCommit),
         releaseInputHash: readNestedString(sourceReport, 'releaseInputHash'),
+        tarballSha256: readNestedString(sourceReport, 'tarballSha256'),
         issues: []
       };
     }
@@ -95,6 +99,7 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
         gitCommit: readOptionalString(evidence.gitCommit) ?? readOptionalString(parsed.gitCommit),
         releaseInputHash: isRecord(parsed.source) ? readOptionalString(parsed.source.releaseInputHash) : undefined,
         manifestHash: readOptionalString(manifest?.hash),
+        tarballSha256: tarballHashFromArtifacts(artifacts),
         issues: []
       };
     }
@@ -109,6 +114,7 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
         mode: 'execute',
         packageVersion: isRecord(parsed.package) ? readOptionalString(parsed.package.version) : undefined,
         manifestHash: `sha256:${sha256(content)}`,
+        tarballSha256: isRecord(parsed.tarball) ? readOptionalString(parsed.tarball.hash) : undefined,
         issues: []
       };
     }
@@ -122,6 +128,11 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
   } catch {
     return { exists: true, schemaValid: false, issues: ['EVIDENCE_ARTIFACT_INVALID_JSON'] };
   }
+}
+
+function tarballHashFromArtifacts(artifacts: unknown[]): string | undefined {
+  const tarball = artifacts.find((artifact): artifact is Record<string, unknown> => isRecord(artifact) && artifact.kind === 'tarball');
+  return readOptionalString(tarball?.hash);
 }
 
 export function normalizeReleaseEvidenceRecord(record: ReleaseEvidenceRecord): NormalizedEvidenceRecord | null {
@@ -264,6 +275,11 @@ function readProviderEcosystem(sourceReport: Record<string, unknown>): string | 
 function readNestedString(record: Record<string, unknown>, key: string): string | undefined {
   const source = isRecord(record.source) ? record.source : undefined;
   return source ? readOptionalString(source[key]) : undefined;
+}
+
+function readSourceKind(record: Record<string, unknown>): string | undefined {
+  const source = isRecord(record.source) ? record.source : undefined;
+  return readOptionalString(source?.kind);
 }
 
 function providerMatchesExpectation(actual: string | undefined, expected: string): boolean {
