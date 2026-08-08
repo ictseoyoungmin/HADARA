@@ -25,6 +25,7 @@ describe('Task Capsule scaffold frames', () => {
     expect(files).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
     const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMarkdown).toContain('## Identity');
+    expect(taskMarkdown).toContain('Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.');
     expect(taskMarkdown).not.toContain('Lifecycle note:');
     expect(taskMarkdown.indexOf('## Goal')).toBeLessThan(taskMarkdown.indexOf('## Inputs / Constraints'));
     expect(taskMarkdown).toContain('## Scope');
@@ -45,6 +46,7 @@ describe('Task Capsule scaffold frames', () => {
     expect(taskMarkdown).not.toContain('\n## Status\n');
     expect(taskMarkdown).not.toContain('## Close Proof');
     const handoff = fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8');
+    expect(handoff).toContain('Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.');
     expect(handoff).not.toContain('## Current State');
     expect(handoff).not.toContain('| CloseState |');
     expect(handoff).toContain('## Identity');

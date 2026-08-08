@@ -748,3 +748,4 @@
 | T-0745 | RC2 Post-Freeze Integrity Correction | Done | tasks/T-0745-rc2-post-freeze-integrity-correction | |
 | T-0746 | RC2 Evidence Reproducibility and Close Contract | Done | tasks/T-0746-rc2-evidence-reproducibility-and-close-contract | |
 | T-0747 | RC2 Current-Head Re-freeze | Done | tasks/T-0747-rc2-current-head-re-freeze | |
+| T-0748 | Document Task Identity Ownership in Capsule Template | Done | tasks/T-0748-document-task-identity-ownership-in-capsule-template | |

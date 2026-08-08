@@ -223,6 +223,7 @@ describe('task create templates', () => {
     expect(report.template.id).toBe('release-read-model');
     const taskMarkdown = fs.readFileSync(path.join(root, report.task.capsule, 'TASK.md'), 'utf8');
     expect(taskMarkdown).toContain('No publish execution');
+    expect(taskMarkdown).toContain('Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.');
     expect(taskMarkdown).not.toContain('Lifecycle note:');
     expect(fs.readdirSync(path.join(root, report.task.capsule)).sort()).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
   });

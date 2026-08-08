@@ -165,13 +165,13 @@ export function createTaskCapsule(projectRoot: string, title: string, options: C
     }
 
     for (const [fileName, factory] of Object.entries(TASK_FILES)) {
-      writeFileIfMissing(path.join(dir, fileName), factory(task));
+      writeFileIfMissing(path.join(dir, fileName), addTaskIdentityOwnershipNotice(fileName, factory(task)));
     }
     const template = getTaskTemplate(options.templateId);
     if (template) {
       for (const [fileName, factory] of Object.entries(template.files)) {
         if (!TASK_FILES[fileName]) continue;
-        if (factory) fs.writeFileSync(path.join(dir, fileName), factory(task), 'utf8');
+        if (factory) fs.writeFileSync(path.join(dir, fileName), addTaskIdentityOwnershipNotice(fileName, factory(task)), 'utf8');
       }
     }
     ensureCloseSummaryInterface(path.join(dir, 'TASK.md'));
@@ -181,6 +181,21 @@ export function createTaskCapsule(projectRoot: string, title: string, options: C
   }
 
   throw new TaskCapsuleCreateCollisionError(maxCreateRetries);
+}
+
+const TASK_IDENTITY_OWNERSHIP_NOTE = '> Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.';
+
+function addTaskIdentityOwnershipNotice(fileName: string, content: string): string {
+  if (fileName !== 'TASK.md' && fileName !== 'HANDOFF.md') return content;
+  if (content.includes(TASK_IDENTITY_OWNERSHIP_NOTE)) return content;
+
+  const anchor = fileName === 'HANDOFF.md'
+    ? '\n\n## Last Completed'
+    : content.includes('\n\nSchema hint:')
+      ? '\n\nSchema hint:'
+      : '\n\n## Goal';
+  if (!content.includes(anchor)) return content;
+  return content.replace(anchor, `\n\n${TASK_IDENTITY_OWNERSHIP_NOTE}${anchor}`);
 }
 
 function ensureCloseSummaryInterface(taskPath: string): void {
