@@ -83,6 +83,7 @@
         "kind": { "type": "string", "enum": ["disposable", "project-source"] },
         "displayPath": { "type": "string", "minLength": 1 },
         "relativePath": { "type": "string", "minLength": 1 },
+        "releaseInputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "pathRedacted": { "const": true },
         "retention": { "type": "string", "enum": ["deleted", "kept-temporary", "private-local"] }
       }

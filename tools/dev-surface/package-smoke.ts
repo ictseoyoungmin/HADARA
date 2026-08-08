@@ -6,6 +6,7 @@ import { HadaraPaths } from '../../src/core/paths';
 import { assertSchema } from '../../src/core/schema';
 import { startMonotonicTimer } from '../../src/core/timing';
 import { attachReducedSmokeEvidence } from './smoke-evidence';
+import { computeReleaseInputHash } from './release-input';
 import { readPythonProjectPreview } from './release-targets';
 import { listCommandRegistryEntries } from '../../src/services/capability-registry';
 import {
@@ -64,6 +65,7 @@ export interface PackageSmokeReport {
     displayPath: string;
     pathRedacted: true;
     relativePath?: string;
+    releaseInputHash?: string;
   };
   steps: Array<{
     id: string;
@@ -1112,13 +1114,15 @@ function createPlannedArtifacts(options: PackageSmokeDryRunOptions): PackageSmok
 }
 
 function createSource(projectRoot: string, from: string | undefined, issues: PackageSmokeIssue[]): PackageSmokeReport['source'] {
+  const releaseInputHash = computeReleaseInputHash(projectRoot);
   if (!from) {
     validateProjectPackageMetadata(projectRoot, issues);
     return {
       kind: 'source-checkout',
       displayPath: '.',
       pathRedacted: true,
-      relativePath: '.'
+      relativePath: '.',
+      ...(releaseInputHash ? { releaseInputHash } : {})
     };
   }
 
@@ -1136,7 +1140,8 @@ function createSource(projectRoot: string, from: string | undefined, issues: Pac
     kind: inferSourceKind(from),
     displayPath: relativePath ? `./${relativePath}` : '<redacted-package-source>',
     pathRedacted: true,
-    ...(relativePath ? { relativePath } : {})
+    ...(relativePath ? { relativePath } : {}),
+    ...(releaseInputHash ? { releaseInputHash } : {})
   };
 }
 

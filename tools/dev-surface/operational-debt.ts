@@ -9,6 +9,7 @@ import {
 import { analyzeAcceptanceReadiness } from '../../src/task/acceptance';
 import { listTaskCapsules, TaskCapsule } from '../../src/task/task-capsule';
 import { readMarkdownSection } from '../../src/services/markdown-table';
+import { computeReleaseInputHash } from './release-input';
 
 export interface OperationalDebtRecord {
   id: string;
@@ -92,6 +93,7 @@ export interface ReleaseGateReport {
 interface ReleaseEvidenceMatch {
   record: ReleaseEvidenceRecord;
   artifactSchemaValid?: boolean;
+  releaseInputHash?: string;
 }
 
 export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
@@ -246,6 +248,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md')) ?? releaseReadiness;
   const licenseText = readOptionalText(path.join(projectRoot, 'LICENSE'));
   const evidence = readReleaseEvidenceRecords(projectRoot);
+  const releaseInputHash = computeReleaseInputHash(projectRoot);
 
   const checks: ReleaseGateReport['checks'] = [
     checkPackageBin(packageJson, mode),
@@ -259,9 +262,9 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkReleaseWorkflowTargetDecision(releaseReadiness, mode),
     checkInstallerSurfaceAndSchema(releaseReadiness, mode),
     checkInstallMatrixSmokePlan(releaseReadiness, mode),
-    checkPackageSmokeEvidence(evidence, mode),
-    checkCleanCheckoutSmokeEvidence(evidence, mode),
-    checkReleaseArtifactEvidence(evidence, mode),
+    checkPackageSmokeEvidence(evidence, mode, releaseInputHash),
+    checkCleanCheckoutSmokeEvidence(evidence, mode, releaseInputHash),
+    checkReleaseArtifactEvidence(evidence, mode, releaseInputHash),
     checkInstallMatrixSmokeEvidence(),
     checkGeneratedArtifactPolicy(architecture, developmentSlices, tuiDesign, mode),
     checkRemoteCiObservation(releaseReadiness, validationHistory, mode)
@@ -606,37 +609,40 @@ function checkInstallMatrixSmokePlan(releaseReadiness: string | null, mode: Rele
   };
 }
 
-function checkPackageSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+function checkPackageSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode'], releaseInputHash: string | undefined): ReleaseGateReport['checks'][number] {
   const match = findLatestEvidence(evidence, (record) => isStrictReleaseEvidenceProof(record, { category: 'package-smoke', mode: 'local' }));
   return createEvidenceCheck(
     'PACKAGE_SMOKE_EVIDENCE',
     'Package smoke evidence',
     match,
     mode,
+    releaseInputHash,
     'Latest package-smoke evidence is recorded',
     'Record passed public package-smoke execution evidence before release readiness is frozen.'
   );
 }
 
-function checkCleanCheckoutSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+function checkCleanCheckoutSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode'], releaseInputHash: string | undefined): ReleaseGateReport['checks'][number] {
   const match = findLatestEvidence(evidence, (record) => isStrictReleaseEvidenceProof(record, { category: 'clean-checkout-smoke', mode: 'execute' }));
   return createEvidenceCheck(
     'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
     'Clean checkout smoke evidence',
     match,
     mode,
+    releaseInputHash,
     'Latest clean-checkout smoke evidence is recorded',
     'Record passed public clean-checkout smoke evidence before release readiness is frozen.'
   );
 }
 
-function checkReleaseArtifactEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+function checkReleaseArtifactEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode'], releaseInputHash: string | undefined): ReleaseGateReport['checks'][number] {
   const match = findLatestEvidence(evidence, (record) => isStrictReleaseEvidenceProof(record, { category: 'release-artifact', mode: 'execute' }));
   return createEvidenceCheck(
     'RELEASE_ARTIFACT_EVIDENCE',
     'Release artifact evidence',
     match,
     mode,
+    releaseInputHash,
     'Latest release artifact build evidence is recorded',
     'Record passed public release artifact build evidence before release readiness is frozen.'
   );
@@ -656,6 +662,7 @@ function createEvidenceCheck(
   name: string,
   match: ReleaseEvidenceMatch | null,
   mode: ReleaseGateReport['mode'],
+  releaseInputHash: string | undefined,
   passedSummary: string,
   missingSummary: string
 ): ReleaseGateReport['checks'][number] {
@@ -672,8 +679,12 @@ function createEvidenceCheck(
   return {
     code,
     name,
-    status: match.artifactSchemaValid === false ? readinessFailureStatus(mode) : 'passed',
-    summary: `${passedSummary}: ${match.record.taskId} at ${match.record.time}${artifactNote}.`
+    status: match.artifactSchemaValid === false || !releaseInputHash || match.releaseInputHash !== releaseInputHash ? readinessFailureStatus(mode) : 'passed',
+    summary: match.artifactSchemaValid === false
+      ? `${passedSummary}: ${match.record.taskId} at ${match.record.time}${artifactNote}.`
+      : !releaseInputHash || match.releaseInputHash !== releaseInputHash
+        ? `${match.record.taskId} at ${match.record.time} has a stale or missing release input hash.`
+        : `${passedSummary}: ${match.record.taskId} at ${match.record.time}${artifactNote}.`
   };
 }
 
@@ -725,9 +736,11 @@ function findLatestEvidence(evidence: ReleaseEvidenceRecord[], predicate: (recor
   };
 }
 
-function validateLinkedEvidenceArtifact(record: ReleaseEvidenceRecord): { artifactSchemaValid?: boolean } {
+function validateLinkedEvidenceArtifact(record: ReleaseEvidenceRecord): { artifactSchemaValid?: boolean; releaseInputHash?: string } {
   const validation = validateReleaseEvidenceArtifact(record);
-  return validation.exists ? { artifactSchemaValid: validation.schemaValid === true } : {};
+  return validation.exists
+    ? { artifactSchemaValid: validation.schemaValid === true, ...(validation.releaseInputHash ? { releaseInputHash: validation.releaseInputHash } : {}) }
+    : {};
 }
 
 function readinessFailureStatus(mode: ReleaseGateReport['mode']): 'warning' | 'error' {

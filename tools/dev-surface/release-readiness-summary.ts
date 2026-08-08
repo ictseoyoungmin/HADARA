@@ -7,7 +7,8 @@ export function createReadinessSummary(
   evidence: ReleaseDryRunReport['evidence'],
   packageVersion: string,
   gitCommit: string | undefined,
-  gitFreshness: GitFreshnessChecker
+  gitFreshness: GitFreshnessChecker,
+  releaseInputHash: string | undefined
 ): ReleaseDryRunReport['readiness'] {
   const blockers = checks.filter((check) => check.status === 'error').length;
   const warnings = checks.filter((check) => check.status === 'warning').length;
@@ -15,7 +16,7 @@ export function createReadinessSummary(
     status: blockers === 0 ? 'ready' : 'blocked',
     blockers,
     warnings,
-    nextActions: createNextActions(checks, evidence, packageVersion, gitCommit, gitFreshness)
+    nextActions: createNextActions(checks, evidence, packageVersion, gitCommit, gitFreshness, releaseInputHash)
   };
 }
 
@@ -24,7 +25,8 @@ function createNextActions(
   evidence: ReleaseDryRunReport['evidence'],
   packageVersion: string,
   gitCommit: string | undefined,
-  gitFreshness: GitFreshnessChecker
+  gitFreshness: GitFreshnessChecker,
+  releaseInputHash: string | undefined
 ): ReleaseDryRunReport['readiness']['nextActions'] {
   const actions: ReleaseDryRunReport['readiness']['nextActions'] = [];
   if (checks.some((check) => check.code === 'STRICT_RELEASE_GATE' && check.status === 'error')) {
@@ -38,7 +40,7 @@ function createNextActions(
   }
 
   const packageSmoke = evidence.find((item) => item.code === 'PACKAGE_SMOKE_EVIDENCE');
-  if (!evidenceCheckPassed(packageSmoke ?? { code: 'PACKAGE_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness)) {
+  if (!evidenceCheckPassed(packageSmoke ?? { code: 'PACKAGE_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness, releaseInputHash)) {
     actions.push({
       id: 'refresh-package-smoke-evidence',
       required: true,
@@ -49,7 +51,7 @@ function createNextActions(
   }
 
   const cleanCheckout = evidence.find((item) => item.code === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE');
-  if (!evidenceCheckPassed(cleanCheckout ?? { code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness)) {
+  if (!evidenceCheckPassed(cleanCheckout ?? { code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness, releaseInputHash)) {
     actions.push({
       id: 'refresh-clean-checkout-smoke-evidence',
       required: true,
@@ -60,7 +62,7 @@ function createNextActions(
   }
 
   const releaseArtifact = evidence.find((item) => item.code === 'RELEASE_ARTIFACT_EVIDENCE');
-  if (!evidenceCheckPassed(releaseArtifact ?? { code: 'RELEASE_ARTIFACT_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness)) {
+  if (!evidenceCheckPassed(releaseArtifact ?? { code: 'RELEASE_ARTIFACT_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness, releaseInputHash)) {
     actions.push({
       id: 'refresh-release-artifact-evidence',
       required: true,

@@ -29,6 +29,7 @@ export interface ReleaseEvidenceArtifactValidation {
   providerEcosystem?: string;
   packageVersion?: string;
   gitCommit?: string;
+  releaseInputHash?: string;
   manifestHash?: string;
   issues: string[];
 }
@@ -74,6 +75,7 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
         providerEcosystem: readProviderEcosystem(sourceReport),
         packageVersion: readOptionalString(parsed.packageVersion) ?? readOptionalString(sourceReport.packageVersion),
         gitCommit: readOptionalString(parsed.gitCommit) ?? readOptionalString(sourceReport.gitCommit),
+        releaseInputHash: readNestedString(sourceReport, 'releaseInputHash'),
         issues: []
       };
     }
@@ -91,6 +93,7 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
         mode: typeof parsed.mode === 'string' ? parsed.mode : undefined,
         packageVersion: isRecord(parsed.package) ? readOptionalString(parsed.package.version) : undefined,
         gitCommit: readOptionalString(evidence.gitCommit) ?? readOptionalString(parsed.gitCommit),
+        releaseInputHash: isRecord(parsed.source) ? readOptionalString(parsed.source.releaseInputHash) : undefined,
         manifestHash: readOptionalString(manifest?.hash),
         issues: []
       };
@@ -256,6 +259,11 @@ function readOptionalString(value: unknown): string | undefined {
 function readProviderEcosystem(sourceReport: Record<string, unknown>): string | undefined {
   const provider = isRecord(sourceReport.provider) ? sourceReport.provider : undefined;
   return readOptionalString(provider?.ecosystem);
+}
+
+function readNestedString(record: Record<string, unknown>, key: string): string | undefined {
+  const source = isRecord(record.source) ? record.source : undefined;
+  return source ? readOptionalString(source[key]) : undefined;
 }
 
 function providerMatchesExpectation(actual: string | undefined, expected: string): boolean {

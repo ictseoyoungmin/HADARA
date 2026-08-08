@@ -31,7 +31,8 @@
       "properties": {
         "packageName": { "type": "string", "minLength": 1 },
         "packageVersion": { "type": "string", "minLength": 1 },
-        "gitCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+        "gitCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "releaseInputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
       }
     },
     "releaseTargets": {

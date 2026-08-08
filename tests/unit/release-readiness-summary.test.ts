@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { createReadinessSummary } from '../../tools/dev-surface/release-readiness-summary';
 import type { ReleaseDryRunReport } from '../../tools/dev-surface/release-dry-run';
 
+const HASH = 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+
 describe('release readiness summary service', () => {
   it('returns review-publish-dry-run when all checks and evidence pass', () => {
-    const readiness = createReadinessSummary(passedChecks(), passedEvidence(), '0.1.0-rc.0', '0123456789abcdef0123456789abcdef01234567', () => true);
+    const readiness = createReadinessSummary(passedChecks(), passedEvidence(), '0.1.0-rc.0', '0123456789abcdef0123456789abcdef01234567', () => true, HASH);
 
     expect(readiness).toEqual({
       status: 'ready',
@@ -28,7 +30,8 @@ describe('release readiness summary service', () => {
       passedEvidence(),
       '0.1.0-rc.0',
       undefined,
-      () => true
+      () => true,
+      HASH
     );
 
     expect(readiness).toMatchObject({
@@ -49,7 +52,7 @@ describe('release readiness summary service', () => {
         : item
     );
 
-    const readiness = createReadinessSummary(passedChecks(), evidence, '0.1.0-rc.0', '0123456789abcdef0123456789abcdef01234567', () => false);
+    const readiness = createReadinessSummary(passedChecks(), evidence, '0.1.0-rc.0', '0123456789abcdef0123456789abcdef01234567', () => false, HASH);
 
     expect(readiness.nextActions).toContainEqual(
       expect.objectContaining({
@@ -88,7 +91,8 @@ function passedEvidence(): ReleaseDryRunReport['evidence'] {
       result: 'passed',
       category: 'package-smoke',
       mode: 'local',
-      providerEcosystem: 'npm'
+      providerEcosystem: 'npm',
+      releaseInputHash: HASH
     },
     {
       code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
@@ -97,7 +101,8 @@ function passedEvidence(): ReleaseDryRunReport['evidence'] {
       sourceOk: true,
       result: 'passed',
       category: 'clean-checkout-smoke',
-      mode: 'execute'
+      mode: 'execute',
+      releaseInputHash: HASH
     },
     {
       code: 'RELEASE_ARTIFACT_EVIDENCE',
@@ -109,7 +114,8 @@ function passedEvidence(): ReleaseDryRunReport['evidence'] {
       mode: 'execute',
       packageVersion: '0.1.0-rc.0',
       gitCommit: '0123456789abcdef0123456789abcdef01234567',
-      manifestHash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+      manifestHash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      releaseInputHash: HASH
     }
   ];
 }

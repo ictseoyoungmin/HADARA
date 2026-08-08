@@ -90,6 +90,7 @@
       "required": ["pathRedacted"],
       "properties": {
         "gitCommit": { "type": "string", "pattern": "^[a-fA-F0-9]{40}$" },
+        "releaseInputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "pathRedacted": { "const": true }
       }
     },

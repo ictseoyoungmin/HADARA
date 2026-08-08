@@ -7,6 +7,7 @@ import { ensureDir } from '../../src/core/fs';
 import { HadaraPaths } from '../../src/core/paths';
 import { assertSchema } from '../../src/core/schema';
 import { startMonotonicTimer } from '../../src/core/timing';
+import { computeReleaseInputHash } from './release-input';
 
 export interface ReleaseArtifactIssue {
   severity: 'warning' | 'error';
@@ -52,6 +53,7 @@ export interface ReleaseArtifactReport {
   };
   source?: {
     gitCommit?: string;
+    releaseInputHash?: string;
     pathRedacted: true;
   };
   package: {
@@ -342,6 +344,7 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
     if (output.cleanupAllowed) cleanupDirectory(output.path, false);
   }
 
+  const releaseInputHash = computeReleaseInputHash(options.paths.projectRoot);
   const report: ReleaseArtifactReport = {
     schemaVersion: 'hadara.releaseArtifact.v1',
     command: 'release.artifact',
@@ -366,6 +369,7 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
     selfInvalidationRisk,
     source: {
       ...readCurrentGitCommit(options.paths.projectRoot),
+      ...(releaseInputHash ? { releaseInputHash } : {}),
       pathRedacted: true
     },
     output: {

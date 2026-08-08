@@ -21,9 +21,11 @@ installed-package acceptance. Exact field-by-field legacy migration remains gate
 frozen migration specification; new Init v1 projects must not create legacy core artifacts.
 
 T-0699 through T-0706 completed the Init v1 implementation boundaries through mutation authority;
-T-0743 completed the RC2 status/close runtime reduction. T-0744 is the final source acceptance capsule
-for document routing, legacy isolation, installed dogfood, release readiness, and the explicit RC2
-contract freeze. Release promotion remains deferred until its evidence and close proof pass.
+T-0743 completed the RC2 status/close runtime reduction. T-0744 through T-0748 closed document,
+legacy-isolation, installed-dogfood, close-contract, and generated-capsule ownership corrections.
+T-0749 is the final source acceptance capsule for release-input binding, current-head release
+readiness, and the explicit RC2 contract freeze. Release promotion remains deferred until its
+evidence and close proof pass.
 
 ## Current Release Sequence
 

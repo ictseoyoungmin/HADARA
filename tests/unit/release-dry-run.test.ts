@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createReleaseDryRunReport } from '../../tools/dev-surface/release-dry-run';
 import { validateSchema } from '../../src/core/schema';
 import { readPythonProjectPreview } from '../../tools/dev-surface/release-targets';
+import { computeReleaseInputHash } from '../../tools/dev-surface/release-input';
 
 const roots: string[] = [];
 const commit = '0123456789abcdef0123456789abcdef01234567';
@@ -14,6 +15,8 @@ function tempProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-dry-run-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'src', 'task'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'src', 'task', 'task-capsule.ts'), 'export const capsule = "fixture";\n', 'utf8');
   fs.mkdirSync(path.join(root, '.git', 'refs', 'heads'), { recursive: true });
   fs.writeFileSync(path.join(root, '.git', 'HEAD'), 'ref: refs/heads/main\n', 'utf8');
   fs.writeFileSync(path.join(root, '.git', 'refs', 'heads', 'main'), `${commit}\n`, 'utf8');
@@ -135,6 +138,7 @@ describe('release dry-run', () => {
       'release-targets',
       'release-target-configuration',
       'git-commit',
+      'release-input-hash',
       'strict-release-gate',
       'release-evidence-scan',
       'release-evidence-validation',
@@ -285,7 +289,10 @@ describe('release dry-run', () => {
   it('points operators at release artifact refresh when commit freshness is stale', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);
-    writeStrongEvidence(root, { artifactGitCommit: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' });
+    writeStrongEvidence(root, {
+      artifactGitCommit: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      releaseInputHash: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+    });
 
     const report = createReleaseDryRunReport(root);
 
@@ -332,10 +339,46 @@ describe('release dry-run', () => {
         status: 'passed'
       })
     );
+    expect(report.checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE', status: 'passed' }),
+        expect.objectContaining({ code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', status: 'passed' })
+      ])
+    );
     expect(report.readiness).toMatchObject({
       status: 'ready',
       blockers: 0
     });
+  });
+
+  it('rejects release evidence after a release input source change', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-dry-run-source-drift-'));
+    roots.push(root);
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    writeReleaseReadinessFiles(root);
+    fs.mkdirSync(path.join(root, 'src', 'task'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'task', 'task-capsule.ts'), 'export const capsule = "fixture";\n', 'utf8');
+    runGit(root, ['init']);
+    runGit(root, ['config', 'user.email', 'hadara@example.test']);
+    runGit(root, ['config', 'user.name', 'HADARA Test']);
+    runGit(root, ['add', 'package.json', 'LICENSE', 'docs', 'src']);
+    runGit(root, ['commit', '-m', 'package inputs']);
+    const inputHash = computeReleaseInputHash(root);
+    writeStrongEvidence(root, { artifactGitCommit: gitOutput(root, ['rev-parse', 'HEAD']), releaseInputHash: inputHash });
+    fs.writeFileSync(path.join(root, 'src', 'task', 'task-capsule.ts'), 'export const capsule = "changed";\n', 'utf8');
+    runGit(root, ['add', 'src']);
+    runGit(root, ['commit', '-m', 'source change']);
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(false);
+    expect(report.checks.filter((check) => check.code.endsWith('_EVIDENCE'))).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE', status: 'error' }),
+        expect.objectContaining({ code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', status: 'error' }),
+        expect.objectContaining({ code: 'RELEASE_ARTIFACT_EVIDENCE', status: 'error' })
+      ])
+    );
   });
 
   it('detects pyproject.toml as a read-only Python release target preview', () => {
@@ -541,17 +584,18 @@ describe('release dry-run', () => {
 
 function writeStrongEvidence(
   root: string,
-  options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2'; artifactGitCommit?: string; packageSmokeProvider?: 'npm' | 'python' } = {}
+  options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2'; artifactGitCommit?: string; releaseInputHash?: string; packageSmokeProvider?: 'npm' | 'python' } = {}
 ): void {
   const taskDir = path.join(root, 'tasks', 'T-0001-release-evidence');
   const artifactDir = path.join(taskDir, 'artifacts');
   fs.mkdirSync(path.join(artifactDir, 'package-smoke'), { recursive: true });
   fs.mkdirSync(path.join(artifactDir, 'clean-checkout-smoke'), { recursive: true });
   fs.mkdirSync(path.join(artifactDir, 'release-artifact'), { recursive: true });
+  const releaseInputHash = options.releaseInputHash ?? computeReleaseInputHash(root) ?? 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
-  writeJson(path.join(artifactDir, 'package-smoke', 'summary.json'), smokeSummary('package-smoke', 'package.smoke', 'local', options.packageSmokeProvider ?? 'npm'));
-  writeJson(path.join(artifactDir, 'clean-checkout-smoke', 'summary.json'), smokeSummary('clean-checkout-smoke', 'smoke.clean-checkout', 'execute'));
-  writeJson(path.join(artifactDir, 'release-artifact', 'report.json'), releaseArtifactReport(options.artifactGitCommit));
+  writeJson(path.join(artifactDir, 'package-smoke', 'summary.json'), smokeSummary('package-smoke', 'package.smoke', 'local', options.packageSmokeProvider ?? 'npm', releaseInputHash));
+  writeJson(path.join(artifactDir, 'clean-checkout-smoke', 'summary.json'), smokeSummary('clean-checkout-smoke', 'smoke.clean-checkout', 'execute', undefined, releaseInputHash));
+  writeJson(path.join(artifactDir, 'release-artifact', 'report.json'), releaseArtifactReport(options.artifactGitCommit, releaseInputHash));
 
   const records = [
     evidenceRecord(
@@ -632,7 +676,7 @@ function writePythonSmokeEvidence(root: string, options: { result: 'passed' | 'f
   );
 }
 
-function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', command: string, mode: string, providerEcosystem?: 'npm' | 'python'): Record<string, unknown> {
+function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', command: string, mode: string, providerEcosystem?: 'npm' | 'python', releaseInputHash = 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'): Record<string, unknown> {
   return {
     schemaVersion: 'hadara.smokeEvidenceSummary.v1',
     time: '2026-05-28T10:00:00Z',
@@ -644,6 +688,7 @@ function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', comman
       command,
       mode,
       ok: true,
+      source: { releaseInputHash },
       ...(providerEcosystem
         ? {
             provider: {
@@ -670,7 +715,7 @@ function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', comman
   };
 }
 
-function releaseArtifactReport(gitCommit = commit): Record<string, unknown> {
+function releaseArtifactReport(gitCommit = commit, releaseInputHash = 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'): Record<string, unknown> {
   return {
     schemaVersion: 'hadara.releaseArtifact.v1',
     command: 'release.artifact',
@@ -726,6 +771,11 @@ function releaseArtifactReport(gitCommit = commit): Record<string, unknown> {
       privatePathsIncluded: false,
       environmentSecretsIncluded: false,
       privateStorePathsIncluded: false
+    },
+    source: {
+      gitCommit,
+      releaseInputHash,
+      pathRedacted: true
     },
     evidence: {
       gitCommit

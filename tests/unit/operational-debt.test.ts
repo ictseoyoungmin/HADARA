@@ -11,6 +11,7 @@ import {
   OPERATIONAL_DEBT_RECORDS
 } from '../../tools/dev-surface/operational-debt';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { computeReleaseInputHash } from '../../tools/dev-surface/release-input';
 
 const roots: string[] = [];
 
@@ -270,6 +271,7 @@ function writeSmokeEvidenceSummary(
     category: 'package-smoke' | 'clean-checkout-smoke';
     mode: 'local' | 'execute';
     command: string;
+    releaseInputHash?: string;
   }
 ): void {
   writeJsonArtifact(taskDir, options.filePath, {
@@ -281,7 +283,10 @@ function writeSmokeEvidenceSummary(
       schemaVersion: options.category === 'package-smoke' ? 'hadara.packageSmoke.v1' : 'hadara.cleanCheckoutSmoke.v1',
       command: options.command,
       mode: options.mode,
-      ok: true
+      ok: true,
+      source: {
+        releaseInputHash: options.releaseInputHash ?? computeReleaseInputHash(path.resolve(taskDir, '..', '..'))
+      }
     },
     execution: {},
     steps: [{ id: 'run', label: 'Run smoke', status: 'passed', summary: 'Smoke passed.' }],
@@ -347,6 +352,10 @@ function writeReleaseArtifactEvidence(taskDir: string, filePath: string): void {
       allowedRoots: ['dist/'],
       requiredFiles: ['package.json', 'README.md', 'LICENSE'],
       forbiddenMatches: []
+    },
+    source: {
+      releaseInputHash: computeReleaseInputHash(path.resolve(taskDir, '..', '..')),
+      pathRedacted: true
     },
     privacy: {
       rawLogsIncluded: false,

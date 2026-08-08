@@ -38,6 +38,7 @@ export function validateEvidenceRequirement(records: ReleaseEvidenceRecord[], re
     ...(artifact.providerEcosystem ? { providerEcosystem: artifact.providerEcosystem } : {}),
     ...(artifact.packageVersion ? { packageVersion: artifact.packageVersion } : {}),
     ...(artifact.gitCommit ? { gitCommit: artifact.gitCommit } : {}),
+    ...(artifact.releaseInputHash ? { releaseInputHash: artifact.releaseInputHash } : {}),
     ...(artifact.manifestHash ? { manifestHash: artifact.manifestHash } : {})
   };
 }
@@ -46,10 +47,12 @@ export function evidenceCheckPassed(
   item: ReleaseDryRunReport['evidence'][number],
   packageVersion: string,
   gitCommit: string | undefined,
-  gitFreshness: GitFreshnessChecker
+  gitFreshness: GitFreshnessChecker,
+  releaseInputHash: string | undefined
 ): boolean {
   if (item.result !== 'passed') return false;
   if (item.artifactExists !== true || item.artifactSchemaValid !== true || item.sourceOk !== true) return false;
+  if (!releaseInputHash || item.releaseInputHash !== releaseInputHash) return false;
   if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local' || !npmProviderEvidenceCompatible(item.providerEcosystem))) return false;
   if (item.code === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE' && (item.category !== 'clean-checkout-smoke' || item.mode !== 'execute')) return false;
   if (item.code === 'RELEASE_ARTIFACT_EVIDENCE') {
@@ -65,13 +68,15 @@ export function evidenceSummary(
   item: ReleaseDryRunReport['evidence'][number],
   packageVersion: string,
   gitCommit: string | undefined,
-  gitFreshness: GitFreshnessChecker
+  gitFreshness: GitFreshnessChecker,
+  releaseInputHash: string | undefined
 ): string {
   if (!item.taskId) return 'No matching passed public evidence record was found.';
   if (!item.artifactExists) return `${item.taskId} at ${item.time} has no linked public evidence artifact.`;
   if (item.artifactSchemaValid !== true) return `${item.taskId} at ${item.time} has a linked artifact, but schema validation failed.`;
   if (item.sourceOk !== true) return `${item.taskId} at ${item.time} has a linked artifact, but source report ok is not true.`;
   if (item.result !== 'passed') return `${item.taskId} at ${item.time} is not a passed evidence record.`;
+  if (!releaseInputHash || item.releaseInputHash !== releaseInputHash) return `${item.taskId} at ${item.time} release input hash does not match current source inputs.`;
   if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local' || !npmProviderEvidenceCompatible(item.providerEcosystem))) {
     return `${item.taskId} at ${item.time} does not match expected npm package-smoke category/mode/provider.`;
   }
@@ -84,6 +89,7 @@ export function evidenceSummary(
     if (!item.manifestHash) return `${item.taskId} at ${item.time} does not expose a release artifact manifest hash.`;
     if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit && !gitFreshness(item)) return `${item.taskId} at ${item.time} git commit ${item.gitCommit} does not match current ${gitCommit}.`;
   }
+  if (!item.releaseInputHash) return `${item.taskId} at ${item.time} does not expose a release input hash.`;
   return `${item.taskId} at ${item.time} has a current schema-valid public artifact.`;
 }
 

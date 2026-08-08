@@ -6,6 +6,7 @@ import { HadaraPaths } from '../../src/core/paths';
 import { assertSchema } from '../../src/core/schema';
 import { startMonotonicTimer } from '../../src/core/timing';
 import { attachReducedSmokeEvidence, SmokeEvidenceArtifact } from './smoke-evidence';
+import { computeReleaseInputHash } from './release-input';
 
 export interface CleanCheckoutSmokeIssue {
   severity: 'warning' | 'error';
@@ -52,6 +53,7 @@ export interface CleanCheckoutSmokeReport {
     displayPath: string;
     pathRedacted: true;
     relativePath?: string;
+    releaseInputHash?: string;
     mutated: false;
   };
   steps: CleanCheckoutSmokeStep[];
@@ -233,6 +235,7 @@ export function createCleanCheckoutSmokeReport(options: CleanCheckoutSmokeOption
     }
   }
 
+  const releaseInputHash = computeReleaseInputHash(options.paths.projectRoot);
   const report: CleanCheckoutSmokeReport = {
     schemaVersion: 'hadara.cleanCheckoutSmoke.v1',
     command: 'smoke.cleanCheckout',
@@ -252,6 +255,7 @@ export function createCleanCheckoutSmokeReport(options: CleanCheckoutSmokeOption
       displayPath: '.',
       pathRedacted: true,
       relativePath: '.',
+      ...(releaseInputHash ? { releaseInputHash } : {}),
       mutated: false
     },
     steps,

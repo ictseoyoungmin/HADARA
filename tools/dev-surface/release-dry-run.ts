@@ -17,6 +17,7 @@ import { createReadinessSummary } from './release-readiness-summary';
 import { createReleaseTargetConfigurationCheck, readReleaseTargetConfiguration } from './release-target-configuration';
 import { readReleaseEvidenceRecords } from './release-evidence';
 import { createReleaseTargetModel, ReleaseProviderCapabilities, ReleaseTargetDescriptor } from './release-targets';
+import { computeReleaseInputHash } from './release-input';
 
 export interface ReleaseDryRunReport {
   schemaVersion: 'hadara.releaseDryRun.v1';
@@ -27,6 +28,7 @@ export interface ReleaseDryRunReport {
     packageName: string;
     packageVersion: string;
     gitCommit?: string;
+    releaseInputHash?: string;
   };
   releaseTargets: {
     primary: 'npm-package';
@@ -83,6 +85,7 @@ export interface ReleaseDryRunReport {
     result?: string;
     packageVersion?: string;
     gitCommit?: string;
+    releaseInputHash?: string;
     manifestHash?: string;
   }>;
   plannedSteps: Array<{
@@ -153,6 +156,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     version: targetModel.primary.version ?? 'unknown'
   };
   const gitCommit = timeStage(timings, 'git-commit', () => readCurrentGitCommit(projectRoot));
+  const releaseInputHash = timeStage(timings, 'release-input-hash', () => computeReleaseInputHash(projectRoot));
   const releaseGate = timeStage(timings, 'strict-release-gate', () => createReleaseGateReport(projectRoot, 'strict'));
   const evidenceRecords = timeStage(timings, 'release-evidence-scan', () => readReleaseEvidenceRecords(projectRoot));
   const evidence = timeStage(timings, 'release-evidence-validation', () => evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement)));
@@ -170,8 +174,8 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     ...evidence.map((item) => ({
       code: item.code,
       name: evidenceName(item.code),
-      status: evidenceCheckPassed(item, packageMetadata.version, gitCommit, gitFreshness) ? ('passed' as const) : ('error' as const),
-      summary: evidenceSummary(item, packageMetadata.version, gitCommit, gitFreshness)
+      status: evidenceCheckPassed(item, packageMetadata.version, gitCommit, gitFreshness, releaseInputHash) ? ('passed' as const) : ('error' as const),
+      summary: evidenceSummary(item, packageMetadata.version, gitCommit, gitFreshness, releaseInputHash)
     })),
     {
       code: 'RELEASE_TARGETS',
@@ -188,7 +192,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       message: `${check.name}: ${check.summary}`
     }));
   applyStageStatuses(timings, releaseGate.ok, checks);
-  const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit, gitFreshness);
+  const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit, gitFreshness, releaseInputHash);
   const diagnostics = createDiagnostics(generatedAt, timer, timings, releaseTargetConfiguration);
 
   const report: ReleaseDryRunReport = {
@@ -199,7 +203,8 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     current: {
       packageName: packageMetadata.name,
       packageVersion: packageMetadata.version,
-      ...(gitCommit ? { gitCommit } : {})
+      ...(gitCommit ? { gitCommit } : {}),
+      ...(releaseInputHash ? { releaseInputHash } : {})
     },
     releaseTargets: {
       primary: 'npm-package',
