@@ -778,7 +778,7 @@ function isProjectRelativePath(projectRoot: string, absolutePath: string): boole
 
 function concernForPath(sourcePath: string): string {
   if (sourcePath.includes('/cli/') || sourcePath.startsWith('src/cli/')) return 'CLI command behavior';
-  if (sourcePath.includes('/harness/') || sourcePath.startsWith('src/harness/')) return 'Harness validation behavior';
+  if (sourcePath.includes('/task-validation') || sourcePath.endsWith('task-validation.ts')) return 'Task Capsule validation behavior';
   if (sourcePath.includes('/schemas/') || sourcePath.endsWith('.schema.json')) return 'JSON schema compatibility';
   if (sourcePath.includes('/tests/') || sourcePath.startsWith('tests/')) return 'Regression coverage';
   if (sourcePath.startsWith('docs/')) return 'Documented workflow or design constraint';

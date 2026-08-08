@@ -630,8 +630,7 @@ function createFastOpsStatusReport(
   const validation = {
     latestFullCheck:
       extractValidationHistoryLine(sources.validationHistory.content, 'Docker check'),
-    latestDoneLevelValidation:
-      extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
+    latestDoneLevelValidation: null
   };
   const issues: OpsStatusReport['issues'] = [];
   if (!sources.taskBoard.exists) issues.push({ severity: 'warning', code: 'TASK_BOARD_MISSING', message: 'docs/TASK_BOARD.md is missing.' });

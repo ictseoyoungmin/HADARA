@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
-import * as harnessService from '../../src/services/harness-service';
+import * as taskValidationService from '../../src/services/task-validation';
 import { createTaskSelectionStatusV2Report } from '../../src/services/task-selection-status-v2';
 import { createTaskStatusV2Report } from '../../src/services/task-status-v2';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../../src/services/task-workbench';
@@ -411,7 +411,7 @@ describe('task workbench status report', () => {
   it('uses fast selected-task CLI status by default and full diagnostics only on request', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench CLI detail');
-    const spy = vi.spyOn(harnessService, 'createHarnessValidateReport');
+    const spy = vi.spyOn(taskValidationService, 'createTaskValidationReport');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     const fastHandled = handleTaskCommand({
@@ -564,7 +564,7 @@ describe('task workbench status report', () => {
   it('skips task close dry-run on the default fast service path', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench validation count');
-    const spy = vi.spyOn(harnessService, 'createHarnessValidateReport');
+    const spy = vi.spyOn(taskValidationService, 'createTaskValidationReport');
 
     createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
 
@@ -574,7 +574,7 @@ describe('task workbench status report', () => {
   it('uses task close dry-run as the single done-level validation source for full detail', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench validation count');
-    const spy = vi.spyOn(harnessService, 'createHarnessValidateReport');
+    const spy = vi.spyOn(taskValidationService, 'createTaskValidationReport');
 
     createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
 
@@ -635,7 +635,7 @@ describe('task workbench status report', () => {
     const blocked = appendEvidenceWithResult(root, {
       taskId: task.id,
       kind: 'command-log',
-      summary: 'Validation "Done-level harness validation" blocked; command: hadara harness validate',
+      summary: 'Validation "Done-level task validation" blocked; command: task validation',
       result: 'blocked',
       visibility: 'public',
       category: 'validation',
@@ -659,7 +659,7 @@ describe('task workbench status report', () => {
 
     expect(report.sources.evidenceList.validationAttempts?.latest).toEqual([
       expect.objectContaining({
-        check: 'Done-level harness validation',
+        check: 'Done-level task validation',
         checkKey: 'harness123',
         attempts: 1,
         status: 'resolved',

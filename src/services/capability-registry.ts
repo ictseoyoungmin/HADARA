@@ -233,7 +233,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.schema.vocabulary.v1',
     docs: ['docs/SCHEMAS.md', 'docs/HADARA_WORKFLOW.md'],
     examples: [example('Look up risk state tokens', 'hadara schema --domain task.risk.state --json', 'Before writing TASK.md Risks / Follow-ups State values.')],
-    related: ['commands', 'harness.validate', 'docs.register'],
+    related: ['commands', 'docs.register'],
     conflictsWith: []
   }),
   commandEntry({
@@ -706,7 +706,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.evidence.lint.v1',
     docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Lint evidence', 'hadara evidence lint --task T-0001 --json', 'When readiness reports evidence blockers.')],
-    related: ['task.close', 'harness.validate'],
+    related: ['task.close'],
     conflictsWith: []
   },
   {
@@ -933,7 +933,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.protocol.remediation.v1',
     docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Preview remediation', 'hadara protocol remediate --fix evidence-jsonl --task T-0001 --json', 'When protocol doctor reports a supported fix.')],
-    related: ['protocol.doctor', 'harness.validate'],
+    related: ['protocol.doctor'],
     conflictsWith: []
   }),
   commandEntry({
@@ -1393,27 +1393,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
-    id: 'harness.validate',
-    command: 'hadara harness validate --task <task-id> [--level draft|done] [--json]',
-    summary: 'Run direct Task Capsule structure and done-level diagnostics.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'proof-diagnostics',
-    scope: 'capsule',
-    lifecycleStage: 'ready',
-    requiredness: 'diagnostic',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    schemaVersion: 'hadara.harness.validate.v1',
-    docs: TASK_DOCS,
-    examples: [example('Debug done readiness', 'hadara harness validate --task T-0001 --level done --json', 'When task status or finalize reports done-level blockers.')],
-    related: ['task.close', 'protocol.doctor', 'evidence.lint'],
-    conflictsWith: []
-  }),
-  commandEntry({
     id: 'dev.docker-check',
     command: 'hadara dev docker-check [--focused <test...>] [--full] [--sync-dist] [--json]',
     summary: 'Run Docker-backed development validation wrapper.',
@@ -1434,7 +1413,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     testFiles: ['tests/unit/dev-docker-check.test.ts', 'tests/unit/dev-docker-script.test.ts'],
     docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Run focused Docker check', 'hadara dev docker-check --focused tests/unit/help.test.ts --json', 'When host Node/npm is not the preferred validation path.')],
-    related: ['harness.validate'],
+    related: [],
     conflictsWith: []
   }),
   commandEntry({
@@ -1942,20 +1921,6 @@ export const HADARA_MCP_READ_CAPABILITIES: McpCapabilityDefinition[] = [
       }
     },
     surface: { ...DEFAULT_READ, name: 'hadara.policy.evaluate' }
-  },
-  {
-    name: 'hadara.harness.validate',
-    description: 'Validate a Task Capsule without mutating it.',
-    inputSchema: {
-      type: 'object',
-      required: ['taskId'],
-      additionalProperties: false,
-      properties: {
-        taskId: { type: 'string', pattern: '^T-[0-9]{4}$' },
-        level: { type: 'string', enum: ['draft', 'done'], default: 'draft' }
-      }
-    },
-    surface: { ...DEFAULT_READ, name: 'hadara.harness.validate' }
   },
   {
     name: 'hadara.evidence.list',

@@ -131,7 +131,7 @@ export function deriveEvidenceCategoryFromV1(record: EvidenceIndexRecord): Evide
 
   const summary = record.summary.toLowerCase();
   if (/\b(release|package|artifact|publish|install|clean-checkout)\b/.test(summary)) return 'release';
-  if (/\b(npm run check|test|vitest|harness validate|doctor|smoke|dev:docker-sync-build|docker sync-build)\b/.test(summary)) {
+  if (/\b(npm run check|test|vitest|doctor|smoke|dev:docker-sync-build|docker sync-build)\b/.test(summary)) {
     return 'validation';
   }
   return 'operation';

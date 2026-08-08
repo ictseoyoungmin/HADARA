@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleHarnessCommand } from '../../src/cli/harness';
 import { main } from '../../src/cli/main';
 import { handlePackageCommand } from '../../tools/dev-surface-handlers';
 import { handlePolicyCommand } from '../../src/cli/policy';
@@ -39,7 +38,6 @@ describe('legacy command routing', () => {
     const root = tempProject();
 
     expect(handlePolicyCommand({ args: ['policy', 'check-shell', 'npm test', '--json'], jsonOutput: true })).toBe(false);
-    expect(await handleHarnessCommand({ args: ['harness', 'replay', 'scenario.jsonl', '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
     expect(handlePackageCommand({ args: ['package', 'smoke', '--dry-run', '--json'], paths: resolveHadaraPaths({ projectRoot: root }), jsonOutput: true })).toBe(false);
   });
 

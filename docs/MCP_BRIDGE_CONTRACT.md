@@ -100,7 +100,6 @@ Current default read-only tools:
 hadara.task.list
 hadara.task.read
 hadara.policy.evaluate
-hadara.harness.validate
 hadara.evidence.list
 hadara.context.export
 hadara.tools.list
@@ -569,46 +568,6 @@ Output schema:
 ```
 
 This tool does not execute the command. Its output is a policy evaluation result, not execution authorization for MCP. Even if CLI policy would allow a command, MCP tools must not execute it unless a separate write/execution-capable contract and implementation explicitly allow that behavior.
-
-### `hadara.harness.validate`
-
-Validate a Task Capsule without mutating it.
-
-Input schema:
-
-```json
-{
-  "type": "object",
-  "required": ["taskId"],
-  "additionalProperties": false,
-  "properties": {
-    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
-    "level": {
-      "type": "string",
-      "enum": ["draft", "done"],
-      "default": "draft"
-    }
-  }
-}
-```
-
-Output schema:
-
-```json
-{
-  "schemaVersion": "hadara.harness.validate.v1",
-  "command": "harness.validate",
-  "ok": true,
-  "level": "done",
-  "task": {
-    "id": "T-0042",
-    "title": "Hermes/MCP Read-Only Contract",
-    "capsule": "tasks/T-0042-hermes-mcp-read-only-contract"
-  },
-  "checkedFiles": [],
-  "issues": []
-}
-```
 
 ## Recommended First Implementation Order
 

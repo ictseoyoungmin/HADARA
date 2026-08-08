@@ -178,7 +178,7 @@ describe('workbench next actions', () => {
       issues: [
         {
           severity: 'error',
-          code: 'HARNESS_TASK_BOARD_STATUS_NOT_DONE',
+          code: 'TASK_VALIDATION_TASK_BOARD_STATUS_NOT_DONE',
           message: 'Done-level validation requires docs/TASK_BOARD.md status for T-0001 to be Done.'
         },
         {

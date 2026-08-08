@@ -21,7 +21,6 @@ const PRIMARY_WHEN: Record<string, string> = {
 const DIAGNOSTIC_USE_WHEN: Record<string, string> = {
   'evidence.lint': 'Evidence records or semantic proof are unclear.',
   'protocol.doctor': 'Protocol docs, task board rows, or profile state may be inconsistent.',
-  'harness.validate': 'task close or task status full diagnostics report format or done-level blockers.'
 };
 
 const ADVANCED_FAMILY_USE_WHEN: Array<{ family: CommandFamily; useWhen: string }> = [
@@ -29,7 +28,7 @@ const ADVANCED_FAMILY_USE_WHEN: Array<{ family: CommandFamily; useWhen: string }
   { family: 'dev-validation', useWhen: 'HADARA-dev validation or replay work only.' },
   { family: 'ui', useWhen: 'Operator console or TUI observation work only.' },
   { family: 'integrations', useWhen: 'Hermes/MCP/tool-discovery integration work only.' },
-  { family: 'agent-loop', useWhen: 'Deterministic harness or local agent-loop work only.' },
+  { family: 'agent-loop', useWhen: 'Deterministic local agent-loop work only.' },
   { family: 'install', useWhen: 'Installer planning work only.' },
   { family: 'advanced', useWhen: 'Low-level compatibility or remediation work only.' }
 ];
@@ -95,7 +94,7 @@ export interface PortfolioAuditReport {
 export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
     decision: 'Task status is the default lifecycle cockpit.',
-    commands: ['task.status', 'harness.validate'],
+    commands: ['task.status'],
     rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces are no longer public routes.',
     evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },

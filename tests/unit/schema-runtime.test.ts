@@ -151,7 +151,7 @@ describe('runtime schema validation', () => {
         schemaVersion: 'hadara.event.v1',
         time: '2026-05-25T00:00:00.000Z',
         level: 'info',
-        eventType: 'harness.validate.completed',
+        eventType: 'task.validation.completed',
         actor: 'cli',
         taskId: 'T-0095',
         summary: 'Done-level validation passed.',
@@ -159,41 +159,6 @@ describe('runtime schema validation', () => {
           ok: true,
           level: 'done'
         }
-      }).ok
-    ).toBe(true);
-  });
-
-  it('validates harness validation reports with remediation hints', () => {
-    expect(
-      validateSchema('hadara.harness.validate.v1', {
-        schemaVersion: 'hadara.harness.validate.v1',
-        command: 'harness.validate',
-        ok: false,
-        level: 'done',
-        task: {
-          id: 'T-0306',
-          title: 'Ready Close Guidance',
-          capsule: 'tasks/T-0306-ready-close-guidance'
-        },
-        checkedFiles: ['tasks/T-0306-ready-close-guidance/ACCEPTANCE.md'],
-        issues: [
-          {
-            severity: 'error',
-            code: 'ACCEPTANCE_INCOMPLETE',
-            message: 'Done-level validation requires all acceptance criteria to be complete.',
-            path: 'tasks/T-0306-ready-close-guidance/ACCEPTANCE.md',
-            heading: 'Acceptance Criteria',
-            fixHint: 'Mark each acceptance criterion complete with concrete evidence.',
-            example: '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
-            remediationHint: {
-              path: 'tasks/T-0306-ready-close-guidance/ACCEPTANCE.md',
-              heading: 'Acceptance Criteria',
-              requiredChange: 'Complete every acceptance criterion with evidence before closing.',
-              example: '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
-              blocking: true
-            }
-          }
-        ]
       }).ok
     ).toBe(true);
   });

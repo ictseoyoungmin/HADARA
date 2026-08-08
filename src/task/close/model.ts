@@ -1,6 +1,6 @@
 import type { HadaraActorContext } from '../../core/actor-context';
 import type { HadaraNextAction } from '../../core/next-action';
-import type { RemediationHint } from '../../harness/validate';
+import type { RemediationHint } from '../../services/task-validation';
 import type { TaskAuthoringGuidance } from '../authoring-guidance';
 import type { CloseGuardedWritePlan } from './guardedWrites';
 

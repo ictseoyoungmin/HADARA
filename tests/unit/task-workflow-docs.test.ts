@@ -62,8 +62,6 @@ describe('task workflow command semantics docs', () => {
     expect(contract).toContain('source.closePlan');
     expect(workflow).toContain('`task status` is an operator cockpit; `ok: true` means report generation succeeded.');
     expect(workflow).toContain('No public lifecycle step command is required for ordinary close.');
-    expect(workflow).toContain('In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof');
-    expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task close --json`.');
     expect(workflow).toContain('Make those edits before task close');
     expect(workflow).toContain('`HANDOFF.md` may be updated during the task as a work-in-progress checkpoint.');
     expect(workflow).toContain('convert it into close-time handoff');
@@ -85,7 +83,6 @@ describe('task workflow command semantics docs', () => {
     expect(hadaraWorkflow).toContain('Do not hand-edit `evidence.jsonl`.');
     expect(hadaraWorkflow).toContain('Avoid writing volatile close evidence ids into close-source docs');
     expect(hadaraWorkflow).toContain('## Evidence');
-    expect(hadaraWorkflow).toContain('hadara harness validate --task T-XXXX --level done --json');
     expect(agents).toContain('Do not defer all documentation until after implementation.');
     expect(agents).toContain('Parallelize read-only discovery, file inspection, independent validation');
     expect(agents).toContain('Serialize same-file prose writes, Task Capsule doc writes');

@@ -36,7 +36,6 @@ describe('registry-backed help', () => {
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).not.toContain('Low-level proof-boundary commands are available');
     expect(output).toContain('Diagnostics when blocked');
-    expect(output).toContain('harness.validate');
   });
 
   it('can render lifecycle guide JSON projection data', () => {
@@ -49,7 +48,6 @@ describe('registry-backed help', () => {
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.lifecycle');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.close');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('handoff.update');
-    expect(report.diagnostics.map((item) => item.commandId)).toContain('harness.validate');
   });
 
   it('explains a command with registry metadata', () => {

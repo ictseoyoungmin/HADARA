@@ -41,7 +41,6 @@ Examples include:
 - `hadara.operational_debt.v1`
 - `hadara.operational_debt.show.v1`
 - `hadara.tools.list.v1`
-- `hadara.harness.validate.v1`
 - `hadara.ops.status.v1`
 - `hadara.protocol.consistency.v1`
 - `hadara.protocol.remediation.v1`
@@ -174,7 +173,6 @@ Known fallback issue codes include:
 | `EVIDENCE_RESULT_UNSUPPORTED` | `--result` is not one of `passed`, `failed`, `blocked`, or `unknown`. |
 | `EVIDENCE_RESULT_OUTCOME_MISMATCH` | `evidence add-command` received incompatible explicit `--result` and `--outcome` values. |
 | `EVIDENCE_VISIBILITY_UNSUPPORTED` | `--visibility` is not one of `public` or `private`. |
-| `HARNESS_LEVEL_UNSUPPORTED` | `--level` is not one of `draft` or `done`. |
 | `CLI_ARGS_*` | Strict CLI argument parsing rejected a malformed option. |
 | `WORKSPACE_*` | Workspace/project path resolution rejected an unsafe or invalid path. |
 | `CLI_COMMAND_FAILED` | Fallback for unexpected command failure. |

@@ -5,8 +5,8 @@ import { appendEvidenceWithResult, CloseEvidenceSnapshot } from '../../evidence/
 import { normalizeEvidenceRecordsWithSourceLines } from '../../evidence/normalizer';
 import { findUnexplainedBlockedEvidence, findUnresolvedFailedEvidence } from '../../evidence/semantics';
 import { createEvidenceLintReport, EvidenceLintReport, readTaskDocs, readValidPersistedEvidenceRecords } from '../../services/evidence-lint';
-import { createHarnessValidateReport, HarnessValidateResult } from '../../services/harness-service';
-import type { RemediationHint } from '../../harness/validate';
+import { createTaskValidationReport, TaskValidationResult } from '../../services/task-validation';
+import type { RemediationHint } from '../../services/task-validation';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../../services/protocol-consistency';
 import type { HadaraActorContext } from '../../core/actor-context';
 import { isInside } from '../../core/paths';
@@ -171,7 +171,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
     return buildMissingTaskReport(projectRoot, taskId, mode, issues, actor);
   }
 
-  const validation = createHarnessValidateReport(projectRoot, taskId, { level: 'done' });
+  const validation = createTaskValidationReport(projectRoot, taskId, { level: 'done' });
   const evidenceLint = createEvidenceLintReport(projectRoot, taskId);
   const protocolDoctor = createTaskProtocolConsistencyReport(projectRoot, taskId);
   const validationReportHash = hashValidationInputs(validation, evidenceLint, protocolDoctor);
@@ -238,11 +238,11 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   };
 }
 
-function collectBlockingIssues(validation: HarnessValidateResult, evidenceLint: EvidenceLintReport, protocolDoctor: ProtocolConsistencyReport, issues: TaskCloseIssue[]): void {
+function collectBlockingIssues(validation: TaskValidationResult, evidenceLint: EvidenceLintReport, protocolDoctor: ProtocolConsistencyReport, issues: TaskCloseIssue[]): void {
   for (const issue of validation.issues) {
     issues.push({
       severity: issue.severity,
-      code: `HARNESS_${issue.code}`,
+      code: `TASK_VALIDATION_${issue.code}`,
       message: issue.message,
       path: issue.path,
       heading: issue.heading,
@@ -552,7 +552,7 @@ function createCloseLifecycleGuidance(taskId: string, mode: TaskCloseMode): Task
   };
 }
 
-function hashValidationInputs(validation: HarnessValidateResult, evidenceLint: EvidenceLintReport, protocolDoctor: ProtocolConsistencyReport): string {
+function hashValidationInputs(validation: TaskValidationResult, evidenceLint: EvidenceLintReport, protocolDoctor: ProtocolConsistencyReport): string {
   const payload = JSON.stringify({
     validationOk: validation.ok,
     validationIssues: validation.issues,

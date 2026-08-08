@@ -4,7 +4,6 @@ import { resolveHadaraPaths } from '../core/paths';
 import { createContextExportReport } from '../hermes/context-export';
 import { createActiveRunResumeReport, safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createEvidenceListReport } from '../services/evidence-list';
-import { createHarnessValidateReport } from '../services/harness-service';
 import { createPolicyEvaluateReport } from '../services/policy-service';
 import { createTaskListReport, createTaskReadReport } from '../services/task-read-model';
 import { createToolsListReport } from '../services/tools-list';
@@ -45,10 +44,6 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
       });
     case 'hadara.policy.evaluate':
       return createPolicyEvaluateReport(String(args.command), typeof args.mode === 'string' ? args.mode : 'assisted');
-    case 'hadara.harness.validate':
-      return createHarnessValidateReport(projectRoot, String(args.taskId), {
-        level: args.level === 'done' ? 'done' : 'draft'
-      });
     case 'hadara.evidence.list':
       return createEvidenceListReport(projectRoot, {
         taskId: String(args.taskId),

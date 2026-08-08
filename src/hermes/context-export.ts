@@ -79,7 +79,7 @@ Agents must:
 6. Treat docs/TASK_BOARD.md and task-local HANDOFF.md as the compact continuation state.
 7. Prefer stable HADARA read surfaces before scraping raw files: use hadara task status --json for next-work selection and hadara task status --task <task-id> --detail full --json for selected-task diagnostics.
 8. Use hadara.task.list and hadara.task.read, or hadara task list --json and hadara task status --task <task-id> --json, for task state.
-9. Use hadara.policy.evaluate and hadara.harness.validate, or their CLI JSON equivalents, for policy and validation state.
+9. Use hadara.policy.evaluate and task status/close reports, or their CLI JSON equivalents, for policy and validation state.
 10. Use hadara.context.export for in-memory MCP context export; only hadara hermes export-context writes .hadara/context/HADARA_CONTEXT.md.
 11. Treat MCP default mode as read-only; do not assume MCP task mutation, file writes, shell execution, or release/package execution exists.
 12. If MCP is unavailable, fall back to CLI JSON commands and then to repository documents.

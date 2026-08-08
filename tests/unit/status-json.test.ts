@@ -221,7 +221,7 @@ describe('Operations Status JSON', () => {
         '# VALIDATION_HISTORY',
         '',
         '- Docker check after T-0053: 28 test files passed, 144 tests passed.',
-        '- Docker node dist/cli/main.js harness validate --task T-0053 --level done --json returned ok true.'
+        '- Docker task close --task T-0053 --dry-run --json returned done-level validation ok.'
       ].join('\n'),
       'utf8'
     );
@@ -231,7 +231,7 @@ describe('Operations Status JSON', () => {
     expect(report.project.phase).toBe('bootstrap-development');
     expect(report.validation).toEqual({
       latestFullCheck: 'Docker check after T-0053: 28 test files passed, 144 tests passed',
-      latestDoneLevelValidation: 'Docker node dist/cli/main.js harness validate --task T-0053 --level done --json returned ok true'
+      latestDoneLevelValidation: null
     });
     expect(report.issues).toEqual([]);
   });

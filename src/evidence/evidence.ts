@@ -703,7 +703,7 @@ function deriveEvidenceCategory(kind: EvidenceRecord['kind'], summary: string): 
 
   const lowered = summary.toLowerCase();
   if (/\b(release|package|artifact|publish|install|clean-checkout)\b/.test(lowered)) return 'release';
-  if (/\b(npm run check|test|vitest|harness validate|doctor|smoke|dev:docker-sync-build|docker sync-build)\b/.test(lowered)) {
+  if (/\b(npm run check|test|vitest|doctor|smoke|dev:docker-sync-build|docker sync-build)\b/.test(lowered)) {
     return 'validation';
   }
   if (/\b(policy|preflight|permission)\b/.test(lowered)) return 'policy';

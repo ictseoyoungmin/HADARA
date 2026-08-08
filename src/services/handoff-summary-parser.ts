@@ -24,8 +24,7 @@ export function extractValidationBaselineSummary(handoff: string, validationHist
     latestFullCheck: extractValidationTableValue(handoff, 'full') ?? extractLegacyValidationLine(handoff, 'Latest full check') ?? extractValidationHistoryLine(validationHistory, 'Docker check'),
     latestDoneLevelValidation:
       extractValidationTableValue(handoff, 'done') ??
-      extractLegacyValidationLine(handoff, 'Latest done-level validation') ??
-      extractValidationHistoryLine(validationHistory, 'harness validate')
+      extractLegacyValidationLine(handoff, 'Latest done-level validation') ?? null
   };
 }
 

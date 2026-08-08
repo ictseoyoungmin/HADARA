@@ -77,7 +77,6 @@ describe('CLI Hermes JSON reports', () => {
     expect(output).toContain('hadara.task.list');
     expect(output).toContain('hadara.task.read');
     expect(output).toContain('hadara.policy.evaluate');
-    expect(output).toContain('hadara.harness.validate');
     expect(output).toContain('hadara.context.export');
     expect(output).toContain('only hadara hermes export-context writes .hadara/context/HADARA_CONTEXT.md');
     expect(output).toContain('Treat MCP default mode as read-only');

@@ -26,7 +26,7 @@ describe('Phase 7.2 lifecycle guide', () => {
     const primaryIds = report.primaryPath.map((step) => step.commandId);
     const diagnosticIds = report.diagnostics.map((item) => item.commandId);
 
-    expect(diagnosticIds).toEqual(expect.arrayContaining(['evidence.lint', 'protocol.doctor', 'harness.validate']));
+    expect(diagnosticIds).toEqual(expect.arrayContaining(['evidence.lint', 'protocol.doctor']));
     expect(diagnosticIds).not.toContain('proof.status');
     expect(diagnosticIds).not.toContain('proof.explain');
     expect(diagnosticIds).not.toContain('ci.gate');
@@ -58,7 +58,6 @@ describe('Phase 7.2 lifecycle guide', () => {
     expect(output).toContain('task close --task T-XXXX --json');
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).toContain('Diagnostics when blocked:');
-    expect(output).toContain('harness.validate');
     expect(output).not.toContain('task.show');
     expect(output).not.toContain('release.gate');
   });

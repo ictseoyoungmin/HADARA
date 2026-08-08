@@ -169,25 +169,6 @@ describe('MCP read tools', () => {
     });
   });
 
-  it('validates Task Capsules without mutating them', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'MCP harness validate');
-
-    const payload = parseToolPayload(callTool(root, 'hadara.harness.validate', { taskId: task.id }));
-
-    expect(payload).toMatchObject({
-      schemaVersion: 'hadara.harness.validate.v1',
-      command: 'harness.validate',
-      ok: true,
-      level: 'draft',
-      task: {
-        id: task.id,
-        title: 'MCP harness validate'
-      },
-      issues: []
-    });
-  });
-
   it('maps tool dispatch failures to JSON-RPC errors with HADARA issue codes', () => {
     const root = tempProject();
 

@@ -4,7 +4,6 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskListReport } from '../../src/cli/task-json';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
-import { createHarnessValidateReport } from '../../src/services/harness-service';
 import { createActiveRunManifest, createActiveRunResumeReport, safeCreateActiveRunProjection, writeActiveRunManifest } from '../../src/services/active-run-state';
 import { createShellExecutionPreflight } from '../../src/policy/preflight';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -78,15 +77,6 @@ describe('MCP bridge contract', () => {
 
     expect(mcpToolPayload(root, 'hadara.policy.evaluate', { command: 'npm run check', mode: 'assisted' })).toEqual(
       createShellExecutionPreflight('npm run check', 'assisted')
-    );
-  });
-
-  it('matches harness validate MCP payload to harness validation contract', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Contract harness validate');
-
-    expect(mcpToolPayload(root, 'hadara.harness.validate', { taskId: task.id, level: 'draft' })).toEqual(
-      createHarnessValidateReport(root, task.id, { level: 'draft' })
     );
   });
 

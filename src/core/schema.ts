@@ -34,7 +34,6 @@ import evidenceMigrationPreviewSchemaJson from '../schemas/evidence-migration-pr
 import evidenceProjectionSchemaJson from '../schemas/evidence-projection.schema.json';
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
-import harnessValidateSchemaJson from '../schemas/harness-validate.schema.json';
 import initAdoptionSchemaJson from '../schemas/init-adoption.schema.json';
 import initDocumentsSchemaJson from '../schemas/init-documents.schema.json';
 import initPlanSchemaJson from '../schemas/init-plan.schema.json';
@@ -150,7 +149,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.evidence.projection.v1': evidenceProjectionSchemaJson as JsonObject,
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
-  'hadara.harness.validate.v1': harnessValidateSchemaJson as JsonObject,
   'hadara.init.adoption.v1': initAdoptionSchemaJson as JsonObject,
   'hadara.documents.v1': initDocumentsSchemaJson as JsonObject,
   'hadara.init.plan.v1': initPlanSchemaJson as JsonObject,

@@ -331,7 +331,6 @@ Evidence must reflect real execution results. Fabricated or assumed results are 
 ```bash
 hadara task status --task T-XXXX --detail full --json
 hadara task close --task T-XXXX --dry-run --json
-hadara harness validate --task T-XXXX --level done --json
 hadara init doctor --json
 ```
 

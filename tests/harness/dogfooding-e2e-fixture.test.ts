@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createContextExportReport } from '../../src/hermes/context-export';
 import { appendEvidenceTextArtifact } from '../../src/evidence/evidence';
-import { validateTaskCapsule } from '../../src/harness/validate';
+import { validateTaskCapsule } from '../../src/services/task-validation';
 import { createPolicyCheckReport } from '../../src/services/policy-service';
 import { createTaskCapsule, TaskCapsule } from '../../src/task/task-capsule';
 
@@ -96,8 +96,8 @@ describe('Dogfooding E2E fixture', () => {
 
     const doneValidation = validateTaskCapsule(root, task.id, { level: 'done' });
     expect(doneValidation).toMatchObject({
-      schemaVersion: 'hadara.harness.validate.v1',
-      command: 'harness.validate',
+      schemaVersion: 'hadara.task.validation.v1',
+      command: 'task.validation',
       ok: true,
       level: 'done',
       issues: []
@@ -191,8 +191,8 @@ describe('Dogfooding E2E fixture', () => {
 
     const validationReport = runBuiltCliJson(root, executedCommands, ['harness', 'validate', '--task', task.id, '--level', 'done', '--json']);
     expect(validationReport).toMatchObject({
-      schemaVersion: 'hadara.harness.validate.v1',
-      command: 'harness.validate',
+      schemaVersion: 'hadara.task.validation.v1',
+      command: 'task.validation',
       ok: true,
       level: 'done',
       issues: []
@@ -204,7 +204,7 @@ describe('Dogfooding E2E fixture', () => {
       ...fixture.policyChecks.map((check) => `policy preflight-shell ${check.command} --mode ${check.mode} --json`),
       `evidence add-command --task ${task.id} --summary ${fixture.evidence.summary} --result ${fixture.evidence.result} --json`,
       `evidence list --task ${task.id} --json`,
-      `harness validate --task ${task.id} --level done --json`
+      `task validation --task ${task.id} --level done --json`
     ]);
     expect(executedCommands.some((command) => /^(run|mcp|release|dashboard)\b/.test(command))).toBe(false);
   });
@@ -286,13 +286,13 @@ Replay a miniature HADARA-on-HADARA workflow.
 | AC-2 | Policy continuity was checked. | Yes | Pending | TBD | Required | fixture |
 | AC-3 | Evidence was attached. | Yes | Pending | TBD | Required | fixture |
 | AC-4 | Task-local handoff was updated. | Yes | Pending | TBD | Required | fixture |
-| AC-5 | Done-level harness validation passed. | Yes | Pending | TBD | Required | fixture |
+| AC-5 | Done-level Task Capsule validation passed. | Yes | Pending | TBD | Required | fixture |
 
 ## Validation
 
 | Check | Command / Method | Required | Latest Result | Evidence |
 |---|---|---:|---|---|
-| Done-level harness validation | harness validate --level done | Yes | Not Run | TBD |
+| Done-level Task Capsule validation | task close --dry-run --json | Yes | Not Run | TBD |
 
 ## Change Summary
 

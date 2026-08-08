@@ -394,7 +394,7 @@ describe('TUI snapshot renderer', () => {
 function writeProjectDocs(root: string, activeTaskId: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), `# VALIDATION_HISTORY\n\n- Docker check passed for ${activeTaskId}.\n- harness validate passed for ${activeTaskId}.\n`, 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), `# VALIDATION_HISTORY\n\n- Docker check passed for ${activeTaskId}.\n`, 'utf8');
 }
 
 function listProjectFiles(root: string): string[] {

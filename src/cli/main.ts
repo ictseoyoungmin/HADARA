@@ -134,12 +134,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'harness': {
-      const { handleHarnessCommand } = await import('./harness');
-      if (await handleHarnessCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'mcp': {
       const { handleMcpCommand } = await import('./mcp');
       if (handleMcpCommand({ args, projectRoot: paths.projectRoot })) return;

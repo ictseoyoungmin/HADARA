@@ -4,9 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
-import { validateTaskCapsule } from '../../src/harness/validate';
+import { validateTaskCapsule } from '../../src/services/task-validation';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { parseHarnessValidationLevel } from '../../src/cli/harness';
+import { parseTaskValidationLevel } from '../../src/services/task-validation';
 import { findVocabularyDomain, RISK_STATE_TOKENS, SOURCE_DOCUMENT_ROLE_TOKENS } from '../../src/services/controlled-vocabulary';
 
 const roots: string[] = [];
@@ -21,7 +21,7 @@ afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
-describe('Harness Task Capsule validation', () => {
+describe('Task Capsule validation', () => {
   it('returns a stable successful JSON envelope for a complete capsule', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validate capsule');
@@ -35,8 +35,8 @@ describe('Harness Task Capsule validation', () => {
     const result = validateTaskCapsule(root, task.id);
 
     expect(result).toMatchObject({
-      schemaVersion: 'hadara.harness.validate.v1',
-      command: 'harness.validate',
+      schemaVersion: 'hadara.task.validation.v1',
+      command: 'task.validation',
       ok: true,
       taskId: task.id,
       level: 'draft',
@@ -506,7 +506,7 @@ describe('Harness Task Capsule validation', () => {
       path.join(task.dir, 'TASK.md'),
       fs
         .readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')
-        .replace('| Harness done-level fixture | Yes | Passed | Harness result. |', `| \`hadara task close --task ${task.id} --json\` | Yes | Not Run | TBD |`),
+        .replace('| Harness done-level fixture | Yes | Passed | Task validation result. |', `| \`hadara task close --task ${task.id} --json\` | Yes | Not Run | TBD |`),
       'utf8'
     );
     writeHandoffDone(task.dir);
@@ -812,7 +812,7 @@ describe('Harness Task Capsule validation', () => {
     fs.writeFileSync(
       path.join(task.dir, 'HANDOFF.md'),
       fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')
-        .replace('Harness result.', `ev:${task.id}:pending`),
+        .replace('Task validation result.', `ev:${task.id}:pending`),
       'utf8'
     );
     appendEvidence(root, {
@@ -847,7 +847,7 @@ describe('Harness Task Capsule validation', () => {
     fs.writeFileSync(
       path.join(task.dir, 'HANDOFF.md'),
       fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')
-        .replace('Harness result.', `ev:${task.id}:missingevidenceref000001`),
+        .replace('Task validation result.', `ev:${task.id}:missingevidenceref000001`),
       'utf8'
     );
     appendEvidence(root, {
@@ -1019,10 +1019,10 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
-  it('rejects unsupported harness validation levels', () => {
-    expect(parseHarnessValidationLevel('draft')).toBe('draft');
-    expect(parseHarnessValidationLevel('done')).toBe('done');
-    expect(() => parseHarnessValidationLevel('release')).toThrow(/unsupported harness validation level/);
+  it('rejects unsupported task validation levels', () => {
+    expect(parseTaskValidationLevel('draft')).toBe('draft');
+    expect(parseTaskValidationLevel('done')).toBe('done');
+    expect(() => parseTaskValidationLevel('release')).toThrow(/unsupported task validation level/);
   });
 
   it('reports missing required capsule files as schema errors', () => {
@@ -1263,11 +1263,11 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
     .replace(/\| AC-(\d+) \| ([^|]+) \| Pending \| TBD \| TBD \|/g, '| AC-$1 | $2 | Met | Fixture evidence. | Fixture evidence. |')
     .replace(/\| AC-(\d+) \| ([^|]+) \| Must \| Pending \| TBD \| TBD \|/g, '| AC-$1 | $2 | Must | Met | Fixture evidence. | Fixture evidence. |')
     .replace(/\| AC-(\d+) \| ([^|]+) \| Yes \| Pending \| TBD \| Required \| TBD \|/g, '| AC-$1 | $2 | Yes | Met | Fixture evidence. | Required | Fixture evidence. |')
-    .replace('| TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | Yes | Passed | Harness result. |')
-    .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | validateTaskCapsule(..., done) | Yes | Passed | Harness result. |')
-    .replace('| N/A | TBD |', '| src/harness/validate.ts | Exercise fixture validation. |')
-    .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/harness/validate.ts | L1-L20 | Exercise fixture validation. | Done-level harness coverage. | Harness result. |')
-    .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | Fixture follow-up. | Closed | Harness result. |')
+    .replace('| TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | Yes | Passed | Task validation result. |')
+    .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | validateTaskCapsule(..., done) | Yes | Passed | Task validation result. |')
+    .replace('| N/A | TBD |', '| src/services/task-validation.ts | Exercise fixture validation. |')
+    .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/services/task-validation.ts | L1-L20 | Exercise fixture validation. | Done-level harness coverage. | Task validation result. |')
+    .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | Fixture follow-up. | Closed | Task validation result. |')
     .replace(/\| \d{4}-\d{2}-\d{2} \| Draft \| Initial task scaffold\. \|/, options.keepHistoryDraft ? '| 2026-06-02 | In Progress | Fixture still active. |' : '| 2026-06-02 | Done | Fixture completed. |')
     .replace('| TBD | Draft | Initial task scaffold. |', options.keepHistoryDraft ? '| 2026-06-02 | In Progress | Fixture still active. |' : '| 2026-06-02 | Done | Fixture completed. |')
     .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')
@@ -1278,14 +1278,14 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
   }
   if (options.keepStatusHistoryDraft) {
     taskContent = taskContent.replace(/\n## History\n[\s\S]*$/m, '');
-    taskContent = `${taskContent.trimEnd()}\n\n## Status History\n\n| Time | Status | Note | Evidence |\n|---|---|---|---|\n| 2026-06-02 | Draft | Legacy fixture. | Harness fixture. |\n`;
+    taskContent = `${taskContent.trimEnd()}\n\n## Status History\n\n| Time | Status | Note | Evidence |\n|---|---|---|---|\n| 2026-06-02 | Draft | Legacy fixture. | Task validation fixture. |\n`;
   }
   fs.writeFileSync(taskPath, taskContent, 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Prepare completed capsule fixture. | Done | Test fixture setup. |\n| 2 | Run done-level validation. | Done | Harness result. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| src/harness/validate.ts | Harness validator behavior. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture represents a completed task. | Test setup | Done-level regression would be noisy. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| No broad workflow changes. | Fixture scope | Keep assertions focused. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/harness/validate.ts | read | Exercise done-level validation. | Done |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Prepare completed capsule fixture. | Done | Test fixture setup. |\n| 2 | Run done-level validation. | Done | Task validation result. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| src/services/task-validation.ts | Task validator behavior. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture represents a completed task. | Test setup | Done-level regression would be noisy. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| No broad workflow changes. | Fixture scope | Keep assertions focused. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/services/task-validation.ts | read | Exercise done-level validation. | Done |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), '# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Done-level fixture is complete. | Met | Fixture content. |\n| AC-2 | Evidence is attached. | Met | evidence.jsonl record. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Focused harness validation fixture | Exercise validation. | Yes | Passed | Harness result. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture only. | Not Run | Not applicable |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Focused task validation fixture | Exercise validation. | Yes | Passed | Task validation result. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture only. | Not Run | Not applicable |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Medium | Low | Keep assertions focused. | Mitigated |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| TD-1 | Use task-specific completed fixture content. | Accepted | Keeps scaffold detection meaningful. | Test fixture. |\n', 'utf8');
 }
@@ -1297,7 +1297,7 @@ function hashText(content: string): string {
 function writeHandoffDone(taskDir: string): void {
   fs.writeFileSync(
     path.join(taskDir, 'HANDOFF.md'),
-    '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Done-level validation fixture completed. | Harness result. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue with the next task. | Fixture complete. | docs/TASK_BOARD.md |\n',
+    '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Done-level validation fixture completed. | Task validation result. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue with the next task. | Fixture complete. | docs/TASK_BOARD.md |\n',
     'utf8'
   );
 }

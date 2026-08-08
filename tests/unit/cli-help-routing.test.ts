@@ -4,7 +4,6 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleDevCommand } from '../../tools/dev-surface-handlers';
 import { handleDocsCommand } from '../../src/cli/docs';
-import { handleHarnessCommand } from '../../src/cli/harness';
 import { handlePackageCommand, handleSmokeCommand, handleReleaseArtifactCommand, handleReleaseCloseoutCommand, handleReleaseDryRunCommand, handleReleaseGateCommand, handleReleasePublishCommand } from '../../tools/dev-surface-handlers';
 import { handleSliceCommand } from '../../src/cli/slice';
 import { handleTaskCommand } from '../../src/cli/task';
@@ -48,9 +47,6 @@ describe('command-level help routing', () => {
 
     expect(handleSliceCommand({ args: ['slice', 'add', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('slice.add');
-
-    expect(await handleHarnessCommand({ args: ['harness', 'validate', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
-    expect(latestOutput()).toContain('harness.validate');
 
     expect(process.exitCode).toBeUndefined();
   });

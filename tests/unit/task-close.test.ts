@@ -153,7 +153,7 @@ describe('task close report', () => {
 
     expect(report.state.ready).toBe(true);
     expect(report.issues.map((issue) => issue.code)).not.toEqual(
-      expect.arrayContaining(['HARNESS_TASK_STATUS_NOT_DONE', 'HARNESS_TASK_BOARD_STATUS_NOT_DONE'])
+      expect.arrayContaining(['TASK_VALIDATION_TASK_STATUS_NOT_DONE', 'TASK_VALIDATION_TASK_BOARD_STATUS_NOT_DONE'])
     );
     expect(report.nextActions).toContainEqual(expect.objectContaining({ command: `hadara task close --task ${task.id} --dry-run --json` }));
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
@@ -1933,7 +1933,7 @@ describe('task close report', () => {
     expect(report.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: 'HARNESS_ACCEPTANCE_INCOMPLETE',
+          code: 'TASK_VALIDATION_ACCEPTANCE_INCOMPLETE',
           path: `tasks/${task.id}-close-blocked-task/TASK.md`,
           heading: 'Acceptance Criteria',
           fixHint: expect.stringContaining('acceptance criterion'),

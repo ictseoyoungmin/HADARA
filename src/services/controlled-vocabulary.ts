@@ -3,7 +3,7 @@ import { DOCS_REGISTER_ALLOWED_VALUES } from './docs-registry';
 /**
  * Single shared source for controlled token vocabularies (FD-006 / FD-009).
  *
- * TASK.md token sets live here and are consumed by `src/harness/validate.ts`;
+ * TASK.md token sets live here and are consumed by Task Capsule validation;
  * docs-registry vocabularies are re-exposed from their existing source so the
  * `hadara schema` lookup surface and the validators cannot drift apart.
  * Physical extraction to a data file and project-level overrides are 0.5

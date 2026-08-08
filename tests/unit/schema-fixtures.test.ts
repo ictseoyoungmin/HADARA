@@ -62,7 +62,6 @@ describe('schema fixtures', () => {
       'hadara.evidence.migration_preview.v1',
       'hadara.evidence.projection.v1',
       'hadara.featureSmoke.v1',
-      'hadara.harness.validate.v1',
       'hadara.init.adoption.v1',
       'hadara.init.plan.v1',
       'hadara.init.report.v1',

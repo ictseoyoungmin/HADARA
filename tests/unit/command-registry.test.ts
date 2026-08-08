@@ -50,7 +50,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'docs.required-reading',
   'tools.list',
   'policy.preflight-shell',
-  'harness.validate',
   'hermes.detect',
   'hermes.export-context',
   'mcp.serve',
@@ -104,7 +103,7 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('ops.status')).toBeUndefined();
     expect(findCommandRegistryEntry('policy.check-shell')).toBeUndefined();
     expect(findCommandRegistryEntry('write.preflight')).toBeUndefined();
-    expect(findCommandRegistryEntry('harness.validate')).toMatchObject({ requiredness: 'diagnostic', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('harness.validate')).toBeUndefined();
     expect(findCommandRegistryEntry('proof.status')).toBeUndefined();
     expect(findCommandRegistryEntry('proof.explain')).toBeUndefined();
     expect(findCommandRegistryEntry('evidence.summary')).toBeUndefined();

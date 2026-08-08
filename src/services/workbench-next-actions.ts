@@ -54,7 +54,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
       priority: 'now',
       command: `hadara task close --task ${input.taskId} --json`,
       message: 'Only guarded writes remain; run guarded task close to update task status, Task Board, readiness evidence, and close proof.',
-      sourceIssueCodes: ['HARNESS_TASK_BOARD_STATUS_NOT_DONE'],
+      sourceIssueCodes: ['TASK_VALIDATION_TASK_BOARD_STATUS_NOT_DONE'],
       loopBoundary: true
     });
   }
@@ -109,7 +109,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
 
 function hasOnlyFinishBookkeepingBlockers(issues: TaskCloseIssue[]): boolean {
   const errors = issues.filter((issue) => issue.severity === 'error');
-  return errors.length > 0 && errors.every((issue) => issue.code === 'HARNESS_TASK_BOARD_STATUS_NOT_DONE');
+  return errors.length > 0 && errors.every((issue) => issue.code === 'TASK_VALIDATION_TASK_BOARD_STATUS_NOT_DONE');
 }
 
 function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: string, issue: TaskCloseIssue): void {

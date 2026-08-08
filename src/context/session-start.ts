@@ -17,7 +17,7 @@ import {
 } from './context-cache-store';
 import { checkContextSourceManifestFastFreshness } from './source-manifest';
 import { codeIndexReportToGraphExtraction } from './code-graph-extractor';
-import { validateTaskCapsule } from '../harness/validate';
+import { validateTaskCapsule } from '../services/task-validation';
 import { createDocsReadMapReport, type DocsDriftWarning, type DocsReadMapEntry } from '../services/docs-registry';
 import { parseTaskBoard } from '../task/task-board';
 

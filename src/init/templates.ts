@@ -312,7 +312,6 @@ Evidence must reflect real execution results. Fabricated or assumed results are 
 \`\`\`bash
 hadara task status --task T-XXXX --detail full --json
 hadara task close --task T-XXXX --dry-run --json
-hadara harness validate --task T-XXXX --level done --json
 hadara init doctor --json
 \`\`\`
 
@@ -500,7 +499,7 @@ HADARA development should proceed in small, evidence-backed slices.
 
 | Order | Slice | Capsule | Purpose | Done Evidence |
 |---|---|---|---|---|
-| 1 | First validated task | TBD | Create a Task Capsule, implement a small change, and attach evidence. | Harness validation passes. |
+| 1 | First validated task | TBD | Create a Task Capsule, implement a small change, and attach evidence. | Task Capsule validation passes. |
 `;
 }
 
@@ -656,7 +655,7 @@ hadara task close --task T-XXXX --json
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
-\`task close --dry-run\` and \`task status --detail full\` include done-level Task Capsule validation. In the ordinary path, do not run \`validation run -- ... harness validate ...\` only to create a readiness proof: \`task close --json\` validates the virtual post-write state before mutation, applies reviewed guarded writes, revalidates the actual filesystem state, records readiness evidence and close proof, then performs the final audit. Use \`hadara harness validate --task T-XXXX --level done --json\` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+\`task close --dry-run\` and \`task status --detail full\` include done-level Task Capsule validation. Use those reports to inspect capsule format, status-history, acceptance, evidence, and handoff blockers; \`task close --json\` validates the virtual post-write state before mutation, applies reviewed guarded writes, revalidates the actual filesystem state, records readiness evidence and close proof, then performs the final audit.
 
 For current v2 \`TASK.md\`, the manual \`## History\` table is close-source. Before task close, append a final row such as \`| 2026-06-12 | Done | Finished task capsule. |\`. \`task status\` and \`task close --dry-run\` surface this as authoring guidance before close; done-level validation blocks a \`TASK.md\` whose persistent status is \`Done\` but whose latest History row is not \`Done\`.
 
@@ -678,7 +677,7 @@ HADARA uses separate token families for persistent state, derived proof state, d
 | \`Superseded\` | Task has been replaced by another task or line. | Worker/coordinator docs |
 | \`Archived\` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
 
-Reserved non-TaskStatus strings include \`Closed\`, \`Ready\`, \`Approved\`, \`Complete\`, \`closed-valid\`, \`not-closed\`, and phrases such as \`Done pending lifecycle close\`. Use \`TaskStatus: Done\`; get close proof state from \`task status --detail full\`, \`task close\`, \`status\`, or \`protocol doctor\` read models.
+Reserved non-TaskStatus strings include \`Closed\`, \`Ready\`, \`Approved\`, \`Complete\`, \`closed-valid\`, \`not-closed\`, and phrases such as \`Done pending lifecycle close\`. Use \`TaskStatus: Done\`; get close proof state from \`task status --detail full\`, \`task close\`, or \`protocol doctor\` read models.
 
 ### CloseState
 
@@ -752,7 +751,6 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, be
 - \`task status --json\` chooses work; it does not create a capsule or infer completion.
 - \`task status\` is an operator console; \`ok: true\` means report generation succeeded, not that the task is ready.
 - Readiness diagnostics are exposed through \`task status --detail full\` and \`task close --dry-run --json\`.
-- \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary \`task close --json\`.
 - \`task complete\` and \`task lifecycle\` are fully removed public commands. Prefer \`task status\` and \`task close\`.
 - \`task close\` owns close-proof repair planning and ordinary execution. Reviewed execute uses a matching current dry-run \`planHash\`, runs phases serially, stops on blockers, and returns success only after the final audit is \`closed-valid\`.
 - \`evidence list\` is the supported evidence id discovery surface. Text output shows \`[id] time | category/outcome | visibility | summary\`; JSON records expose \`id\`, \`idSource\`, \`idStability\`, \`persistedSchemaVersion\`, \`category\`, \`outcome\`, and \`tags\`. Use durable persisted \`ev:\` ids for long-lived \`--resolves\` and \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.

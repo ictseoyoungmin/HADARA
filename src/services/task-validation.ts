@@ -9,11 +9,16 @@ import { parseTaskBoard } from '../task/task-board';
 import { findTaskCapsule, isTaskCapsuleScaffoldContent, TaskCapsule } from '../task/task-capsule';
 import { readHandoffContinuationSection } from '../task/handoff-sections';
 
-export type HarnessValidationSeverity = 'error' | 'warning';
-export type HarnessValidationLevel = 'draft' | 'done';
+export type TaskValidationSeverity = 'error' | 'warning';
+export type TaskValidationLevel = 'draft' | 'done';
 
-export interface HarnessValidationIssue {
-  severity: HarnessValidationSeverity;
+export function parseTaskValidationLevel(value: string): TaskValidationLevel {
+  if (value === 'draft' || value === 'done') return value;
+  throw new Error(`unsupported task validation level: ${value}`);
+}
+
+export interface TaskValidationIssue {
+  severity: TaskValidationSeverity;
   code: string;
   message: string;
   path?: string;
@@ -35,19 +40,19 @@ export interface RemediationHint {
   blocking: boolean;
 }
 
-export interface HarnessValidateResult {
-  schemaVersion: 'hadara.harness.validate.v1';
-  command: 'harness.validate';
+export interface TaskValidationResult {
+  schemaVersion: 'hadara.task.validation.v1';
+  command: 'task.validation';
   ok: boolean;
   taskId: string;
-  level: HarnessValidationLevel;
+  level: TaskValidationLevel;
   task: {
     id: string;
     title: string;
     capsule: string;
   };
   checkedFiles: string[];
-  issues: HarnessValidationIssue[];
+  issues: TaskValidationIssue[];
 }
 
 const REQUIRED_TASK_FILES = [
@@ -76,17 +81,17 @@ const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
   'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE'
 ]);
 
-export interface HarnessValidateOptions {
-  level?: HarnessValidationLevel;
+export interface TaskValidationOptions {
+  level?: TaskValidationLevel;
 }
 
-export function validateTaskCapsule(projectRoot: string, taskId: string, options: HarnessValidateOptions = {}): HarnessValidateResult {
+export function validateTaskCapsule(projectRoot: string, taskId: string, options: TaskValidationOptions = {}): TaskValidationResult {
   const level = options.level ?? 'draft';
   const task = findTask(projectRoot, taskId);
   if (!task) {
     return {
-      schemaVersion: 'hadara.harness.validate.v1',
-      command: 'harness.validate',
+      schemaVersion: 'hadara.task.validation.v1',
+      command: 'task.validation',
       ok: false,
       taskId,
       level,
@@ -102,7 +107,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
     };
   }
 
-  const issues: HarnessValidationIssue[] = [];
+  const issues: TaskValidationIssue[] = [];
   const checkedFiles: string[] = [];
 
   for (const fileName of REQUIRED_TASK_FILES) {
@@ -134,8 +139,8 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
   }
 
   return {
-    schemaVersion: 'hadara.harness.validate.v1',
-    command: 'harness.validate',
+    schemaVersion: 'hadara.task.validation.v1',
+    command: 'task.validation',
     ok: !issues.some((issue) => issue.severity === 'error'),
     taskId: task.id,
     level,
@@ -149,11 +154,19 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
   };
 }
 
+export function createTaskValidationReport(
+  projectRoot: string,
+  taskId: string,
+  options: TaskValidationOptions = {}
+): TaskValidationResult {
+  return validateTaskCapsule(projectRoot, taskId, options);
+}
+
 function findTask(projectRoot: string, taskId: string): TaskCapsule | undefined {
   return findTaskCapsule(projectRoot, taskId);
 }
 
-function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], level: HarnessValidationLevel): void {
+function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[], level: TaskValidationLevel): void {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return;
 
@@ -175,7 +188,7 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
   validateTaskCloseStateBoundaries(content, relativePath, issues);
 }
 
-function validateTaskIdentityTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskIdentityTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   const rows = sectionRows(content, '## Identity');
   requireTableHeader(rows, ['Field', 'Value'], relativePath, '## Identity', issues);
   const statusRows = rows.filter((row) => normalizeFieldName(row[0] ?? '') === 'status');
@@ -195,7 +208,7 @@ function validateTaskIdentityTable(content: string, relativePath: string, issues
   }
 }
 
-function validateTaskSourceDocumentsTable(projectRoot: string, content: string, relativePath: string, issues: HarnessValidationIssue[], level: HarnessValidationLevel): void {
+function validateTaskSourceDocumentsTable(projectRoot: string, content: string, relativePath: string, issues: TaskValidationIssue[], level: TaskValidationLevel): void {
   const heading = sectionHeading(content, ['## Inputs / Constraints', '## Source Documents']);
   const table = sectionTable(content, heading);
   const recognizedHeader = requireAnyTableHeader(
@@ -244,8 +257,8 @@ function validateSourceDocumentHash(
   recordedHash: string,
   relativePath: string,
   heading: string,
-  issues: HarnessValidationIssue[],
-  level: HarnessValidationLevel
+  issues: TaskValidationIssue[],
+  level: TaskValidationLevel
 ): void {
   if (recordedHash === 'TBD') {
     if (level === 'done') {
@@ -273,7 +286,7 @@ function hashFile(filePath: string): string {
   return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')}`;
 }
 
-function validateTaskPlanTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskPlanTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   const heading = '## Plan';
   const table = sectionTable(content, heading);
   if (!requireAnyTableHeader(table.rows, [['Step', 'Action', 'Status'], ['Step', 'Action', 'Status', 'Evidence']], relativePath, heading, issues)) return;
@@ -283,7 +296,7 @@ function validateTaskPlanTable(content: string, relativePath: string, issues: Ha
   }
 }
 
-function validateTaskAcceptanceTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskAcceptanceTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   const heading = '## Acceptance';
   const table = sectionTable(content, heading);
   if (
@@ -328,7 +341,7 @@ function validateTaskAcceptanceTable(content: string, relativePath: string, issu
   }
 }
 
-function validateTaskValidationTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskValidationTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   const heading = '## Validation';
   const table = sectionTable(content, heading);
   if (
@@ -351,7 +364,7 @@ function validateTaskValidationTable(content: string, relativePath: string, issu
   }
 }
 
-function validateTaskChangeSummaryTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskChangeSummaryTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   const heading = sectionHeading(content, ['## Changes', '## Change Summary']);
   const table = sectionTable(content, heading);
   if (!requireChangeSummaryHeader(table.rows, relativePath, heading, issues)) return;
@@ -394,7 +407,7 @@ function validateTaskChangeSummaryTable(content: string, relativePath: string, i
   }
 }
 
-function requireChangeSummaryHeader(rows: string[][], relativePath: string, heading: string, issues: HarnessValidationIssue[]): boolean {
+function requireChangeSummaryHeader(rows: string[][], relativePath: string, heading: string, issues: TaskValidationIssue[]): boolean {
   const actual = rows[0] ?? [];
   const summaryHeader = ['Area', 'Summary'];
   const summaryWithEvidenceHeader = ['Area', 'Summary', 'Evidence'];
@@ -418,7 +431,7 @@ function requireChangeSummaryHeader(rows: string[][], relativePath: string, head
   return false;
 }
 
-function validateTaskRisksTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskRisksTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   const heading = '## Risks / Follow-ups';
   const table = sectionTable(content, heading);
   if (
@@ -440,14 +453,14 @@ function validateTaskRisksTable(content: string, relativePath: string, issues: H
   }
 }
 
-function validateTaskHistoryTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskHistoryTable(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   if (!content.includes('## History')) return;
   const heading = '## History';
   const table = sectionTable(content, heading);
   requireTableHeader(table.rows, ['Date', 'State', 'Note'], relativePath, heading, issues);
 }
 
-function validateTaskCloseStateBoundaries(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskCloseStateBoundaries(content: string, relativePath: string, issues: TaskValidationIssue[]): void {
   if (/^\|\s*CloseState\s*\|/im.test(content) || /^\|\s*Close State\s*\|/im.test(content)) {
     issues.push(taskTableIssue('TASK_CLOSE_STATE_PERSISTED_IN_TASK', 'TASK.md must not persist derived CloseState values.', relativePath, 'TASK.md'));
   }
@@ -456,7 +469,7 @@ function validateTaskCloseStateBoundaries(content: string, relativePath: string,
   }
 }
 
-function requireTaskSection(content: string, relativePath: string, issues: HarnessValidationIssue[], heading: string): void {
+function requireTaskSection(content: string, relativePath: string, issues: TaskValidationIssue[], heading: string): void {
   if (content.includes(heading)) return;
   issues.push({
     severity: 'error',
@@ -474,7 +487,7 @@ function requireTaskSection(content: string, relativePath: string, issues: Harne
   });
 }
 
-function requireAnyTaskSection(content: string, relativePath: string, issues: HarnessValidationIssue[], headings: string[]): void {
+function requireAnyTaskSection(content: string, relativePath: string, issues: TaskValidationIssue[], headings: string[]): void {
   if (headings.some((heading) => content.includes(heading))) return;
   const heading = headings[0];
   issues.push({
@@ -515,7 +528,7 @@ function requireTableHeader(
   expected: string[],
   relativePath: string,
   heading: string,
-  issues: HarnessValidationIssue[]
+  issues: TaskValidationIssue[]
 ): boolean {
   const actual = rows[0] ?? [];
   if (expected.every((cell, index) => actual[index] === cell)) return true;
@@ -536,7 +549,7 @@ function requireAnyTableHeader(
   expectedHeaders: string[][],
   relativePath: string,
   heading: string,
-  issues: HarnessValidationIssue[]
+  issues: TaskValidationIssue[]
 ): boolean {
   const actual = rows[0] ?? [];
   if (expectedHeaders.some((expected) => expected.every((cell, index) => actual[index] === cell))) return true;
@@ -572,7 +585,7 @@ function checkToken(
   code: string,
   relativePath: string,
   heading: string,
-  issues: HarnessValidationIssue[]
+  issues: TaskValidationIssue[]
 ): void {
   const domain = vocab.findVocabularyDomain(domainId);
   const allowed = domain?.allowed ?? [];
@@ -588,7 +601,7 @@ function checkToken(
   issues.push(issue);
 }
 
-function applyTokenFixHint(issue: HarnessValidationIssue, domainId: string, value: string): void {
+function applyTokenFixHint(issue: TaskValidationIssue, domainId: string, value: string): void {
   const normalized = value.trim().toLowerCase();
   if (domainId === 'task.risk.state' && normalized === 'done') {
     const fixHint = 'Use `Closed` when a risk or follow-up has been fully resolved; use `Mitigated` when the risk remains but has an active mitigation.';
@@ -601,7 +614,7 @@ function applyTokenFixHint(issue: HarnessValidationIssue, domainId: string, valu
   }
 }
 
-function taskTableIssue(code: string, message: string, relativePath: string, heading: string, example?: string): HarnessValidationIssue {
+function taskTableIssue(code: string, message: string, relativePath: string, heading: string, example?: string): TaskValidationIssue {
   return {
     severity: 'error',
     code,
@@ -638,7 +651,7 @@ function isChangeSummaryLines(value: string): boolean {
   );
 }
 
-function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   validateMarkdownFile(projectRoot, task, issues, 'HANDOFF.md', [
     { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Last Completed'] },
     { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Post-Close Continuation', '## Pre-Close Operator Action', '## Next Recommended Step'] }
@@ -648,7 +661,7 @@ function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, i
 function validateMarkdownFile(
   projectRoot: string,
   task: TaskCapsule,
-  issues: HarnessValidationIssue[],
+  issues: TaskValidationIssue[],
   fileName: string,
   checks: Array<{ code: string; anyText: string[] }>
 ): void {
@@ -677,7 +690,7 @@ function validateMarkdownFile(
   }
 }
 
-function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const evidencePath = path.join(task.dir, 'EVIDENCE.md');
   if (!fs.existsSync(evidencePath)) return;
 
@@ -708,7 +721,7 @@ function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues
   }
 }
 
-function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const indexPath = path.join(task.dir, 'evidence.jsonl');
   if (!fs.existsSync(indexPath)) return;
 
@@ -836,7 +849,7 @@ function validateEvidenceSchemaSpecificFields(
   },
   lineNumber: number,
   relativePath: string,
-  issues: HarnessValidationIssue[]
+  issues: TaskValidationIssue[]
 ): void {
   if (record.schemaVersion !== 'hadara.evidence.v2') return;
   const legacy = record.legacy as { kind?: unknown; result?: unknown; evidencePath?: unknown } | undefined;
@@ -887,7 +900,7 @@ function isEvidenceOutcome(value: unknown): boolean {
   return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown' || value === 'recorded' || value === 'not-applicable';
 }
 
-function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
+function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[], checkedFiles: string[]): void {
   validateTaskMetadataComplete(projectRoot, task, issues);
   validateTaskStatusDone(projectRoot, task, issues);
   validateTaskStatusHistoryDone(projectRoot, task, issues);
@@ -902,7 +915,7 @@ function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: Harne
   validateTaskBoardDone(projectRoot, task, issues, checkedFiles);
 }
 
-function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return;
 
@@ -955,7 +968,7 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
   }
 }
 
-function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return;
 
@@ -982,7 +995,7 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
   }
 }
 
-function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return;
 
@@ -1050,7 +1063,7 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
   }
 }
 
-function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(acceptancePath) && !fs.existsSync(taskPath)) return;
@@ -1088,7 +1101,7 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
   }
 }
 
-function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const legacySidecarComplete = hasLegacyCompletionSidecars(task.dir);
   const checks: Array<{ fileName: string; code: string; message: string }> = [
     {
@@ -1169,7 +1182,7 @@ function hasLegacyCompletionSidecars(taskDir: string): boolean {
   return ['PLAN.md', 'ACCEPTANCE.md', 'TESTS.md', 'FILES.md'].every((fileName) => fs.existsSync(path.join(taskDir, fileName)));
 }
 
-function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const indexPath = path.join(task.dir, 'evidence.jsonl');
   if (!fs.existsSync(indexPath)) return;
 
@@ -1192,7 +1205,7 @@ function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule,
   }
 }
 
-function validateEvidenceSemanticGates(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateEvidenceSemanticGates(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const lintReport = createEvidenceLintReport(projectRoot, task.id);
   for (const issue of lintReport.issues) {
     if (!DONE_SEMANTIC_EVIDENCE_CODES.has(issue.code)) continue;
@@ -1213,7 +1226,7 @@ function validateEvidenceSemanticGates(projectRoot: string, task: TaskCapsule, i
   }
 }
 
-function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const evidencePath = path.join(task.dir, 'EVIDENCE.md');
   if (!fs.existsSync(evidencePath)) return;
 
@@ -1242,7 +1255,7 @@ function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCaps
   }
 }
 
-function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return;
 
@@ -1311,7 +1324,7 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
   }
 }
 
-function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return;
 
@@ -1377,7 +1390,7 @@ function handoffCurrentStateFields(currentState: string): Map<string, string> {
   return fields;
 }
 
-function handoffStatusIssue(relativePath: string, message: string): HarnessValidationIssue {
+function handoffStatusIssue(relativePath: string, message: string): TaskValidationIssue {
   return {
     severity: 'error',
     code: 'TASK_HANDOFF_STATUS_DRIFT',
@@ -1396,7 +1409,7 @@ function handoffStatusIssue(relativePath: string, message: string): HarnessValid
   };
 }
 
-function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {
   const legacyPlanPath = path.join(task.dir, 'PLAN.md');
   const taskPath = path.join(task.dir, 'TASK.md');
   const usesLegacyPlan = fs.existsSync(legacyPlanPath);
@@ -1454,7 +1467,7 @@ function evidenceRefExists(projectRoot: string, ref: string): boolean {
   return fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/).some((line) => line.includes(`"id":"${ref}"`) || line.includes(`"id": "${ref}"`));
 }
 
-function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
+function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[], checkedFiles: string[]): void {
   const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   const relativePath = toPortablePath(path.relative(projectRoot, taskBoardPath));
   checkedFiles.push(relativePath);

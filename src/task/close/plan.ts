@@ -40,10 +40,10 @@ export type {
 // defined to resolve (TASK.md/Task Board status cells). --auto treats these
 // as executable-through, matching the manual dry-run -> execute pattern.
 const FINISH_RESOLVABLE_BLOCKER_CODES = new Set([
-  'HARNESS_TASK_STATUS_NOT_DONE',
-  'HARNESS_TASK_STATUS_HISTORY_NOT_DONE',
-  'HARNESS_TASK_BOARD_STATUS_NOT_DONE',
-  'HARNESS_TASK_BOARD_CAPSULE_MISMATCH'
+  'TASK_VALIDATION_TASK_STATUS_NOT_DONE',
+  'TASK_VALIDATION_TASK_STATUS_HISTORY_NOT_DONE',
+  'TASK_VALIDATION_TASK_BOARD_STATUS_NOT_DONE',
+  'TASK_VALIDATION_TASK_BOARD_CAPSULE_MISMATCH'
 ]);
 
 export function isCloseGuardedWriteResolvableBlocker(code: string): boolean {
@@ -288,7 +288,7 @@ function closeGuardedWriteIssueToClosePlanIssue(issue: CloseGuardedWritePlan['is
 
 function isDryRunPreflightBlocker(issue: TaskClosePlanIssue): boolean {
   if (FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code)) return false;
-  return issue.code.includes('INVALID_TOKEN') || issue.code === 'HARNESS_TASK_PLAN_STATUS_DRIFT';
+  return issue.code.includes('INVALID_TOKEN') || issue.code === 'TASK_VALIDATION_TASK_PLAN_STATUS_DRIFT';
 }
 
 function createVirtualBookkeptProjectRoot(projectRoot: string, taskId: string, guardedWritePlan: CloseGuardedWritePlan): string {
@@ -707,7 +707,7 @@ function appendTaskClosePlanReadinessEvidence(
   const sourceHash = closeReport.validation.validatedBeforeCloseEvidenceSourceHash;
   const summary = [
     `Task closePlan done-level readiness for ${taskId} passed before close evidence append`,
-    `harnessOk=${closeReport.validation.ok}`,
+    `taskValidationOk=${closeReport.validation.ok}`,
     `evidenceLintOk=${closeReport.evidenceLint.ok}`,
     `protocolDoctorOk=${closeReport.protocolDoctor.ok}`,
     `validationReportHash=${validationHash}`,

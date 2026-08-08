@@ -188,7 +188,7 @@
       "path": "src/schemas/schema-vocabulary.schema.json",
       "status": "fixture",
       "owner": "services/controlled-vocabulary",
-      "notes": "Documents the hadara schema controlled-vocabulary lookup report listing token domains shared with harness and docs validators."
+      "notes": "Documents the hadara schema controlled-vocabulary lookup report listing token domains shared with task and docs validators."
     },
     {
       "id": "hadara.slice.report.v1",
@@ -462,13 +462,6 @@
       "status": "fixture",
       "owner": "tools/dev-surface/feature-smoke",
       "notes": "Documents reduced read-only major feature smoke reports for core service/read-model validation; installed binary and launcher checks are deferred."
-    },
-    {
-      "id": "hadara.harness.validate.v1",
-      "path": "src/schemas/harness-validate.schema.json",
-      "status": "fixture",
-      "owner": "harness/validate",
-      "notes": "Documents Task Capsule draft/done validation reports with additive remediation hints."
     },
     {
       "id": "hadara.init.adoption.v1",
