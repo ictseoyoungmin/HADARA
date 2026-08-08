@@ -25,6 +25,8 @@ RC2 highlights:
   acceptance, installed dogfood, close/evidence hardening, and generated-capsule identity guidance.
 - T-0749 owns the final current-head release recycle and contract-freeze record. This source
   candidate is ready for operator review only; it is not a publish operation.
+- T-0751 records npm `0.5.0-rc.2` publication on `next`, the public GitHub Release
+  `v0.5.0-rc.2`, and the repair to the publish helper's post-publish evidence runner.
 
 ## 0.5.0-rc.1
 

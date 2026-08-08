@@ -567,7 +567,7 @@ exit 1
 fi
 
 echo "npm view verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION}"
-run_hadara evidence add-command \
+run_dev_surface evidence add-command \
   --task "${TASK_ID}" \
   --summary "Published ${PACKAGE_NAME}@${VERSION} to npm and verified npm view returned ${PUBLISHED_VERSION}; GitHub Release draft requested: ${CREATE_GITHUB_DRAFT}." \
   --result passed \
@@ -651,7 +651,7 @@ echo
 echo "GitHub Release draft created."
 echo "Review it in GitHub UI, then publish the draft manually if everything is correct:"
 echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false"
-run_hadara evidence add-command \
+run_dev_surface evidence add-command \
   --task "${TASK_ID}" \
   --summary "Created GitHub Release draft ${TAG} with tarball, checksum, and manifest assets after npm publish." \
   --result passed \
