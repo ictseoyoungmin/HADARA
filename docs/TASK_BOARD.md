@@ -750,3 +750,4 @@
 | T-0747 | RC2 Current-Head Re-freeze | Done | tasks/T-0747-rc2-current-head-re-freeze | |
 | T-0748 | Document Task Identity Ownership in Capsule Template | Done | tasks/T-0748-document-task-identity-ownership-in-capsule-template | |
 | T-0749 | RC2 Final Head Freeze and Publish Readiness | Done | tasks/T-0749-rc2-final-head-freeze-and-publish-readiness | |
+| T-0750 | RC2 GitHub Release Note Preparation | Done | tasks/T-0750-rc2-github-release-note-preparation | |
