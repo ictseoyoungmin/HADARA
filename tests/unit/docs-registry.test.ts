@@ -93,6 +93,26 @@ describe('Phase 7.3 docs registry', () => {
     expect(initDocuments.documents.find((document) => document.path.endsWith('route.txt'))?.readPolicy).toBe('on-task-explicit');
     expect(fs.readFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), 'utf8')).toContain('docs/specs/0.5.0-rc3/route.txt');
 
+    const taskScopedDryRun = createDocsRegisterReport(root, {
+      documentPath: 'docs/specs/0.5.0-rc3/task-scoped.pdf',
+      kind: 'release',
+      status: 'active',
+      readWhen: 'task-start',
+      activeForTasks: ['T-0001']
+    });
+    const taskScoped = createDocsRegisterReport(root, {
+      documentPath: 'docs/specs/0.5.0-rc3/task-scoped.pdf',
+      kind: 'release',
+      status: 'active',
+      readWhen: 'task-start',
+      activeForTasks: ['T-0001'],
+      mode: 'execute',
+      beforeHash: taskScopedDryRun.beforeHash
+    });
+    expect(taskScoped.ok).toBe(true);
+    const taskMap = createDocsReadMapReport(root, 'T-0001');
+    expect(taskMap.readFirst.map((entry) => entry.path)).toContain('docs/specs/0.5.0-rc3/task-scoped.pdf');
+
     fs.writeFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), '# drift\n', 'utf8');
     const renderDryRun = createDocsRenderReport(root);
     expect(renderDryRun.path).toBe('.hadara/context/READ_MAP.md');

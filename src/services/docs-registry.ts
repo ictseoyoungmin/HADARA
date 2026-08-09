@@ -1703,7 +1703,10 @@ function guidanceReason(doc: DocumentRegistryEntry): string {
 
 function createReadMapEntry(doc: DocumentRegistryEntry, taskId: string, taskTitle: string | null): DocsReadMapEntry {
   const raw = doc as DocumentRegistryEntry & { documentKind?: string; authority?: DocsAuthority; readTier?: DocsReadTier; editPolicy?: DocsEditPolicy };
-  const readTier = raw.readTier && VALID_READ_TIERS.includes(raw.readTier) ? raw.readTier : inferReadTier(doc, taskId, taskTitle);
+  const taskScoped = matchesActiveSpec(doc, taskId, taskTitle);
+  const readTier = taskScoped && raw.readTier !== 'historical' && raw.readTier !== 'excluded'
+    ? 'active-spec'
+    : raw.readTier && VALID_READ_TIERS.includes(raw.readTier) ? raw.readTier : inferReadTier(doc, taskId, taskTitle);
   return {
     path: doc.path,
     title: doc.title,

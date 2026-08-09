@@ -758,3 +758,4 @@
 | T-0755 | Remove Legacy Status and State Surface | Done | tasks/T-0755-remove-legacy-status-and-state-surface | |
 | T-0756 | Remove Legacy Harness Validation Surface | Done | tasks/T-0756-remove-legacy-harness-validation-surface | |
 | T-0757 | Converge Init v1 Document Routing Authority | Done | tasks/T-0757-converge-init-v1-document-routing-authority | |
+| T-0758 | Validate RC3 Read Routing and Delegated Lifecycle | Done | tasks/T-0758-validate-rc3-read-routing-and-delegated-lifecycle | |
