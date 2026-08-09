@@ -763,3 +763,4 @@
 | T-0760 | Init v1 Partial-State Authority Hardening | Done | tasks/T-0760-init-v1-partial-state-authority-hardening | |
 | T-0761 | Refresh RC3 Final Readiness | Done | tasks/T-0761-refresh-rc3-final-readiness | |
 | T-0762 | Integrate RC3 Reviewer Feedback | Done | tasks/T-0762-integrate-rc3-reviewer-feedback | |
+| T-0763 | Publish RC3 and Recycle Public Consumer | Draft | tasks/T-0763-publish-rc3-and-recycle-public-consumer | |
