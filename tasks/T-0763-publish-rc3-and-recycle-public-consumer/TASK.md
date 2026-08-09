@@ -18,7 +18,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 
 | Goal | Notes |
 |---|---|
-| Prepare the final RC3 artifact and all pre-publish proofs so the operator can publish one exact tarball to npm `next`, attach the same files to the GitHub prerelease, verify public metadata, and recycle a fresh public consumer through a closed-valid lifecycle. | This session stops before `prepare-publish-env.sh`, npm/GitHub mutation, public registry install, and operator-controlled recycle execution. |
+| Prepare the final RC3 artifact and all pre-publish proofs so the operator can publish one exact tarball to npm `next`, attach the same files to the GitHub prerelease, verify public metadata, and recycle a fresh public consumer through a closed-valid lifecycle. | npm publication and `hadara@next` verification are complete; GitHub prerelease/artifact verification and the public consumer lifecycle remain open. |
 
 ## Release Identity
 
@@ -33,7 +33,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Boundary | Items |
 |---|---|
 | In | Current committed RC3 source artifact, checksum/manifest, exact tarball package smoke, clean-checkout smoke, strict gate, release/publish dry-runs, operator publish/release/recycle command sequence, and post-publish evidence slots. |
-| Out | Source/runtime changes, `scripts/release/prepare-publish-env.sh`, npm publish, GitHub prerelease mutation/upload, public npm metadata mutation, public package install, and installed consumer lifecycle execution before operator handoff. |
+| Out | Source/runtime changes, artifact regeneration, and public consumer lifecycle execution beyond the operator publication already recorded here. |
 
 ## Plan
 
@@ -41,7 +41,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 |---|---|---|
 | 1 | Define the single-artifact and operator-boundary contract for RC3 publication/recycle. | Done |
 | 2 | Generate and validate the final pre-publish artifact and exact package/readiness evidence. | Done |
-| 3 | Record operator commands and wait for external publication/recycle completion. | In Progress |
+| 3 | Record operator publication, repair/verify the GitHub prerelease artifact set, and complete public consumer recycle evidence. | In Progress |
 
 ## Acceptance
 
@@ -51,7 +51,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | AC-2 | Exact tarball package smoke passes with matching artifact/package SHA-256 provenance. | Met | ev:T-0763:f6c9879e8ad7453dbc88ace5; matching SHA-256 `843f582d000d69f2088ef4debd9b969150de3154935ea783961f58d06882eb53` | `docs/specs/0.5.0-rc3/02_RC3_Release_Readiness.md` |
 | AC-3 | Clean-checkout smoke, full check, strict gate, release dry-run, and publish dry-run pass before external mutation. | Met | ev:T-0763:e65676daf07649f69624dfd4; ev:T-0763:43796b9113ff4961a6ee82bc; ev:T-0763:0bd3e18ee8494dde83167b71; ev:T-0763:146d2746d9804bccbf0fac09; ev:T-0763:58578ea3cb38403283b90c64; ev:T-0763:4e57d6cc591649488d6053a1 | `docs/RELEASE_READINESS.md` |
 | AC-4 | Operator handoff specifies one `.tgz` plus its `.sha256` and manifest for npm/GitHub, followed by prerelease/public `hadara@next` verification and public consumer recycle. | Met | `HANDOFF.md`; `GITHUB_RELEASE_NOTE.md`; ev:T-0763:84c5bf346e9748e4a61286d0 | `scripts/release/prepare-publish-env.sh`; `scripts/release/manual-publish-rc.sh` |
-| AC-5 | Public consumer lifecycle evidence reaches `closed-valid`, same-close retry is idempotent, fresh task status has no stale continuation, and all external mutations are recorded by the operator. | Pending | TBD | Post-publish operator evidence |
+| AC-5 | Public consumer lifecycle evidence reaches `closed-valid`, same-close retry is idempotent, fresh task status has no stale continuation, and all external mutations are recorded by the operator. | Pending | npm publication is verified, but public consumer lifecycle evidence is not yet supplied; GitHub prerelease metadata/assets also require correction or verification. ev:T-0763:9d34929d0f82454aaf4d553b; ev:T-0763:a3ca34fc604a4b0f8aa52e0c | Post-publish operator evidence |
 
 ## Validation
 
@@ -66,6 +66,9 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Release dry-run | Yes | Passed | ev:T-0763:146d2746d9804bccbf0fac09 |
 | Publish dry-run | Yes | Passed | ev:T-0763:58578ea3cb38403283b90c64 |
 | Exact tarball npm publish dry-run | Yes | Passed | ev:T-0763:4e57d6cc591649488d6053a1 |
+| Public npm `next` metadata | Yes | Passed | `npm view hadara@next version --registry=https://registry.npmjs.org` returned `0.5.0-rc.3`. ev:T-0763:9d34929d0f82454aaf4d553b |
+| GitHub RC3 prerelease and artifact attachments | Yes | Failed | `v0.5.0-rc.3` is non-draft but `isPrerelease=false` and `assets=[]`. ev:T-0763:a3ca34fc604a4b0f8aa52e0c |
+| Public consumer lifecycle | Yes | Pending | Init/doctor/task lifecycle, close retry, audit, and stale-continuation checks remain to be run against public `hadara@next`. |
 
 ## Inputs / Constraints
 
@@ -74,7 +77,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | `docs/RELEASE_READINESS.md` | constraint | active | Canonical artifact, evidence-root, clean-checkout, gate, publish, and recycle order. |
 | `docs/specs/0.5.0-rc3/02_RC3_Release_Readiness.md` | constraint | active | RC3 exact-artifact and no-mutation contract. |
 | `scripts/release/prepare-publish-env.sh` | implementation-source | active | Operator preparation boundary; not run in this session. |
-| `scripts/release/manual-publish-rc.sh` | implementation-source | active | Operator single-artifact publish/GitHub boundary; not run in this session. |
+| `scripts/release/manual-publish-rc.sh` | implementation-source | active | Operator single-artifact publish/GitHub boundary; npm publish was executed, while the GitHub asset/prerelease contract still needs repair. |
 | T-0762 committed RC3 source | reference | active | Current release input commit before T-0763 capsule-local evidence. |
 
 ## Changes
@@ -82,13 +85,16 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Area | Summary |
 |---|---|
 | Release preparation | Done: generated one preflight artifact set and attached reduced pre-publish evidence. |
-| Operator handoff | In Progress: exact publish/GitHub/public consumer sequence, release note, and post-publish evidence slots recorded. |
+| npm publication | Done: operator reported publish completion and public `next` metadata reads `0.5.0-rc.3`. |
+| GitHub release | Follow-up required: `v0.5.0-rc.3` is published as a normal release with no assets; it must be converted to a prerelease and receive the exact `.tgz`, `.sha256`, and manifest. |
+| Operator handoff | In Progress: exact publish/GitHub/public consumer sequence and post-publish evidence slots recorded; public lifecycle remains open. |
 
 ## Risks / Follow-ups
 
 | ID | Type | Summary | State | Link |
 |---|---|---|---|---|
 | RF-1 | Follow-up | External operator boundary | Open | User-run publish/recycle continuation |
+| RF-2 | Release metadata | GitHub `v0.5.0-rc.3` is not marked prerelease and has no attached artifact files. | Open | ev:T-0763:a3ca34fc604a4b0f8aa52e0c |
 
 ## History
 
@@ -97,3 +103,4 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | 2026-08-09 | Draft | Initial task scaffold. |
 | 2026-08-09 | In Progress | Defined single-artifact RC3 publish/recycle preparation and stopped-before-mutation operator boundary. |
 | 2026-08-09 | In Progress | Preflight artifact, exact package smoke, clean-checkout, full check, strict/dry-run gates, and exact-tarball npm dry-run passed; awaiting operator publication and public consumer recycle. |
+| 2026-08-09 | In Progress | Operator reported npm publication; public `hadara@next` resolves to `0.5.0-rc.3`. GitHub release exists but is not a prerelease and has no assets; public consumer recycle remains pending. |
