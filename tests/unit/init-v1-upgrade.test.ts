@@ -37,7 +37,7 @@ afterEach(() => {
 });
 
 describe('Init v1 re-init and upgrade ownership', () => {
-  it('keeps base init read-only on a partial installation and directs repair to upgrade', () => {
+  it('keeps base init and upgrade read-only on a partial Init v1 authority pair', () => {
     const root = tempProject();
     initialize(root);
     fs.rmSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'));
@@ -64,16 +64,15 @@ describe('Init v1 re-init and upgrade ownership', () => {
     expect(String(logSpy.mock.calls.at(-1)?.[0])).toContain('A partial Init v1 installation requires hadara init upgrade.');
 
     const upgrade = createInitUpgradePlanningResult(root);
-    expect(upgrade.plan.actions).toEqual(expect.arrayContaining([
-      expect.objectContaining({ path: '.hadara/documents.json', kind: 'create' }),
-      expect.objectContaining({ path: 'docs/HADARA_WORKFLOW.md', kind: 'create' })
-    ]));
-    const applied = applyInitPlanningResult(root, upgrade, { planHash: upgrade.plan.planHash });
-    expect(applied).toMatchObject({ ok: true, operation: 'upgrade', mode: 'applied' });
-    expect(JSON.parse(read(root, '.hadara/documents.json')).documents).toEqual(
-      expect.arrayContaining([expect.objectContaining({ path: 'docs/PROJECT_OVERVIEW.md' })])
-    );
+    expect(upgrade.report).toMatchObject({
+      ok: false,
+      mode: 'error',
+      projectMode: 'partial',
+      issues: [expect.objectContaining({ code: 'INIT_V1_PARTIAL_STATE' })]
+    });
+    expect(upgrade.plan.actions).toEqual([]);
     expect(read(root, '.hadara/project.json')).toBe(before);
+    expect(fs.existsSync(path.join(root, '.hadara', 'documents.json'))).toBe(false);
   });
 
   it('plans and applies only managed core repairs while preserving configuration and user content', () => {

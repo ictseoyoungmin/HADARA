@@ -760,3 +760,4 @@
 | T-0757 | Converge Init v1 Document Routing Authority | Done | tasks/T-0757-converge-init-v1-document-routing-authority | |
 | T-0758 | Validate RC3 Read Routing and Delegated Lifecycle | Done | tasks/T-0758-validate-rc3-read-routing-and-delegated-lifecycle | |
 | T-0759 | Prepare RC3 Release Readiness | Done | tasks/T-0759-prepare-rc3-release-readiness | |
+| T-0760 | Init v1 Partial-State Authority Hardening | Done | tasks/T-0760-init-v1-partial-state-authority-hardening | |

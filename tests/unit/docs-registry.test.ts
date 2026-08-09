@@ -121,6 +121,42 @@ describe('Phase 7.3 docs registry', () => {
     expect(fs.readFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), 'utf8')).toContain('route.txt');
   });
 
+  it('blocks docs authority selection for project-only or documents-only Init v1 state', () => {
+    const root = tempProject();
+    const plan = createInitPlanningResult(root, 'standard');
+    applyInitPlanningResult(root, plan, { planHash: plan.plan.planHash });
+    fs.writeFileSync(path.join(root, '.hadara', 'docs-registry.json'), `${JSON.stringify({
+      schemaVersion: 'hadara.docs.registry.v1',
+      registryVersion: 1,
+      projectProfile: 'standard',
+      documents: []
+    })}\n`);
+
+    const projectContent = fs.readFileSync(path.join(root, '.hadara', 'project.json'), 'utf8');
+    const documentsContent = fs.readFileSync(path.join(root, '.hadara', 'documents.json'), 'utf8');
+    fs.rmSync(path.join(root, '.hadara', 'project.json'));
+    const projectOnly = createDocsListReport(root);
+    expect(projectOnly.ok).toBe(false);
+    expect(projectOnly.source).toEqual({ registryPath: '.hadara/documents.json', registryPresent: true, inferred: true });
+    expect(projectOnly.issues).toContainEqual(expect.objectContaining({ code: 'INIT_V1_PARTIAL_STATE', severity: 'error' }));
+    const projectOnlyMutation = createDocsRegisterReport(root, { documentPath: 'docs/blocked.md' });
+    expect(projectOnlyMutation.ok).toBe(false);
+    expect(projectOnlyMutation.action).toBe('blocked');
+    expect(projectOnlyMutation.writes).toEqual([]);
+
+    fs.writeFileSync(path.join(root, '.hadara', 'project.json'), projectContent);
+    fs.rmSync(path.join(root, '.hadara', 'documents.json'));
+    const documentsOnly = createDocsListReport(root);
+    expect(documentsOnly.ok).toBe(false);
+    expect(documentsOnly.source).toEqual({ registryPath: '.hadara/documents.json', registryPresent: false, inferred: true });
+    expect(documentsOnly.issues).toContainEqual(expect.objectContaining({ code: 'INIT_V1_PARTIAL_STATE', severity: 'error' }));
+    const documentsOnlyMutation = createDocsRegisterReport(root, { documentPath: 'docs/blocked-again.md' });
+    expect(documentsOnlyMutation.ok).toBe(false);
+    expect(documentsOnlyMutation.action).toBe('blocked');
+    expect(documentsOnlyMutation.writes).toEqual([]);
+    fs.writeFileSync(path.join(root, '.hadara', 'documents.json'), documentsContent);
+  });
+
   it('keeps retired global-state compatibility paths unregistered and the repository projection aligned', () => {
     const repoRoot = process.cwd();
     const registry = JSON.parse(fs.readFileSync(path.join(repoRoot, DOCS_REGISTRY_PATH), 'utf8')) as DocumentRegistryFile;

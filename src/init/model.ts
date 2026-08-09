@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { validateSchema } from '../core/schema';
 import type {
@@ -67,6 +68,99 @@ export class InitModelError extends Error {
     super(message);
     this.name = 'InitModelError';
   }
+}
+
+export type InitV1StateKind = 'none' | 'init-v1' | 'partial' | 'invalid';
+
+export interface InitV1StateIssue {
+  severity: 'warning' | 'error';
+  code: string;
+  path?: string;
+  message: string;
+}
+
+export interface ValidatedInitV1State {
+  kind: InitV1StateKind;
+  projectPresent: boolean;
+  documentsPresent: boolean;
+  legacyRegistryPresent: boolean;
+  project: InitProjectConfigV1 | null;
+  documents: InitDocumentsV1 | null;
+  issues: InitV1StateIssue[];
+}
+
+/**
+ * Read the two-file Init v1 state boundary once and apply the canonical
+ * validators before any consumer is allowed to select an authority.
+ *
+ * An Init v1 project is a pair. A single file, malformed file, or invalid
+ * cross-file state is never upgraded into an inferred writable registry.
+ */
+export function readValidatedInitV1State(projectRoot: string): ValidatedInitV1State {
+  const projectPath = path.join(projectRoot, '.hadara/project.json');
+  const documentsPath = path.join(projectRoot, '.hadara/documents.json');
+  const legacyPath = path.join(projectRoot, '.hadara/docs-registry.json');
+  const projectPresent = fs.existsSync(projectPath);
+  const documentsPresent = fs.existsSync(documentsPath);
+  const legacyRegistryPresent = fs.existsSync(legacyPath);
+  const base = {
+    projectPresent,
+    documentsPresent,
+    legacyRegistryPresent,
+    project: null,
+    documents: null,
+    issues: [] as InitV1StateIssue[]
+  };
+
+  if (!projectPresent && !documentsPresent) return { ...base, kind: 'none' };
+  if (!projectPresent || !documentsPresent) {
+    const missingPath = projectPresent ? '.hadara/documents.json' : '.hadara/project.json';
+    return {
+      ...base,
+      kind: 'partial',
+      issues: [{
+        severity: 'error',
+        code: 'INIT_V1_PARTIAL_STATE',
+        path: missingPath,
+        message: 'Init v1 requires both .hadara/project.json and .hadara/documents.json; no writable authority was selected.'
+      }]
+    };
+  }
+
+  let project: InitProjectConfigV1 | null = null;
+  let documents: InitDocumentsV1 | null = null;
+  const issues: InitV1StateIssue[] = [];
+  try {
+    const parsed = JSON.parse(fs.readFileSync(projectPath, 'utf8')) as unknown;
+    assertInitProjectConfig(parsed);
+    project = parsed;
+  } catch (error) {
+    issues.push(initStateIssue(error, '.hadara/project.json', 'INIT_PROJECT_CONFIG_INVALID', 'Init v1 project config is invalid.'));
+  }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(documentsPath, 'utf8')) as unknown;
+    assertInitDocuments(parsed);
+    documents = parsed;
+  } catch (error) {
+    issues.push(initStateIssue(error, '.hadara/documents.json', 'INIT_DOCUMENTS_REGISTRY_INVALID', 'Init v1 document registry is invalid.'));
+  }
+  if (issues.length > 0) return { ...base, kind: 'invalid', project, documents, issues };
+
+  const warnings: InitV1StateIssue[] = legacyRegistryPresent
+    ? [{
+      severity: 'warning',
+      code: 'INIT_V1_LEGACY_REGISTRY_IGNORED',
+      path: '.hadara/docs-registry.json',
+      message: 'Init v1 is authoritative; the legacy docs registry is present but is not selected for read or write operations.'
+    }]
+    : [];
+  return { ...base, kind: 'init-v1', project, documents, issues: warnings };
+}
+
+function initStateIssue(error: unknown, issuePath: string, fallbackCode: string, prefix: string): InitV1StateIssue {
+  const code = error instanceof InitModelError ? error.code : fallbackCode;
+  const detail = error instanceof Error ? error.message : String(error);
+  return { severity: 'error', code, path: issuePath, message: `${prefix} ${detail}` };
 }
 
 export function resolveInitPreset(input?: { preset?: string; profile?: string }): {

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { readValidatedInitV1State } from './model';
 import { DOCS_REGISTRY_PATH } from '../services/docs-registry';
 import type { DocumentRegistryFile } from '../services/docs-registry';
 import { requiredDocsForProfile } from './profile';
@@ -294,8 +295,7 @@ function projectAuthoredRegistryPaths(projectRoot: string): Set<string> {
 }
 
 function hasInitV1State(projectRoot: string): boolean {
-  return fs.existsSync(path.join(projectRoot, '.hadara', 'project.json'))
-    || fs.existsSync(path.join(projectRoot, '.hadara', 'documents.json'));
+  return readValidatedInitV1State(projectRoot).kind !== 'none';
 }
 
 function readJsonObject(projectRoot: string, relativePath: string): Record<string, unknown> | null {
@@ -312,16 +312,10 @@ function readJsonObject(projectRoot: string, relativePath: string): Record<strin
 }
 
 function validateInitV1State(projectRoot: string, issues: InitIssue[]): void {
-  const project = readJsonObject(projectRoot, '.hadara/project.json');
-  if (project === null) {
-    issues.push({ severity: 'error', code: 'INIT_PROJECT_CONFIG_INVALID', path: '.hadara/project.json', message: '.hadara/project.json must be valid JSON object state.' });
-  } else if (project.schemaVersion !== 'hadara.project.v1') {
-    issues.push({ severity: 'error', code: 'INIT_PROJECT_CONFIG_UNSUPPORTED', path: '.hadara/project.json', message: '.hadara/project.json must declare schemaVersion "hadara.project.v1".' });
-  }
-  const documents = readJsonObject(projectRoot, '.hadara/documents.json');
-  if (documents === null) {
-    issues.push({ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_INVALID', path: '.hadara/documents.json', message: '.hadara/documents.json must be valid JSON object state.' });
-  } else if (documents.schemaVersion !== 'hadara.documents.v1' || !Array.isArray(documents.documents)) {
-    issues.push({ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_UNSUPPORTED', path: '.hadara/documents.json', message: '.hadara/documents.json must declare schemaVersion "hadara.documents.v1" and contain documents.' });
-  }
+  issues.push(...readValidatedInitV1State(projectRoot).issues.map((issue) => ({
+    severity: issue.severity,
+    code: issue.code,
+    path: issue.path,
+    message: issue.message
+  })));
 }

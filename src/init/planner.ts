@@ -13,7 +13,8 @@ import {
   createInitV1ScaffoldFiles,
   createInitV1UpgradeFiles,
   initArtifactManifest,
-  presetFromProjectConfig
+  presetFromProjectConfig,
+  readValidatedInitV1State
 } from './model';
 import { validateInitPaths } from './safety';
 import type {
@@ -145,14 +146,19 @@ export function createInitUpgradePlanningResult(
         'Init v1 upgrade requires .hadara/project.json; base init does not guess or repair missing configuration.'
       );
     }
-    const project = readJson(projectPath, 'INIT_PROJECT_CONFIG_INVALID');
+    const initState = readValidatedInitV1State(projectRoot);
+    if (initState.kind !== 'init-v1' || !initState.project || !initState.documents) {
+      const issue = initState.issues[0];
+      throw new InitModelError(
+        issue?.code ?? 'INIT_V1_PARTIAL_STATE',
+        issue?.message ?? 'Init v1 upgrade requires a valid .hadara/project.json and .hadara/documents.json pair.'
+      );
+    }
+    const project = initState.project;
+    const registry = initState.documents;
     assertInitProjectConfig(project);
+    assertInitDocuments(registry);
     preset = presetFromProjectConfig(project);
-    const documentsPath = path.join(projectRoot, '.hadara', 'documents.json');
-    const registry = fs.existsSync(documentsPath)
-      ? readJson(documentsPath, 'INIT_DOCUMENT_REGISTRY_INVALID')
-      : createInitDocuments(preset);
-    if (fs.existsSync(documentsPath)) assertInitDocuments(registry);
     files = createInitV1UpgradeFiles(
       project as InitProjectConfigV1,
       registry as InitDocumentsV1
@@ -430,6 +436,7 @@ function extractManagedBlock(content: string): string {
 
 function classifyFailedProject(projectRoot: string): InitPlanV1['projectMode'] {
   const hadaraPath = path.join(projectRoot, '.hadara');
+  if (readValidatedInitV1State(projectRoot).kind !== 'none') return 'partial';
   return fs.existsSync(hadaraPath) ? 'unsafe' : 'brownfield';
 }
 

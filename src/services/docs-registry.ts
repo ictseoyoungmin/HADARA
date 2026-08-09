@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
-import { assertInitDocuments, createReadMap } from '../init/model';
+import { assertInitDocuments, createReadMap, readValidatedInitV1State } from '../init/model';
 import type { InitDocumentV1, InitDocumentsV1 } from '../init/types';
 import { managedSectionBlock } from './managed-sections';
 import { readMarkdownSection } from './markdown-table';
@@ -912,27 +912,27 @@ export interface RegistryStorageState {
 }
 
 export function readDocsRegistryStorage(projectRoot: string): RegistryStorageState {
-  const initTarget = path.join(projectRoot, INIT_DOCUMENTS_PATH);
-  if (fs.existsSync(initTarget)) {
-    const content = fs.readFileSync(initTarget, 'utf8');
-    try {
-      const initDocuments = JSON.parse(content) as InitDocumentsV1;
-      assertInitDocuments(initDocuments);
-      return {
-        registry: initDocumentsToDocumentRegistry(projectRoot, initDocuments),
-        beforeHash: hashText(content),
-        issues: [],
-        registryPath: INIT_DOCUMENTS_PATH,
-        initDocuments
-      };
-    } catch (error) {
-      return {
-        registry: null,
-        beforeHash: hashText(content),
-        issues: [{ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_INVALID', path: INIT_DOCUMENTS_PATH, message: `Init v1 document registry could not be parsed: ${error instanceof Error ? error.message : String(error)}` }],
-        registryPath: INIT_DOCUMENTS_PATH
-      };
-    }
+  const initState = readValidatedInitV1State(projectRoot);
+  if (initState.kind === 'init-v1' && initState.documents) {
+    const content = fs.readFileSync(path.join(projectRoot, INIT_DOCUMENTS_PATH), 'utf8');
+    return {
+      registry: initDocumentsToDocumentRegistry(projectRoot, initState.documents),
+      beforeHash: hashText(content),
+      issues: initState.issues.map(toDocsIssue),
+      registryPath: INIT_DOCUMENTS_PATH,
+      initDocuments: initState.documents
+    };
+  }
+  if (initState.kind === 'partial' || initState.kind === 'invalid') {
+    const content = fs.existsSync(path.join(projectRoot, INIT_DOCUMENTS_PATH))
+      ? fs.readFileSync(path.join(projectRoot, INIT_DOCUMENTS_PATH), 'utf8')
+      : '';
+    return {
+      registry: null,
+      beforeHash: hashText(content),
+      issues: initState.issues.map(toDocsIssue),
+      registryPath: INIT_DOCUMENTS_PATH
+    };
   }
 
   const target = path.join(projectRoot, DOCS_REGISTRY_PATH);
@@ -958,15 +958,8 @@ export function readDocsRegistryStorage(projectRoot: string): RegistryStorageSta
 }
 
 function initProfileForProject(projectRoot: string): InitProfile {
-  const projectPath = path.join(projectRoot, '.hadara/project.json');
-  if (fs.existsSync(projectPath)) {
-    try {
-      const project = JSON.parse(fs.readFileSync(projectPath, 'utf8')) as { presetOrigin?: unknown };
-      if (project.presetOrigin === 'basic' || project.presetOrigin === 'standard' || project.presetOrigin === 'governed') return project.presetOrigin;
-    } catch {
-      // The registry validator reports malformed project state separately.
-    }
-  }
+  const project = readValidatedInitV1State(projectRoot).project;
+  if (project) return project.presetOrigin === 'minimal' ? 'basic' : project.presetOrigin;
   return 'standard';
 }
 
@@ -1377,24 +1370,20 @@ function loadRegistryOrInfer(projectRoot: string): {
   issues: DocsIssue[];
   source: DocsListReport['source'];
 } {
-  const initPath = path.join(projectRoot, INIT_DOCUMENTS_PATH);
-  if (fs.existsSync(initPath)) {
-    const content = fs.readFileSync(initPath, 'utf8');
-    try {
-      const initDocuments = JSON.parse(content) as InitDocumentsV1;
-      assertInitDocuments(initDocuments);
-      return {
-        registry: initDocumentsToDocumentRegistry(projectRoot, initDocuments),
-        issues: [],
-        source: { registryPath: INIT_DOCUMENTS_PATH, registryPresent: true, inferred: false }
-      };
-    } catch (error) {
-      return {
-        registry: inferRegistry(projectRoot),
-        issues: [{ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_INVALID', path: INIT_DOCUMENTS_PATH, message: `Init v1 document registry could not be parsed: ${error instanceof Error ? error.message : String(error)}` }],
-        source: { registryPath: INIT_DOCUMENTS_PATH, registryPresent: true, inferred: true }
-      };
-    }
+  const initState = readValidatedInitV1State(projectRoot);
+  if (initState.kind === 'init-v1' && initState.documents) {
+    return {
+      registry: initDocumentsToDocumentRegistry(projectRoot, initState.documents),
+      issues: initState.issues.map(toDocsIssue),
+      source: { registryPath: INIT_DOCUMENTS_PATH, registryPresent: true, inferred: false }
+    };
+  }
+  if (initState.kind === 'partial' || initState.kind === 'invalid') {
+    return {
+      registry: inferRegistry(projectRoot),
+      issues: initState.issues.map(toDocsIssue),
+      source: { registryPath: INIT_DOCUMENTS_PATH, registryPresent: initState.documentsPresent, inferred: true }
+    };
   }
   const registryPath = path.join(projectRoot, DOCS_REGISTRY_PATH);
   if (!fs.existsSync(registryPath)) {
@@ -1414,6 +1403,10 @@ function loadRegistryOrInfer(projectRoot: string): {
       source: { registryPath: DOCS_REGISTRY_PATH, registryPresent: true, inferred: true }
     };
   }
+}
+
+function toDocsIssue(issue: { severity: 'warning' | 'error'; code: string; path?: string; message: string }): DocsIssue {
+  return { severity: issue.severity, code: issue.code, path: issue.path, message: issue.message };
 }
 
 function inferRegistry(projectRoot: string): DocumentRegistryFile {

@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
@@ -9,6 +12,7 @@ import {
   createInitProjectConfig,
   createInitV1ScaffoldFiles,
   initArtifactManifest,
+  readValidatedInitV1State,
   resolveInitPreset
 } from '../../src/init/model';
 
@@ -159,5 +163,58 @@ describe('Init v1 core model', () => {
         { ...base.documents[1], id: 'b', supersedes: ['a'] }
       ]
     })).toThrow(/cycle/);
+  });
+
+  it('uses a two-file Init v1 authority boundary and fails closed for partial or malformed state', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-init-v1-state-'));
+    const hadara = path.join(root, '.hadara');
+    fs.mkdirSync(hadara, { recursive: true });
+    const project = createInitProjectConfig('state-matrix', 'standard');
+    const documents = createInitDocuments('standard');
+    const write = (name: string, value: unknown): void => fs.writeFileSync(
+      path.join(hadara, name), `${JSON.stringify(value, null, 2)}\n`, 'utf8'
+    );
+
+    try {
+      expect(readValidatedInitV1State(root).kind).toBe('none');
+
+      write('project.json', project);
+      expect(readValidatedInitV1State(root)).toMatchObject({
+        kind: 'partial',
+        issues: [expect.objectContaining({ code: 'INIT_V1_PARTIAL_STATE' })]
+      });
+
+      fs.rmSync(path.join(hadara, 'project.json'));
+      write('documents.json', documents);
+      expect(readValidatedInitV1State(root)).toMatchObject({
+        kind: 'partial',
+        issues: [expect.objectContaining({ code: 'INIT_V1_PARTIAL_STATE' })]
+      });
+
+      write('project.json', { ...project, features: ['task-lifecycle'] });
+      expect(readValidatedInitV1State(root)).toMatchObject({
+        kind: 'invalid',
+        issues: [expect.objectContaining({ code: 'INIT_PROJECT_CONFIG_INVALID' })]
+      });
+
+      write('project.json', project);
+      write('docs-registry.json', { schemaVersion: 'hadara.docs.registry.v1' });
+      expect(readValidatedInitV1State(root)).toMatchObject({
+        kind: 'init-v1',
+        legacyRegistryPresent: true,
+        issues: [expect.objectContaining({ code: 'INIT_V1_LEGACY_REGISTRY_IGNORED' })]
+      });
+
+      write('documents.json', {
+        ...documents,
+        documents: documents.documents.slice(0, 2).map((document) => ({ ...document, id: 'duplicate' }))
+      });
+      expect(readValidatedInitV1State(root)).toMatchObject({
+        kind: 'invalid',
+        issues: [expect.objectContaining({ code: 'INIT_DOCUMENT_REGISTRY_INVALID' })]
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
