@@ -757,3 +757,4 @@
 | T-0754 | Retarget RC3 and Complete Published RC2 Recycle | Done | tasks/T-0754-retarget-rc3-and-complete-published-rc2-recycle | |
 | T-0755 | Remove Legacy Status and State Surface | Done | tasks/T-0755-remove-legacy-status-and-state-surface | |
 | T-0756 | Remove Legacy Harness Validation Surface | Done | tasks/T-0756-remove-legacy-harness-validation-surface | |
+| T-0757 | Converge Init v1 Document Routing Authority | Done | tasks/T-0757-converge-init-v1-document-routing-authority | |

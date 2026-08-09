@@ -4,6 +4,8 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import { initProject } from '../../src/cli/init';
+import { createInitPlanningResult } from '../../src/init/planner';
+import { applyInitPlanningResult } from '../../src/init/transaction';
 import { handleDocsCommand } from '../../src/cli/docs';
 import {
   DOCS_REGISTRY_PATH,
@@ -61,6 +63,44 @@ afterEach(() => {
 });
 
 describe('Phase 7.3 docs registry', () => {
+  it('uses Init v1 documents.json as the sole routing authority and regenerates READ_MAP', () => {
+    const root = tempProject();
+    const plan = createInitPlanningResult(root, 'standard');
+    applyInitPlanningResult(root, plan, { planHash: plan.plan.planHash });
+
+    const list = createDocsListReport(root, {});
+    expect(list.source).toEqual({ registryPath: '.hadara/documents.json', registryPresent: true, inferred: false });
+    expect(list.issues).not.toContainEqual(expect.objectContaining({ code: 'DOC_REGISTRY_MISSING' }));
+
+    const dryRun = createDocsRegisterReport(root, {
+      documentPath: 'docs/specs/0.5.0-rc3/route.txt',
+      kind: 'spec',
+      status: 'active',
+      readWhen: 'task-start'
+    });
+    expect(dryRun.source.registryPath).toBe('.hadara/documents.json');
+    const executed = createDocsRegisterReport(root, {
+      documentPath: 'docs/specs/0.5.0-rc3/route.txt',
+      kind: 'spec',
+      status: 'active',
+      readWhen: 'task-start',
+      mode: 'execute',
+      beforeHash: dryRun.beforeHash
+    });
+    expect(executed).toMatchObject({ ok: true, writes: ['.hadara/documents.json', '.hadara/context/READ_MAP.md'] });
+    expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(false);
+    const initDocuments = JSON.parse(fs.readFileSync(path.join(root, '.hadara', 'documents.json'), 'utf8')) as { documents: Array<{ path: string; readPolicy: string }> };
+    expect(initDocuments.documents.find((document) => document.path.endsWith('route.txt'))?.readPolicy).toBe('on-task-explicit');
+    expect(fs.readFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), 'utf8')).toContain('docs/specs/0.5.0-rc3/route.txt');
+
+    fs.writeFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), '# drift\n', 'utf8');
+    const renderDryRun = createDocsRenderReport(root);
+    expect(renderDryRun.path).toBe('.hadara/context/READ_MAP.md');
+    const render = createDocsRenderReport(root, { mode: 'execute', beforeHash: renderDryRun.beforeHash });
+    expect(render).toMatchObject({ ok: true, action: 'render', writes: ['.hadara/context/READ_MAP.md'], registryPath: '.hadara/documents.json' });
+    expect(fs.readFileSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'), 'utf8')).toContain('route.txt');
+  });
+
   it('keeps retired global-state compatibility paths unregistered and the repository projection aligned', () => {
     const repoRoot = process.cwd();
     const registry = JSON.parse(fs.readFileSync(path.join(repoRoot, DOCS_REGISTRY_PATH), 'utf8')) as DocumentRegistryFile;

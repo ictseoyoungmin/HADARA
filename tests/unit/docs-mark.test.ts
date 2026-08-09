@@ -164,7 +164,7 @@ describe('Phase 7.5 docs mark', () => {
     });
     const realRenameSync = fs.renameSync.bind(fs);
     vi.spyOn(fs, 'renameSync').mockImplementation((oldPath, newPath) => {
-      if (String(oldPath).includes('.hadara-atomic-write-') && String(newPath).endsWith(path.join('.hadara', 'docs-registry.json'))) {
+      if (String(oldPath).endsWith('.tmp') && String(newPath) === registryPath(root)) {
         throw new Error('simulated registry rename failure');
       }
       return realRenameSync(oldPath, newPath);

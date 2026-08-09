@@ -122,7 +122,7 @@ hadara docs add security-model --json
 hadara docs add agent-guide --json
 ```
 
-`docs add` is dry-run-first. Review its `beforeHash`, then execute with the reported command. It creates the Markdown file only when missing and registers it in `.hadara/docs-registry.json`. If you create a custom Markdown file directly, register it with `hadara docs register --path <path> --json` so read maps and doctor checks can route it.
+`docs add` is dry-run-first. Review its `beforeHash`, then execute with the reported command. It creates the Markdown file only when missing and registers it in the project's canonical document registry: `.hadara/documents.json` for Init v1 or `.hadara/docs-registry.json` for legacy projects. If you create a custom document directly, register it with `hadara docs register --path <path> --json` so read maps and doctor checks can route it.
 
 ## HADARA-dev Docker Workflow
 
@@ -360,7 +360,7 @@ Agents should use `task close --json` for ordinary clean capsules; it performs t
 | Close ordinary work | `hadara task close --task T-XXXX --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | `hadara task close --task T-XXXX --dry-run --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
 | Repair close drift | `hadara task close --task T-XXXX --dry-run --json` then rerun close or execute with the reviewed `planHash` | Default repair path for stale close proof. |
-| Register project-specific docs | `hadara docs register --path <path> --json` | 0.4 registry surface. Canonical state belongs in `.hadara/docs-registry.json`; use registry-backed help for exact options. |
+| Register project-specific docs | `hadara docs register --path <path> --json` | Registry surface. Init v1 writes `.hadara/documents.json`; legacy projects retain `.hadara/docs-registry.json`. Use registry-backed help for exact options. |
 | Discover command details | `hadara help lifecycle`, `hadara help command <id>`, `hadara commands --json` | Prefer registry-backed help over copied command tables. |
 
 ## Common Failure Modes

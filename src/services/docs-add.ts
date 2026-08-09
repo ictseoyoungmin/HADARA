@@ -12,7 +12,9 @@ import {
 import {
   DOCS_REGISTRY_PATH,
   createSeedDocumentRegistry,
-  registryJson,
+  readDocsRegistryStorage,
+  registryWritePaths,
+  writeDocsRegistryStorage,
   type DocsIssue,
   type DocumentKind,
   type DocumentRegistryEntry,
@@ -144,9 +146,8 @@ export function createDocsAddReport(projectRoot: string, options: {
     }
     state.registry.documents = [...state.registry.documents, document].sort((a, b) => a.path.localeCompare(b.path));
     state.registry.generatedAt = new Date().toISOString();
-    fs.mkdirSync(path.dirname(path.join(projectRoot, DOCS_REGISTRY_PATH)), { recursive: true });
-    fs.writeFileSync(path.join(projectRoot, DOCS_REGISTRY_PATH), registryJson(state.registry), 'utf8');
-    writes.push(DOCS_REGISTRY_PATH);
+    writeDocsRegistryStorage(projectRoot, state.registry, state);
+    writes.push(...registryWritePaths(state.registryPath));
   }
 
   const report: DocsAddReport = {
@@ -177,29 +178,24 @@ function readRegistry(projectRoot: string): {
   profile: InitProfile;
   beforeHash: string;
   issues: DocsIssue[];
+  registryPath: string;
+  initDocuments?: import('../init/types').InitDocumentsV1;
 } {
-  const registryPath = path.join(projectRoot, DOCS_REGISTRY_PATH);
-  if (!fs.existsSync(registryPath)) {
-    const registry = createSeedDocumentRegistry('standard');
-    return { registry, profile: 'standard', beforeHash: hashText(''), issues: [] };
-  }
-  try {
-    const text = fs.readFileSync(registryPath, 'utf8');
-    const registry = JSON.parse(text) as DocumentRegistryFile;
-    return { registry, profile: registryProfile(registry), beforeHash: hashText(text), issues: [] };
-  } catch (error) {
+  const storage = readDocsRegistryStorage(projectRoot);
+  if (storage.registry) {
     return {
-      registry: createSeedDocumentRegistry('standard'),
-      profile: 'standard',
-      beforeHash: hashText(''),
-      issues: [{
-        severity: 'error',
-        code: 'DOCS_ADD_REGISTRY_INVALID',
-        path: DOCS_REGISTRY_PATH,
-        message: `${DOCS_REGISTRY_PATH} could not be read: ${error instanceof Error ? error.message : String(error)}`
-      }]
+      ...storage,
+      registry: storage.registry,
+      profile: registryProfile(storage.registry),
+      registryPath: storage.registryPath,
+      ...(storage.initDocuments ? { initDocuments: storage.initDocuments } : {})
     };
   }
+  if (storage.registryPath === DOCS_REGISTRY_PATH && storage.issues.some((issue) => issue.code === 'DOC_REGISTRY_MISSING')) {
+    const registry = createSeedDocumentRegistry('standard');
+    return { registry, profile: 'standard', beforeHash: storage.beforeHash, issues: [], registryPath: DOCS_REGISTRY_PATH };
+  }
+  return { registry: createSeedDocumentRegistry('standard'), profile: 'standard', beforeHash: storage.beforeHash, issues: storage.issues, registryPath: storage.registryPath };
 }
 
 function registryProfile(registry: DocumentRegistryFile): InitProfile {

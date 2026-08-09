@@ -3,6 +3,7 @@ import { normalizeContextGraphPath } from './extractor-contract';
 
 export const CONTEXT_SLICE_HADARA_ALLOWLIST = new Set([
   '.hadara/context/HADARA_CONTEXT.md',
+  '.hadara/documents.json',
   '.hadara/docs-registry.json'
 ]);
 

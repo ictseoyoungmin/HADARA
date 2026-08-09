@@ -85,7 +85,7 @@ export interface SessionStartSummary {
 export interface SessionStartDocsReadMap {
   taskId: string;
   command: string;
-  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  source: { registryPath: string; registryPresent: boolean; inferred: boolean };
   task: { capsulePath: string | null; capsulePresent: boolean; title: string | null };
   readFirstCount: number;
   readFirstTotalCount: number;

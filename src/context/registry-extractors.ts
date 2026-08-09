@@ -10,46 +10,39 @@ import {
   hashContextGraphText,
   normalizeContextGraphPath
 } from './extractor-contract';
-import { DOCS_REGISTRY_PATH, type DocumentRegistryEntry, type DocumentRegistryFile } from '../services/docs-registry';
+import { readDocsRegistryStorage, type DocumentRegistryEntry } from '../services/docs-registry';
 import { listCommandRegistryEntries, type CommandRegistryEntry } from '../services/capability-registry';
 import { isHadaraSourceCheckout } from './project-kind';
 
 const COMMAND_REGISTRY_SOURCE_PATH = 'src/services/capability-registry.ts';
 
 export function extractDocsRegistry(projectRoot: string): GraphExtractionResult {
-  const absolutePath = path.join(projectRoot, DOCS_REGISTRY_PATH);
-  const content = readOptionalText(absolutePath);
-  const result = createEmptyExtractionResult('extractDocsRegistry', [{ path: DOCS_REGISTRY_PATH, content }]);
-  if (content == null) {
+  const storage = readDocsRegistryStorage(projectRoot);
+  const sourcePath = storage.registryPath;
+  const content = readOptionalText(path.join(projectRoot, sourcePath));
+  const result = createEmptyExtractionResult('extractDocsRegistry', [{ path: sourcePath, content }]);
+  if (storage.registry === null || content == null) {
     result.issues.push({
       severity: 'warning',
       code: 'CONTEXT_GRAPH_DOC_REGISTRY_MISSING',
-      path: DOCS_REGISTRY_PATH,
-      message: '.hadara/docs-registry.json is missing; Document nodes cannot be extracted from registry metadata.',
-      fixHint: 'Restore the docs registry artifact or run the scoped docs registry workflow before relying on document context routing.'
+      path: sourcePath,
+      message: `${sourcePath} is missing or invalid; Document nodes cannot be extracted from registry metadata.`,
+      fixHint: 'Restore the canonical Init v1 or legacy docs registry artifact before relying on document context routing.'
     });
-    return result;
-  }
-
-  let registry: DocumentRegistryFile;
-  try {
-    registry = JSON.parse(content) as DocumentRegistryFile;
-  } catch (error) {
-    result.issues.push(parseFailedIssue(DOCS_REGISTRY_PATH, `.hadara/docs-registry.json could not be parsed: ${error instanceof Error ? error.message : String(error)}`));
     return result;
   }
 
   const sourceHash = hashContextGraphText(content);
   const source = createContextGraphSourceRef({
-    path: DOCS_REGISTRY_PATH,
+    path: sourcePath,
     extractor: 'extractDocsRegistry',
     line: 1,
     hash: sourceHash
   });
-  const documents = Array.isArray(registry.documents) ? registry.documents : [];
+  const documents = storage.registry.documents;
   result.nodes.push(...documents.map((doc) => documentNode(doc, source)));
   result.edges.push(...documents.flatMap((doc) => documentEdges(doc, source)));
-  result.stateSources?.push(docsRegistryStateSource(documents, sourceHash));
+  result.stateSources?.push(docsRegistryStateSource(documents, sourceHash, sourcePath));
   return result;
 }
 
@@ -151,10 +144,10 @@ function commandDocEdges(entry: CommandRegistryEntry, source: ReturnType<typeof 
   );
 }
 
-function docsRegistryStateSource(documents: DocumentRegistryEntry[], sourceHash: string): StateSource {
+function docsRegistryStateSource(documents: DocumentRegistryEntry[], sourceHash: string, sourcePath: string): StateSource {
   return {
     id: 'state-source:docs-registry',
-    path: DOCS_REGISTRY_PATH,
+    path: sourcePath,
     kind: 'docs-registry',
     hash: sourceHash,
     extracted: {

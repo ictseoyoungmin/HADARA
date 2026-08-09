@@ -18,7 +18,7 @@
       "additionalProperties": true,
       "required": ["registryPath", "registryPresent", "inferred"],
       "properties": {
-        "registryPath": { "const": ".hadara/docs-registry.json" },
+        "registryPath": { "enum": [".hadara/docs-registry.json", ".hadara/documents.json"] },
         "registryPresent": { "type": "boolean" },
         "inferred": { "type": "boolean" }
       }

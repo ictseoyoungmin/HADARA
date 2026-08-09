@@ -76,7 +76,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
 | Need project-specific docs | Use \`hadara docs add <type> --json\`, or create a Markdown file directly and register it with \`hadara docs register\`. |
-| Need files to inspect | Use \`hadara task status --task T-XXXX --json\`, docs read-map, and explicit file reads. |
+| Need files to inspect | Use \`hadara task status --task T-XXXX --json\`, \`hadara docs read-map --task T-XXXX --json\`, and explicit file reads. |
 | Ready to close | Run \`hadara task close --task T-XXXX --json\` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Use \`--dry-run\` only when a separate reviewer needs the plan. |
 
 ## Minimal Loop
@@ -343,7 +343,7 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 | Close ordinary work | \`hadara task close --task T-XXXX --json\` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | \`hadara task close --task T-XXXX --dry-run --json\` then execute with its \`planHash\` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
 | Repair close drift | \`hadara task close --task T-XXXX --dry-run --json\` then execute with the reviewed \`planHash\`, or rerun ordinary \`task close --json\` | Default repair path for stale close proof. |
-| Register project-specific docs | \`hadara docs register --path <path> --json\` | 0.4 registry surface. Canonical state belongs in \`.hadara/docs-registry.json\`; use registry-backed help for exact options. |
+| Register project-specific docs | \`hadara docs register --path <path> --json\` | Registry surface. Init v1 writes \`.hadara/documents.json\`; legacy projects retain \`.hadara/docs-registry.json\`. Use registry-backed help for exact options. |
 | Discover command details | \`hadara help lifecycle\`, \`hadara help command <id>\`, \`hadara commands --json\` | Prefer registry-backed help over copied command tables. |
 
 ## Common Failure Modes
@@ -367,6 +367,14 @@ Do not treat every file under \`docs/specs/**\` as default Required Reading.
 Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to \`AGENTS.md\`, \`.hadara/context/HADARA_CONTEXT.md\`, or this workflow document.
 
 ## Authoring Model
+
+## Task Capsule Identity Ownership
+
+The \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` fields in Task Capsule Identity tables are command-owned. Do not hand-edit them. Use \`task create\` to create identity and \`task close\` to apply lifecycle updates. Task prose and close-source tables remain worker-authored before close.
+
+## Read Map Lifecycle
+
+Init v1 projects use \`.hadara/documents.json\` as the document-routing authority. \`.hadara/context/READ_MAP.md\` is a generated fallback projection and must not be edited directly. Use \`hadara docs read-map --task T-XXXX --json\` for task-specific routing; read the projection directly only when the CLI is unavailable or routing drift is being investigated.
 
 | Surface | Human / Operator | Agent | CLI |
 |---|---|---|---|
@@ -720,7 +728,7 @@ Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`
 | Task-local \`HANDOFF.md\` Identity table | Command-owned for \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` during task create/close bookkeeping. |
 | Task-local \`HANDOFF.md\` prose/tables | Worker-owned close-time handoff guidance. Persist \`TaskStatus\` only; \`CloseState\` is derived by status/close/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Optional registered documents. Close does not create or maintain global state projections. |
-| \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
+| \`.hadara/documents.json\` / legacy \`.hadara/docs-registry.json\` and projections | Document-routing registry-owned; mutations should stay dry-run-first or explicitly scoped. |
 
 Before task close, finish Task Capsule docs, acceptance/tests/handoff notes, and evidence summaries. Task Board bookkeeping is projected by close. Optional shared prose remains human-owned, and Development Slices applies only when it already links the selected task. \`HANDOFF.md\` may be updated during the task as a work-in-progress checkpoint. Before close, keep close prerequisites in \`Pre-Close Operator Action\` and convert \`Post-Close Continuation\` into guidance that remains true after this task closes. \`TASK.md\` \`Close Summary\` records the completed outcome only. After \`task close --json\` or \`task close --execute --plan-hash ...\` reaches close proof, changing close-source documents requires rerunning task close.
 
@@ -768,7 +776,7 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, be
 
 export function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
-    ['`docs/TASK_BOARD.md`', 'Every session', 'Task queue, task status, and capsule paths.'],
+    ['`docs/TASK_BOARD.md`', 'Fallback or explicit task-index review', 'Task queue, task status, and capsule paths.'],
     ['`docs/HADARA_WORKFLOW.md`', 'Every session; whenever using HADARA CLI workflow commands', 'Project start, task lifecycle, evidence, context, document timing, repair, and useful CLI guidance.']
   ];
   if (spec.docs.contextRouter) requiredReadingRows.unshift(['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.']);
@@ -777,6 +785,7 @@ export function createAgentsDoc(spec: InitProfileSpec): string {
   if (spec.docs.securityModel) requiredReadingRows.push(['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
   if (spec.docs.roadmap) requiredReadingRows.push(['`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']);
   requiredReadingRows.push(
+    ['`.hadara/context/READ_MAP.md`', 'CLI unavailable or routing/drift investigation', 'Generated document-routing fallback; do not edit directly.'],
     ['Active `tasks/T-*/TASK.md`', 'Every task-work session', 'Task scope, source documents, plan, acceptance, validation, and change summary.'],
     ['Active Task Capsule `HANDOFF.md` and `EVIDENCE.md`', 'Resuming, validating, finishing, or handing off a task', 'Continuation guidance and human-readable evidence projection.'],
     ['Project-specific docs referenced by the task, registry, or read-map', 'When referenced', 'Task-specific architecture, design, roadmap, validation, security, or integration constraints.']
@@ -793,6 +802,8 @@ This repository uses the HADARA protocol for scoped, evidenced, resumable AI-ass
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
 \`AGENTS.md\` owns Required Reading.${spec.docs.contextRouter ? ' `.hadara/context/HADARA_CONTEXT.md` is a compact routing anchor that points to task status, Task Board, and workflow documents; it is not a second Required Reading authority.' : ''}
+
+Identity fields in Task Capsules are command-owned. Use \`task create\` and \`task close\`; see [\`HADARA_WORKFLOW.md\` — Task Capsule Identity Ownership](HADARA_WORKFLOW.md#task-capsule-identity-ownership).
 
 ## Required Reading Tiers
 

@@ -1,15 +1,13 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { atomicWriteTextFile } from '../core/fs';
 import {
   DOCS_REGISTER_ALLOWED_VALUES,
-  DOCS_REGISTRY_PATH,
+  readDocsRegistryStorage,
+  registryWritePaths,
+  writeDocsRegistryStorage,
   DocumentRegistryEntry,
-  DocumentRegistryFile,
   DocumentStatus,
-  DocsIssue,
-  registryJson
+  DocsIssue
 } from './docs-registry';
 
 const VALID_STATUS_TOKENS = DOCS_REGISTER_ALLOWED_VALUES.status;
@@ -26,7 +24,7 @@ export interface DocsMarkReport {
   fieldDiff: DocsMarkFieldDiff[];
   supersededBy?: string;
   reason: string | null;
-  registryPath: typeof DOCS_REGISTRY_PATH;
+  registryPath: string;
   beforeHash: string;
   impact: {
     registryPatchPlanned: boolean;
@@ -59,7 +57,7 @@ export interface DocsCompleteSpecReport {
   ok: boolean;
   path: string;
   implementedBy: string;
-  registryPath: typeof DOCS_REGISTRY_PATH;
+  registryPath: string;
   beforeHash: string;
   action: 'update' | 'already-complete' | 'blocked';
   before: {
@@ -119,10 +117,10 @@ export function createDocsCompleteSpecReport(projectRoot: string, options: DocsC
     issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_TASK_NOT_FOUND', path: normalizedPath, message: `${implementedBy} task capsule was not found.` });
   }
   if (options.mode === 'execute' && !options.beforeHash) {
-    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_BEFORE_HASH_REQUIRED', path: DOCS_REGISTRY_PATH, message: 'Execute mode requires --before-hash from the reviewed dry-run.' });
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_BEFORE_HASH_REQUIRED', path: state.registryPath, message: 'Execute mode requires --before-hash from the reviewed dry-run.' });
   }
   if (options.mode === 'execute' && options.beforeHash && options.beforeHash !== state.beforeHash) {
-    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_BEFORE_HASH_MISMATCH', path: DOCS_REGISTRY_PATH, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_BEFORE_HASH_MISMATCH', path: state.registryPath, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
   }
 
   const before = entry ? completionSnapshot(entry) : null;
@@ -140,10 +138,10 @@ export function createDocsCompleteSpecReport(projectRoot: string, options: DocsC
     entry.activeForTasks = after.activeForTasks;
     entry.notes = appendNote(entry.notes, options.reason ?? `Completed by ${implementedBy}.`);
     try {
-      atomicWriteTextFile(projectRoot, DOCS_REGISTRY_PATH, registryJson(state.registry));
+      writeDocsRegistryStorage(projectRoot, state.registry, state);
     } catch (error) {
       ok = false;
-      issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_ATOMIC_WRITE_FAILED', path: DOCS_REGISTRY_PATH, message: `Could not write docs registry atomically: ${error instanceof Error ? error.message : String(error)}` });
+      issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_ATOMIC_WRITE_FAILED', path: state.registryPath, message: `Could not write docs registry atomically: ${error instanceof Error ? error.message : String(error)}` });
     }
   }
 
@@ -154,12 +152,12 @@ export function createDocsCompleteSpecReport(projectRoot: string, options: DocsC
     ok,
     path: normalizedPath,
     implementedBy,
-    registryPath: DOCS_REGISTRY_PATH,
+    registryPath: state.registryPath,
     beforeHash: state.beforeHash,
     action: ok ? alreadyComplete ? 'already-complete' : 'update' : 'blocked',
     before,
     after,
-    writes: ok && options.mode === 'execute' && !alreadyComplete ? [DOCS_REGISTRY_PATH] : [],
+    writes: ok && options.mode === 'execute' && !alreadyComplete ? registryWritePaths(state.registryPath) : [],
     issues
   };
 }
@@ -201,10 +199,10 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
     issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: normalizedPath, message: `${normalizePath(options.by)} is not a registered replacement document.` });
   }
   if (options.mode === 'execute' && !options.beforeHash) {
-    issues.push({ severity: 'error', code: 'DOC_CLEANUP_BEFORE_HASH_REQUIRED', path: DOCS_REGISTRY_PATH, message: 'Execute mode requires --before-hash from the reviewed dry-run.' });
+    issues.push({ severity: 'error', code: 'DOC_CLEANUP_BEFORE_HASH_REQUIRED', path: state.registryPath, message: 'Execute mode requires --before-hash from the reviewed dry-run.' });
   }
   if (options.mode === 'execute' && options.beforeHash && options.beforeHash !== state.beforeHash) {
-    issues.push({ severity: 'error', code: 'DOC_CLEANUP_BEFORE_HASH_MISMATCH', path: DOCS_REGISTRY_PATH, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
+    issues.push({ severity: 'error', code: 'DOC_CLEANUP_BEFORE_HASH_MISMATCH', path: state.registryPath, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
   }
   const fieldDiff = createDocsMarkFieldDiff(entry, afterStatus, options);
   let ok = issues.every((issue) => issue.severity !== 'error');
@@ -213,10 +211,10 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
     entry.notes = options.reason ? `${entry.notes ? `${entry.notes} ` : ''}Cleanup reason: ${options.reason}` : entry.notes;
     if (afterStatus === 'superseded') entry.supersededBy = normalizePath(options.by ?? '');
     try {
-      atomicWriteTextFile(projectRoot, DOCS_REGISTRY_PATH, registryJson(state.registry));
+      writeDocsRegistryStorage(projectRoot, state.registry, state);
     } catch (error) {
       ok = false;
-      issues.push({ severity: 'error', code: 'DOC_CLEANUP_ATOMIC_WRITE_FAILED', path: DOCS_REGISTRY_PATH, message: `Could not write docs registry atomically: ${error instanceof Error ? error.message : String(error)}` });
+      issues.push({ severity: 'error', code: 'DOC_CLEANUP_ATOMIC_WRITE_FAILED', path: state.registryPath, message: `Could not write docs registry atomically: ${error instanceof Error ? error.message : String(error)}` });
     }
   }
   return {
@@ -231,7 +229,7 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
     fieldDiff,
     ...(afterStatus === 'superseded' && options.by ? { supersededBy: normalizePath(options.by) } : {}),
     reason: options.reason ?? null,
-    registryPath: DOCS_REGISTRY_PATH,
+    registryPath: state.registryPath,
     beforeHash: state.beforeHash,
     impact: {
       registryPatchPlanned: Boolean(entry && afterStatus && beforeStatus !== afterStatus),
@@ -324,25 +322,8 @@ function isAllowedTransition(before: DocumentStatus, after: DocumentStatus, forc
   return false;
 }
 
-function readRegistry(projectRoot: string): { registry: DocumentRegistryFile | null; beforeHash: string; issues: DocsIssue[] } {
-  const registryPath = path.join(projectRoot, DOCS_REGISTRY_PATH);
-  if (!fs.existsSync(registryPath)) {
-    return {
-      registry: null,
-      beforeHash: hashContent(''),
-      issues: [{ severity: 'error', code: 'DOC_REGISTRY_MISSING', path: DOCS_REGISTRY_PATH, message: 'Docs registry is required for cleanup operations.' }]
-    };
-  }
-  const content = fs.readFileSync(registryPath, 'utf8');
-  try {
-    return { registry: JSON.parse(content) as DocumentRegistryFile, beforeHash: hashContent(content), issues: [] };
-  } catch (error) {
-    return {
-      registry: null,
-      beforeHash: hashContent(content),
-      issues: [{ severity: 'error', code: 'DOC_REGISTRY_INVALID_JSON', path: DOCS_REGISTRY_PATH, message: `Docs registry JSON could not be parsed: ${error instanceof Error ? error.message : String(error)}` }]
-    };
-  }
+function readRegistry(projectRoot: string) {
+  return readDocsRegistryStorage(projectRoot);
 }
 
 function completionSnapshot(entry: DocumentRegistryEntry): DocsCompleteSpecReport['before'] {
@@ -390,8 +371,4 @@ function parseStatus(value: string): DocumentStatus | null {
 
 function normalizePath(value: string): string {
   return value.trim().replace(/\\/g, '/').replace(/^\.?\//, '');
-}
-
-function hashContent(content: string): string {
-  return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
 }

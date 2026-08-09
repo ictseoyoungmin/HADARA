@@ -55,7 +55,7 @@
         { "type": "null" }
       ]
     },
-    "registryPath": { "const": ".hadara/docs-registry.json" },
+    "registryPath": { "enum": [".hadara/docs-registry.json", ".hadara/documents.json"] },
     "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
     "impact": {
       "type": "object",

@@ -123,7 +123,7 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`
 | Task-local `HANDOFF.md` Identity table | Command-owned for `ID`, `Title`, `Status`, `Created`, and `Updated` during task create/close-plan guarded writes. |
 | Task-local `HANDOFF.md` prose/tables | Worker-owned close-time handoff guidance. Persist `TaskStatus` only; `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
 | Optional shared docs | Optional registered documents. Close does not create or update global continuation checkpoints; human prose remains user-owned. |
-| `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
+| `.hadara/documents.json` / legacy `.hadara/docs-registry.json` and their projections | Document-routing registry-owned; Init v1 uses `documents.json`, legacy projects retain `docs-registry.json`, and mutations remain dry-run-first or explicitly scoped. |
 
 Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Treat Task Capsule `evidence.jsonl` as canonical append-only evidence and `EVIDENCE.md` as a non-canonical human summary. Future rebuild preview must define whether `wouldChange` means formatting regeneration, managed-section drift, or data inconsistency before it reports changes; any future execute mode must be dry-run-first and before-hash guarded.
 

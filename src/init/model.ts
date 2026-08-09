@@ -359,9 +359,10 @@ At the start of each session:
 1. Read \`docs/HADARA_WORKFLOW.md\`.
 2. Run \`hadara task status --json\`.
 3. Prefer the selected Task Capsule and its registered required documents over broad repository reading.
-4. Use \`.hadara/context/READ_MAP.md\` and \`docs/TASK_BOARD.md\` as Markdown fallbacks when the CLI is unavailable.
+4. Use \`.hadara/context/READ_MAP.md\` and \`docs/TASK_BOARD.md\` only as Markdown fallbacks when the CLI is unavailable or routing needs investigation.
 
 Only registered documents are HADARA routing authority. Do not hand-edit command-managed files such as \`.hadara/project.json\`, \`.hadara/documents.json\`, or \`docs/TASK_BOARD.md\`.
+Identity fields in Task Capsules are command-owned; update them with \`task create\` or \`task close\`. See \`docs/HADARA_WORKFLOW.md#task-capsule-identity-ownership\`.
 <!-- hadara:managed:end bootstrap -->
 `;
 }
@@ -381,6 +382,16 @@ Keep implementation, validation evidence, and handoff inside the selected Task C
 
 Read registered \`session-start\` documents first. Resolve additional documents from the selected task and exact TargetRef matches. Unregistered documents are not automatic authority.
 
+## Task Capsule Identity Ownership
+
+The \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` fields in Task Capsule Identity tables are command-owned. Do not hand-edit them. Use \`task create\` to create identity and \`task close\` to apply lifecycle updates.
+
+Task prose, acceptance, validation, changes, risks, history, and handoff guidance remain worker-authored before close. Close proof state is derived by task status and audit reports, not stored as a TaskStatus token.
+
+## Read Map Lifecycle
+
+\`.hadara/documents.json\` is the Init v1 document-routing authority. \`.hadara/context/READ_MAP.md\` is a generated fallback projection and must not be edited directly. Use \`hadara docs read-map --task T-XXXX --json\` for task-specific dynamic routing; read the projection directly only when the CLI is unavailable or routing drift is being investigated.
+
 ## Ownership
 
 Do not directly edit command-managed files. HADARA-managed files are replaced only by lifecycle commands; mixed-managed files preserve user-owned content outside HADARA markers.
@@ -395,8 +406,8 @@ function createTaskBoard(): string {
 `;
 }
 
-function createReadMap(registry: InitDocumentsV1): string {
-  const rows = registry.documents
+export function createReadMap(registry: InitDocumentsV1): string {
+  const rows = [...registry.documents].sort((a, b) => a.path.localeCompare(b.path))
     .map((document) => `| \`${document.path}\` | ${document.readPolicy} | ${document.status} |`)
     .join('\n');
   return `# HADARA Read Map

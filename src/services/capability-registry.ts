@@ -1069,7 +1069,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   commandEntry({
     id: 'docs.add',
     command: 'hadara docs add <architecture|decisions|roadmap|security-model|agent-guide> [--execute --before-hash <hash>] [--json]',
-    summary: 'Create an optional project-owned docs file and register it in .hadara/docs-registry.json.',
+    summary: 'Create an optional project-owned document and register it in the canonical project document registry.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'docs-governance',
@@ -1094,7 +1094,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   commandEntry({
     id: 'docs.register',
     command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--read-tier <tier>] [--authority <authority>] [--edit-policy <policy>] [--active-for-task <ids>] [--drift <risk>] [--drift-review-required] [--drift-reason <text>] [--required-reading] [--require-exists] [--execute --before-hash <hash>] [--json]',
-    summary: 'Register one project document in .hadara/docs-registry.json without mutating AGENTS, context, or workflow prose.',
+    summary: 'Register one project document in the canonical project document registry without mutating AGENTS, context, or workflow prose.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'docs-governance',
@@ -1111,7 +1111,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [example('Preview spec registration', 'hadara docs register --path docs/specs/example.md --json', 'When adding a project-specific document to the canonical docs registry.')],
     related: ['docs.list', 'docs.doctor', 'docs.explain'],
     conflictsWith: [],
-    notes: 'Dry-run first. Execute requires --before-hash from the reviewed dry-run and writes only .hadara/docs-registry.json.'
+    notes: 'Dry-run first. Init v1 writes .hadara/documents.json; legacy projects retain .hadara/docs-registry.json. Execute requires --before-hash from the reviewed dry-run.'
   }),
   commandEntry({
     id: 'docs.complete-spec',
@@ -1134,7 +1134,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [example('Preview spec completion', 'hadara docs complete-spec --path docs/specs/example.md --implemented-by T-0001 --json', 'When a registered spec has been implemented and should stop being active default reading.')],
     related: ['docs.register', 'docs.read-map', 'docs.inbox', 'docs.mark'],
     conflictsWith: [],
-    notes: 'Dry-run first. Execute requires --before-hash from the reviewed dry-run and writes only .hadara/docs-registry.json.'
+    notes: 'Dry-run first. Init v1 writes .hadara/documents.json; legacy projects retain .hadara/docs-registry.json. Execute requires --before-hash from the reviewed dry-run.'
   }),
   commandEntry({
     id: 'docs.update',
@@ -1157,7 +1157,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [example('Preview registry field update', 'hadara docs update --path docs/specs/example.md --set status=reference --json', 'When correcting one registered document field.')],
     related: ['docs.archive', 'docs.supersede', 'docs.unregister', 'docs.render', 'docs.doctor'],
     conflictsWith: [],
-    notes: 'Dry-run first. Execute requires --before-hash from the reviewed dry-run and writes only .hadara/docs-registry.json.'
+    notes: 'Dry-run first. Init v1 writes .hadara/documents.json; legacy projects retain .hadara/docs-registry.json. Execute requires --before-hash from the reviewed dry-run.'
   }),
   commandEntry({
     id: 'docs.archive',
@@ -1228,7 +1228,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   commandEntry({
     id: 'docs.render',
     command: 'hadara docs render [--execute --before-hash <hash>] [--json]',
-    summary: 'Regenerate docs/DOC_REGISTRY.md from .hadara/docs-registry.json through a guarded command.',
+    summary: 'Regenerate the canonical document-routing projection through a guarded command.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'docs-governance',

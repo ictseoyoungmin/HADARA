@@ -81,6 +81,12 @@ describe('Init v1 core model', () => {
     expect(agents).toContain('selected Task Capsule');
     expect(agents).toContain('registered documents');
     expect(agents).toContain('Do not hand-edit command-managed files');
+    expect(agents).toContain('Identity fields in Task Capsules are command-owned');
+    expect(agents).toContain('HADARA_WORKFLOW.md#task-capsule-identity-ownership');
+    expect(agents).toContain('only as Markdown fallbacks');
+    const workflow = minimal.find((file) => file.path === 'docs/HADARA_WORKFLOW.md')?.content ?? '';
+    expect(workflow).toContain('## Task Capsule Identity Ownership');
+    expect(workflow).toContain('## Read Map Lifecycle');
     expect(minimal.find((file) => file.path === 'docs/TASK_BOARD.md')?.content).toContain(
       '| ID | Title | Status | Targets | Capsule | Result |'
     );

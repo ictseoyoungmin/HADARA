@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
+import { assertInitDocuments, createReadMap } from '../init/model';
+import type { InitDocumentV1, InitDocumentsV1 } from '../init/types';
 import { managedSectionBlock } from './managed-sections';
 import { readMarkdownSection } from './markdown-table';
 
@@ -104,7 +106,7 @@ export interface DocsListReport {
   schemaVersion: 'hadara.docs.list.v1';
   command: 'docs.list';
   ok: boolean;
-  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  source: { registryPath: string; registryPresent: boolean; inferred: boolean };
   filters: { status: DocumentStatus | null; readWhen: ReadWhen | null };
   documents: DocumentRegistryEntry[];
   issues: DocsIssue[];
@@ -156,7 +158,7 @@ export interface DocsRegisterReport {
   ok: boolean;
   mode: 'dry-run' | 'execute';
   path: string;
-  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  source: { registryPath: string; registryPresent: boolean; inferred: boolean };
   beforeHash: string;
   action: 'create' | 'already-registered' | 'blocked';
   document: DocumentRegistryEntry | null;
@@ -172,7 +174,7 @@ export interface DocsRegistryMutationReport {
   mode: 'dry-run' | 'execute';
   action: 'update' | 'archive' | 'supersede' | 'unregister' | 'render' | 'already-current' | 'already-unregistered' | 'blocked';
   path: string;
-  registryPath: typeof DOCS_REGISTRY_PATH;
+  registryPath: string;
   beforeHash: string;
   before: unknown;
   after: unknown;
@@ -208,7 +210,7 @@ export interface DocsReadMapReport {
   command: 'docs.read-map';
   ok: boolean;
   taskId: string;
-  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  source: { registryPath: string; registryPresent: boolean; inferred: boolean };
   task: { capsulePath: string | null; capsulePresent: boolean; title: string | null };
   readFirst: DocsReadMapEntry[];
   readIfNeeded: DocsReadMapEntry[];
@@ -221,13 +223,15 @@ export interface DocsInboxReport {
   schemaVersion: 'hadara.docs.inbox.v1';
   command: 'docs.inbox';
   ok: boolean;
-  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  source: { registryPath: string; registryPresent: boolean; inferred: boolean };
   summary: { items: number; errors: number; warnings: number };
   items: DocsIssue[];
   issues: DocsIssue[];
 }
 
 export const DOCS_REGISTRY_PATH = '.hadara/docs-registry.json';
+export const INIT_DOCUMENTS_PATH = '.hadara/documents.json';
+export const READ_MAP_PATH = '.hadara/context/READ_MAP.md';
 
 const VALID_STATUSES: DocumentStatus[] = ['canonical', 'active', 'reference', 'historical', 'superseded', 'archived'];
 const VALID_KINDS: DocumentKind[] = [
@@ -555,7 +559,7 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   const mode = options.mode ?? 'dry-run';
   const normalized = normalizePath(options.documentPath);
   const state = loadRegistryOrInfer(projectRoot);
-  const mutationState = readRegistryForMutation(projectRoot);
+  const mutationState = readDocsRegistryStorage(projectRoot);
   const issues = [...state.issues];
   const kind = parseKind(options.kind);
   const status = parseStatus(options.status ?? 'reference');
@@ -620,7 +624,7 @@ export function createDocsRegisterReport(projectRoot: string, options: {
       generatedAt: new Date().toISOString(),
       documents: [...state.registry.documents, document].sort((a, b) => a.path.localeCompare(b.path))
     };
-    writeRegistry(projectRoot, next);
+    writeDocsRegistryStorage(projectRoot, next, mutationState);
   }
 
   const report: DocsRegisterReport = {
@@ -633,7 +637,7 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     beforeHash: mutationState.beforeHash,
     action: document ? 'create' : 'blocked',
     document,
-    writes: document && mode === 'execute' && issues.every((issue) => issue.severity !== 'error') ? [DOCS_REGISTRY_PATH] : [],
+    writes: document && mode === 'execute' && issues.every((issue) => issue.severity !== 'error') ? registryWritePaths(mutationState.registryPath) : [],
     issues
   };
   if (report.mode === 'dry-run' && report.ok && report.action === 'create') {
@@ -663,7 +667,7 @@ export function createDocsUpdateReport(projectRoot: string, options: {
   mode?: 'dry-run' | 'execute';
   beforeHash?: string;
 }): DocsRegistryMutationReport {
-  const state = readRegistryForMutation(projectRoot);
+  const state = readDocsRegistryStorage(projectRoot);
   const mode = options.mode ?? 'dry-run';
   const normalized = normalizePath(options.documentPath);
   const issues = [...state.issues];
@@ -679,7 +683,7 @@ export function createDocsUpdateReport(projectRoot: string, options: {
   const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : changedFields.length === 0 ? 'already-current' : 'update';
   if (mode === 'execute' && action === 'update' && state.registry && entry && after) {
     Object.assign(entry, after);
-    writeRegistry(projectRoot, state.registry);
+    writeDocsRegistryStorage(projectRoot, state.registry, state);
   }
   return mutationReport({
     command: 'docs.update',
@@ -690,8 +694,9 @@ export function createDocsUpdateReport(projectRoot: string, options: {
     before,
     after,
     changedFields,
-    writes: mode === 'execute' && action === 'update' ? [DOCS_REGISTRY_PATH] : [],
+    writes: mode === 'execute' && action === 'update' ? registryWritePaths(state.registryPath) : [],
     issues,
+    registryPath: state.registryPath,
     executeArgs: `docs update --path ${shellQuote(normalized)} ${options.set.map((value) => `--set ${shellQuote(value)}`).join(' ')}`
   });
 }
@@ -775,7 +780,7 @@ export function createDocsUnregisterReport(projectRoot: string, options: {
   mode?: 'dry-run' | 'execute';
   beforeHash?: string;
 }): DocsRegistryMutationReport {
-  const state = readRegistryForMutation(projectRoot);
+  const state = readDocsRegistryStorage(projectRoot);
   const mode = options.mode ?? 'dry-run';
   const normalized = normalizePath(options.documentPath);
   const reason = options.reason?.trim() ?? '';
@@ -790,7 +795,7 @@ export function createDocsUnregisterReport(projectRoot: string, options: {
   if (mode === 'execute' && action === 'unregister' && state.registry) {
     state.registry.documents.splice(index, 1);
     state.registry.generatedAt = new Date().toISOString();
-    writeRegistry(projectRoot, state.registry);
+    writeDocsRegistryStorage(projectRoot, state.registry, state);
   }
   return mutationReport({
     command: 'docs.unregister',
@@ -801,8 +806,9 @@ export function createDocsUnregisterReport(projectRoot: string, options: {
     before,
     after,
     changedFields: before ? [{ field: 'documents', before: normalized, after: null }] : [],
-    writes: mode === 'execute' && action === 'unregister' ? [DOCS_REGISTRY_PATH] : [],
+    writes: mode === 'execute' && action === 'unregister' ? registryWritePaths(state.registryPath) : [],
     issues,
+    registryPath: state.registryPath,
     executeArgs: `docs unregister --path ${shellQuote(normalized)} --reason ${shellQuote(reason)}`
   });
 }
@@ -811,14 +817,19 @@ export function createDocsRenderReport(projectRoot: string, options: {
   mode?: 'dry-run' | 'execute';
   beforeHash?: string;
 } = {}): DocsRegistryMutationReport {
-  const state = readRegistryForMutation(projectRoot);
+  const state = readDocsRegistryStorage(projectRoot);
   const mode = options.mode ?? 'dry-run';
   const issues = [...state.issues];
   validateMutationExecuteGuard(mode, options.beforeHash, state.beforeHash, issues);
-  const beforePath = path.join(projectRoot, 'docs/DOC_REGISTRY.md');
+  const projectionPath = state.registryPath === INIT_DOCUMENTS_PATH ? READ_MAP_PATH : 'docs/DOC_REGISTRY.md';
+  const beforePath = path.join(projectRoot, projectionPath);
   const before = fs.existsSync(beforePath) ? fs.readFileSync(beforePath, 'utf8') : null;
-  const after = state.registry ? renderDocRegistryMarkdown(normalizeDocumentRegistryFile(state.registry)) : null;
-  const changedFields = before !== after ? [{ field: 'docs/DOC_REGISTRY.md', before: before === null ? null : 'present', after: after === null ? null : 'rendered' }] : [];
+  const after = state.registry
+    ? state.registryPath === INIT_DOCUMENTS_PATH && state.initDocuments
+      ? createReadMap(state.initDocuments)
+      : renderDocRegistryMarkdown(normalizeDocumentRegistryFile(state.registry))
+    : null;
+  const changedFields = before !== after ? [{ field: projectionPath, before: before === null ? null : 'present', after: after === null ? null : 'rendered' }] : [];
   const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : changedFields.length === 0 ? 'already-current' : 'render';
   if (mode === 'execute' && action === 'render' && after !== null) {
     fs.mkdirSync(path.dirname(beforePath), { recursive: true });
@@ -830,13 +841,14 @@ export function createDocsRenderReport(projectRoot: string, options: {
     command: 'docs.render',
     mode,
     action,
-    path: 'docs/DOC_REGISTRY.md',
+    path: projectionPath,
     beforeHash: state.beforeHash,
-    before: before === null ? null : { path: 'docs/DOC_REGISTRY.md', present: true },
-    after: after === null ? null : { path: 'docs/DOC_REGISTRY.md', bytes: after.length },
+    before: before === null ? null : { path: projectionPath, present: true },
+    after: after === null ? null : { path: projectionPath, bytes: after.length },
     changedFields,
-    writes: mode === 'execute' && action === 'render' ? ['docs/DOC_REGISTRY.md'] : [],
+    writes: mode === 'execute' && action === 'render' ? [projectionPath] : [],
     issues,
+    registryPath: state.registryPath,
     executeArgs: 'docs render'
   });
 }
@@ -854,7 +866,7 @@ function mutateDocument(projectRoot: string, input: {
   executeArgs: string;
   extraValidate?: (registry: DocumentRegistryFile, issues: DocsIssue[]) => void;
 }): DocsRegistryMutationReport {
-  const state = readRegistryForMutation(projectRoot);
+  const state = readDocsRegistryStorage(projectRoot);
   const normalized = normalizePath(input.documentPath);
   const issues = [...state.issues];
   const entry = state.registry?.documents.find((doc) => doc.path === normalized) ?? null;
@@ -873,7 +885,7 @@ function mutateDocument(projectRoot: string, input: {
   if (input.mode === 'execute' && action === input.action && state.registry && entry && after) {
     Object.assign(entry, after);
     state.registry.generatedAt = new Date().toISOString();
-    writeRegistry(projectRoot, state.registry);
+    writeDocsRegistryStorage(projectRoot, state.registry, state);
   }
   return mutationReport({
     command: input.command,
@@ -884,31 +896,173 @@ function mutateDocument(projectRoot: string, input: {
     before,
     after,
     changedFields,
-    writes: input.mode === 'execute' && action === input.action ? [DOCS_REGISTRY_PATH] : [],
+    writes: input.mode === 'execute' && action === input.action ? registryWritePaths(state.registryPath) : [],
     issues,
+    registryPath: state.registryPath,
     executeArgs: input.executeArgs
   });
 }
 
-function readRegistryForMutation(projectRoot: string): { registry: DocumentRegistryFile | null; beforeHash: string; issues: DocsIssue[] } {
+export interface RegistryStorageState {
+  registry: DocumentRegistryFile | null;
+  beforeHash: string;
+  issues: DocsIssue[];
+  registryPath: string;
+  initDocuments?: InitDocumentsV1;
+}
+
+export function readDocsRegistryStorage(projectRoot: string): RegistryStorageState {
+  const initTarget = path.join(projectRoot, INIT_DOCUMENTS_PATH);
+  if (fs.existsSync(initTarget)) {
+    const content = fs.readFileSync(initTarget, 'utf8');
+    try {
+      const initDocuments = JSON.parse(content) as InitDocumentsV1;
+      assertInitDocuments(initDocuments);
+      return {
+        registry: initDocumentsToDocumentRegistry(projectRoot, initDocuments),
+        beforeHash: hashText(content),
+        issues: [],
+        registryPath: INIT_DOCUMENTS_PATH,
+        initDocuments
+      };
+    } catch (error) {
+      return {
+        registry: null,
+        beforeHash: hashText(content),
+        issues: [{ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_INVALID', path: INIT_DOCUMENTS_PATH, message: `Init v1 document registry could not be parsed: ${error instanceof Error ? error.message : String(error)}` }],
+        registryPath: INIT_DOCUMENTS_PATH
+      };
+    }
+  }
+
   const target = path.join(projectRoot, DOCS_REGISTRY_PATH);
   if (!fs.existsSync(target)) {
     return {
       registry: null,
       beforeHash: hashText(''),
-      issues: [{ severity: 'error', code: 'DOC_REGISTRY_MISSING', path: DOCS_REGISTRY_PATH, message: 'Docs registry is required for mutation commands.' }]
+      issues: [{ severity: 'error', code: 'DOC_REGISTRY_MISSING', path: DOCS_REGISTRY_PATH, message: 'Docs registry is required for mutation commands.' }],
+      registryPath: DOCS_REGISTRY_PATH
     };
   }
   const content = fs.readFileSync(target, 'utf8');
   try {
-    return { registry: JSON.parse(content) as DocumentRegistryFile, beforeHash: hashText(content), issues: [] };
+    return { registry: JSON.parse(content) as DocumentRegistryFile, beforeHash: hashText(content), issues: [], registryPath: DOCS_REGISTRY_PATH };
   } catch (error) {
     return {
       registry: null,
       beforeHash: hashText(content),
-      issues: [{ severity: 'error', code: 'DOC_REGISTRY_INVALID_JSON', path: DOCS_REGISTRY_PATH, message: `Docs registry JSON could not be parsed: ${error instanceof Error ? error.message : String(error)}` }]
+      issues: [{ severity: 'error', code: 'DOC_REGISTRY_INVALID_JSON', path: DOCS_REGISTRY_PATH, message: `Docs registry JSON could not be parsed: ${error instanceof Error ? error.message : String(error)}` }],
+      registryPath: DOCS_REGISTRY_PATH
     };
   }
+}
+
+function initProfileForProject(projectRoot: string): InitProfile {
+  const projectPath = path.join(projectRoot, '.hadara/project.json');
+  if (fs.existsSync(projectPath)) {
+    try {
+      const project = JSON.parse(fs.readFileSync(projectPath, 'utf8')) as { presetOrigin?: unknown };
+      if (project.presetOrigin === 'basic' || project.presetOrigin === 'standard' || project.presetOrigin === 'governed') return project.presetOrigin;
+    } catch {
+      // The registry validator reports malformed project state separately.
+    }
+  }
+  return 'standard';
+}
+
+function initDocumentsToDocumentRegistry(projectRoot: string, source: InitDocumentsV1): DocumentRegistryFile {
+  const profile = initProfileForProject(projectRoot);
+  return {
+    schemaVersion: 'hadara.docsRegistry.v3',
+    registryVersion: 3,
+    project: { id: 'project', hadaraProfile: profile },
+    projectProfile: profile,
+    documents: source.documents.map((document) => ({
+      path: document.path,
+      title: titleFromPath(document.path),
+      owner: document.management === 'user-authored' ? 'project' : 'hadara-init',
+      kind: inferKind(document.path),
+      status: initStatusToDocumentStatus(document.status),
+      scope: document.appliesTo?.find((target) => target.namespace === 'release') ? 'release' : 'project',
+      profiles: [profile],
+      origin: { type: document.management === 'generated-projection' ? 'hadara-projection' : 'hadara-scaffold', generator: 'hadara init' },
+      readWhen: [initReadPolicyToReadWhen(document.readPolicy)],
+      requiredReading: document.readPolicy === 'session-start',
+      updateOwner: initManagementToUpdateOwner(document.management),
+      updatedByCommands: ['hadara init', 'hadara docs'],
+      managedSections: [],
+      closeSourceRole: document.path === READ_MAP_PATH ? 'excluded' : 'task-dependent',
+      readTier: initReadPolicyToReadTier(document.readPolicy),
+      authority: document.status === 'active' ? 'normative' : 'reference-only',
+      editPolicy: document.management === 'generated-projection' ? 'generated-projection' : document.management === 'user-authored' ? 'agent-editable-with-review' : 'cli-owned',
+      activeForTasks: document.appliesTo?.filter((target): target is { namespace: 'task'; id: string } => target.namespace === 'task').map((target) => target.id),
+      supersedes: document.supersedes ?? []
+    }))
+  };
+}
+
+function documentRegistryToInitDocuments(registry: DocumentRegistryFile, original: InitDocumentsV1): InitDocumentsV1 {
+  const originalByPath = new Map(original.documents.map((document) => [document.path, document]));
+  const documents: InitDocumentV1[] = registry.documents.map((entry) => {
+    const previous = originalByPath.get(entry.path);
+    const status = documentStatusToInitStatus(entry.status);
+    const readPolicy = documentReadWhenToInitReadPolicy(entry.readWhen[0]);
+    const appliesTo = (entry.activeForTasks && entry.activeForTasks.length > 0 ? entry.activeForTasks.map((id) => ({ namespace: 'task' as const, id })) : undefined)
+      ?? previous?.appliesTo
+      ?? (readPolicy === 'on-target' ? [{ namespace: 'project' as const }] : undefined);
+    return {
+      id: previous?.id ?? `doc-${crypto.createHash('sha1').update(entry.path).digest('hex').slice(0, 12)}`,
+      path: entry.path,
+      management: previous?.management ?? 'user-authored',
+      status,
+      readPolicy,
+      ...(appliesTo && appliesTo.length > 0 ? { appliesTo } : {}),
+      ...(entry.supersedes.length > 0 ? { supersedes: entry.supersedes } : {})
+    };
+  });
+  const result: InitDocumentsV1 = { schemaVersion: 'hadara.documents.v1', documents };
+  assertInitDocuments(result);
+  return result;
+}
+
+function initStatusToDocumentStatus(status: InitDocumentV1['status']): DocumentStatus {
+  if (status === 'active') return 'active';
+  if (status === 'superseded') return 'superseded';
+  if (status === 'archived') return 'archived';
+  return 'reference';
+}
+
+function documentStatusToInitStatus(status: DocumentStatus): InitDocumentV1['status'] {
+  if (status === 'active' || status === 'canonical') return 'active';
+  if (status === 'superseded') return 'superseded';
+  if (status === 'archived' || status === 'historical') return 'archived';
+  return 'draft';
+}
+
+function initReadPolicyToReadWhen(policy: InitDocumentV1['readPolicy']): ReadWhen {
+  if (policy === 'session-start') return 'session-start';
+  if (policy === 'explicit-only') return 'never-default';
+  return 'only-when-linked';
+}
+
+function documentReadWhenToInitReadPolicy(readWhen: ReadWhen | undefined): InitDocumentV1['readPolicy'] {
+  if (readWhen === 'session-start') return 'session-start';
+  if (readWhen === 'never-default') return 'explicit-only';
+  if (readWhen === 'task-start' || readWhen === 'task-close') return 'on-task-explicit';
+  return 'on-target';
+}
+
+function initReadPolicyToReadTier(policy: InitDocumentV1['readPolicy']): DocsReadTier {
+  if (policy === 'session-start') return 'current-state';
+  if (policy === 'explicit-only') return 'excluded';
+  return 'conditional-reference';
+}
+
+function initManagementToUpdateOwner(management: InitDocumentV1['management']): DocumentRegistryEntry['updateOwner'] {
+  if (management === 'user-authored') return 'human';
+  if (management === 'mixed-managed-block') return 'hadara-init';
+  if (management === 'generated-projection') return 'hadara-init';
+  return 'hadara-init';
 }
 
 function validateMutationExecuteGuard(mode: 'dry-run' | 'execute', requestedHash: string | undefined, beforeHash: string, issues: DocsIssue[]): void {
@@ -1017,10 +1171,10 @@ function appendRegistryNote(current: string | undefined, note: string): string {
   return current ? `${current} ${note}` : note;
 }
 
-function mutationReport(input: Omit<DocsRegistryMutationReport, 'schemaVersion' | 'registryPath' | 'executeCommand' | 'ok'> & { executeArgs: string }): DocsRegistryMutationReport {
+function mutationReport(input: Omit<DocsRegistryMutationReport, 'schemaVersion' | 'registryPath' | 'executeCommand' | 'ok'> & { executeArgs: string; registryPath?: string }): DocsRegistryMutationReport {
   const report: DocsRegistryMutationReport = {
     schemaVersion: 'hadara.docs.registryMutation.v1',
-    registryPath: DOCS_REGISTRY_PATH,
+    registryPath: input.registryPath ?? DOCS_REGISTRY_PATH,
     command: input.command,
     ok: input.issues.every((issue) => issue.severity !== 'error'),
     mode: input.mode,
@@ -1223,6 +1377,25 @@ function loadRegistryOrInfer(projectRoot: string): {
   issues: DocsIssue[];
   source: DocsListReport['source'];
 } {
+  const initPath = path.join(projectRoot, INIT_DOCUMENTS_PATH);
+  if (fs.existsSync(initPath)) {
+    const content = fs.readFileSync(initPath, 'utf8');
+    try {
+      const initDocuments = JSON.parse(content) as InitDocumentsV1;
+      assertInitDocuments(initDocuments);
+      return {
+        registry: initDocumentsToDocumentRegistry(projectRoot, initDocuments),
+        issues: [],
+        source: { registryPath: INIT_DOCUMENTS_PATH, registryPresent: true, inferred: false }
+      };
+    } catch (error) {
+      return {
+        registry: inferRegistry(projectRoot),
+        issues: [{ severity: 'error', code: 'INIT_DOCUMENTS_REGISTRY_INVALID', path: INIT_DOCUMENTS_PATH, message: `Init v1 document registry could not be parsed: ${error instanceof Error ? error.message : String(error)}` }],
+        source: { registryPath: INIT_DOCUMENTS_PATH, registryPresent: true, inferred: true }
+      };
+    }
+  }
   const registryPath = path.join(projectRoot, DOCS_REGISTRY_PATH);
   if (!fs.existsSync(registryPath)) {
     return {
@@ -1642,6 +1815,10 @@ function normalizePath(value: string): string {
 }
 
 function inferKind(documentPath: string): DocumentKind {
+  if (documentPath === 'AGENTS.md') return 'protocol';
+  if (documentPath === 'docs/HADARA_WORKFLOW.md') return 'workflow-guide';
+  if (documentPath === 'docs/TASK_BOARD.md') return 'task-board';
+  if (documentPath === READ_MAP_PATH) return 'project-context';
   if (documentPath.startsWith('docs/specs/')) return 'spec';
   if (documentPath === 'docs/ARCHITECTURE.md') return 'architecture';
   if (documentPath === 'docs/DECISIONS.md') return 'decision-log';
@@ -1696,8 +1873,31 @@ function titleFromPath(documentPath: string): string {
   return path.basename(documentPath).replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
 }
 
-function writeRegistry(projectRoot: string, registry: DocumentRegistryFile): void {
-  const target = path.join(projectRoot, DOCS_REGISTRY_PATH);
+export function registryWritePaths(registryPath: string): string[] {
+  return registryPath === INIT_DOCUMENTS_PATH ? [INIT_DOCUMENTS_PATH, READ_MAP_PATH] : [registryPath];
+}
+
+export function writeDocsRegistryStorage(projectRoot: string, registry: DocumentRegistryFile, state: RegistryStorageState): void {
+  if (state.registryPath === INIT_DOCUMENTS_PATH && state.initDocuments) {
+    const initDocuments = documentRegistryToInitDocuments(registry, state.initDocuments);
+    const documentsTarget = path.join(projectRoot, INIT_DOCUMENTS_PATH);
+    const documentsTemp = `${documentsTarget}.${process.pid}.tmp`;
+    fs.mkdirSync(path.dirname(documentsTarget), { recursive: true });
+    fs.writeFileSync(documentsTemp, `${JSON.stringify(initDocuments, null, 2)}\n`, 'utf8');
+    fs.renameSync(documentsTemp, documentsTarget);
+
+    const readMapTarget = path.join(projectRoot, READ_MAP_PATH);
+    const readMapTemp = `${readMapTarget}.${process.pid}.tmp`;
+    fs.mkdirSync(path.dirname(readMapTarget), { recursive: true });
+    fs.writeFileSync(readMapTemp, createReadMap(initDocuments), 'utf8');
+    fs.renameSync(readMapTemp, readMapTarget);
+    return;
+  }
+  writeRegistry(projectRoot, registry, state.registryPath);
+}
+
+function writeRegistry(projectRoot: string, registry: DocumentRegistryFile, registryPath = DOCS_REGISTRY_PATH): void {
+  const target = path.join(projectRoot, registryPath);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const temp = `${target}.${process.pid}.tmp`;
   fs.writeFileSync(temp, registryJson(registry));

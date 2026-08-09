@@ -428,9 +428,10 @@ function extractDevelopmentSlices(source: SourceText): { latestDoneTaskId: strin
 }
 
 function extractDocsRegistry(projectRoot: string, issues: StateProjectionIssue[]): StateProjectionReport['sources']['docsRegistry'] {
-  const source = readSource(projectRoot, '.hadara/docs-registry.json');
+  const initSource = readSource(projectRoot, '.hadara/documents.json');
+  const source = initSource.exists ? initSource : readSource(projectRoot, '.hadara/docs-registry.json');
   if (!source.exists) {
-    issues.push(warning('STATE_DOCS_REGISTRY_MISSING', source.path, '.hadara/docs-registry.json is missing.', 'Run docs registry generation or protocol migration before relying on docs state projection.'));
+    issues.push(warning('STATE_DOCS_REGISTRY_MISSING', source.path, '.hadara/documents.json and .hadara/docs-registry.json are missing.', 'Run HADARA init or the documented legacy migration before relying on docs state projection.'));
     return { path: source.path, exists: false, registeredDocuments: null, statusCounts: {} };
   }
   try {
@@ -447,7 +448,7 @@ function extractDocsRegistry(projectRoot: string, issues: StateProjectionIssue[]
       }, {})
     };
   } catch (error) {
-    issues.push(warning('STATE_DOCS_REGISTRY_INVALID_JSON', source.path, `.hadara/docs-registry.json could not be parsed: ${error instanceof Error ? error.message : String(error)}`, 'Repair the docs registry JSON before relying on document state projection.'));
+    issues.push(warning('STATE_DOCS_REGISTRY_INVALID_JSON', source.path, `${source.path} could not be parsed: ${error instanceof Error ? error.message : String(error)}`, 'Repair the canonical document registry JSON before relying on document state projection.'));
     return { path: source.path, exists: true, registeredDocuments: null, statusCounts: {} };
   }
 }

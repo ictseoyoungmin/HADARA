@@ -420,7 +420,7 @@ export function createContextSourceSubsetHash(
 export function classifyContextSourcePath(inputPath: string): ContextSourceKind | undefined {
   const filePath = normalizeContextGraphPath(inputPath);
   if (filePath === 'docs/TASK_BOARD.md') return 'task-board';
-  if (filePath === '.hadara/docs-registry.json' || filePath === 'docs/DOC_REGISTRY.md') return 'docs-registry';
+  if (filePath === '.hadara/documents.json' || filePath === '.hadara/docs-registry.json' || filePath === 'docs/DOC_REGISTRY.md') return 'docs-registry';
   if (filePath === 'src/services/capability-registry.ts') return 'command-registry';
   if (filePath === 'docs/RELEASE_READINESS.md') return 'release-doc';
   if (filePath.startsWith('docs/specs/') && filePath.endsWith('.md')) return 'spec-doc';
