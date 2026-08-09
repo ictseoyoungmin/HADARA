@@ -155,6 +155,23 @@ describe('Phase 7.3 docs registry', () => {
     expect(documentsOnlyMutation.action).toBe('blocked');
     expect(documentsOnlyMutation.writes).toEqual([]);
     fs.writeFileSync(path.join(root, '.hadara', 'documents.json'), documentsContent);
+
+    fs.writeFileSync(path.join(root, '.hadara', 'documents.json'), '{"schemaVersion":"hadara.documents.v1"}\n');
+    const malformedDocuments = createDocsListReport(root);
+    expect(malformedDocuments.ok).toBe(false);
+    expect(malformedDocuments.issues).toContainEqual(expect.objectContaining({ code: 'INIT_DOCUMENT_REGISTRY_INVALID', severity: 'error' }));
+    expect(createDocsDoctorReport(root).ok).toBe(false);
+    expect(createDocsReadMapReport(root, 'T-0001').ok).toBe(false);
+    const malformedDocumentsMutation = createDocsRegisterReport(root, { documentPath: 'docs/blocked-malformed-documents.md' });
+    expect(malformedDocumentsMutation).toMatchObject({ ok: false, action: 'blocked', writes: [] });
+
+    fs.writeFileSync(path.join(root, '.hadara', 'documents.json'), documentsContent);
+    fs.writeFileSync(path.join(root, '.hadara', 'project.json'), '{"schemaVersion":"hadara.project.v1"}\n');
+    const malformedProject = createDocsListReport(root);
+    expect(malformedProject.ok).toBe(false);
+    expect(malformedProject.issues).toContainEqual(expect.objectContaining({ code: 'INIT_PROJECT_CONFIG_INVALID', severity: 'error' }));
+    const malformedProjectMutation = createDocsRegisterReport(root, { documentPath: 'docs/blocked-malformed-project.md' });
+    expect(malformedProjectMutation).toMatchObject({ ok: false, action: 'blocked', writes: [] });
   });
 
   it('keeps retired global-state compatibility paths unregistered and the repository projection aligned', () => {

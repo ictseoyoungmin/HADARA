@@ -15,7 +15,7 @@ This capsule prepares a releasable `0.5.0-rc.3` source state and verifies all re
 | Source | `package.json`, lockfile, README, release readiness, and release note metadata target `0.5.0-rc.3`. | Current committed source and capsule evidence |
 | Artifact | A clean source checkout produces tarball, checksum, and manifest. | Reduced report plus operator-retained exact files |
 | Provenance | Package smoke must use `--from <exact-tarball>` and its SHA-256 must equal the release artifact tarball hash. | Public package-smoke and release-artifact evidence |
-| Consumer | Disposable clean-checkout smoke runs install, build, full check, doctor, task status, and strict gate. | Public clean-checkout evidence |
+| Consumer | Disposable clean-checkout smoke runs install, build, full check, doctor, and task status. Strict release gate runs separately after clean-checkout evidence is attached. | Public clean-checkout evidence plus separate strict-gate report |
 | Readiness | Strict release gate, release dry-run, and publish dry-run pass without mutation. | Read-only reports |
 
 ## Artifact Retention
