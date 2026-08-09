@@ -104,6 +104,7 @@ Current package metadata preparation mode:
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
 - Published release: `0.5.0-rc.2` remains public on npm `next` and GitHub as a prerelease.
 - Current source version: `0.5.0-rc.3`.
+- Current version is `0.5.0-rc.3` for the active RC3 source candidate; the published RC2 package remains immutable on npm `next`.
 - Current release target: RC3 source/readiness preparation; no RC3 publication has occurred.
 - Current prerelease npm status: `next=0.5.0-rc.2`; stable `latest=0.4.6` remains unchanged.
 - Current prerelease GitHub status: `v0.5.0-rc.2` is public with `isPrerelease=true`.

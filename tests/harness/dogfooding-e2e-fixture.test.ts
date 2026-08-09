@@ -128,7 +128,7 @@ describe('Dogfooding E2E fixture', () => {
 
     const taskReport = runBuiltCliJson(root, executedCommands, ['task', 'status', '--task', task.id, '--json']);
     expect(taskReport).toMatchObject({
-      schemaVersion: 'hadara.task.status.summary.v1',
+      schemaVersion: 'hadara.task.status.v2',
       command: 'task.status',
       ok: true,
       mode: 'selected-task',
@@ -189,13 +189,26 @@ describe('Dogfooding E2E fixture', () => {
     markAcceptanceDone(task.dir);
     writeTaskHandoff(task.dir, fixture);
 
-    const validationReport = runBuiltCliJson(root, executedCommands, ['harness', 'validate', '--task', task.id, '--level', 'done', '--json']);
+    const validationReport = runBuiltCliJson(root, executedCommands, [
+      'validation',
+      'run',
+      '--task',
+      task.id,
+      '--check',
+      'Dogfooding-fixture-validation',
+      '--direct-result',
+      'passed',
+      '--direct-summary',
+      'Dogfooding-fixture-validation-passed',
+      '--json'
+    ]);
     expect(validationReport).toMatchObject({
-      schemaVersion: 'hadara.task.validation.v1',
-      command: 'task.validation',
+      schemaVersion: 'hadara.validation.run.v2',
+      command: 'validation.run',
       ok: true,
-      level: 'done',
-      issues: []
+      taskId: task.id,
+      check: 'Dogfooding-fixture-validation',
+      status: 'Passed'
     });
 
     expect(executedCommands).toEqual([
@@ -204,7 +217,7 @@ describe('Dogfooding E2E fixture', () => {
       ...fixture.policyChecks.map((check) => `policy preflight-shell ${check.command} --mode ${check.mode} --json`),
       `evidence add-command --task ${task.id} --summary ${fixture.evidence.summary} --result ${fixture.evidence.result} --json`,
       `evidence list --task ${task.id} --json`,
-      `task validation --task ${task.id} --level done --json`
+      `validation run --task ${task.id} --check Dogfooding-fixture-validation --direct-result passed --direct-summary Dogfooding-fixture-validation-passed --json`
     ]);
     expect(executedCommands.some((command) => /^(run|mcp|release|dashboard)\b/.test(command))).toBe(false);
   });
