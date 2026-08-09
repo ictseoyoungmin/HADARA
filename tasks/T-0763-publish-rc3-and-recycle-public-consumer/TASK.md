@@ -20,6 +20,14 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 |---|---|
 | Prepare the final RC3 artifact and all pre-publish proofs so the operator can publish one exact tarball to npm `next`, attach the same files to the GitHub prerelease, verify public metadata, and recycle a fresh public consumer through a closed-valid lifecycle. | This session stops before `prepare-publish-env.sh`, npm/GitHub mutation, public registry install, and operator-controlled recycle execution. |
 
+## Release Identity
+
+| Field | Value |
+|---|---|
+| Package | `hadara` |
+| Version | `0.5.0-rc.3` |
+| npm tag | `next` |
+
 ## Scope
 
 | Boundary | Items |
