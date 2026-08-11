@@ -15,6 +15,8 @@ GITHUB_TOKEN_ENV=""
 APPROVAL_ACTOR="${HADARA_RELEASE_APPROVAL_ACTOR:-local-operator}"
 APPROVAL_REASON="${HADARA_RELEASE_APPROVAL_REASON:-Manual approval-gated npm publish for current package version}"
 GITHUB_MUTATION_PERFORMED="false"
+DIST_TAGS_BEFORE_JSON="{}"
+DIST_TAGS_AFTER_JSON="{}"
 
 usage() {
 cat <<'EOF'
@@ -358,6 +360,24 @@ echo "Run gh auth login first, set GH_TOKEN for gh, or pass --github-token-env <
 exit 1
 }
 
+read_npm_dist_tags() {
+local output
+output="$(npm view "${PACKAGE_NAME}" dist-tags --json --registry="${REGISTRY}" 2>/dev/null || true)"
+if node - "${output}" <<'NODE' >/dev/null 2>&1
+try {
+  const parsed = JSON.parse(process.argv[2] || '{}');
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) process.exit(1);
+} catch {
+  process.exit(1);
+}
+NODE
+then
+printf '%s\n' "${output}"
+else
+printf '{}\n'
+fi
+}
+
 write_operator_publication_report() {
 local report_path="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
 mkdir -p "$(dirname "${report_path}")"
@@ -367,6 +387,8 @@ OP_VERSION="${VERSION}" \
 OP_PACKAGE_NAME="${PACKAGE_NAME}" \
 OP_REGISTRY="${REGISTRY}" \
 OP_NPM_TAG="${NPM_TAG}" \
+OP_DIST_TAGS_BEFORE="${DIST_TAGS_BEFORE_JSON}" \
+OP_DIST_TAGS_AFTER="${DIST_TAGS_AFTER_JSON}" \
 OP_NPM_OBSERVED="${PUBLISHED_VERSION:-}" \
 OP_GITHUB_MUTATION="${GITHUB_MUTATION_PERFORMED}" \
 OP_GITHUB_DRAFT="${CREATE_GITHUB_DRAFT}" \
@@ -388,6 +410,17 @@ const asset = (filePath, uploaded) => ({
   uploaded
 });
 const githubMutation = process.env.OP_GITHUB_MUTATION === 'true';
+const parseTags = (value) => {
+  try {
+    const parsed = JSON.parse(value || '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+const distTagsBefore = parseTags(process.env.OP_DIST_TAGS_BEFORE);
+const distTagsAfter = parseTags(process.env.OP_DIST_TAGS_AFTER);
+const prerelease = /-rc\.[0-9]+$/.test(process.env.OP_VERSION);
 const report = {
   schemaVersion: 'hadara.releaseOperatorPublication.v1',
   generatedAt: new Date().toISOString(),
@@ -397,12 +430,14 @@ const report = {
     registry: process.env.OP_REGISTRY,
     distTag: process.env.OP_NPM_TAG,
     npmMutationPerformed: true,
-    observedVersion: process.env.OP_NPM_OBSERVED
+    observedVersion: process.env.OP_NPM_OBSERVED,
+    distTagsBefore,
+    distTagsAfter
   },
   github: {
     mutationPerformed: githubMutation,
     draftRequested: process.env.OP_GITHUB_DRAFT === 'true',
-    prerelease: /-rc\.[0-9]+$/.test(process.env.OP_VERSION),
+    prerelease,
     assets: [
       asset(process.env.OP_TARBALL, githubMutation),
       asset(process.env.OP_CHECKSUM_FILE, githubMutation),
@@ -417,12 +452,12 @@ const report = {
   },
   mutationBoundary: {
     dockerMutationPerformed: false,
-    stableLatestMutationPerformed: false,
+    stableLatestMutationPerformed: process.env.OP_NPM_TAG === 'latest' && distTagsAfter.latest === process.env.OP_VERSION,
     substituteArtifactUsed: false
   },
   commands: {
     npmPublish: ['npm', 'publish', path.basename(process.env.OP_TARBALL), '--tag', process.env.OP_NPM_TAG],
-    githubRelease: githubMutation ? ['gh', 'release', 'create', `v${process.env.OP_VERSION}`, '--draft', '--prerelease'] : null
+    githubRelease: githubMutation ? ['gh', 'release', 'create', `v${process.env.OP_VERSION}`, '--draft', ...(prerelease ? ['--prerelease'] : [])] : null
   }
 };
 fs.writeFileSync(process.env.OP_REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
@@ -620,6 +655,7 @@ echo "Publish cancelled."
 exit 1
 fi
 
+DIST_TAGS_BEFORE_JSON="$(read_npm_dist_tags)"
 npm publish "${NPM_TARBALL}" --registry="${REGISTRY}" --tag="${NPM_TAG}"
 
 echo
@@ -648,6 +684,20 @@ exit 1
 fi
 
 echo "npm view verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION}"
+DIST_TAGS_AFTER_JSON="$(read_npm_dist_tags)"
+if ! node - "${DIST_TAGS_AFTER_JSON}" "${NPM_TAG}" "${VERSION}" <<'NODE'
+const tags = JSON.parse(process.argv[2] || '{}');
+const expectedTag = process.argv[3];
+const expectedVersion = process.argv[4];
+if (tags[expectedTag] !== expectedVersion) {
+  console.error(`npm dist-tag ${expectedTag} did not resolve to ${expectedVersion}; observed ${tags[expectedTag] ?? '<missing>'}`);
+  process.exit(1);
+}
+NODE
+then
+echo "npm dist-tag verification failed; refusing to write an operator publication report."
+exit 1
+fi
 
 if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
 write_operator_publication_report
@@ -656,7 +706,7 @@ run_hadara_cli evidence add-command \
   --summary "Operator publication report recorded npm ${PACKAGE_NAME}@${VERSION}, mutation boundaries, and exact release asset digests." \
   --result passed \
   --category release \
-  --artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
+  --artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
   --idempotency-key "operator-publication:${TASK_ID}:${VERSION}" \
   --json
 echo
@@ -753,6 +803,6 @@ run_hadara_cli evidence add-command \
   --summary "Operator publication report recorded npm/GitHub mutation boundaries and exact ${TAG} release asset digests." \
   --result passed \
   --category release \
-  --artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
+  --artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
   --idempotency-key "operator-publication:${TASK_ID}:${VERSION}" \
   --json

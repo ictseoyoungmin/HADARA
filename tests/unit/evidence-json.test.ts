@@ -209,6 +209,79 @@ describe('CLI evidence JSON reports', () => {
     }
   });
 
+  it('binds task-capsule-relative reports with byte metadata and fails lint after mutation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Bind task-relative report');
+    const sourcePath = path.join(task.dir, 'artifacts', 'operator-publication', 'report.json');
+    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+    fs.writeFileSync(sourcePath, '{"result":"passed"}\n', 'utf8');
+    const artifactFile = path.relative(root, sourcePath).split(path.sep).join('/');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => output.push(String(value));
+
+    try {
+      expect(handleEvidenceCommand({
+        args: ['evidence', 'add-command', '--task', task.id, '--summary', 'Task-relative report attached', '--result', 'passed', '--category', 'release', '--artifact-file', artifactFile, '--json'],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    const artifact = report.evidence.artifacts[0];
+    expect(artifact).toMatchObject({
+      path: expect.stringMatching(/^artifacts\/command-log\//),
+      sha256: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      byteLength: Buffer.byteLength('{"result":"passed"}\n', 'utf8')
+    });
+    expect(report.evidence.fingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
+
+    const canonicalPath = path.join(task.dir, artifact.path);
+    fs.writeFileSync(canonicalPath, '{"result":"tampered"}\n', 'utf8');
+    const lint = createEvidenceLintReport(root, task.id);
+    expect(lint.ok).toBe(false);
+    expect(lint.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'EVIDENCE_ARTIFACT_HASH_MISMATCH', severity: 'error' })
+    ]));
+
+    fs.rmSync(canonicalPath);
+    const missing = createEvidenceLintReport(root, task.id);
+    expect(missing.ok).toBe(false);
+    expect(missing.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'EVIDENCE_ARTIFACT_MISSING', severity: 'error' })
+    ]));
+  });
+
+  it('fails same-key retries when the incoming report bytes differ', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Reject changed idempotent report');
+    const sourcePath = path.join(root, 'idempotent-report.json');
+    fs.writeFileSync(sourcePath, '{"version":1}\n', 'utf8');
+    const args = ['evidence', 'add-command', '--task', task.id, '--summary', 'Idempotent report', '--result', 'passed', '--category', 'validation', '--artifact-file', 'idempotent-report.json', '--idempotency-key', 'same-key:different-bytes', '--json'];
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => output.push(String(value));
+
+    try {
+      expect(handleEvidenceCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
+      output.length = 0;
+      fs.writeFileSync(sourcePath, '{"version":2}\n', 'utf8');
+      expect(handleEvidenceCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const retry = JSON.parse(output.join('\n'));
+    expect(retry.ok).toBe(false);
+    expect(retry.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'EVIDENCE_IDEMPOTENCY_ARTIFACT_CONFLICT', severity: 'error' })
+    ]));
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split('\n')).toHaveLength(1);
+  });
+
   it('reports append lock contention without persisting diagnostics into evidence records', async () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Append lock diagnostics');

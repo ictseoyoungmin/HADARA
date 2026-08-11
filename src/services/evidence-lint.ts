@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { countEvidenceProjectionRows } from '../evidence/evidence';
 import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
@@ -194,7 +195,7 @@ function lintSchemaSpecificEvidenceRecord(
     if (typeof v1.result !== 'string' || !EVIDENCE_RESULTS.has(v1.result)) {
       issues.push({ severity: 'error', code: 'EVIDENCE_INDEX_RESULT_INVALID', message: `evidence.jsonl line ${lineNumber} has unsupported evidence result.`, path: relativePath, line: lineNumber, expected: Array.from(EVIDENCE_RESULTS).join('|'), actual: String(v1.result ?? 'missing') });
     }
-    if (typeof v1.evidencePath === 'string' && v1.visibility === 'public') lintPublicArtifact(indexPath, v1.evidencePath, relativePath, lineNumber, issues);
+    if (typeof v1.evidencePath === 'string' && v1.visibility === 'public') lintLegacyPublicArtifact(indexPath, v1.evidencePath, relativePath, lineNumber, issues);
     return;
   }
   if (record.schemaVersion === 'hadara.evidence.v2') {
@@ -217,7 +218,7 @@ function lintSchemaSpecificEvidenceRecord(
     if (!Array.isArray(v2.artifacts) || !v2.artifacts.every(isEvidenceV2ArtifactRef)) {
       issues.push({ severity: 'error', code: 'EVIDENCE_INDEX_ARTIFACTS_INVALID', message: `evidence.jsonl line ${lineNumber} has invalid evidence artifacts.`, path: relativePath, line: lineNumber });
     } else if (v2.visibility === 'public') {
-      for (const artifact of v2.artifacts) lintPublicArtifact(indexPath, artifact.path, relativePath, lineNumber, issues);
+      for (const artifact of v2.artifacts) lintPublicArtifact(indexPath, artifact, relativePath, lineNumber, issues);
     }
     if (!Array.isArray(v2.tags) || !v2.tags.every((tag) => typeof tag === 'string')) {
       issues.push({ severity: 'error', code: 'EVIDENCE_INDEX_TAGS_INVALID', message: `evidence.jsonl line ${lineNumber} has invalid evidence tags.`, path: relativePath, line: lineNumber });
@@ -372,10 +373,38 @@ function toPortablePath(value: string): string {
   return value.split(path.sep).join('/');
 }
 
-function lintPublicArtifact(indexPath: string, evidencePath: string, relativePath: string, lineNumber: number, issues: EvidenceLintIssue[]): void {
+function lintLegacyPublicArtifact(indexPath: string, evidencePath: string, relativePath: string, lineNumber: number, issues: EvidenceLintIssue[]): void {
   const artifactPath = path.resolve(path.dirname(indexPath), evidencePath);
   if (!artifactPath.startsWith(path.resolve(path.dirname(indexPath)) + path.sep) || !fs.existsSync(artifactPath)) {
-    issues.push({ severity: 'warning', code: 'EVIDENCE_ARTIFACT_MISSING', message: `Public evidence artifact for line ${lineNumber} does not exist.`, path: relativePath, line: lineNumber, expected: evidencePath, actual: 'missing' });
+    issues.push({ severity: 'warning', code: 'EVIDENCE_ARTIFACT_MISSING', message: `Legacy public evidence artifact for line ${lineNumber} does not exist.`, path: relativePath, line: lineNumber, expected: evidencePath, actual: 'missing' });
+  }
+}
+
+function lintPublicArtifact(
+  indexPath: string,
+  artifact: EvidenceV2IndexRecord['artifacts'][number],
+  relativePath: string,
+  lineNumber: number,
+  issues: EvidenceLintIssue[]
+): void {
+  const artifactPath = path.resolve(path.dirname(indexPath), artifact.path);
+  const taskRoot = path.resolve(path.dirname(indexPath));
+  if (!artifactPath.startsWith(taskRoot + path.sep)) {
+    issues.push({ severity: 'error', code: 'EVIDENCE_ARTIFACT_PATH_INVALID', message: `Public evidence artifact for line ${lineNumber} escapes the Task Capsule.`, path: relativePath, line: lineNumber, expected: 'task-relative artifact path', actual: artifact.path });
+    return;
+  }
+  if (!fs.existsSync(artifactPath)) {
+    issues.push({ severity: 'error', code: 'EVIDENCE_ARTIFACT_MISSING', message: `Public evidence artifact for line ${lineNumber} does not exist.`, path: relativePath, line: lineNumber, expected: artifact.path, actual: 'missing' });
+    return;
+  }
+  if (artifact.sha256 === undefined && artifact.byteLength === undefined) return;
+  const bytes = fs.readFileSync(artifactPath);
+  const actualHash = `sha256:${crypto.createHash('sha256').update(bytes).digest('hex')}`;
+  if (artifact.sha256 !== actualHash) {
+    issues.push({ severity: 'error', code: 'EVIDENCE_ARTIFACT_HASH_MISMATCH', message: `Public evidence artifact for line ${lineNumber} has changed bytes.`, path: relativePath, line: lineNumber, expected: artifact.sha256 ?? 'missing', actual: actualHash });
+  }
+  if (artifact.byteLength !== bytes.byteLength) {
+    issues.push({ severity: 'error', code: 'EVIDENCE_ARTIFACT_BYTE_LENGTH_MISMATCH', message: `Public evidence artifact for line ${lineNumber} has changed byte length.`, path: relativePath, line: lineNumber, expected: String(artifact.byteLength ?? 'missing'), actual: String(bytes.byteLength) });
   }
 }
 
@@ -402,7 +431,9 @@ function isEvidenceOutcome(value: unknown): boolean {
 function isEvidenceV2ArtifactRef(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false;
   const artifact = value as Partial<EvidenceV2IndexRecord['artifacts'][number]>;
-  return typeof artifact.path === 'string' && artifact.visibility === 'public' && typeof artifact.artifactType === 'string' && EVIDENCE_KINDS.has(artifact.artifactType);
+  const metadataAbsent = artifact.sha256 === undefined && artifact.byteLength === undefined;
+  const metadataValid = typeof artifact.sha256 === 'string' && /^sha256:[a-f0-9]{64}$/.test(artifact.sha256) && typeof artifact.byteLength === 'number' && Number.isInteger(artifact.byteLength) && artifact.byteLength >= 0;
+  return typeof artifact.path === 'string' && artifact.visibility === 'public' && typeof artifact.artifactType === 'string' && EVIDENCE_KINDS.has(artifact.artifactType) && (metadataAbsent || metadataValid);
 }
 
 function isEvidenceV2Legacy(value: unknown): value is EvidenceV2IndexRecord['legacy'] {

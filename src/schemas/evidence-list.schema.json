@@ -81,7 +81,9 @@
             "properties": {
               "path": { "type": "string", "minLength": 1 },
               "visibility": { "const": "public" },
-              "artifactType": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] }
+              "artifactType": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
+              "sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+              "byteLength": { "type": "integer", "minimum": 0 }
             }
           }
         },

@@ -16,6 +16,8 @@ export interface EvidenceArtifactRef {
   path: string;
   visibility: EvidenceVisibility;
   artifactType: EvidenceArtifactType;
+  sha256?: string;
+  byteLength?: number;
   exists?: boolean;
   schemaVersion?: string;
 }
@@ -215,7 +217,9 @@ function normalizeV2ArtifactRefs(record: EvidenceV2IndexRecord, taskDir: string 
       const normalized: EvidenceArtifactRef = {
         path: artifact.path,
         visibility: 'public',
-        artifactType: normalizeArtifactType(artifact.artifactType)
+        artifactType: normalizeArtifactType(artifact.artifactType),
+        ...(artifact.sha256 ? { sha256: artifact.sha256 } : {}),
+        ...(artifact.byteLength !== undefined ? { byteLength: artifact.byteLength } : {})
       };
       if (taskDir) {
         const absolutePath = path.resolve(taskDir, artifact.path);

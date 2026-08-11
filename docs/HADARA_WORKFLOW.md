@@ -317,7 +317,7 @@ hadara validation run --task T-XXXX --check "Focused tests" --direct-result pass
 
 For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.ts`. Do not use `npm run test:unit -- tests/unit/<file>.test.ts`; `test:unit` already supplies the broad unit suite path.
 
-Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `--artifact-file` when a sanitized UTF-8 command or release report is part of the claim; the shared writer policy-checks and binds that report into canonical evidence `artifacts[]`. Use `evidence list` to find durable evidence ids for docs and resolution markers.
+Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `--artifact-file` when a sanitized UTF-8 command or release report is part of the claim; the shared writer policy-checks it, records exact `sha256`/`byteLength`, includes those bytes in the evidence fingerprint, and binds the report into canonical evidence `artifacts[]`. Evidence lint fails on missing or changed bound bytes, while historical refs without byte metadata remain compatible. Same-key retries must present the same artifact bytes. Use `evidence list` to find durable evidence ids for docs and resolution markers.
 
 Do not hand-edit `evidence.jsonl`.
 Evidence appends are task-scoped and internally serialized by a local lock, so independent `validation run` or `evidence add-command` calls may run in parallel. JSON evidence responses include `evidence.appendLock` so lock contention and wait time are visible when it happens.

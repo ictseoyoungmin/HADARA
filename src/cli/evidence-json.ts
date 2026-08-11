@@ -3,6 +3,7 @@ import {
   appendEvidenceWithResult,
   EvidenceAppendLockError,
   EvidenceArtifactPolicyError,
+  EvidenceIdempotencyArtifactConflictError,
   EvidenceRecord,
   EvidenceResultOutcomeMismatchError,
   EvidenceTaskDirectoryError,
@@ -79,6 +80,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     if (
       error instanceof WorkspaceFileError ||
       error instanceof EvidenceArtifactPolicyError ||
+      error instanceof EvidenceIdempotencyArtifactConflictError ||
       error instanceof EvidenceAppendLockError ||
       error instanceof EvidenceResultOutcomeMismatchError ||
       error instanceof EvidenceTaskDirectoryError

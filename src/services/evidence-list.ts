@@ -275,7 +275,14 @@ function isEvidenceVisibility(value: unknown): value is EvidenceIndexRecord['vis
 function isEvidenceV2ArtifactRef(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false;
   const artifact = value as Partial<EvidenceV2IndexRecord['artifacts'][number]>;
-  return typeof artifact.path === 'string' && artifact.visibility === 'public' && isEvidenceKind(artifact.artifactType);
+  const metadataAbsent = artifact.sha256 === undefined && artifact.byteLength === undefined;
+  const metadataValid =
+    typeof artifact.sha256 === 'string' &&
+    /^sha256:[a-f0-9]{64}$/.test(artifact.sha256) &&
+    typeof artifact.byteLength === 'number' &&
+    Number.isInteger(artifact.byteLength) &&
+    artifact.byteLength >= 0;
+  return typeof artifact.path === 'string' && artifact.visibility === 'public' && isEvidenceKind(artifact.artifactType) && (metadataAbsent || metadataValid);
 }
 
 function normalizeLimit(value: number | undefined): number {

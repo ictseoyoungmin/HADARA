@@ -54,6 +54,18 @@ export interface EvidenceV2ArtifactRef {
   path: string;
   visibility: 'public';
   artifactType: EvidenceRecord['kind'];
+  /** Present on artifacts created by the byte-binding writer; omitted on legacy refs. */
+  sha256?: string;
+  /** Present on artifacts created by the byte-binding writer; omitted on legacy refs. */
+  byteLength?: number;
+}
+
+export interface EvidenceArtifactBinding {
+  path: string;
+  visibility: 'public';
+  artifactType: EvidenceRecord['kind'];
+  sha256: string;
+  byteLength: number;
 }
 
 export interface EvidenceV2IndexRecord {
@@ -146,6 +158,7 @@ export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' 
 export type EvidenceAppendErrorCode =
   | 'EVIDENCE_APPEND_LOCK_TIMEOUT'
   | 'EVIDENCE_RESULT_OUTCOME_MISMATCH'
+  | 'EVIDENCE_IDEMPOTENCY_ARTIFACT_CONFLICT'
   | 'TASK_NOT_FOUND'
   | 'TASK_CAPSULE_AMBIGUOUS';
 
@@ -174,6 +187,15 @@ export class EvidenceArtifactPolicyError extends Error {
   ) {
     super(message);
     this.name = 'EvidenceArtifactPolicyError';
+  }
+}
+
+export class EvidenceIdempotencyArtifactConflictError extends Error {
+  public readonly code: EvidenceAppendErrorCode = 'EVIDENCE_IDEMPOTENCY_ARTIFACT_CONFLICT';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'EvidenceIdempotencyArtifactConflictError';
   }
 }
 
@@ -402,7 +424,7 @@ function appendEvidenceRecord(input: {
   time: string;
   record: Omit<EvidenceRecord, 'time'>;
   visibility: NonNullable<EvidenceRecord['visibility']>;
-  createAttachedPath: () => string | undefined;
+  createAttachedPath: () => EvidenceArtifactBinding | undefined;
 }): EvidenceAppendResult {
   const resultOutcomeIssue = validateEvidenceResultOutcomeCompatibility({
     result: input.record.result,
@@ -420,6 +442,19 @@ function appendEvidenceRecord(input: {
     if (idempotencyKey) {
       const existing = readEvidenceIndex(input.taskDir).find((record) => persistedEvidenceIdempotencyKey(record) === idempotencyKey);
       if (existing) {
+        if (input.record.path && input.visibility === 'public') {
+          const incoming = readPublicEvidenceSource(input.projectRoot, input.record.path);
+          const existingArtifact = existing.schemaVersion === 'hadara.evidence.v2' ? existing.artifacts[0] : undefined;
+          if (
+            !existingArtifact ||
+            existingArtifact.sha256 !== incoming.sha256 ||
+            existingArtifact.byteLength !== incoming.byteLength
+          ) {
+            throw new EvidenceIdempotencyArtifactConflictError(
+              `Evidence idempotency key ${idempotencyKey} already exists with different or legacy artifact bytes; use a new key or the original artifact.`
+            );
+          }
+        }
         return {
           markdownPath,
           evidence: existing,
@@ -430,7 +465,7 @@ function appendEvidenceRecord(input: {
       }
     }
 
-    const attachedPath = input.createAttachedPath();
+    const attachedArtifact = input.createAttachedPath();
     const evidence = createEvidenceV2Record({
       time: input.time,
       taskId: input.record.taskId,
@@ -440,7 +475,7 @@ function appendEvidenceRecord(input: {
       category: input.record.category,
       outcome: input.record.outcome,
       visibility: input.visibility,
-      attachedPath,
+      attachedArtifact,
       tags: input.record.tags,
       idempotencyKey: input.record.idempotencyKey,
       actor: input.record.actor,
@@ -620,7 +655,7 @@ function createEvidenceV2Record(input: {
   category?: EvidenceCategory;
   outcome?: EvidenceOutcome;
   visibility: NonNullable<EvidenceRecord['visibility']>;
-  attachedPath?: string;
+  attachedArtifact?: EvidenceArtifactBinding;
   tags?: string[];
   idempotencyKey?: string;
   actor?: HadaraActorContext;
@@ -629,7 +664,7 @@ function createEvidenceV2Record(input: {
   const legacy = {
     kind: input.kind,
     result: input.result,
-    ...(input.visibility === 'public' && input.attachedPath ? { evidencePath: input.attachedPath } : {})
+    ...(input.visibility === 'public' && input.attachedArtifact ? { evidencePath: input.attachedArtifact.path } : {})
   };
   const tags = Array.from(new Set([...extractEvidenceTags(input.summary), ...(input.tags ?? [])]));
   const recordWithoutIdentity = {
@@ -641,12 +676,10 @@ function createEvidenceV2Record(input: {
     visibility: input.visibility,
     summary: input.summary,
     artifacts:
-      input.visibility === 'public' && input.attachedPath
+      input.visibility === 'public' && input.attachedArtifact
         ? [
             {
-              path: input.attachedPath,
-              visibility: 'public' as const,
-              artifactType: input.kind
+              ...input.attachedArtifact,
             }
           ]
         : [],
@@ -730,25 +763,16 @@ function copyPublicEvidenceArtifact(input: {
   sourcePath?: string;
   time: string;
   visibility: NonNullable<EvidenceRecord['visibility']>;
-}): string | undefined {
+}): EvidenceArtifactBinding | undefined {
   if (!input.sourcePath || input.visibility === 'private') return undefined;
 
-  const sourceFile = resolveProjectFile(input.projectRoot, input.sourcePath);
-  const artifactText = readPublicTextArtifact(sourceFile.absolutePath);
-  const policy = createPublicEvidenceArtifactPolicyReport(artifactText);
-  if (policy.blocking) {
-    throw new EvidenceArtifactPolicyError(
-      'PUBLIC_ARTIFACT_SECRET_DETECTED',
-      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.',
-      policy.redaction
-    );
-  }
+  const source = readPublicEvidenceSource(input.projectRoot, input.sourcePath);
 
   const artifactsDir = path.join(input.taskDir, 'artifacts', input.kind);
   ensureDir(artifactsDir);
-  const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(sourceFile.absolutePath))}`);
-  fs.writeFileSync(targetPath, artifactText, 'utf8');
-  return toPortablePath(path.relative(input.taskDir, targetPath));
+  const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(source.absolutePath))}`);
+  fs.writeFileSync(targetPath, source.bytes);
+  return createArtifactBinding(input.taskDir, targetPath, input.kind, source.bytes);
 }
 
 function writePublicEvidenceTextArtifact(input: {
@@ -759,7 +783,7 @@ function writePublicEvidenceTextArtifact(input: {
   content: string;
   artifactDirName?: string;
   policyOptions?: PublicEvidenceArtifactPolicyOptions;
-}): string {
+}): EvidenceArtifactBinding {
   const policy = createPublicEvidenceArtifactPolicyReport(input.content, input.policyOptions);
   if (policy.blocking) {
     throw new EvidenceArtifactPolicyError(
@@ -772,19 +796,50 @@ function writePublicEvidenceTextArtifact(input: {
   const artifactsDir = path.join(input.taskDir, 'artifacts', safeFilePart(input.artifactDirName ?? input.kind));
   ensureDir(artifactsDir);
   const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(input.fileName)}`);
-  fs.writeFileSync(targetPath, input.content, 'utf8');
-  return toPortablePath(path.relative(input.taskDir, targetPath));
+  const bytes = Buffer.from(input.content, 'utf8');
+  fs.writeFileSync(targetPath, bytes);
+  return createArtifactBinding(input.taskDir, targetPath, input.kind, bytes);
 }
 
-function readPublicTextArtifact(filePath: string): string {
-  const content = fs.readFileSync(filePath);
-  if (!isTextBuffer(content)) {
+function readPublicEvidenceSource(projectRoot: string, sourcePath: string): { absolutePath: string; bytes: Buffer; text: string; sha256: string; byteLength: number } {
+  const sourceFile = resolveProjectFile(projectRoot, sourcePath);
+  const bytes = fs.readFileSync(sourceFile.absolutePath);
+  if (!isTextBuffer(bytes)) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_BINARY_REJECTED',
       'Public evidence artifacts must be UTF-8 text; collect binary evidence as private evidence until binary policy is implemented.'
     );
   }
-  return content.toString('utf8');
+  const text = bytes.toString('utf8');
+  const policy = createPublicEvidenceArtifactPolicyReport(text);
+  if (policy.blocking) {
+    throw new EvidenceArtifactPolicyError(
+      'PUBLIC_ARTIFACT_SECRET_DETECTED',
+      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.',
+      policy.redaction
+    );
+  }
+  return {
+    absolutePath: sourceFile.absolutePath,
+    bytes,
+    text,
+    sha256: hashBuffer(bytes),
+    byteLength: bytes.byteLength
+  };
+}
+
+function createArtifactBinding(taskDir: string, targetPath: string, kind: EvidenceRecord['kind'], bytes: Buffer): EvidenceArtifactBinding {
+  return {
+    path: toPortablePath(path.relative(taskDir, targetPath)),
+    visibility: 'public',
+    artifactType: kind,
+    sha256: hashBuffer(bytes),
+    byteLength: bytes.byteLength
+  };
+}
+
+function hashBuffer(content: Buffer): string {
+  return `sha256:${crypto.createHash('sha256').update(content).digest('hex')}`;
 }
 
 function isTextBuffer(content: Buffer): boolean {

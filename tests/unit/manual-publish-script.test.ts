@@ -59,12 +59,16 @@ describe('manual publish release script', () => {
 
     expect(script).toContain('write_operator_publication_report()');
     expect(script).toContain("schemaVersion: 'hadara.releaseOperatorPublication.v1'");
-    expect(script).toContain('--artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
+    expect(script).toContain('--artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
+    expect(script).toContain('read_npm_dist_tags()');
+    expect(script).toContain('distTagsBefore');
+    expect(script).toContain('distTagsAfter');
+    expect(script).toContain("stableLatestMutationPerformed: process.env.OP_NPM_TAG === 'latest' && distTagsAfter.latest === process.env.OP_VERSION");
     expect(script).toContain('dockerMutationPerformed: false');
-    expect(script).toContain('stableLatestMutationPerformed: false');
     expect(script).toContain('substituteArtifactUsed: false');
     expect(script).toContain('sha256:${hashFile(filePath)}');
     expect(script).toContain('--idempotency-key "operator-publication:${TASK_ID}:${VERSION}"');
+    expect(script).not.toContain('--artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
   });
 
   it('refreshes and verifies dist immediately before building release artifacts', () => {

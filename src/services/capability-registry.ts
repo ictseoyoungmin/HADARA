@@ -640,7 +640,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Bind a reduced command report', 'hadara evidence add-command --task T-0001 --summary "Lifecycle passed" --result passed --category validation --artifact-file artifacts/lifecycle/report.json --json', 'When a sanitized UTF-8 command report must be retained and bound to the evidence record.')
     ],
     related: ['evidence.list', 'evidence.lint', 'task.close'],
-    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata, optional artifact-file binding, and appendLock diagnostics for task-scoped append-lock waits. Public artifact files are copied through the shared redaction and UTF-8 policy before artifacts[] is persisted.',
+    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata, exact sha256/byteLength artifact binding, and appendLock diagnostics for task-scoped append-lock waits. Public artifact files are copied through the shared redaction and UTF-8 policy before artifacts[] is persisted; lint verifies bound bytes and same-key retries fail on artifact conflicts.',
     conflictsWith: []
   },
   {

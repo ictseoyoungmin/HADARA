@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "hadara.t0776.validation-report.v1",
+  "taskId": "T-0776",
+  "scope": {
+    "externalReleaseMutation": false,
+    "packagePublication": false,
+    "githubMutation": false,
+    "dockerImageMutation": false
+  },
+  "checks": [
+    {
+      "command": "npm run test:focused -- tests/unit/evidence-json.test.ts tests/unit/manual-publish-script.test.ts tests/unit/schema-runtime.test.ts tests/unit/task-workflow-docs.test.ts",
+      "result": "passed",
+      "tests": 60
+    },
+    {
+      "command": "npm run typecheck:src && npm run typecheck:tools",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:all",
+      "result": "passed",
+      "publicTests": 1046,
+      "hadaraDevTests": 138
+    },
+    {
+      "command": "npm run dev:docker-check",
+      "result": "passed",
+      "publicTests": 1054,
+      "hadaraDevTests": 139,
+      "build": "passed",
+      "typecheckTools": "passed"
+    }
+  ],
+  "contractCoverage": [
+    "task-capsule-relative artifact attach",
+    "sha256 and byteLength persisted in artifacts[]",
+    "artifact bytes included in evidence fingerprint",
+    "missing or changed bound artifact fails lint",
+    "same-key changed artifact fails closed",
+    "observed npm dist-tags and truthful stable/latest mutation report"
+  ]
+}

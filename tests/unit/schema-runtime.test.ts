@@ -23,7 +23,9 @@ describe('runtime schema validation', () => {
         registry: 'https://registry.npmjs.org',
         distTag: 'next',
         npmMutationPerformed: true,
-        observedVersion: '0.5.0-rc.4'
+        observedVersion: '0.5.0-rc.4',
+        distTagsBefore: { latest: '0.4.6', next: '0.5.0-rc.3' },
+        distTagsAfter: { latest: '0.4.6', next: '0.5.0-rc.4' }
       },
       github: {
         mutationPerformed: true,
