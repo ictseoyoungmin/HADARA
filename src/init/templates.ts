@@ -57,7 +57,7 @@ export function createSlotRegistryJson(): string {
   }, null, 2)}\n`;
 }
 
-export function createHadaraWorkflowDoc(profile: InitProfile): string {
+export function createHadaraWorkflowDoc(profile: InitProfile, contextRouterPath = '.hadara/context/HADARA_CONTEXT.md'): string {
   return `# HADARA_WORKFLOW
 
 ## Purpose
@@ -131,7 +131,7 @@ After init, review:
 | Step | Document | Purpose |
 |---|---|---|
 | 1 | \`AGENTS.md\` | Entry rules and required reading. |
-${profile === 'basic' ? '' : '| 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |\n'}| ${profile === 'basic' ? '2' : '3'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
+${profile === 'basic' ? '' : `| 2 | \`${contextRouterPath}\` | Compact read routing. |\n`}| ${profile === 'basic' ? '2' : '3'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
 | ${profile === 'basic' ? '3' : '4'} | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
@@ -364,7 +364,7 @@ Design source documents may live under \`docs/specs/**\` or other registered pat
 
 Do not treat every file under \`docs/specs/**\` as default Required Reading.
 
-Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to \`AGENTS.md\`, \`.hadara/context/HADARA_CONTEXT.md\`, or this workflow document.
+Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to \`AGENTS.md\`, \`${contextRouterPath}\`, or this workflow document.
 
 ## Authoring Model
 
@@ -774,12 +774,13 @@ Serialize same-file prose writes, Task Capsule doc writes, Task Board writes, be
 `;
 }
 
-export function createAgentsDoc(spec: InitProfileSpec): string {
+export function createAgentsDoc(spec: InitProfileSpec, options: { contextRouterPath?: string } = {}): string {
+  const contextRouterPath = options.contextRouterPath ?? '.hadara/context/HADARA_CONTEXT.md';
   const requiredReadingRows = [
     ['`docs/TASK_BOARD.md`', 'Fallback or explicit task-index review', 'Task queue, task status, and capsule paths.'],
     ['`docs/HADARA_WORKFLOW.md`', 'Every session; whenever using HADARA CLI workflow commands', 'Project start, task lifecycle, evidence, context, document timing, repair, and useful CLI guidance.']
   ];
-  if (spec.docs.contextRouter) requiredReadingRows.unshift(['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.']);
+  if (spec.docs.contextRouter) requiredReadingRows.unshift([`\`${contextRouterPath}\``, 'Every session', 'Compact project-local context anchor and read-routing guide.']);
   if (spec.docs.architecture) requiredReadingRows.push(['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
   if (spec.docs.decisions) requiredReadingRows.push(['`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
   if (spec.docs.securityModel) requiredReadingRows.push(['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
@@ -801,7 +802,7 @@ This repository uses the HADARA protocol for scoped, evidenced, resumable AI-ass
 |---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
-\`AGENTS.md\` owns Required Reading.${spec.docs.contextRouter ? ' `.hadara/context/HADARA_CONTEXT.md` is a compact routing anchor that points to task status, Task Board, and workflow documents; it is not a second Required Reading authority.' : ''}
+\`AGENTS.md\` owns Required Reading.${spec.docs.contextRouter ? ` \`${contextRouterPath}\` is a compact routing anchor that points to task status, Task Board, and workflow documents; it is not a second Required Reading authority.` : ''}
 
 Identity fields in Task Capsules are command-owned. Use \`task create\` and \`task close\`; see [\`HADARA_WORKFLOW.md\` — Task Capsule Identity Ownership](HADARA_WORKFLOW.md#task-capsule-identity-ownership).
 
@@ -838,7 +839,7 @@ Identity fields in Task Capsules are command-owned. Use \`task create\` and \`ta
 ## Workflow Reference
 
 Use \`docs/HADARA_WORKFLOW.md\` for project start, task lifecycle, context, evidence, document timing, repair, docs read-map, and useful CLI guidance.
-${spec.docs.contextRouter ? '\n## Project Context\n\nUse `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.\n' : ''}
+${spec.docs.contextRouter ? `\n## Project Context\n\nUse \`${contextRouterPath}\` as the compact project-local context anchor.\n` : ''}
 `;
 }
 

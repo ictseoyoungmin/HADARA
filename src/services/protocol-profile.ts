@@ -58,7 +58,8 @@ const OPTIONAL_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'doc
 export function createProfileConsistencyDiagnostics(projectRoot: string): ProfileDiagnostics {
   const checkedDocs = new Set<string>();
   const issues: ProfileDiagnosticIssue[] = [];
-  const docSet = getProfileDocSet(projectRoot);
+  const standardMinimalDocs = standardMinimalDocsForProject(projectRoot);
+  const docSet = getProfileDocSet(projectRoot, standardMinimalDocs);
   const metadata = readProfileMetadata(projectRoot);
   const declaredProfile = inferDeclaredProfile(metadata);
   const detectedProfile = declaredProfile === 'unknown' ? detectProfileFromDocSet(docSet) : declaredProfile;
@@ -69,10 +70,10 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
     target: targetProfile,
     source: 'metadata-and-docset' as const
   };
-  const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile);
+  const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile, standardMinimalDocs);
   const missingTargetDocs = requiredDocs.filter((relativePath) => !exists(projectRoot, relativePath));
 
-  for (const relativePath of new Set([...CORE_PROJECT_DOCS, ...STANDARD_MINIMAL_DOCS, ...GOVERNED_MINIMAL_DOCS, ...OPTIONAL_PROJECT_DOCS])) {
+  for (const relativePath of new Set([...CORE_PROJECT_DOCS, ...standardMinimalDocs, ...GOVERNED_MINIMAL_DOCS, ...OPTIONAL_PROJECT_DOCS])) {
     checkedDocs.add(relativePath);
   }
 
@@ -102,7 +103,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
   }
 
   if (targetProfile !== 'unknown') {
-    const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile);
+    const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile, standardMinimalDocs);
     const agentsMissing = missingRequiredReadingPaths(projectRoot, 'AGENTS.md', requiredReadingDocs);
     if (agentsMissing.length > 0) {
       issues.push({
@@ -123,7 +124,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
 }
 
 export function createProtocolProfileSummary(projectRoot: string): ProtocolProfileSummary {
-  const docSet = getProfileDocSet(projectRoot);
+  const docSet = getProfileDocSet(projectRoot, standardMinimalDocsForProject(projectRoot));
   const metadata = readProfileMetadata(projectRoot);
   const detected = detectProfileFromDocSet(docSet);
   const declared = inferDeclaredProfile(metadata);
@@ -188,7 +189,7 @@ function buildProfileRemediations(
   return remediations;
 }
 
-function getProfileDocSet(projectRoot: string): {
+function getProfileDocSet(projectRoot: string, standardMinimalDocs: string[] = STANDARD_MINIMAL_DOCS): {
   core: { present: string[]; missing: string[] };
   governedMinimal: { present: string[]; missing: string[] };
   standard: { present: string[]; missing: string[] };
@@ -197,7 +198,7 @@ function getProfileDocSet(projectRoot: string): {
   return {
     core: splitDocPresence(projectRoot, CORE_PROJECT_DOCS),
     governedMinimal: splitDocPresence(projectRoot, GOVERNED_MINIMAL_DOCS),
-    standard: splitDocPresence(projectRoot, STANDARD_MINIMAL_DOCS),
+    standard: splitDocPresence(projectRoot, standardMinimalDocs),
     governed: splitDocPresence(projectRoot, [])
   };
 }
@@ -224,15 +225,21 @@ function highestDocSetProfile(docSet: ReturnType<typeof getProfileDocSet>): Targ
   return 'unknown';
 }
 
-function requiredDocsForProfile(profile: TargetProtocolProfile): string[] {
+function requiredDocsForProfile(profile: TargetProtocolProfile, standardMinimalDocs: string[] = STANDARD_MINIMAL_DOCS): string[] {
   const docs = [...CORE_PROJECT_DOCS];
-  if (profile === 'standard' || profile === 'governed') docs.push(...STANDARD_MINIMAL_DOCS);
+  if (profile === 'standard' || profile === 'governed') docs.push(...standardMinimalDocs);
   if (profile === 'governed') docs.push(...GOVERNED_MINIMAL_DOCS);
   return Array.from(new Set(docs));
 }
 
-function requiredReadingDocsForProfile(profile: TargetProtocolProfile): string[] {
-  return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
+function requiredReadingDocsForProfile(profile: TargetProtocolProfile, standardMinimalDocs: string[] = STANDARD_MINIMAL_DOCS): string[] {
+  return requiredDocsForProfile(profile, standardMinimalDocs).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
+}
+
+function standardMinimalDocsForProject(projectRoot: string): string[] {
+  return fs.existsSync(path.join(projectRoot, '.hadara', 'project.json'))
+    ? ['.hadara/context/READ_MAP.md']
+    : STANDARD_MINIMAL_DOCS;
 }
 
 function readProfileMetadata(projectRoot: string): { scaffold: TargetProtocolProfile | null } {

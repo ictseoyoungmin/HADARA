@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { validateSchema } from '../core/schema';
+import { createHadaraWorkflowDoc } from './templates';
 import type {
   GeneratedScaffoldFile,
   InitArtifactV1,
@@ -268,12 +269,12 @@ export function createInitV1ScaffoldFiles(projectId: string, preset: InitPreset)
   const project = createInitProjectConfig(projectId, preset);
   const registry = createInitDocuments(preset);
   const files: GeneratedScaffoldFile[] = [
-    { path: 'AGENTS.md', content: createAgentsBootstrap() },
+    { path: 'AGENTS.md', content: createInitV1AgentsDoc(preset) },
     { path: '.gitignore', content: '.hadara/local/\n' },
     { path: '.hadara/project.json', content: jsonFile(project) },
     { path: '.hadara/documents.json', content: jsonFile(registry) },
     { path: '.hadara/context/READ_MAP.md', content: createReadMap(registry) },
-    { path: 'docs/HADARA_WORKFLOW.md', content: createWorkflow() },
+    { path: 'docs/HADARA_WORKFLOW.md', content: createInitV1WorkflowDoc(preset) },
     { path: 'docs/TASK_BOARD.md', content: createTaskBoard() }
   ];
   for (const documentPath of INIT_PRESET_SPECS[preset].optionalDocuments) {
@@ -442,7 +443,8 @@ function assertAcyclicSupersedes(entries: InitDocumentV1[]): void {
   for (const entry of entries) visit(entry.id);
 }
 
-function createAgentsBootstrap(): string {
+function createInitV1AgentsDoc(preset: InitPreset): string {
+  const contextRow = '| `.hadara/context/READ_MAP.md` | Every session or routing investigation | Compact generated read-routing anchor. |\n';
   return `# AGENTS.md
 
 <!-- hadara:managed:start bootstrap -->
@@ -455,41 +457,23 @@ At the start of each session:
 3. Prefer the selected Task Capsule and its registered required documents over broad repository reading.
 4. Use \`.hadara/context/READ_MAP.md\` and \`docs/TASK_BOARD.md\` only as Markdown fallbacks when the CLI is unavailable or routing needs investigation.
 
+## Required Reading
+
+| Document | When to Read | Purpose |
+|---|---|---|
+| \`docs/TASK_BOARD.md\` | Every session or task selection | Task queue, task status, and capsule paths. |
+| \`docs/HADARA_WORKFLOW.md\` | Every session and lifecycle work | Project start, task lifecycle, evidence, and close guidance. |
+${contextRow}| \`Active tasks/T-*/TASK.md\` | Every task-work session | Active Task Capsule scope, plan, acceptance, and validation. |
+
 Only registered documents are HADARA routing authority. Do not hand-edit command-managed files such as \`.hadara/project.json\`, \`.hadara/documents.json\`, or \`docs/TASK_BOARD.md\`.
 Identity fields in Task Capsules are command-owned; update them with \`task create\` or \`task close\`. See \`docs/HADARA_WORKFLOW.md#task-capsule-identity-ownership\`.
 <!-- hadara:managed:end bootstrap -->
 `;
 }
 
-function createWorkflow(): string {
-  return `# HADARA Workflow
-
-## Required Reading
-
-Read this file at every agent session start, then use \`hadara task status --json\` as the primary ingress.
-
-## Task Loop
-
-Keep implementation, validation evidence, and handoff inside the selected Task Capsule. Create a capsule only when no suitable task exists. Finish capsule documents and evidence before \`hadara task close --task T-XXXX --json\`.
-
-## Document Routing
-
-Read registered \`session-start\` documents first. Resolve additional documents from the selected task and exact TargetRef matches. Unregistered documents are not automatic authority.
-
-## Task Capsule Identity Ownership
-
-The \`ID\`, \`Title\`, \`Status\`, \`Created\`, and \`Updated\` fields in Task Capsule Identity tables are command-owned. Do not hand-edit them. Use \`task create\` to create identity and \`task close\` to apply lifecycle updates.
-
-Task prose, acceptance, validation, changes, risks, history, and handoff guidance remain worker-authored before close. Close proof state is derived by task status and audit reports, not stored as a TaskStatus token.
-
-## Read Map Lifecycle
-
-\`.hadara/documents.json\` is the Init v1 document-routing authority. \`.hadara/context/READ_MAP.md\` is a generated fallback projection and must not be edited directly. Use \`hadara docs read-map --task T-XXXX --json\` for task-specific dynamic routing; read the projection directly only when the CLI is unavailable or routing drift is being investigated.
-
-## Ownership
-
-Do not directly edit command-managed files. HADARA-managed files are replaced only by lifecycle commands; mixed-managed files preserve user-owned content outside HADARA markers.
-`;
+function createInitV1WorkflowDoc(preset: InitPreset): string {
+  const profile = preset === 'minimal' ? 'basic' : preset;
+  return createHadaraWorkflowDoc(profile, '.hadara/context/READ_MAP.md');
 }
 
 function createTaskBoard(): string {

@@ -299,7 +299,7 @@ function countIssues(issues: ProtocolConsistencyIssue[]): { error: number; warni
 function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
   const docs = [...CORE_PROJECT_DOCS];
   const profile = createProtocolProfileSummary(projectRoot).target;
-  if (profile === 'standard' || profile === 'governed') docs.push(...STANDARD_MINIMAL_DOCS);
+  if (profile === 'standard' || profile === 'governed') docs.push(...standardMinimalDocsForProject(projectRoot));
   if (profile === 'governed') docs.push(...GOVERNED_MINIMAL_DOCS);
 
   for (const relativePath of Array.from(new Set(docs))) {
@@ -316,6 +316,12 @@ function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>,
       });
     }
   }
+}
+
+function standardMinimalDocsForProject(projectRoot: string): string[] {
+  return fs.existsSync(path.join(projectRoot, '.hadara', 'project.json'))
+    ? ['.hadara/context/READ_MAP.md']
+    : STANDARD_MINIMAL_DOCS;
 }
 
 function checkRequiredReadingPaths(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {

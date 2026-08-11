@@ -12,6 +12,7 @@ import { appendEvidence } from '../../src/evidence/evidence';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskStatusV2Report } from '../../src/services/task-status-v2';
+import { createInitV1ScaffoldFiles } from '../../src/init/model';
 
 const roots: string[] = [];
 
@@ -39,6 +40,34 @@ afterEach(() => {
 });
 
 describe('Docs protocol consistency report', () => {
+  it('keeps fresh Init v1 standard scaffolds clean across workflow and profile checks', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-init-v1-protocol-'));
+    roots.push(root);
+    for (const file of createInitV1ScaffoldFiles('init-v1-standard', 'standard')) {
+      const target = path.join(root, file.path);
+      if (file.path === 'tasks') {
+        fs.mkdirSync(target, { recursive: true });
+        continue;
+      }
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, file.content, 'utf8');
+    }
+
+    const report = createAllProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(true);
+    expect(report.summary.profile).toMatchObject({
+      detected: 'standard',
+      target: 'standard'
+    });
+    expect(report.issues.map((issue) => issue.code)).not.toEqual(expect.arrayContaining([
+      'WORKFLOW_SCAFFOLD_SECTION_MISSING',
+      'WORKFLOW_READ_AUTHORITY_TABLE_MISSING',
+      'PROFILE_REQUIRED_READING_DRIFT',
+      'PROJECT_DOC_MISSING'
+    ]));
+  });
+
   it('returns an all-scoped report that aggregates docs, profile, and active-task diagnostics', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'All protocol');
