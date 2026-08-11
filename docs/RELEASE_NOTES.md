@@ -1,5 +1,9 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.5
+
+RC5 is the current unpublished source candidate after T-0776 hardened exact evidence artifact binding and release operator report execution. This section records readiness preparation only; npm/GitHub publication and public consumer recycle require a separate operator-approved capsule.
+
 ## 0.5.0-rc.4
 
 Prepared source candidate after T-0766 reconciled fresh Init v1 scaffolds with protocol doctor.
