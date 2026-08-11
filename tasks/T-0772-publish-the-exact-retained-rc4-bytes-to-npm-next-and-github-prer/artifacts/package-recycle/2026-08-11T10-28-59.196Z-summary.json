@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-11T10:28:59.194Z",
+  "taskId": "T-0772",
+  "category": "package-recycle",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageRecycle.v1",
+    "command": "package.recycle",
+    "mode": "execute",
+    "ok": true,
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Installed-package recycle uses npm registry/network access only in explicit --execute mode."
+      ]
+    }
+  },
+  "execution": {
+    "npmViewExecuted": true,
+    "npmDistTagExecuted": true,
+    "packageInstallExecuted": true,
+    "installedVersionExecuted": true,
+    "commandSurfaceExecuted": true,
+    "lifecycleHelpExecuted": true,
+    "initExecuted": true,
+    "taskStatusExecuted": true,
+    "contextSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable consumer workspace",
+      "status": "passed",
+      "summary": "Disposable consumer workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-view-version",
+      "label": "Verify registry package version",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 665,
+      "summary": "Registry resolved package version 0.5.0-rc.4."
+    },
+    {
+      "id": "npm-dist-tags",
+      "label": "Verify registry dist-tags",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 539,
+      "summary": "Registry latest dist-tag points to 0.4.6."
+    },
+    {
+      "id": "install-package",
+      "label": "Install package from registry into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1272,
+      "summary": "Package installed into an isolated temporary prefix from the registry."
+    },
+    {
+      "id": "installed-version",
+      "label": "Verify installed CLI version",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 101,
+      "summary": "Installed CLI reports packageVersion 0.5.0-rc.4."
+    },
+    {
+      "id": "command-surface",
+      "label": "Read installed CLI command surface",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 98,
+      "summary": "Installed command surface exposed 57 command ids."
+    },
+    {
+      "id": "help-lifecycle",
+      "label": "Verify lifecycle help from installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 105,
+      "summary": "Verify lifecycle help from installed CLI returned an ok JSON report."
+    },
+    {
+      "id": "init-project",
+      "label": "Initialize disposable project with installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 120,
+      "summary": "Initialize disposable project with installed CLI dry-run plan was applied with its reviewed plan hash."
+    },
+    {
+      "id": "task-create",
+      "label": "Create disposable task with installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 163,
+      "summary": "Disposable task T-0001 was created."
+    },
+    {
+      "id": "task-status",
+      "label": "Verify task status read model",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 162,
+      "summary": "Verify task status read model returned an ok JSON report."
+    },
+    {
+      "id": "status-ingress",
+      "label": "Verify task status selection ingress",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 148,
+      "summary": "Verify task status selection ingress returned an ok JSON report."
+    },
+    {
+      "id": "task-close",
+      "label": "Verify task close dry-run report",
+      "status": "passed",
+      "exitCode": 6,
+      "elapsedMs": 208,
+      "summary": "Verify task close dry-run report returned a task close dry-run report."
+    },
+    {
+      "id": "context-slice",
+      "label": "Verify context slice raw adapter",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 109,
+      "summary": "Verify context slice raw adapter returned an ok JSON report."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}
