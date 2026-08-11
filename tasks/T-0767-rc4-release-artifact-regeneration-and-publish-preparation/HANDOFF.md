@@ -6,10 +6,9 @@
 |---|---|
 | ID | T-0767 |
 | Title | RC4 Release Artifact Regeneration and Publish Preparation |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-11T15:58 |
-| Updated | 2026-08-11T15:58 |
-
+| Updated | 2026-08-11T16:15 |
 ## Last Completed
 
 | Item | Evidence |

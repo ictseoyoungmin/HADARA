@@ -15,6 +15,7 @@ Do not hand-edit this file.
 | ev:T-0767:aef6d7be85d94839ba0d9399 | passed | release | Package smoke local passed with reduced public evidence. |
 | ev:T-0767:cdac888ca0fd49308b8dc666 | passed | release | Clean-checkout smoke passed with reduced public evidence. |
 | ev:T-0767:239506a239ed460d85ac3c59 | passed | release | Final RC4 release readiness passed: strict gate, release dry-run, and publish dry-run all passed with no npm, GitHub, Docker, or registry mutation; package and clean-checkout evidence are current and tarball provenance matches. |
+| ev:T-0767:a9e04e2c41144445853e02cb | passed | validation | Task finalize done-level readiness for T-0767 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:8782d5ac06afccad8a959948f932035fc2efc6f7f29fba67a24f00264b08e0a2 |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -22,6 +23,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0767:362d88fd6a9d4ee5a3ea14d5 |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence
