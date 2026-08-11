@@ -6,27 +6,26 @@
 |---|---|
 | ID | T-0763 |
 | Title | Publish RC3 and Recycle Public Consumer |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-09T22:41 |
-| Updated | 2026-08-09T22:41 |
-
+| Updated | 2026-08-11T14:05 |
 ## Last Completed
 
 | Item | Evidence |
 |---|---|
-| Preflight artifact and all local gates passed; operator published npm `hadara@0.5.0-rc.3`; public `hadara@next` installed and completed deep task lifecycle dogfooding. Read-only GitHub verification still finds `v0.5.0-rc.3` is not a prerelease and has no assets. | ev:T-0763:84c5bf346e9748e4a61286d0; ev:T-0763:14975c72acda4514a8497233; ev:T-0763:04c70bb575b640cdb621f7c7; ev:T-0763:a3ca34fc604a4b0f8aa52e0c; preflight tarball SHA-256 `843f582d000d69f2088ef4debd9b969150de3154935ea783961f58d06882eb53` |
+| Preflight artifact and all local gates passed; operator published npm `hadara@0.5.0-rc.3`; public `hadara@next` completed deep task lifecycle dogfooding; host `gh` marked `v0.5.0-rc.3` as prerelease. Custom asset parity was removed from acceptance. | ev:T-0763:84c5bf346e9748e4a61286d0; ev:T-0763:14975c72acda4514a8497233; ev:T-0763:04c70bb575b640cdb621f7c7; ev:T-0763:1d7c176c105247c6812ce55b; preflight tarball SHA-256 `843f582d000d69f2088ef4debd9b969150de3154935ea783961f58d06882eb53` |
 
 ## Pre-Close Operator Action
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Attach the retained `.tgz`, `.sha256`, and manifest to `v0.5.0-rc.3`, mark it as a prerelease, and verify GitHub metadata/assets. | npm publication and public consumer lifecycle dogfooding are complete; only the GitHub release contract remains open. | `docs/RELEASE_READINESS.md`; `docs/specs/0.5.0-rc3/02_RC3_Release_Readiness.md`; `scripts/release/manual-publish-rc.sh`; `DOGFOOD_REPORT.md` |
+| Run `hadara task close --task T-0763 --dry-run --json`, review readiness, then execute close if clean. | All revised acceptance criteria and external mutations are complete. | `docs/TASK_WORKFLOW_COMMANDS.md`; `TASK.md`; `DOGFOOD_REPORT.md` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| The operator reuses the retained final artifact set to attach the three release files, marks `v0.5.0-rc.3` prerelease, and verifies `isPrerelease=true` with all assets. | npm and installed consumer verification are already complete; do not regenerate the tarball or rerun consumer mutation unless a new comparative run is desired. | `HANDOFF.md`; `scripts/release/manual-publish-rc.sh`; `docs/RELEASE_READINESS.md` |
+| Run proof-last task close and confirm `closed-valid`. | The capsule is complete under the revised independent npm/GitHub acceptance. | `HANDOFF.md`; `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Operator Publish / Public Consumer Sequence
 
@@ -44,7 +43,6 @@ node --import tsx tools/dev-surfaces.ts package recycle --execute --package hada
 Before public recycle, repair the GitHub release with the exact retained files and prerelease flag, then verify:
 
 ```sh
-gh release upload v0.5.0-rc.3 "$ARTIFACT_DIR"/hadara-0.5.0-rc.3.tgz "$ARTIFACT_DIR"/hadara-0.5.0-rc.3.tgz.sha256 "$ARTIFACT_DIR"/hadara-0.5.0-rc.3.tgz.manifest.json --repo ictseoyoungmin/HADARA --clobber
 gh release edit v0.5.0-rc.3 --repo ictseoyoungmin/HADARA --prerelease
 gh release view v0.5.0-rc.3 --repo ictseoyoungmin/HADARA --json tagName,isDraft,isPrerelease,assets
 ```
@@ -55,5 +53,5 @@ After that, record: npm `next == 0.5.0-rc.3`, GitHub `isPrerelease=true`, all th
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| The exact tarball must not be regenerated between smoke, npm publish, and GitHub upload. | A regenerated artifact breaks provenance and may not match the smoke evidence. | Retain the `.tgz`, `.sha256`, and manifest from one artifact run and reuse those exact files. |
-| GitHub release metadata does not currently satisfy the RC3 prerelease contract. | RC3 is not complete until the operator uploads the exact three files, sets `isPrerelease=true`, and records public consumer lifecycle evidence. | Repair `v0.5.0-rc.3` before recycle; do not regenerate the artifact. |
+| npm artifact provenance is independent from GitHub Release metadata. | A GitHub prerelease does not need to carry the npm tarball under the revised acceptance. | Keep the existing npm evidence immutable; do not regenerate it for GitHub. |
+| GitHub release metadata was initially not marked prerelease. | This was corrected; custom asset parity is out of scope under the revised acceptance. | Preserve the npm artifact evidence independently and do not regenerate it for GitHub. |

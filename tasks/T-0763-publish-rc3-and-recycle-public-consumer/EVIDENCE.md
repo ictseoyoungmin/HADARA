@@ -21,6 +21,9 @@ Do not hand-edit this file.
 | ev:T-0763:14975c72acda4514a8497233 | passed | release | Installed-package recycle passed with reduced public evidence. |
 | ev:T-0763:04c70bb575b640cdb621f7c7 | passed | operation | Installed hadara@next 0.5.0-rc.3 deep dogfooding passed: fresh consumer init, T-0001 validation/evidence, close returned closed-valid, same-close retry was idempotent with zero writes, and fresh task status returned idle with no recommendation. |
 | ev:T-0763:210c16f6b2da4ee5a46bdef9 | passed | validation | Validation "Installed RC3 dogfooding report" passed from direct result; hadara@next 0.5.0-rc.3 installed, recycled, and completed a closed-valid consumer lifecycle with idempotent close retry and terminal fresh status.; command: direct-result; exitCode: 0; signal: null; durationMs: 0; stdoutHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| ev:T-0763:1d7c176c105247c6812ce55b | passed | release | Host gh updated v0.5.0-rc.3 to prerelease; read-only verification returned isDraft=false, isPrerelease=true, and tagName=v0.5.0-rc.3. Custom GitHub assets are out of scope under the revised acceptance. |
+| ev:T-0763:4627a816c6554a2a87e5d52b | passed | release | Resolution under revised independent npm/GitHub acceptance: network-approved package recycle passed, and GitHub custom artifact asset parity is intentionally out of scope; no unresolved release blocker remains. |
+| ev:T-0763:3b0088956d8a4b97960c3e62 | passed | validation | Task finalize done-level readiness for T-0763 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:ff79133ec94aeb71796cad41e9698e74720a018f02d51dab181deb7c9afc4fcd |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -28,6 +31,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0763:bacec0e6f980426f8f6815f4 |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence
@@ -35,6 +39,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.residuals -->
 | Evidence ID | Outcome | Summary | Disposition | Reference |
 |---|---|---|---|---|
-| ev:T-0763:a3ca34fc604a4b0f8aa52e0c | failed | Read-only GitHub check found v0.5.0-rc.3 exists with isDraft=false, isPrerelease=false, and no assets; the RC3 prerelease and artifact-attachment contract is not met. | Unresolved | evidence.jsonl |
-| ev:T-0763:6247d461e5b94d5bbb6acf01 | failed | Installed-package recycle failed with reduced public evidence. | Unresolved | evidence.jsonl |
+| ev:T-0763:a3ca34fc604a4b0f8aa52e0c | failed | Read-only GitHub check found v0.5.0-rc.3 exists with isDraft=false, isPrerelease=false, and no assets; the RC3 prerelease and artifact-attachment contract is not met. | Resolved | ev:T-0763:1d7c176c105247c6812ce55b |
+| ev:T-0763:6247d461e5b94d5bbb6acf01 | failed | Installed-package recycle failed with reduced public evidence. | Resolved | ev:T-0763:4627a816c6554a2a87e5d52b |
+| ev:T-0763:a01c6ce39d144245a60a6792 | blocked | Host gh read-only verification confirmed v0.5.0-rc.3 has isDraft=false, isPrerelease=false, and zero assets; upload was not attempted because the exact retained tarball, checksum, and manifest were not present in the workspace, /tmp, or bounded home searches. | Resolved | ev:T-0763:4627a816c6554a2a87e5d52b |
 <!-- /hadara:slot -->
