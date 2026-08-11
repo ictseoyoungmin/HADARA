@@ -772,3 +772,4 @@
 | T-0769 | Decouple Init v1 Canonical State from Compatibility Profiles | Done | tasks/T-0769-decouple-init-v1-canonical-state-from-compatibility-profiles | |
 | T-0770 | RC4 Exact Artifact Retention and Publication Handoff | Done | tasks/T-0770-rc4-exact-artifact-retention-and-publication-handoff | |
 | T-0772 | Publish the exact retained RC4 bytes to npm next and GitHub prerelease in the separately approved operator flow. | Done | tasks/T-0772-publish-the-exact-retained-rc4-bytes-to-npm-next-and-github-prer | |
+| T-0773 | Reconcile RC4 current-state and harden Done HANDOFF continuation projection. | Done | tasks/T-0773-reconcile-rc4-current-state-and-harden-done-handoff-continuation | |
