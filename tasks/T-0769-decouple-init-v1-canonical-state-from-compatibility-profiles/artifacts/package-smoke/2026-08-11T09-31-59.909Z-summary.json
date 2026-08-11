@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-08-11T09:31:59.907Z",
+  "taskId": "T-0769",
+  "category": "package-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageSmoke.v1",
+    "command": "package.smoke",
+    "mode": "local",
+    "ok": true,
+    "provider": {
+      "ecosystem": "npm",
+      "smokeProfile": "npm-package-smoke",
+      "command": "package.smoke"
+    },
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Package-smoke commands inherit the current environment network behavior.",
+        "HADARA does not enforce OS-level network isolation for local package tooling."
+      ]
+    },
+    "source": {
+      "kind": "tarball",
+      "displayPath": "<redacted-package-source>",
+      "pathRedacted": true,
+      "releaseInputHash": "sha256:c7c31f8e4d80647a6e0aebe72bd6077df86425dba0faa6802f951e76e33e377c",
+      "tarballSha256": "sha256:5ccbb838940af4bad1e65308a7bed9e561ae682401d359df181c04ab89dc30ce"
+    }
+  },
+  "execution": {
+    "npmPackExecuted": false,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "validate-source",
+      "label": "Validate package source",
+      "status": "passed",
+      "summary": "Package source metadata was checked without exposing package contents."
+    },
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable workspace",
+      "status": "passed",
+      "summary": "Disposable package-smoke workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "status": "skipped",
+      "summary": "Skipped because a package artifact source was provided."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 2148,
+      "summary": "Package installed into an isolated temporary prefix."
+    },
+    {
+      "id": "generated-init-docs",
+      "label": "Generated init docs current UX check",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 178,
+      "summary": "Generated init workflow docs expose current task close and slice guidance without stale removed command instructions."
+    },
+    {
+      "id": "doctor",
+      "label": "Installed HADARA doctor",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 92,
+      "summary": "Installed hadara doctor returned an ok reduced JSON report."
+    },
+    {
+      "id": "command-surface-drift",
+      "label": "Command surface drift vs source registry",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 90,
+      "summary": "Installed command surface matches the source registry and installed routing parity holds."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}
