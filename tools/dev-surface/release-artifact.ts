@@ -252,7 +252,7 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
           cwd: options.paths.projectRoot,
           timeoutMs
         });
-        const builtVersion = version.stdout.trim();
+        const builtVersion = parseBuiltCliVersion(version.stdout);
         if (version.status !== 0 || builtVersion !== packageMetadata.version) {
           issues.push({
             severity: 'error',
@@ -399,6 +399,17 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
 
   assertSchema('hadara.releaseArtifact.v1', report);
   return report;
+}
+
+function parseBuiltCliVersion(stdout: string): string {
+  const trimmed = stdout.trim();
+  if (!trimmed.startsWith('{')) return trimmed;
+  try {
+    const parsed = JSON.parse(trimmed) as { packageVersion?: unknown };
+    return typeof parsed.packageVersion === 'string' ? parsed.packageVersion : trimmed;
+  } catch {
+    return trimmed;
+  }
 }
 
 function readCurrentGitCommit(projectRoot: string): { gitCommit?: string } {

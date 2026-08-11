@@ -251,6 +251,35 @@ describe('release artifact builder', () => {
     expect(runner).toHaveBeenCalledTimes(2);
   });
 
+  it('accepts JSON-formatted built CLI version output from a JSON parent command', () => {
+    const root = tempProject();
+    const runner = vi.fn<ReleaseArtifactCommandRunner>((command, args) => {
+      if (args[0] === 'run' && args[1] === 'build') {
+        return { status: 0, stdout: '', stderr: '', elapsedMs: 5 };
+      }
+      if (command === process.execPath && args.at(-1) === 'version') {
+        return { status: 0, stdout: JSON.stringify({ packageVersion: '0.0.0-bootstrap' }), stderr: '', elapsedMs: 2 };
+      }
+      const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+      fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+      return {
+        status: 0,
+        stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz', files: [{ path: 'package.json', size: 1 }, { path: 'README.md', size: 1 }, { path: 'LICENSE', size: 1 }, { path: 'dist/cli/main.js', size: 1 }] }]),
+        stderr: '',
+        elapsedMs: 5
+      };
+    });
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner
+    });
+
+    expect(report.execution.builtCliVersionVerified).toBe(true);
+  });
+
   it('refuses to build release artifacts from a dirty git worktree', () => {
     const root = tempProject();
     spawnSync('git', ['init'], { cwd: root, encoding: 'utf8' });
