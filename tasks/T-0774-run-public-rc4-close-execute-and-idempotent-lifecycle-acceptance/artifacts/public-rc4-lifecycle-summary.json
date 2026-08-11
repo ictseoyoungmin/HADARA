@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "hadara.publicRc4LifecycleAcceptance.v1",
+  "package": "hadara@next",
+  "expectedVersion": "0.5.0-rc.4",
+  "init": "passed",
+  "substantiveValidation": "passed",
+  "taskId": "T-0001",
+  "closeExecute": {
+    "result": "closed-valid",
+    "terminal": true
+  },
+  "closeRetry": {
+    "result": "closed-valid",
+    "executedWrites": 0,
+    "closeProofAppended": false
+  },
+  "audit": "closed-valid",
+  "freshStatus": {
+    "phase": "idle",
+    "recommendations": 0
+  },
+  "doctor": "ok",
+  "mutationBoundary": {
+    "publish": false,
+    "github": false,
+    "docker": false,
+    "persistentConsumerState": false
+  }
+}
