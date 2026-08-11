@@ -107,11 +107,11 @@ hadara task close --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.5.0-rc.3`](docs/RELEASE_NOTES.md#050-rc3) retargeted after RC2 publication; RC3 release evidence is being regenerated |
+| Prepared source | [`hadara@0.5.0-rc.4`](docs/RELEASE_NOTES.md#050-rc4) after Init v1 scaffold reconciliation; RC4 release evidence is being regenerated |
 | Published stable npm | `hadara@0.4.6` |
 | Published GitHub Release | [`v0.4.6`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6) |
-| Published RC npm | `hadara@0.5.0-rc.2` on `next`; `0.5.0-rc.3` is the current source candidate |
-| Published RC GitHub Release | [`v0.5.0-rc.2`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.5.0-rc.2), public prerelease |
+| Published RC npm | `hadara@0.5.0-rc.3` on `next`; `0.5.0-rc.4` is the current source candidate |
+| Published RC GitHub Release | [`v0.5.0-rc.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.5.0-rc.3), public prerelease |
 | Stable recycle decision | `0.4.6` published and installed-package recycle passed from `hadara@latest`; `0.5.0-rc.1` npm/GitHub publication and Docker installed-package dogfood passed from `hadara@next` |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |

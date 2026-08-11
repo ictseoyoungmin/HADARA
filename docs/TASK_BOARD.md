@@ -767,3 +767,4 @@
 | T-0764 | Graphify Study and HADARA Agent Usage Guide | Done | tasks/T-0764-graphify-study-and-hadara-agent-usage-guide | |
 | T-0765 | RC3 Release Contract and Current-State Reconciliation | Done | tasks/T-0765-rc3-release-contract-and-current-state-reconciliation | |
 | T-0766 | RC4 Fresh Init Scaffold and Protocol Doctor Reconciliation | Done | tasks/T-0766-rc4-fresh-init-scaffold-and-protocol-doctor-reconciliation | |
+| T-0767 | RC4 Release Artifact Regeneration and Publish Preparation | Draft | tasks/T-0767-rc4-release-artifact-regeneration-and-publish-preparation | |

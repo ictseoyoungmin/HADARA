@@ -104,11 +104,11 @@ Current package metadata preparation mode:
 - Current stable 0.4.3 source/readiness baseline: T-0561 through T-0569 established structured current-state, currentness diagnostics, measurement, positioning, release smokes, fresh-init dogfood, and post-dogfood cleanup; T-0570 prepared stable release notes/readiness/helper examples; the operator published npm and GitHub Release `v0.4.3`; T-0571 verified `hadara@latest` resolves to `0.4.3` and installed-package recycle passes.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
 - Published release: `0.5.0-rc.3` is public on npm `next`; stable `latest=0.4.6` remains unchanged.
-- Current source version: `0.5.0-rc.3`.
-- Current version is `0.5.0-rc.3` for the active RC3 source candidate, and T-0763 completed public consumer dogfood through `closed-valid`, zero-write same-close retry, and fresh idle status.
-- Current release target: RC3 public-release reconciliation; npm RC3 is published and GitHub `v0.5.0-rc.3` is public prerelease. Stable promotion remains pending the fresh standard-init warning decision.
-- Current prerelease npm status: `next=0.5.0-rc.3`; stable `latest=0.4.6` remains unchanged.
-- Current prerelease GitHub status: `v0.5.0-rc.3` is public with `isPrerelease=true`, `isDraft=false`, and no custom assets currently attached.
+- Current source version: `0.5.0-rc.4`.
+- Current version is `0.5.0-rc.4` for the active RC4 source candidate; T-0766 reconciled fresh Init v1 scaffolds and protocol doctor now reports zero warnings across all three presets.
+- Current release target: RC4 pre-operator artifact regeneration and publish preparation; npm `next` remains the published RC3 line until an operator publishes RC4.
+- Current prerelease npm status: published `next=0.5.0-rc.3`; target `next=0.5.0-rc.4` after operator publication; stable `latest=0.4.6` remains unchanged.
+- Current prerelease GitHub status: `v0.5.0-rc.3` is public with `isPrerelease=true`, `isDraft=false`, and no custom assets currently attached; RC4 GitHub publication is pending operator action.
 - RC3 public consumer status: T-0763 verified registry metadata, installed version, command surface, init, task create/status, validation/evidence, close, same-close zero-write retry, fresh status idle, and no recommendation from the published `hadara@next` package.
 - RC3 artifact status: the exact original `.tgz`, `.sha256`, and manifest were not retained in the capsule; T-0765 attempts read-only registry recovery and keeps each file's provenance separate.
 - Previous prerelease: `hadara@0.5.0-rc.1` and `v0.5.0-rc.1` remain historical context.

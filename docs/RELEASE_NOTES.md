@@ -1,5 +1,17 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.4
+
+Prepared source candidate after T-0766 reconciled fresh Init v1 scaffolds with protocol doctor.
+Minimal, standard, and governed fresh projects now produce warning-free protocol doctor output.
+This section records pre-operator RC4 readiness only; npm/GitHub publication and public consumer
+recycle remain separate approval-controlled actions.
+
+- Uses the corrected Init v1 `READ_MAP.md` routing and canonical workflow/Required Reading contract.
+- Release artifact, exact tarball package smoke, clean-checkout smoke, strict gate, release dry-run,
+  and publish dry-run must be regenerated from this source input.
+- The exact reviewed tarball must remain available through any selected secondary upload.
+
 ## 0.5.0-rc.3
 
 Current source candidate after the published `0.5.0-rc.2` line. This release line carries exact

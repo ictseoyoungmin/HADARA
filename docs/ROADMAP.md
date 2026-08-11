@@ -1,12 +1,12 @@
 # ROADMAP
 
-## Current Baseline: v0.5.0-rc.3 Source Retarget
+## Current Baseline: v0.5.0-rc.4 Source Retarget
 
-`0.5.0-rc.2` is the published immutable prerelease; `0.5.0-rc.3` is the current source candidate. The RC2 line consolidates the Init v1 contracts,
+`0.5.0-rc.3` is the published immutable prerelease; `0.5.0-rc.4` is the current source candidate. The RC2 line consolidates the Init v1 contracts,
 task-local continuation, evidence/close proof, and developer-surface reduction before any publish
 mutation. The published `0.5.0-rc.1` remains historical release context.
 
-The immediate roadmap is RC3 evidence regeneration and post-publish verification rather than capability expansion. HADARA's product
+The immediate roadmap is RC4 evidence regeneration and post-publish verification rather than capability expansion. HADARA's product
 boundary is portable task-local state and evidence integrity across human and agent sessions; a full
 controller, default real-provider runtime, cloud queue, broad write-capable MCP, and browser dashboard
 remain outside the current release line.
