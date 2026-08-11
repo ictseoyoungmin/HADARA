@@ -86,7 +86,11 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 |---|---|---|---|---|
 | RF-1 | Follow-up | Operator must publish the reviewed RC4 artifact to npm `next`, create/update the independent GitHub prerelease, and then run public consumer recycle. | Open | Post-close release operator capsule |
 | RF-2 | Risk | Source and evidence roots must remain separate or release artifact clean-tree checks self-invalidate. | Open | `docs/RELEASE_READINESS.md` |
-| RF-3 | Corrective record | T-0768 supersedes the original RC4 artifact bytes after source-level profile fixes; publish only the T-0768 rebuild. | Open | T-0768 handoff |
+| RF-3 | Follow-up | T-0768 supersedes the original RC4 artifact bytes after source-level profile fixes; publish only the T-0768 rebuild. | Open | T-0768 handoff |
+
+## Close Summary
+
+T-0767's stale continuation and artifact provenance were reconciled by T-0768. The current operator path is the T-0768 RC4 rebuild; npm/GitHub/public recycle remains separately approved work.
 
 ## History
 

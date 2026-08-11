@@ -6,11 +6,9 @@
 |---|---|
 | ID | T-0768 |
 | Title | Init v1 Profile and RC4 Release Provenance Reconciliation |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-11T17:23 |
-| Updated | 2026-08-11T17:23 |
-
-> Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.
+| Updated | 2026-08-11T17:40 |
 
 ## Last Completed
 
@@ -29,7 +27,7 @@
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Publish the reviewed RC4 artifact to npm/GitHub and run public consumer recycle only in a separately approved operator capsule. | waiting-for-operator | yes | Corrective source changes invalidate the prior RC4 bytes; this task only regenerates and proves local readiness. | `docs/RELEASE_READINESS.md`, T-0767 handoff |
+| Publish the reviewed RC4 artifact to npm/GitHub and run public consumer recycle only in a separately approved operator capsule. | waiting-for-operator | no | Corrective source changes invalidate the prior RC4 bytes; this task only regenerates and proves local readiness. | `docs/RELEASE_READINESS.md`, T-0767 handoff |
 
 ## Carry Forward Warnings
 
@@ -44,7 +42,7 @@
 |---|---|
 | Logical artifact root | `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.4/` |
 | Actual local retention metadata | `.hadara/local/release-workspace.json` (ignored) |
-| Source commit | `b41cbb7210b9e807d83ebf85ce033393b6d3bc3b` |
+| Source commit | `6cea1560d6e5e4cb73b6076bc1128bd872f16e5d` |
 | Release input hash | `sha256:cd38f6afeab4312f426d00a5357ade0665b2ab70a111ebf95b20ac367d25104d` |
 | Tarball | `hadara-0.5.0-rc.4.tgz`, 428507 bytes |
 | Tarball SHA-256 | `171d03568fb6f6424aaf90560927837d89b558171ce5f4858b45115d18415b89` |

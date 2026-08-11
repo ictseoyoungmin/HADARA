@@ -9,6 +9,7 @@
 | Status | Done |
 | Created | 2026-08-11T15:58 |
 | Updated | 2026-08-11T16:15 |
+
 ## Last Completed
 
 | Item | Evidence |
@@ -38,7 +39,7 @@
 | Local retention metadata | `.hadara/local/release-workspace.json` (ignored; actual host path is private) |
 | Tarball | `hadara-0.5.0-rc.4.tgz`, 428507 bytes |
 | Original T-0767 tarball SHA-256 (superseded) | `b99dbf90e9a07d82f197e1542afc45c5036bdb81156dda8965056fac5660fde8` |
-| Current T-0768 source commit | `b41cbb7210b9e807d83ebf85ce033393b6d3bc3b` |
+| Current T-0768 source commit | `6cea1560d6e5e4cb73b6076bc1128bd872f16e5d` |
 | Current T-0768 release input hash | `sha256:cd38f6afeab4312f426d00a5357ade0665b2ab70a111ebf95b20ac367d25104d` |
 | Tarball SHA-256 (T-0768 rebuild) | `171d03568fb6f6424aaf90560927837d89b558171ce5f4858b45115d18415b89` |
 | Checksum file SHA-256 (T-0768 rebuild) | `857f55c6fa2dee29d1c15086767c16913c0e14e191d298f7c455a1d9baaa7c67` |

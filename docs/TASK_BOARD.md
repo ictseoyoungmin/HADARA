@@ -768,4 +768,4 @@
 | T-0765 | RC3 Release Contract and Current-State Reconciliation | Done | tasks/T-0765-rc3-release-contract-and-current-state-reconciliation | |
 | T-0766 | RC4 Fresh Init Scaffold and Protocol Doctor Reconciliation | Done | tasks/T-0766-rc4-fresh-init-scaffold-and-protocol-doctor-reconciliation | |
 | T-0767 | RC4 Release Artifact Regeneration and Publish Preparation | Done | tasks/T-0767-rc4-release-artifact-regeneration-and-publish-preparation | |
-| T-0768 | Init v1 Profile and RC4 Release Provenance Reconciliation | Draft | tasks/T-0768-init-v1-profile-and-rc4-release-provenance-reconciliation | |
+| T-0768 | Init v1 Profile and RC4 Release Provenance Reconciliation | Done | tasks/T-0768-init-v1-profile-and-rc4-release-provenance-reconciliation | |
