@@ -199,7 +199,7 @@ T-0139 decides what release means before any publish or deploy script exists.
 Release target decision:
 
 - Primary release target: npm package.
-- Secondary release target: GitHub Release as an independent public release-note/prerelease surface. Tarball, checksum, and manifest assets are optional per release contract; if selected, each must be the exact reviewed bytes or be explicitly labeled as reconstructed/non-original.
+- Secondary release target: GitHub Release with tarball, checksum, and manifest assets optional per release contract, as an independent public release-note/prerelease surface; if selected, each must be the exact reviewed bytes or be explicitly labeled as reconstructed/non-original.
 - Deferred release target: Docker image.
 - Docker image publishing is deferred unless HADARA adds a server/runtime product surface that needs container distribution.
 - npm package publish is the first approval-gated mutation path because HADARA is currently a Node CLI/workbench.

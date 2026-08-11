@@ -31,33 +31,35 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 
 | Step | Action | Status |
 |---|---|---|
-| 1 | Retarget release metadata and define the single-artifact/no-mutation contract for RC4. | Pending |
-| 2 | Generate the clean-source RC4 artifact and run exact tarball package smoke. | Pending |
-| 3 | Run clean-checkout smoke, strict gate, release dry-run, and publish dry-run. | Pending |
-| 4 | Record artifact provenance and prepare the operator publish/recycle handoff. | Pending |
-| 5 | Finish capsule docs and close with proof-last evidence. | Pending |
+| 1 | Retarget release metadata and define the single-artifact/no-mutation contract for RC4. | Done |
+| 2 | Generate the clean-source RC4 artifact and run exact tarball package smoke. | Done |
+| 3 | Run clean-checkout smoke, strict gate, release dry-run, and publish dry-run. | Done |
+| 4 | Record artifact provenance and prepare the operator publish/recycle handoff. | Done |
+| 5 | Finish capsule docs and close with proof-last evidence. | Done |
 
 ## Acceptance
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | Source metadata, release notes, readiness, and roadmap target `0.5.0-rc.4` without changing immutable RC2/RC3 historical records. | Pending | TBD | `package.json`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
-| AC-2 | A clean source produces one RC4 tarball, checksum, and manifest with a retained operator workspace and no committed binary. | Pending | TBD | release artifact journal |
-| AC-3 | Exact tarball package smoke passes and its SHA-256 equals the release artifact tarball SHA-256. | Pending | TBD | package smoke report |
-| AC-4 | Clean-checkout smoke, full repository validation, strict release gate, release dry-run, and publish dry-run pass without external mutation. | Pending | TBD | validation and release reports |
-| AC-5 | Operator handoff states the exact artifact path, checksum/manifest provenance, and separate npm/GitHub/public recycle sequence. | Pending | TBD | `HANDOFF.md`, `GITHUB_RELEASE_NOTE.md` |
-| AC-6 | Capsule evidence, handoff, and close-source docs are complete before proof-last close. | Pending | TBD | close proof |
+| AC-1 | Source metadata, release notes, readiness, and roadmap target `0.5.0-rc.4` without changing immutable RC2/RC3 historical records. | Met | ev:T-0767:21beb4b802514c0abc8d8a58 | `package.json`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
+| AC-2 | A clean source produces one RC4 tarball, checksum, and manifest with a retained operator workspace and no committed binary. | Met | ev:T-0767:623ede5e563b43a4b887081e | release artifact journal |
+| AC-3 | Exact tarball package smoke passes and its SHA-256 equals the release artifact tarball SHA-256. | Met | ev:T-0767:aef6d7be85d94839ba0d9399 | package smoke report; `b99dbf90e9a07d82f197e1542afc45c5036bdb81156dda8965056fac5660fde8` |
+| AC-4 | Clean-checkout smoke, full repository validation, strict release gate, release dry-run, and publish dry-run pass without external mutation. | Met | ev:T-0767:cdac888ca0fd49308b8dc666; ev:T-0767:21beb4b802514c0abc8d8a58; ev:T-0767:239506a239ed460d85ac3c59 | validation and release reports |
+| AC-5 | Operator handoff states the exact artifact path, checksum/manifest provenance, and separate npm/GitHub/public recycle sequence. | Met | `HANDOFF.md`, `GITHUB_RELEASE_NOTE.md`; ev:T-0767:623ede5e563b43a4b887081e | operator handoff |
+| AC-6 | Capsule evidence, handoff, and close-source docs are complete before proof-last close. | Met | ev:T-0767:239506a239ed460d85ac3c59; evidence lint passed | close proof |
 
 ## Validation
 
 | Check | Gate | Result | Evidence |
 |---|---|---|---|
-| Full repository validation | Yes | Not Run | TBD |
-| Current-source RC4 release artifact | Yes | Not Run | TBD |
-| Exact tarball package smoke | Yes | Not Run | TBD |
-| Clean-checkout smoke | Yes | Not Run | TBD |
-| Strict release gate | Yes | Not Run | TBD |
-| Release dry-run and publish dry-run | Yes | Not Run | TBD |
+| Full repository validation | Yes | Passed | ev:T-0767:21beb4b802514c0abc8d8a58 |
+| Current-source RC4 release artifact | Yes | Passed | ev:T-0767:623ede5e563b43a4b887081e |
+| Exact tarball package smoke | Yes | Passed | ev:T-0767:aef6d7be85d94839ba0d9399 |
+| Clean-checkout smoke | Yes | Passed | ev:T-0767:cdac888ca0fd49308b8dc666 |
+| Strict release gate | Yes | Passed | ev:T-0767:239506a239ed460d85ac3c59 |
+| Release dry-run and publish dry-run | Yes | Passed | ev:T-0767:239506a239ed460d85ac3c59 |
+| Release artifact JSON child-version compatibility regression | Yes | Failed | ev:T-0767:93f12b8764964dc99a91e7e3; resolved by ev:T-0767:239506a239ed460d85ac3c59 |
+| Release artifact JSON child-version compatibility regression with development test config | Yes | Passed | ev:T-0767:70deec0c6378466ab43fa101 |
 
 ## Inputs / Constraints
 
@@ -90,3 +92,5 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 |---|---|---|
 | 2026-08-11 | Draft | Initial task scaffold. |
 | 2026-08-11 | In Progress | Opened after T-0766 closed-valid; RC4 artifact regeneration is required before stable promotion. |
+| 2026-08-11 | In Progress | Retargeted source to RC4, generated exact artifact, passed exact package/clean-checkout/gate/dry-runs, and prepared operator handoff without external mutation. |
+| 2026-08-11 | Done | Finalized RC4 pre-operator readiness evidence and handoff; publication and public recycle remain explicitly deferred. |
