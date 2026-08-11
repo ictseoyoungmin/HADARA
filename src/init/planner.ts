@@ -12,8 +12,8 @@ import {
   createInitDocuments,
   createInitV1ScaffoldFiles,
   createInitV1UpgradeFiles,
+  classifyInitCapabilities,
   initArtifactManifest,
-  presetFromProjectConfig,
   readValidatedInitV1State
 } from './model';
 import { validateInitPaths } from './safety';
@@ -158,7 +158,8 @@ export function createInitUpgradePlanningResult(
     const registry = initState.documents;
     assertInitProjectConfig(project);
     assertInitDocuments(registry);
-    preset = presetFromProjectConfig(project);
+    const capabilityProfile = classifyInitCapabilities(project);
+    preset = capabilityProfile === 'governed' ? 'governed' : capabilityProfile === 'standard' ? 'standard' : 'minimal';
     files = createInitV1UpgradeFiles(
       project as InitProjectConfigV1,
       registry as InitDocumentsV1

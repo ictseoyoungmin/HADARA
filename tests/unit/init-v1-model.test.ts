@@ -126,6 +126,17 @@ describe('Init v1 core model', () => {
     })).toThrow(/consistent/);
   });
 
+  it('keeps presetOrigin as provenance when current capabilities later expand', () => {
+    const project = {
+      ...createInitProjectConfig('stable-project', 'minimal'),
+      features: [...createInitProjectConfig('stable-project', 'standard').features],
+      documentPacks: [...createInitProjectConfig('stable-project', 'standard').documentPacks]
+    };
+
+    expect(project.presetOrigin).toBe('minimal');
+    expect(() => assertInitProjectConfig(project)).not.toThrow();
+  });
+
   it('preserves opaque TargetRef ids and rejects invalid unions and registry integrity errors', () => {
     for (const target of [
       { namespace: 'project' },

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { readValidatedInitV1State } from './model';
+import { classifyInitCapabilities, readValidatedInitV1State } from './model';
 import { DOCS_REGISTRY_PATH } from '../services/docs-registry';
 import type { DocumentRegistryFile } from '../services/docs-registry';
 import { requiredDocsForProfile } from './profile';
@@ -10,8 +10,9 @@ import { readProjectText } from './files';
 export function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   const issues: InitIssue[] = [];
   const actions: InitAction[] = [];
-  const initV1 = hasInitV1State(projectRoot);
-  const profile = inferProfileFromGeneratedDocs(projectRoot);
+  const initV1State = readValidatedInitV1State(projectRoot);
+  const initV1 = initV1State.kind !== 'none';
+  const profile = inferProfileFromGeneratedDocs(projectRoot, initV1State);
   const requiredCore: Array<{ path: string; code: string }> = initV1
     ? [
       { path: 'AGENTS.md', code: 'INIT_CORE_DOC_MISSING' },
@@ -228,6 +229,7 @@ const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
 
 function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
   const inferredProfile = inferProfileFromGeneratedDocs(projectRoot);
+  if (inferredProfile === 'unknown') return [];
   const issues: InitIssue[] = [];
   const projectAuthoredPaths = projectAuthoredRegistryPaths(projectRoot);
 
@@ -248,10 +250,11 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
   return issues;
 }
 
-function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
-  const project = readJsonObject(projectRoot, '.hadara/project.json');
-  if (project?.presetOrigin === 'minimal' || project?.presetOrigin === 'standard' || project?.presetOrigin === 'governed') {
-    return project.presetOrigin === 'minimal' ? 'basic' : project.presetOrigin;
+function inferProfileFromGeneratedDocs(projectRoot: string, initV1State = readValidatedInitV1State(projectRoot)): InitProfile | 'unknown' {
+  if (initV1State.kind !== 'none') {
+    if (initV1State.kind !== 'init-v1' || !initV1State.project) return 'unknown';
+    const capabilityProfile = classifyInitCapabilities(initV1State.project);
+    return capabilityProfile === 'unknown' ? 'unknown' : capabilityProfile;
   }
   const registry = readDocsRegistryForDoctor(projectRoot);
   if (registry?.project?.hadaraProfile === 'basic' || registry?.project?.hadaraProfile === 'standard' || registry?.project?.hadaraProfile === 'governed') {

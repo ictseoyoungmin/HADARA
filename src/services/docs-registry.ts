@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
-import { assertInitDocuments, createReadMap, readValidatedInitV1State } from '../init/model';
+import { assertInitDocuments, classifyInitCapabilities, createReadMap, readValidatedInitV1State } from '../init/model';
 import type { InitDocumentV1, InitDocumentsV1 } from '../init/types';
 import { managedSectionBlock } from './managed-sections';
 import { readMarkdownSection } from './markdown-table';
@@ -959,7 +959,10 @@ export function readDocsRegistryStorage(projectRoot: string): RegistryStorageSta
 
 function initProfileForProject(projectRoot: string): InitProfile {
   const project = readValidatedInitV1State(projectRoot).project;
-  if (project) return project.presetOrigin === 'minimal' ? 'basic' : project.presetOrigin;
+  if (project) {
+    const capabilityProfile = classifyInitCapabilities(project);
+    if (capabilityProfile === 'basic' || capabilityProfile === 'standard' || capabilityProfile === 'governed') return capabilityProfile;
+  }
   return 'standard';
 }
 

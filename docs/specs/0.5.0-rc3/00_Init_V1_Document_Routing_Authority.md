@@ -47,6 +47,32 @@ The registry stores paths and routing metadata independently of file format. TXT
 - `AGENTS.md` states policy and required command order.
 - `docs/HADARA_WORKFLOW.md` defines lifecycle commands and operational rules.
 - `READ_MAP.md` is a generated routing fallback and does not duplicate the workflow.
+
+## Canonical Init v1 State and Compatibility Views
+
+Init v1 authority is selected only from the pair of canonical state files:
+
+| State | Role |
+|---|---|
+| `.hadara/project.json` | Validated project configuration: features, document packs, and initial preset provenance. |
+| `.hadara/documents.json` | Canonical document-routing authority. |
+| `.hadara/context/READ_MAP.md` | Generated projection of `documents.json`; never an authority selector. |
+
+`presetOrigin` records the preset used when the initial scaffold was created. It is provenance, not
+the current project profile and must not decide routing, required lifecycle behavior, canonical
+writes, or authority selection. A project may add or remove supported capabilities through an
+explicit configuration operation, so its current `features` and `documentPacks` need not map to the
+original `presetOrigin`.
+
+`basic`, `standard`, `governed`, and `unknown` profile labels are compatibility/diagnostic views
+derived when a consumer needs a compact description of current capabilities. They are not persisted
+Init v1 authority and they must not constrain the canonical state to exactly three profile shapes.
+
+The canonical project validator checks concrete invariants only: required base features, the core
+document pack, feature/pack pairing, governance's dependency on the project pack, and schema-level
+duplicate/unknown-value rules. Partial or invalid `.hadara/project.json`/`.hadara/documents.json`
+state has no implicit authority and must fail closed for every consumer. A missing or stale
+`READ_MAP.md` is projection/doctor drift, not a replacement routing authority.
 - Task Capsules may link to the precise workflow section for command-owned identity fields; they do not need to repeat the full ownership policy.
 
 ## Acceptance
@@ -54,6 +80,9 @@ The registry stores paths and routing metadata independently of file format. TXT
 - Fresh Init v1 `docs list`, `docs doctor`, and `docs read-map` use `.hadara/documents.json` without a missing-legacy-registry warning.
 - Legacy projects continue to use `.hadara/docs-registry.json`.
 - Registry mutation is dry-run-first, before-hash guarded, and single-authority.
+- Init v1 routing authority does not depend on preset selection or compatibility profile classification.
+- `presetOrigin` remains provenance and may differ from a later valid feature/document-pack configuration.
+- Compatibility profile views do not become canonical write or routing authority.
 - Repeated projection generation is byte-stable.
 - Manual projection drift is observable and repairable through the reviewed path.
 - No retired global state or `harness validate` surface is introduced.

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { presetFromProjectConfig, readValidatedInitV1State } from '../init/model';
+import { classifyInitCapabilities, readValidatedInitV1State } from '../init/model';
 import type { ValidatedInitV1State } from '../init/model';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { createManualRemediation } from './protocol-remediation';
@@ -60,8 +60,7 @@ const OPTIONAL_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'doc
 interface ProfileMetadata {
   scaffold: TargetProtocolProfile | null;
   initV1: ValidatedInitV1State;
-  initV1Profile: TargetProtocolProfile | null;
-  initV1ProfileConsistent: boolean;
+  initV1CompatibilityProfile: TargetProtocolProfile | null;
 }
 
 export function createProfileConsistencyDiagnostics(projectRoot: string): ProfileDiagnostics {
@@ -72,10 +71,10 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
   const metadata = readProfileMetadata(projectRoot);
   appendInitV1MetadataIssues(metadata, issues);
   const declaredProfile = inferDeclaredProfile(metadata);
-  const detectedProfile = shouldUseInitV1Authority(metadata)
+  const detectedProfile = hasInitV1StateBoundary(metadata)
     ? declaredProfile
     : declaredProfile === 'unknown' ? detectProfileFromDocSet(docSet) : declaredProfile;
-  const targetProfile = shouldUseInitV1Authority(metadata)
+  const targetProfile = hasInitV1StateBoundary(metadata)
     ? declaredProfile === 'basic' || declaredProfile === 'standard' || declaredProfile === 'governed' ? declaredProfile : 'unknown'
     : inferTargetProfile(docSet, declaredProfile);
   const profileSummary = {
@@ -87,7 +86,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
   const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile, standardMinimalDocs);
   const missingTargetDocs = requiredDocs.filter((relativePath) => !exists(projectRoot, relativePath));
 
-  if (shouldUseInitV1Authority(metadata) && !exists(projectRoot, '.hadara/context/READ_MAP.md')) {
+  if (hasInitV1StateBoundary(metadata) && !exists(projectRoot, '.hadara/context/READ_MAP.md')) {
     issues.push({
       code: 'INIT_V1_REQUIRED_CONTEXT_MISSING',
       severity: 'error',
@@ -154,11 +153,11 @@ export function createProtocolProfileSummary(projectRoot: string): ProtocolProfi
   const docSet = getProfileDocSet(projectRoot, standardMinimalDocsForProject(projectRoot));
   const metadata = readProfileMetadata(projectRoot);
   const declared = inferDeclaredProfile(metadata);
-  const detected = shouldUseInitV1Authority(metadata) || declared !== 'unknown' ? declared : detectProfileFromDocSet(docSet);
+  const detected = hasInitV1StateBoundary(metadata) || declared !== 'unknown' ? declared : detectProfileFromDocSet(docSet);
   return {
     declared,
     detected,
-    target: shouldUseInitV1Authority(metadata)
+    target: hasInitV1StateBoundary(metadata)
       ? declared === 'basic' || declared === 'standard' || declared === 'governed' ? declared : 'unknown'
       : inferTargetProfile(docSet, declared),
     source: 'metadata-and-docset'
@@ -273,23 +272,22 @@ function standardMinimalDocsForProject(projectRoot: string): string[] {
 
 function readProfileMetadata(projectRoot: string): ProfileMetadata {
   const initV1 = readValidatedInitV1State(projectRoot);
-  const initV1Profile = initV1.kind === 'init-v1' && initV1.project
-    ? initPresetToProfile(presetFromProjectConfig(initV1.project))
+  const initV1CompatibilityProfile = initV1.kind === 'init-v1' && initV1.project
+    ? initCapabilityToProfile(classifyInitCapabilities(initV1.project))
     : null;
   return {
     scaffold: readScaffoldProfile(projectRoot),
     initV1,
-    initV1Profile,
-    initV1ProfileConsistent: initV1Profile === null || initV1.project === null || initV1Profile === initPresetToProfile(initV1.project.presetOrigin)
+    initV1CompatibilityProfile
   };
 }
 
 function inferDeclaredProfile(metadata: ProfileMetadata): ProtocolProfile {
-  if (metadata.initV1.kind !== 'none') return metadata.initV1ProfileConsistent ? metadata.initV1Profile ?? 'unknown' : 'unknown';
+  if (metadata.initV1.kind !== 'none') return metadata.initV1CompatibilityProfile ?? 'unknown';
   return metadata.scaffold ?? 'unknown';
 }
 
-function shouldUseInitV1Authority(metadata: ProfileMetadata): boolean {
+function hasInitV1StateBoundary(metadata: ProfileMetadata): boolean {
   return metadata.initV1.kind !== 'none';
 }
 
@@ -307,21 +305,10 @@ function appendInitV1MetadataIssues(metadata: ProfileMetadata, issues: ProfileDi
       });
     }
   }
-  if (metadata.initV1.kind === 'init-v1' && !metadata.initV1ProfileConsistent) {
-    issues.push({
-      code: 'INIT_V1_PROFILE_METADATA_MISMATCH',
-      severity: 'error',
-      area: 'profile',
-      path: '.hadara/project.json',
-      message: 'Init v1 presetOrigin does not match the validated documentPacks profile; profile selection failed closed.',
-      expected: 'presetOrigin consistent with documentPacks',
-      actual: `${metadata.initV1.project?.presetOrigin ?? 'unknown'} versus ${metadata.initV1Profile ?? 'unknown'}`
-    });
-  }
 }
 
-function initPresetToProfile(preset: 'minimal' | 'standard' | 'governed'): TargetProtocolProfile {
-  return preset === 'minimal' ? 'basic' : preset;
+function initCapabilityToProfile(profile: 'basic' | 'standard' | 'governed' | 'unknown'): TargetProtocolProfile | null {
+  return profile === 'basic' || profile === 'standard' || profile === 'governed' ? profile : null;
 }
 
 function readScaffoldProfile(projectRoot: string): TargetProtocolProfile | null {

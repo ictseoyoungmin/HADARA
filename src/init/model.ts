@@ -73,6 +73,13 @@ export class InitModelError extends Error {
 
 export type InitV1StateKind = 'none' | 'init-v1' | 'partial' | 'invalid';
 
+/**
+ * A compatibility view derived from current Init v1 capabilities.
+ * This is not canonical project state; presetOrigin remains initialization
+ * provenance.
+ */
+export type InitCapabilityProfile = 'basic' | 'standard' | 'governed' | 'unknown';
+
 export interface InitV1StateIssue {
   severity: 'warning' | 'error';
   code: string;
@@ -283,17 +290,28 @@ export function createInitV1ScaffoldFiles(projectId: string, preset: InitPreset)
   return files;
 }
 
-export function presetFromProjectConfig(project: InitProjectConfigV1): InitPreset {
+export function classifyInitCapabilities(project: InitProjectConfigV1): InitCapabilityProfile {
   if (project.documentPacks.includes('governance')) return 'governed';
   if (project.documentPacks.includes('project')) return 'standard';
-  return 'minimal';
+  if (project.documentPacks.includes('core')) return 'basic';
+  return 'unknown';
+}
+
+/**
+ * Chooses the template expansion used by the repair/upgrade projection.
+ * This output format choice is not a write authority or current project
+ * identity.
+ */
+export function initPresetForGeneratedProjection(project: InitProjectConfigV1): InitPreset {
+  const profile = classifyInitCapabilities(project);
+  return profile === 'governed' ? 'governed' : profile === 'standard' ? 'standard' : 'minimal';
 }
 
 export function createInitV1UpgradeFiles(
   project: InitProjectConfigV1,
   registry: InitDocumentsV1
 ): GeneratedScaffoldFile[] {
-  const generated = createInitV1ScaffoldFiles(project.projectId, presetFromProjectConfig(project));
+  const generated = createInitV1ScaffoldFiles(project.projectId, initPresetForGeneratedProjection(project));
   const coreFiles = new Set(CORE_ARTIFACTS.filter((artifact) => artifact.type === 'file').map((artifact) => artifact.path));
   return generated
     .filter((file) => coreFiles.has(file.path))

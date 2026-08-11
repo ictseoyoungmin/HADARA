@@ -312,6 +312,29 @@ describe('Profile protocol consistency report', () => {
     });
   });
 
+  it('treats a valid current capability expansion as a compatibility view, not provenance corruption', () => {
+    const root = materializeInitV1Project('minimal');
+    const projectPath = path.join(root, '.hadara', 'project.json');
+    const project = JSON.parse(fs.readFileSync(projectPath, 'utf8')) as {
+      presetOrigin: string;
+      features: string[];
+      documentPacks: string[];
+    };
+    project.features = ['task-lifecycle', 'evidence', 'document-routing', 'project-documentation'];
+    project.documentPacks = ['core', 'project'];
+    fs.writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`, 'utf8');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(true);
+    expect(report.summary.profile).toMatchObject({
+      declared: 'standard',
+      detected: 'standard',
+      target: 'standard'
+    });
+    expect(report.issues.map((issue) => issue.code)).not.toContain('INIT_V1_PROFILE_METADATA_MISMATCH');
+  });
+
   it('fails closed when an Init v1 minimal project loses its READ_MAP context anchor', () => {
     const root = materializeInitV1Project('minimal');
     fs.unlinkSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'));
