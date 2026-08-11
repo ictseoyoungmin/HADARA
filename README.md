@@ -162,7 +162,7 @@ The canonical agent loop, in the same `T-XXXX` form documented in `docs/HADARA_W
 hadara task status --json
 hadara task status --task T-XXXX --json
 
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --artifact-file artifacts/reduced-report.json --idempotency-key "command:T-XXXX:check" --json
 
 # Finalize Task Capsule docs and Task Board state before closing.
 

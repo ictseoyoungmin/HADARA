@@ -14,6 +14,7 @@ GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
 APPROVAL_ACTOR="${HADARA_RELEASE_APPROVAL_ACTOR:-local-operator}"
 APPROVAL_REASON="${HADARA_RELEASE_APPROVAL_REASON:-Manual approval-gated npm publish for current package version}"
+GITHUB_MUTATION_PERFORMED="false"
 
 usage() {
 cat <<'EOF'
@@ -357,6 +358,78 @@ echo "Run gh auth login first, set GH_TOKEN for gh, or pass --github-token-env <
 exit 1
 }
 
+write_operator_publication_report() {
+local report_path="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
+mkdir -p "$(dirname "${report_path}")"
+OP_REPORT_PATH="${report_path}" \
+OP_TASK_ID="${TASK_ID}" \
+OP_VERSION="${VERSION}" \
+OP_PACKAGE_NAME="${PACKAGE_NAME}" \
+OP_REGISTRY="${REGISTRY}" \
+OP_NPM_TAG="${NPM_TAG}" \
+OP_NPM_OBSERVED="${PUBLISHED_VERSION:-}" \
+OP_GITHUB_MUTATION="${GITHUB_MUTATION_PERFORMED}" \
+OP_GITHUB_DRAFT="${CREATE_GITHUB_DRAFT}" \
+OP_TARBALL="${TARBALL}" \
+OP_CHECKSUM_FILE="${CHECKSUM_FILE}" \
+OP_MANIFEST_FILE="${MANIFEST_FILE}" \
+OP_APPROVAL_ACTOR="${APPROVAL_ACTOR}" \
+OP_APPROVAL_REASON="${APPROVAL_REASON}" \
+OP_SOURCE_COMMIT="$(git rev-parse HEAD)" \
+node - <<'NODE'
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const hashFile = (filePath) => crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+const asset = (filePath, uploaded) => ({
+  name: path.basename(filePath),
+  sha256: `sha256:${hashFile(filePath)}`,
+  uploaded
+});
+const githubMutation = process.env.OP_GITHUB_MUTATION === 'true';
+const report = {
+  schemaVersion: 'hadara.releaseOperatorPublication.v1',
+  generatedAt: new Date().toISOString(),
+  package: {
+    name: process.env.OP_PACKAGE_NAME,
+    version: process.env.OP_VERSION,
+    registry: process.env.OP_REGISTRY,
+    distTag: process.env.OP_NPM_TAG,
+    npmMutationPerformed: true,
+    observedVersion: process.env.OP_NPM_OBSERVED
+  },
+  github: {
+    mutationPerformed: githubMutation,
+    draftRequested: process.env.OP_GITHUB_DRAFT === 'true',
+    prerelease: /-rc\.[0-9]+$/.test(process.env.OP_VERSION),
+    assets: [
+      asset(process.env.OP_TARBALL, githubMutation),
+      asset(process.env.OP_CHECKSUM_FILE, githubMutation),
+      asset(process.env.OP_MANIFEST_FILE, githubMutation)
+    ]
+  },
+  lineage: {
+    taskId: process.env.OP_TASK_ID,
+    sourceCommit: process.env.OP_SOURCE_COMMIT,
+    approvalActor: process.env.OP_APPROVAL_ACTOR,
+    approvalReason: process.env.OP_APPROVAL_REASON
+  },
+  mutationBoundary: {
+    dockerMutationPerformed: false,
+    stableLatestMutationPerformed: false,
+    substituteArtifactUsed: false
+  },
+  commands: {
+    npmPublish: ['npm', 'publish', path.basename(process.env.OP_TARBALL), '--tag', process.env.OP_NPM_TAG],
+    githubRelease: githubMutation ? ['gh', 'release', 'create', `v${process.env.OP_VERSION}`, '--draft', '--prerelease'] : null
+  }
+};
+fs.writeFileSync(process.env.OP_REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+NODE
+echo "Operator publication report: ${report_path}"
+}
+
 echo "== HADARA manual npm publish flow =="
 echo "Task: ${TASK_ID}"
 echo "Mode: ${MODE}"
@@ -575,13 +648,17 @@ exit 1
 fi
 
 echo "npm view verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION}"
-run_hadara_cli evidence add-command \
-  --task "${TASK_ID}" \
-  --summary "Published ${PACKAGE_NAME}@${VERSION} to npm and verified npm view returned ${PUBLISHED_VERSION}; GitHub Release draft requested: ${CREATE_GITHUB_DRAFT}." \
-  --result passed \
-  --json
 
 if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
+write_operator_publication_report
+run_hadara_cli evidence add-command \
+  --task "${TASK_ID}" \
+  --summary "Operator publication report recorded npm ${PACKAGE_NAME}@${VERSION}, mutation boundaries, and exact release asset digests." \
+  --result passed \
+  --category release \
+  --artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
+  --idempotency-key "operator-publication:${TASK_ID}:${VERSION}" \
+  --json
 echo
 echo "Skipping GitHub Release draft."
 echo "Re-run with --execute --github-draft if you want to create a draft release."
@@ -660,6 +737,9 @@ gh release create "${TAG}" \
   "${GH_PRERELEASE_ARGS[@]}" \
   --verify-tag
 
+GITHUB_MUTATION_PERFORMED="true"
+write_operator_publication_report
+
 echo
 echo "GitHub Release draft created."
 echo "Review it in GitHub UI, then publish the draft manually if everything is correct:"
@@ -670,6 +750,9 @@ echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false"
 fi
 run_hadara_cli evidence add-command \
   --task "${TASK_ID}" \
-  --summary "Created GitHub Release draft ${TAG} with tarball, checksum, and manifest assets after npm publish." \
+  --summary "Operator publication report recorded npm/GitHub mutation boundaries and exact ${TAG} release asset digests." \
   --result passed \
+  --category release \
+  --artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
+  --idempotency-key "operator-publication:${TASK_ID}:${VERSION}" \
   --json

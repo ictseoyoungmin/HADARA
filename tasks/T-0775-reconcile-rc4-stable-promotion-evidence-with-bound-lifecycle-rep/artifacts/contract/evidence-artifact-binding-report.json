@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "hadara.evidenceArtifactBinding.test.v1",
+  "taskId": "T-0775",
+  "result": "passed",
+  "checks": {
+    "sanitizedUtf8Policy": "passed",
+    "canonicalArtifactsArrayBinding": "passed",
+    "idempotentRetry": "passed",
+    "duplicateArtifactCopy": "zero"
+  },
+  "externalMutation": {
+    "npm": false,
+    "github": false,
+    "docker": false,
+    "stableLatest": false
+  }
+}

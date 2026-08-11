@@ -168,6 +168,47 @@ describe('CLI evidence JSON reports', () => {
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
   });
 
+  it('binds a sanitized command report into canonical artifacts[] and keeps idempotent retries zero-write', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Bind command report artifact');
+    const sourcePath = path.join(root, 'public-report.json');
+    fs.writeFileSync(sourcePath, `${JSON.stringify({ schemaVersion: 'hadara.test.report.v1', ok: true, exitCode: 0 })}\n`, 'utf8');
+    const args = [
+      'evidence', 'add-command', '--task', task.id,
+      '--summary', 'Bound command report passed',
+      '--result', 'passed', '--category', 'validation',
+      '--artifact-file', 'public-report.json',
+      '--idempotency-key', 'artifact-binding:test', '--json'
+    ];
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => output.push(String(value));
+
+    try {
+      expect(handleEvidenceCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
+      const first = JSON.parse(output.join('\n'));
+      output.length = 0;
+      expect(handleEvidenceCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
+      const second = JSON.parse(output.join('\n'));
+
+      expect(first.evidence.artifacts).toEqual([
+        expect.objectContaining({
+          path: expect.stringMatching(/^artifacts\/command-log\/.*-public-report\.json$/),
+          visibility: 'public',
+          artifactType: 'command-log'
+        })
+      ]);
+      const artifactPath = path.join(task.dir, first.evidence.artifacts[0].path);
+      expect(JSON.parse(fs.readFileSync(artifactPath, 'utf8'))).toMatchObject({ schemaVersion: 'hadara.test.report.v1', ok: true });
+      expect(second.evidence.id).toBe(first.evidence.id);
+      expect(second.evidence.existing).toBe(true);
+      expect(fs.readdirSync(path.dirname(artifactPath))).toHaveLength(1);
+      expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split('\n')).toHaveLength(1);
+    } finally {
+      console.log = originalLog;
+    }
+  });
+
   it('reports append lock contention without persisting diagnostics into evidence records', async () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Append lock diagnostics');

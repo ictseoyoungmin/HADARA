@@ -132,6 +132,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       return true;
     }
     const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
+    const artifactFile = getStringOption(input.args, '--artifact-file');
     const idempotencyKey = getStringOption(input.args, '--idempotency-key');
     const categoryInput = getStringOption(input.args, '--category');
     const categoryParse = parseOptionalEvidenceCategoryInput(categoryInput);
@@ -159,6 +160,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       const report = createEvidenceCollectReport(input.projectRoot, {
         taskId,
         kind: 'command-log',
+        path: artifactFile,
         summary,
         result,
         visibility,
@@ -170,7 +172,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       console.log(JSON.stringify({ ...report, command: 'evidence.add-command', ...(categoryParse.alias ? { categoryAlias: categoryParse.alias } : {}) }, null, 2));
       if (!report.ok) process.exitCode = 6;
     } else {
-      const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility, category, outcome, tags, idempotencyKey });
+      const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind: 'command-log', path: artifactFile, summary, result, visibility, category, outcome, tags, idempotencyKey });
       if (categoryParse.alias) {
         console.log(`[HADARA] evidence category "${categoryParse.alias.input}" normalized to "${categoryParse.alias.normalized}".`);
       }
@@ -209,6 +211,7 @@ function renderEvidenceCommandHelp(sub: string | undefined): string {
       '  --outcome <value>         Evidence v2 outcome.',
       '  --category <value>        Evidence v2 category. Common values: validation, implementation, release, audit, note.',
       '                            CLI aliases: test/tests -> validation, diagnostic/diagnostics -> operation.',
+      '  --artifact-file <path>    Attach a sanitized UTF-8 report from the project workspace to artifacts[].',
       '  --resolves <id>           Add a resolves:<id> tag. Repeatable.',
       '  --supersedes <id>         Add a supersedes:<id> tag. Repeatable.',
       '  --idempotency-key <key>   Reuse an existing keyed record instead of appending duplicates.',

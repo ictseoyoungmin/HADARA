@@ -16,7 +16,7 @@ describe('task workflow command semantics docs', () => {
     const commands = [
       'hadara task status --json',
       'hadara task status --task T-XXXX --json',
-      'hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json',
+      'hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --artifact-file artifacts/reduced-report.json --idempotency-key "command:T-XXXX:check" --json',
       '# Finalize Task Capsule docs and Task Board state before closing.',
       'hadara task close --task T-XXXX --json',
       'hadara task close --task T-XXXX --dry-run --json',
@@ -56,7 +56,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('| `hadara task status --json` | Select or inspect work through compact focused reads/edits. `--detail full` exposes the complete v2 report. | Read-only report. | No. |');
     expect(workflow).toContain('`task status` is the operator cockpit for next-work selection and selected-task guidance.');
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Fast phase-aware operator cockpit for one task. | Read-only report. | No. |');
-    expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. |');
+    expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--artifact-file <path>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator; optionally bind a sanitized UTF-8 report into canonical `artifacts[]`. | Write command. | Yes, appends capsule evidence and copies the artifact through the shared public-artifact policy unless an explicit idempotency key already exists. |');
     expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --plan-hash <hash> --json` | Execute a human-reviewed close plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through bounded task/status/evidence write boundaries. |');
     expect(contract).toContain('hadara.task.close.v3');
     expect(contract).toContain('source.closePlan');

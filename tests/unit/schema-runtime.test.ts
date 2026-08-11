@@ -13,6 +13,48 @@ describe('runtime schema validation', () => {
     });
   });
 
+  it('validates the reduced operator publication report contract', () => {
+    const report = {
+      schemaVersion: 'hadara.releaseOperatorPublication.v1',
+      generatedAt: '2026-08-11T10:26:37.624Z',
+      package: {
+        name: 'hadara',
+        version: '0.5.0-rc.4',
+        registry: 'https://registry.npmjs.org',
+        distTag: 'next',
+        npmMutationPerformed: true,
+        observedVersion: '0.5.0-rc.4'
+      },
+      github: {
+        mutationPerformed: true,
+        draftRequested: false,
+        prerelease: true,
+        assets: [
+          { name: 'hadara-0.5.0-rc.4.tgz', sha256: `sha256:${'a'.repeat(64)}`, uploaded: true },
+          { name: 'hadara-0.5.0-rc.4.tgz.sha256', sha256: `sha256:${'b'.repeat(64)}`, uploaded: true },
+          { name: 'hadara-0.5.0-rc.4.tgz.manifest.json', sha256: `sha256:${'c'.repeat(64)}`, uploaded: true }
+        ]
+      },
+      lineage: {
+        taskId: 'T-0775',
+        sourceCommit: '5ccbb838abcdef0',
+        approvalActor: 'local-operator',
+        approvalReason: 'Structural contract test'
+      },
+      mutationBoundary: {
+        dockerMutationPerformed: false,
+        stableLatestMutationPerformed: false,
+        substituteArtifactUsed: false
+      },
+      commands: {
+        npmPublish: ['npm', 'publish', 'hadara-0.5.0-rc.4.tgz', '--tag', 'next'],
+        githubRelease: ['gh', 'release', 'create', 'v0.5.0-rc.4', '--draft', '--prerelease']
+      }
+    };
+
+    expect(validateSchema('hadara.releaseOperatorPublication.v1', report).ok).toBe(true);
+  });
+
   it('validates Phase 6 common context fixtures', () => {
     expect(
       validateSchema('hadara.actor_context.v1', {

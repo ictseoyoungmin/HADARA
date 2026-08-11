@@ -534,6 +534,13 @@
       "notes": "Documents approval-gated publish/deploy readiness reports with token presence checks but no token values or release mutation."
     },
     {
+      "id": "hadara.releaseOperatorPublication.v1",
+      "path": "src/schemas/release-operator-publication.schema.json",
+      "status": "fixture",
+      "owner": "scripts/release/manual-publish-rc",
+      "notes": "Documents sanitized operator publication reports with npm/GitHub mutation state, exact asset digests, lineage, and stable/Docker mutation boundaries."
+    },
+    {
       "id": "hadara.smokeEvidenceSummary.v1",
       "path": "src/schemas/smoke-evidence-summary.schema.json",
       "status": "fixture",

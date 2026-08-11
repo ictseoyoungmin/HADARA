@@ -54,6 +54,19 @@ describe('manual publish release script', () => {
     expect(script).not.toContain('run_hadara package smoke --execute');
   });
 
+  it('binds the reduced operator publication report to canonical evidence', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    expect(script).toContain('write_operator_publication_report()');
+    expect(script).toContain("schemaVersion: 'hadara.releaseOperatorPublication.v1'");
+    expect(script).toContain('--artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
+    expect(script).toContain('dockerMutationPerformed: false');
+    expect(script).toContain('stableLatestMutationPerformed: false');
+    expect(script).toContain('substituteArtifactUsed: false');
+    expect(script).toContain('sha256:${hashFile(filePath)}');
+    expect(script).toContain('--idempotency-key "operator-publication:${TASK_ID}:${VERSION}"');
+  });
+
   it('refreshes and verifies dist immediately before building release artifacts', () => {
     const script = fs.readFileSync(scriptPath, 'utf8');
 

@@ -620,7 +620,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'evidence.add-command',
-    command: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
+    command: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--artifact-file <path>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
     summary: 'Append already-run command-log evidence to a Task Capsule, rejecting incompatible result/outcome metadata.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -636,10 +636,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.evidence.collect.v1',
     docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [
-      example('Record already-run command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'When recording a real result that was already executed outside validation run.')
+      example('Record already-run command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'When recording a real result that was already executed outside validation run.'),
+      example('Bind a reduced command report', 'hadara evidence add-command --task T-0001 --summary "Lifecycle passed" --result passed --category validation --artifact-file artifacts/lifecycle/report.json --json', 'When a sanitized UTF-8 command report must be retained and bound to the evidence record.')
     ],
     related: ['evidence.list', 'evidence.lint', 'task.close'],
-    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata and appendLock diagnostics for task-scoped append-lock waits. A new add-command report schema id, check-id, and subject fields are deferred candidate scope.',
+    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata, optional artifact-file binding, and appendLock diagnostics for task-scoped append-lock waits. Public artifact files are copied through the shared redaction and UTF-8 policy before artifacts[] is persisted.',
     conflictsWith: []
   },
   {

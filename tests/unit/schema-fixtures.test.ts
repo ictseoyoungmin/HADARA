@@ -83,6 +83,7 @@ describe('schema fixtures', () => {
       'hadara.releaseCloseout.v1',
       'hadara.releaseDryRun.v1',
       'hadara.releaseGate.v1',
+      'hadara.releaseOperatorPublication.v1',
       'hadara.releasePublish.v1',
       'hadara.runtime.version.v1',
       'hadara.schema.vocabulary.v1',

@@ -31,7 +31,7 @@ describe('tools list read model', () => {
           risk: 'medium'
         }),
         expect.objectContaining({
-          name: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
+          name: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--artifact-file <path>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
           category: 'write',
           readOnly: false,
           schemaVersion: 'hadara.evidence.collect.v1'
