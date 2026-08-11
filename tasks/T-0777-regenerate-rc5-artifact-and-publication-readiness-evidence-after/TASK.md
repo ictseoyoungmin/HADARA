@@ -6,9 +6,9 @@
 |---|---|
 | ID | T-0777 |
 | Title | Regenerate RC5 artifact and publication-readiness evidence after T-0776 hardening. |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-11T21:47 |
-| Updated | 2026-08-11T21:47 |
+| Updated | 2026-08-11T22:01 |
 
 > Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.
 
@@ -31,28 +31,28 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | Step | Action | Status |
 |---|---|---|
-| 1 | Fix the RC5 release-input contract, source version, and current-state documentation. | In Progress |
-| 2 | Generate and retain exact RC5 artifact/checksum/manifest with operator locator metadata. | Pending |
-| 3 | Run package/readiness dry-run gates, bind evidence, and close. | Pending |
+| 1 | Fix the RC5 release-input contract, source version, and current-state documentation. | Done |
+| 2 | Generate and retain exact RC5 artifact/checksum/manifest with operator locator metadata. | Done |
+| 3 | Run package/readiness dry-run gates, bind evidence, and close. | Done |
 
 ## Acceptance
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | Current package metadata and active release docs consistently identify `0.5.0-rc.5` as the source candidate while preserving published RC4 and stable `latest=0.4.6` as historical/public state. | Pending | TBD | Package/docs reconciliation |
-| AC-2 | Exact RC5 `.tgz`, `.sha256`, and manifest are generated from one clean source root, retained under `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5/`, and recorded with byte hashes and a private local-path boundary. | Pending | TBD | Release artifact retention |
-| AC-3 | Package smoke, clean-checkout smoke, strict release gate, release dry-run, and publish dry-run pass from the same RC5 release input without external mutation. | Pending | TBD | Release readiness gates |
-| AC-4 | Operator publication handoff names the exact logical artifact locator and explicitly defers npm/GitHub publication and public recycle to a separate approved capsule. | Pending | TBD | Operator handoff |
-| AC-5 | Canonical evidence binds the sanitized readiness report with `sha256`/`byteLength`; evidence lint and proof-last close pass. | Pending | TBD | Evidence Artifact Binding contract |
+| AC-1 | Current package metadata and active release docs consistently identify `0.5.0-rc.5` as the source candidate while preserving published RC4 and stable `latest=0.4.6` as historical/public state. | Met | `ev:T-0777:996c5abc74ee401d903bdecd` | Package/docs reconciliation |
+| AC-2 | Exact RC5 `.tgz`, `.sha256`, and manifest are generated from one clean source root, retained under `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5/`, and recorded with byte hashes and a private local-path boundary. | Met | `ev:T-0777:187893aa765a434c9a70c633`, `ev:T-0777:996c5abc74ee401d903bdecd` | Release artifact retention |
+| AC-3 | Package smoke, clean-checkout smoke, strict release gate, release dry-run, and publish dry-run pass from the same RC5 release input without external mutation. | Met | `ev:T-0777:26891a9911d745bfb01e9f98`, `ev:T-0777:f6f63962a5a449fab2b82515`, `ev:T-0777:996c5abc74ee401d903bdecd` | Release readiness gates |
+| AC-4 | Operator publication handoff names the exact logical artifact locator and explicitly defers npm/GitHub publication and public recycle to a separate approved capsule. | Met | `ev:T-0777:996c5abc74ee401d903bdecd` | Operator handoff |
+| AC-5 | Canonical evidence binds the sanitized readiness report with `sha256`/`byteLength`; evidence lint and proof-last close pass. | Met | `ev:T-0777:996c5abc74ee401d903bdecd` | Evidence Artifact Binding contract |
 
 ## Validation
 
 | Check | Gate | Status | Detail | Evidence |
 |---|---|---|---|---|
-| Package metadata/version and active release-doc reconciliation | Yes | Not Run | RC5 source candidate and RC4/latest public-state separation. | TBD |
-| Exact release artifact/checksum/manifest generation and retention | Yes | Not Run | One source root, one byte identity, stable logical locator. | TBD |
-| Package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run | Yes | Not Run | Readiness gates only; no external mutation. | TBD |
-| Evidence artifact binding and lint | Yes | Not Run | Sanitized report bound with exact byte metadata. | TBD |
+| Package metadata/version and active release-doc reconciliation | Yes | Passed | RC5 source candidate and RC4/latest public-state separation. | `ev:T-0777:996c5abc74ee401d903bdecd` |
+| Exact release artifact/checksum/manifest generation and retention | Yes | Passed | One source root, one byte identity, stable logical locator. | `ev:T-0777:187893aa765a434c9a70c633` |
+| Package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run | Yes | Passed | All readiness gates passed; no external mutation. | `ev:T-0777:26891a9911d745bfb01e9f98`, `ev:T-0777:f6f63962a5a449fab2b82515`, `ev:T-0777:996c5abc74ee401d903bdecd` |
+| Evidence artifact binding and lint | Yes | Passed | Sanitized report bound with exact byte metadata; lint has zero errors/warnings. | `ev:T-0777:996c5abc74ee401d903bdecd` |
 | Task close | Yes | Not Run | Proof-last close after handoff completion. | docs/TASK_WORKFLOW_COMMANDS.md |
 
 ## Inputs / Constraints
@@ -92,3 +92,4 @@ RC5 release-readiness preparation is complete without external release mutation.
 |---|---|---|
 | 2026-08-11 | Draft | Initial task scaffold. |
 | 2026-08-11 | In Progress | Scope fixed: RC5 source retarget, exact artifact retention, byte-bound readiness evidence, no external publication. |
+| 2026-08-11 | Done | RC5 exact artifact, package/clean-checkout smokes, strict gate, release dry-run, publish dry-run, bound evidence, and operator handoff are complete; ready for proof-last close. |

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "hadara.t0777.rc5-readiness-summary.v1",
+  "taskId": "T-0777",
+  "package": { "name": "hadara", "version": "0.5.0-rc.5", "distTag": "next", "stableLatest": "0.4.6" },
+  "source": {
+    "commit": "e3ac410e6f635f1625d87f75f5cb4016a5bc5786",
+    "releaseInputHash": "sha256:2732b71faf4ea93441c30ac6a017e2f479d2b9ddfaf2d8b43e477a2a0e463b79"
+  },
+  "artifactLocator": {
+    "logicalRoot": "$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5",
+    "files": [
+      { "name": "hadara-0.5.0-rc.5.tgz", "sha256": "sha256:e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6", "byteLength": 430628 },
+      { "name": "hadara-0.5.0-rc.5.tgz.sha256", "sha256": "sha256:e3a903cca75160585e22b1ee138e0e80abb5a7e389219694aa38020d31275d17", "byteLength": 88 },
+      { "name": "hadara-0.5.0-rc.5.tgz.manifest.json", "sha256": "sha256:2c9f4bcda84704bbb0c5e8bcd15bf9a90a8214e7e5fe8281f436127fc39b6b22", "byteLength": 23535 }
+    ]
+  },
+  "checks": [
+    { "id": "package-smoke", "status": "passed", "sourceKind": "tarball", "tarballSha256": "sha256:e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6" },
+    { "id": "clean-checkout-smoke", "status": "passed", "releaseInputHash": "sha256:2732b71faf4ea93441c30ac6a017e2f479d2b9ddfaf2d8b43e477a2a0e463b79" },
+    { "id": "strict-release-gate", "status": "passed" },
+    { "id": "release-dry-run", "status": "passed", "readiness": "ready" },
+    { "id": "publish-dry-run", "status": "passed", "mutationExecuted": false, "operatorApprovalRequired": true }
+  ],
+  "mutationBoundary": { "npmPublishExecuted": false, "githubReleaseCreated": false, "dockerImageBuilt": false, "publicConsumerRecycleExecuted": false },
+  "privacy": { "rawLogsIncluded": false, "tokensIncluded": false, "machineAbsolutePathsIncluded": false }
+}

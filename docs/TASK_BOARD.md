@@ -776,4 +776,4 @@
 | T-0774 | Run public RC4 close-execute and idempotent lifecycle acceptance. | Done | tasks/T-0774-run-public-rc4-close-execute-and-idempotent-lifecycle-acceptance | |
 | T-0775 | Reconcile RC4 stable-promotion evidence with bound lifecycle report. | Done | tasks/T-0775-reconcile-rc4-stable-promotion-evidence-with-bound-lifecycle-rep | |
 | T-0776 | Harden Evidence Artifact Byte Binding and Release Operator Report Execution. | Done | tasks/T-0776-harden-evidence-artifact-byte-binding-and-release-operator-repor | |
-| T-0777 | Regenerate RC5 artifact and publication-readiness evidence after T-0776 hardening. | Draft | tasks/T-0777-regenerate-rc5-artifact-and-publication-readiness-evidence-after | |
+| T-0777 | Regenerate RC5 artifact and publication-readiness evidence after T-0776 hardening. | Done | tasks/T-0777-regenerate-rc5-artifact-and-publication-readiness-evidence-after | |
