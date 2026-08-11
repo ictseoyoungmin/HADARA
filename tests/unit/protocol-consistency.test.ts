@@ -35,6 +35,21 @@ function tempProject(): string {
   return dir;
 }
 
+function materializeInitV1Project(preset: 'minimal' | 'standard' | 'governed'): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `hadara-init-v1-${preset}-`));
+  roots.push(root);
+  for (const file of createInitV1ScaffoldFiles(`init-v1-${preset}`, preset)) {
+    const target = path.join(root, file.path);
+    if (file.path === 'tasks') {
+      fs.mkdirSync(target, { recursive: true });
+      continue;
+    }
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, file.content, 'utf8');
+  }
+  return root;
+}
+
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
@@ -280,6 +295,74 @@ describe('Docs protocol consistency report', () => {
 });
 
 describe('Profile protocol consistency report', () => {
+  it.each([
+    ['minimal', 'basic'],
+    ['standard', 'standard'],
+    ['governed', 'governed']
+  ] as const)('uses canonical Init v1 metadata for fresh %s profile detection', (preset, expectedProfile) => {
+    const root = materializeInitV1Project(preset);
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(true);
+    expect(report.summary.profile).toMatchObject({
+      declared: expectedProfile,
+      detected: expectedProfile,
+      target: expectedProfile
+    });
+  });
+
+  it('fails closed when an Init v1 minimal project loses its READ_MAP context anchor', () => {
+    const root = materializeInitV1Project('minimal');
+    fs.unlinkSync(path.join(root, '.hadara', 'context', 'READ_MAP.md'));
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.profile).toMatchObject({ declared: 'basic', detected: 'basic', target: 'basic' });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'INIT_V1_REQUIRED_CONTEXT_MISSING',
+      severity: 'error',
+      path: '.hadara/context/READ_MAP.md'
+    }));
+  });
+
+  it('fails closed instead of treating a malformed governed Init v1 manifest as standard', () => {
+    const root = materializeInitV1Project('governed');
+    fs.writeFileSync(path.join(root, '.hadara', 'project.json'), '{"schemaVersion":"hadara.project.v1"}\n', 'utf8');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.profile).toMatchObject({ declared: 'unknown', detected: 'unknown', target: 'unknown' });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'INIT_PROJECT_CONFIG_INVALID',
+      severity: 'error',
+      path: '.hadara/project.json'
+    }));
+  });
+
+  it.each(['basic', 'standard', 'governed'] as const)('preserves legacy %s scaffold profile behavior', (profile) => {
+    const root = tempProject();
+    writeScaffoldProfile(root, profile);
+    if (profile !== 'basic') writeProfileDocs(root, profile);
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.summary.profile).toMatchObject({
+      declared: profile,
+      detected: profile,
+      target: profile
+    });
+  });
+
+  it('includes READ_MAP in the Init v1 minimal workflow Project Start table', () => {
+    const root = materializeInitV1Project('minimal');
+    const workflow = fs.readFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), 'utf8');
+
+    expect(workflow).toContain('| 2 | `.hadara/context/READ_MAP.md` | Compact read routing. |');
+  });
+
   it('does not promote a declared basic scaffold because optional docs are present', () => {
     const root = tempProject();
     writeProfileDocs(root, 'governed');

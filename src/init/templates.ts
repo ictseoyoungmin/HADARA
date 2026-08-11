@@ -58,6 +58,7 @@ export function createSlotRegistryJson(): string {
 }
 
 export function createHadaraWorkflowDoc(profile: InitProfile, contextRouterPath = '.hadara/context/HADARA_CONTEXT.md'): string {
+  const includesContextRouter = profile !== 'basic' || contextRouterPath !== '.hadara/context/HADARA_CONTEXT.md';
   return `# HADARA_WORKFLOW
 
 ## Purpose
@@ -131,8 +132,8 @@ After init, review:
 | Step | Document | Purpose |
 |---|---|---|
 | 1 | \`AGENTS.md\` | Entry rules and required reading. |
-${profile === 'basic' ? '' : `| 2 | \`${contextRouterPath}\` | Compact read routing. |\n`}| ${profile === 'basic' ? '2' : '3'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
-| ${profile === 'basic' ? '3' : '4'} | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
+${includesContextRouter ? `| 2 | \`${contextRouterPath}\` | Compact read routing. |\n` : ''}| ${includesContextRouter ? '3' : '2'} | \`docs/TASK_BOARD.md\` | Inspectable task index and active-work source. |
+| ${includesContextRouter ? '4' : '3'} | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
