@@ -107,9 +107,11 @@ Current package metadata preparation mode:
 - Published release: `0.5.0-rc.3` is public on npm `next`; stable `latest=0.4.6` remains unchanged.
 - Current source version: `0.5.0-rc.4`.
 - Current version is `0.5.0-rc.4` for the active RC4 source candidate; T-0766 reconciled fresh Init v1 scaffolds and protocol doctor now reports zero warnings across all three presets.
-- Current release target: RC4 pre-operator artifact regeneration and publish preparation; npm `next` remains the published RC3 line until an operator publishes RC4.
+- Current release target: RC4 exact-artifact retention and operator publication handoff complete; npm `next` remains the published RC3 line until an operator publishes RC4.
 - Current prerelease npm status: published `next=0.5.0-rc.3`; target `next=0.5.0-rc.4` after operator publication; stable `latest=0.4.6` remains unchanged.
 - Current prerelease GitHub status: `v0.5.0-rc.3` is public with `isPrerelease=true`, `isDraft=false`, and no custom assets currently attached; RC4 GitHub publication is pending operator action.
+- T-0770 verified the retained exact RC4 artifact from source commit `67d5935cfb4cd27bc4d79679e25789417917f4c5` and release input `sha256:c7c31f8e4d80647a6e0aebe72bd6077df86425dba0faa6802f951e76e33e377c`.
+- RC4 operator artifact locator: `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.4/` containing `hadara-0.5.0-rc.4.tgz`, `hadara-0.5.0-rc.4.tgz.sha256`, and `hadara-0.5.0-rc.4.tgz.manifest.json`. Tarball SHA-256 is `5ccbb838940af4bad1e65308a7bed9e561ae682401d359df181c04ab89dc30ce`; checksum and manifest file hashes are `a669125d5c0cb0b28be3fab113c39db470bbfbc30be1b23654572ea760d4feca` and `4910bffd76c97c7ba5204854207837b89498eb533034dfbb5f9929e23d18c5da`. Publish must consume these exact bytes without rebuilding.
 - RC3 public consumer status: T-0763 verified registry metadata, installed version, command surface, init, task create/status, validation/evidence, close, same-close zero-write retry, fresh status idle, and no recommendation from the published `hadara@next` package.
 - RC3 artifact status: the exact original `.tgz`, `.sha256`, and manifest were not retained in the capsule; T-0765 attempts read-only registry recovery and keeps each file's provenance separate.
 - Previous prerelease: `hadara@0.5.0-rc.1` and `v0.5.0-rc.1` remain historical context.

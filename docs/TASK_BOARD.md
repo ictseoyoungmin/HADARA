@@ -770,3 +770,4 @@
 | T-0767 | RC4 Release Artifact Regeneration and Publish Preparation | Done | tasks/T-0767-rc4-release-artifact-regeneration-and-publish-preparation | |
 | T-0768 | Init v1 Profile and RC4 Release Provenance Reconciliation | Done | tasks/T-0768-init-v1-profile-and-rc4-release-provenance-reconciliation | |
 | T-0769 | Decouple Init v1 Canonical State from Compatibility Profiles | Done | tasks/T-0769-decouple-init-v1-canonical-state-from-compatibility-profiles | |
+| T-0770 | RC4 Exact Artifact Retention and Publication Handoff | Done | tasks/T-0770-rc4-exact-artifact-retention-and-publication-handoff | |
