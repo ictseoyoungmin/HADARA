@@ -78,6 +78,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | Release metadata | Retarget package/lockfile, README release status, release notes, roadmap, readiness, and RC4 operator note to the corrected source candidate. |
 | Artifact provenance | Build from a clean source clone into a separate output directory and retain exact tarball/checksum/manifest until operator review. |
 | Release evidence | Attach artifact journal and exact package/checkout/gate/dry-run evidence to T-0767; do not publish or recycle public package here. |
+| Corrective reconciliation | T-0768 corrected Init v1 profile authority and regenerated the current RC4 exact artifact; this handoff now points to that corrective source/evidence line. |
 
 ## Risks / Follow-ups
 
@@ -85,6 +86,7 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 |---|---|---|---|---|
 | RF-1 | Follow-up | Operator must publish the reviewed RC4 artifact to npm `next`, create/update the independent GitHub prerelease, and then run public consumer recycle. | Open | Post-close release operator capsule |
 | RF-2 | Risk | Source and evidence roots must remain separate or release artifact clean-tree checks self-invalidate. | Open | `docs/RELEASE_READINESS.md` |
+| RF-3 | Corrective record | T-0768 supersedes the original RC4 artifact bytes after source-level profile fixes; publish only the T-0768 rebuild. | Open | T-0768 handoff |
 
 ## History
 
@@ -94,3 +96,4 @@ Lifecycle note: do not hand-edit Identity `Status` or `docs/TASK_BOARD.md` Statu
 | 2026-08-11 | In Progress | Opened after T-0766 closed-valid; RC4 artifact regeneration is required before stable promotion. |
 | 2026-08-11 | In Progress | Retargeted source to RC4, generated exact artifact, passed exact package/clean-checkout/gate/dry-runs, and prepared operator handoff without external mutation. |
 | 2026-08-11 | Done | Finalized RC4 pre-operator readiness evidence and handoff; publication and public recycle remain explicitly deferred. |
+| 2026-08-11 | Done | T-0768 corrective capsule opened after review; current artifact locator and continuation now point to the regenerated RC4 evidence line. |

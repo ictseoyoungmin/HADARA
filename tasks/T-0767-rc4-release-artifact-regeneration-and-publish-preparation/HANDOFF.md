@@ -15,11 +15,11 @@
 |---|---|
 | T-0766 closed-valid after Init v1 scaffold/protocol reconciliation; T-0767 now owns RC4 source retarget and pre-operator release evidence. | T-0766 close proof; this capsule |
 
-## Next Recommended Step
+## Corrective Continuation
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Review the close dry-run and execute `hadara task close --task T-0767 --json` if readiness is `ready`. | RC4 source/artifact gates are complete; publication remains a separate operator-controlled mutation. | `TASK.md`, `EVIDENCE.md`, `docs/RELEASE_READINESS.md` |
+| Continue with T-0768 for Init v1 profile authority, READ_MAP routing, and RC4 provenance reconciliation. | This capsule's close proof is complete, but the reviewer identified a source-level profile gap and required a fresh artifact after the corrective source change. | T-0768 `TASK.md`, `docs/RELEASE_READINESS.md` |
 
 ## Carry Forward Warnings
 
@@ -32,16 +32,21 @@
 
 | Item | Value |
 |---|---|
-| Source commit | `3822413a98dc55fd5540d3e3abbc8bc9253e2970` |
-| Release input hash | `sha256:d2b5420a5fcd7aec9ec269f34bc2fcc0d96472ece247c4993a6f34fccb06251e` |
-| Tarball | `hadara-0.5.0-rc.4.tgz`, 427797 bytes |
-| Tarball SHA-256 | `b99dbf90e9a07d82f197e1542afc45c5036bdb81156dda8965056fac5660fde8` |
-| Checksum file SHA-256 | `fd2360afb156f58cd6a861fc26afe557a3054dc1214ca93cbcf5c676a0ed651d` |
-| Manifest file SHA-256 | `5597c03931c34fa8d19fbac63f1eb2e6759a9df783ec324e9f67ccb2a1beb6d0` |
-| Retention | Keep the exact three files in the operator release workspace through any selected secondary upload. |
+| Original T-0767 source commit (superseded) | `3822413a98dc55fd5540d3e3abbc8bc9253e2970` |
+| Original T-0767 release input hash (superseded) | `sha256:d2b5420a5fcd7aec9ec269f34bc2fcc0d96472ece247c4993a6f34fccb06251e` |
+| Logical artifact root | `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.4/` |
+| Local retention metadata | `.hadara/local/release-workspace.json` (ignored; actual host path is private) |
+| Tarball | `hadara-0.5.0-rc.4.tgz`, 428507 bytes |
+| Original T-0767 tarball SHA-256 (superseded) | `b99dbf90e9a07d82f197e1542afc45c5036bdb81156dda8965056fac5660fde8` |
+| Current T-0768 source commit | `b41cbb7210b9e807d83ebf85ce033393b6d3bc3b` |
+| Current T-0768 release input hash | `sha256:cd38f6afeab4312f426d00a5357ade0665b2ab70a111ebf95b20ac367d25104d` |
+| Tarball SHA-256 (T-0768 rebuild) | `171d03568fb6f6424aaf90560927837d89b558171ce5f4858b45115d18415b89` |
+| Checksum file SHA-256 (T-0768 rebuild) | `857f55c6fa2dee29d1c15086767c16913c0e14e191d298f7c455a1d9baaa7c67` |
+| Manifest file SHA-256 (T-0768 rebuild) | `37010b1b6b6f5654822dfe0606bcd68747d3b624c8b0fe72c354d72f64d79e09` |
+| Retention | Use the T-0768 rebuild as the current exact artifact; keep the three files under the logical operator workspace through any selected secondary upload. |
 
 ## Post-Close Continuation
 
-1. Publish the retained exact tarball to npm as `hadara@0.5.0-rc.4` on dist-tag `next` through the approval-controlled publish helper.
+1. After T-0768 closes with fresh readiness proof, publish the retained exact tarball to npm as `hadara@0.5.0-rc.4` on dist-tag `next` through the approval-controlled publish helper.
 2. Verify npm `next` resolves RC4, then create/update the independent GitHub `v0.5.0-rc.4` prerelease; custom assets remain optional, and any uploaded assets must be these exact reviewed bytes.
 3. Run a separate public consumer recycle from `hadara@next` with expected version `0.5.0-rc.4`; do not reuse this pre-operator capsule for post-publish evidence.
