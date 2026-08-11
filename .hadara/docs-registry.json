@@ -2111,6 +2111,39 @@
       "supersedes": []
     },
     {
+      "path": "docs/GRAPHIFY_FOR_HADARA_AGENTS.md",
+      "title": "Graphify for HADARA Agents",
+      "owner": "project",
+      "kind": "implementation-guide",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "conditional-reference",
+      "authority": "reference-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": false,
+        "reason": "docs/GRAPHIFY_FOR_HADARA_AGENTS.md is marked as low drift risk."
+      }
+    },
+    {
       "path": "docs/HADARA_WORKFLOW.md",
       "title": "HADARA_WORKFLOW",
       "owner": "hadara-docs",
@@ -2324,7 +2357,7 @@
       "authority": "historical"
     }
   ],
-  "generatedAt": "2026-08-01T11:15:15.746Z",
+  "generatedAt": "2026-08-11T05:46:44.451Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"

@@ -4,6 +4,9 @@ coverage/
 *.log
 dist-release/
 
+# Graphify local code graph and extraction cache
+graphify-out/
+
 # HADARA portable/local state
 data/
 .hadara/local/

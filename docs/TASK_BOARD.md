@@ -764,4 +764,4 @@
 | T-0761 | Refresh RC3 Final Readiness | Done | tasks/T-0761-refresh-rc3-final-readiness | |
 | T-0762 | Integrate RC3 Reviewer Feedback | Done | tasks/T-0762-integrate-rc3-reviewer-feedback | |
 | T-0763 | Publish RC3 and Recycle Public Consumer | Done | tasks/T-0763-publish-rc3-and-recycle-public-consumer | |
-| T-0764 | Install and configure local Graphify MCP | Draft | tasks/T-0764-install-and-configure-local-graphify-mcp | |
+| T-0764 | Graphify Study and HADARA Agent Usage Guide | Done | tasks/T-0764-graphify-study-and-hadara-agent-usage-guide | |
