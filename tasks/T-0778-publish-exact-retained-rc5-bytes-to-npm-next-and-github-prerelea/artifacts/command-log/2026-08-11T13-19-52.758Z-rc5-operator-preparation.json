@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "hadara.releaseOperatorPreparation.v1",
+  "package": {
+    "name": "hadara",
+    "version": "0.5.0-rc.5",
+    "npmTag": "next"
+  },
+  "retainedArtifact": {
+    "logicalLocator": "$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5",
+    "exactInputRequired": true,
+    "tarball": {
+      "name": "hadara-0.5.0-rc.5.tgz",
+      "byteLength": 430628,
+      "sha256": "e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6"
+    },
+    "checksum": {
+      "name": "hadara-0.5.0-rc.5.tgz.sha256",
+      "byteLength": 88,
+      "sha256": "e3a903cca75160585e22b1ee138e0e80abb5a7e389219694aa38020d31275d17"
+    },
+    "manifest": {
+      "name": "hadara-0.5.0-rc.5.tgz.manifest.json",
+      "byteLength": 23535,
+      "sha256": "2c9f4bcda84704bbb0c5e8bcd15bf9a90a8214e7e5fe8281f436127fc39b6b22"
+    }
+  },
+  "publishEnvironment": {
+    "container": "hadara-dev",
+    "clonePath": "/root/hadara-publish",
+    "cloneCommit": "295a645b",
+    "worktree": "clean",
+    "packageBuildVersion": "0.5.0-rc.5",
+    "strictReleaseGate": "passed"
+  },
+  "mutationBoundary": {
+    "npmPublishPerformed": false,
+    "githubMutationPerformed": false,
+    "dockerMutationPerformed": false,
+    "stableLatestMutationPerformed": false
+  },
+  "operatorWarning": "The current manual-publish-rc.sh rebuilds release artifacts; do not point it at the retained artifact directory when exact byte identity is required."
+}

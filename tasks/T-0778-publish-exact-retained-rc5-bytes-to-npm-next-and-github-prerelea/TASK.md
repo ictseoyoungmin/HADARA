@@ -31,7 +31,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | Step | Action | Status |
 |---|---|---|
-| 1 | Verify the retained RC5 artifact set and operator environment. | In Progress |
+| 1 | Verify the retained RC5 artifact set and operator environment. | Completed |
 | 2 | Publish exact retained bytes to npm and GitHub under explicit operator approval. | Pending |
 | 3 | Recycle the public RC5 consumer and record terminal lifecycle evidence. | Pending |
 | 4 | Reconcile current-state docs and close with proof-last evidence. | Pending |
@@ -40,7 +40,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
-| AC-1 | Retained RC5 tarball, checksum, and manifest are present at the operator locator and match the expected bytes. | Pending | T-0777 release artifact evidence | `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5` |
+| AC-1 | Retained RC5 tarball, checksum, and manifest are present at the operator locator and match the expected bytes. | Met for preparation | `ev:T-0778:da43a3e5cb8b490b94891d25` | `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5` |
 | AC-2 | npm publishes exactly `hadara@0.5.0-rc.5` under `next`; `latest` remains unchanged. | Pending | TBD | External operator publication |
 | AC-3 | GitHub `v0.5.0-rc.5` is public, `isPrerelease=true`, and has the tarball/checksum/manifest assets with digest parity. | Pending | TBD | External operator publication |
 | AC-4 | Public RC5 consumer passes fresh init, validation/evidence, close dry-run, real close execute, `closed-valid`, same-close zero-write retry, and fresh idle status with no stale continuation. | Pending | TBD | Public consumer recycle evidence |
@@ -51,7 +51,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Check | Gate | Status | Detail | Evidence |
 |---|---|---|---|---|
 | Retained artifact byte verification | Yes | Passed in T-0777 | Tarball SHA-256 `e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6`; checksum SHA-256 `e3a903cca75160585e22b1ee138e0e80abb5a7e389219694aa38020d31275d17`; manifest SHA-256 `2c9f4bcda84704bbb0c5e8bcd15bf9a90a8214e7e5fe8281f436127fc39b6b22`. | T-0777 release artifact evidence |
-| Publish environment preparation | Yes | In Progress | Must use a clean Docker ext4 clone and the retained artifact locator; do not run the current helper against the retained directory because it regenerates artifacts. | Operator handoff |
+| Publish environment preparation | Yes | Passed | Clean Docker ext4 clone at `/root/hadara-publish`, commit `295a645b`, package/build version `0.5.0-rc.5`, strict release gate passed; exact retained bytes verified. | `ev:T-0778:da43a3e5cb8b490b94891d25` |
 | Public npm/GitHub publication | Yes | Not Run | Human approval and authenticated npm/gh sessions required. | AC-2, AC-3 |
 | Public RC5 lifecycle recycle | Yes | Not Run | Execute only after public package publication is verified. | AC-4 |
 

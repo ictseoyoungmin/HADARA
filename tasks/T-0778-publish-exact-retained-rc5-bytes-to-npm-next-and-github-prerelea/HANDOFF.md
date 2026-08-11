@@ -17,7 +17,7 @@
 | Item | Evidence |
 |---|---|
 | T-0778 capsule created and exact RC5 publication boundary defined. | T-0777 `closed-valid`; retained artifact hashes recorded in `TASK.md`. |
-| Publish clone preparation is ready to run. | `scripts/release/prepare-publish-env.sh T-0778` |
+| Publish clone prepared and retained artifact verified. | `ev:T-0778:da43a3e5cb8b490b94891d25`; clone `/root/hadara-publish` at `295a645b`, logical artifact locator `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5`. |
 
 ## Pre-Close Operator Action
 
@@ -38,3 +38,4 @@
 |---|---|---|
 | Retained artifact is outside the git worktree. | The logical locator must resolve inside the operator container; do not substitute a regenerated tarball. | Verify all three SHA-256 values immediately before publish and attach the operator report. |
 | Public lifecycle raw consumer logs are disposable. | Repository evidence must retain a sanitized structured acceptance artifact with byte-bound evidence refs. | Attach the reduced report to canonical evidence before close. |
+| Publication has not been authorized or executed by this preparation step. | npm/GitHub state is intentionally unchanged. | Operator must separately review and approve each external mutation. |
