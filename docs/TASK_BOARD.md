@@ -771,3 +771,4 @@
 | T-0768 | Init v1 Profile and RC4 Release Provenance Reconciliation | Done | tasks/T-0768-init-v1-profile-and-rc4-release-provenance-reconciliation | |
 | T-0769 | Decouple Init v1 Canonical State from Compatibility Profiles | Done | tasks/T-0769-decouple-init-v1-canonical-state-from-compatibility-profiles | |
 | T-0770 | RC4 Exact Artifact Retention and Publication Handoff | Done | tasks/T-0770-rc4-exact-artifact-retention-and-publication-handoff | |
+| T-0772 | Publish the exact retained RC4 bytes to npm next and GitHub prerelease in the separately approved operator flow. | Draft | tasks/T-0772-publish-the-exact-retained-rc4-bytes-to-npm-next-and-github-prer | |
