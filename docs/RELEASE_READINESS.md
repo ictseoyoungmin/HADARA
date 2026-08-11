@@ -92,7 +92,8 @@ Current package metadata preparation mode:
 - Published 0.5.0-rc.2 artifact status: T-0749 current-head release artifact, checksum/manifest, package/consumer smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, installed lifecycle acceptance, and closed-valid proof passed before publication. npm `0.5.0-rc.2` is published on `next`; GitHub Release `v0.5.0-rc.2` is public prerelease. Post-publication fixes are outside that immutable RC2 artifact and require a new RC release-input refresh.
 - RC2 post-publication recycle status: T-0754 verified public `hadara@next` resolves to `0.5.0-rc.2`, installs in an isolated consumer, applies the reviewed JSON init plan, and passes task/status, close dry-run report, and context-slice checks. The GitHub Release currently has zero assets, and the exact original RC2 tarball is not retained in the repository; this is historical debt and must not be “fixed” by uploading a regenerated artifact under the RC2 identity.
 - Current post-RC2 source status: T-0751 corrected the post-publish helper dispatch; T-0753 corrected RC prerelease metadata/body truth and added tarball provenance enforcement. These changes intentionally invalidate T-0749's current-head evidence for the checkout. The next RC must regenerate artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, and installed lifecycle evidence from the new release input.
-- Release artifact retention: the capsule retains the reduced public release-artifact report plus checksum and manifest metadata; the binary tarball remains disposable or external to avoid one committed `.tgz` per release capsule. From RC3 onward, the exact artifact used by package smoke must be retained in the operator release workspace until all secondary uploads complete.
+- Release artifact retention: the capsule retains the reduced public release-artifact report plus checksum and manifest metadata; the binary tarball remains disposable or external to avoid one committed `.tgz` per release capsule. T-0763 records a corrective failure because the exact RC3 tarball was not retained through the secondary-upload decision point; future release capsules must retain the exact package-smoke bytes in the operator release workspace until all selected secondary uploads complete.
+- RC3 artifact-retention corrective record: T-0763's expected tarball/checksum/manifest hashes remain evidence of the intended release input, not proof that the files are currently recoverable. A registry tarball may be accepted as exact only after byte/hash comparison; a regenerated checksum or manifest must not be labeled as the original.
 - The published `0.5.0-rc.1` and its package/GitHub/install observations remain historical release context in `docs/RELEASE_NOTES.md` and completed task evidence; they are not the active RC2 gate.
 - Current 0.4.6 stable source/preparation status: T-0604 closed residual brownfield trust gaps; T-0605 improved evidence category UX and manifest inference polish; T-0606/T-0607 recorded delegated onboarding dogfood; T-0608 fixed delegated onboarding UX findings; T-0609 hardened validation execution capture; T-0610 retired stale bootstrap next-work after first close; T-0611 through T-0613 clarified current-state latest-task and trusted validation-baseline contracts; T-0614 prepared and the operator published `0.4.6-rc.0`; T-0615 dogfooded the installed rc.0 package; T-0616 through T-0619 fixed concurrent task creation, first-user docs workflow, and HADARA-dev Docker sync-build friction; T-0620 prepared and the operator published `0.4.6-rc.1`; T-0621 through T-0624 cleaned up rc.1 release/dogfood findings; T-0625 reproduced a delegated first-capsule close blocker; T-0626 and T-0627 fixed the finalize close-boundary and validation placeholder semantics; T-0628 reran delegated Codex dogfood and closed both the adoption baseline and a Quant Battle Arena MVP feature capsule without manual lifecycle-owned status edits.
 - Current 0.4.6 stable readiness: package metadata, release notes, readiness docs, README release status, helper examples, and GitHub stable release note artifact targeted `hadara@0.4.6`; current-package delegated dogfood after the finalize fixes passed; source validation and release package smoke were refreshed in T-0629; T-0631 records completed operator npm/GitHub publication and installed-package recycle from public `hadara@latest` expected `0.4.6`.
@@ -102,12 +103,14 @@ Current package metadata preparation mode:
 - Current 0.4.4 stable readiness: R1 basic-profile delegated dogfood closed 5 capsules with installed `hadara@0.4.3`; R2 standard-profile external validation completed ordinary lifecycle checks and documented host spawn fallback as non-blocking; R3 Claude Code independently completed 8 governed-profile capsules and the reviewer separated 0.4.3-only findings from current candidate behavior. T-0578 fixed the remaining pre-release UX issues; T-0580/T-0581 verified the published RC and consumer recycle; T-0582 exercised repo read models, fresh basic/standard/governed init, governed toy lifecycle, and fixed Development Slices currentness false-positive noise.
 - Current stable 0.4.3 source/readiness baseline: T-0561 through T-0569 established structured current-state, currentness diagnostics, measurement, positioning, release smokes, fresh-init dogfood, and post-dogfood cleanup; T-0570 prepared stable release notes/readiness/helper examples; the operator published npm and GitHub Release `v0.4.3`; T-0571 verified `hadara@latest` resolves to `0.4.3` and installed-package recycle passes.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Published release: `0.5.0-rc.2` remains public on npm `next` and GitHub as a prerelease.
+- Published release: `0.5.0-rc.3` is public on npm `next`; stable `latest=0.4.6` remains unchanged.
 - Current source version: `0.5.0-rc.3`.
-- Current version is `0.5.0-rc.3` for the active RC3 source candidate; the published RC2 package remains immutable on npm `next`.
-- Current release target: RC3 source/readiness preparation; no RC3 publication has occurred.
-- Current prerelease npm status: `next=0.5.0-rc.2`; stable `latest=0.4.6` remains unchanged.
-- Current prerelease GitHub status: `v0.5.0-rc.2` is public with `isPrerelease=true`.
+- Current version is `0.5.0-rc.3` for the active RC3 source candidate, and T-0763 completed public consumer dogfood through `closed-valid`, zero-write same-close retry, and fresh idle status.
+- Current release target: RC3 public-release reconciliation; npm RC3 is published and GitHub `v0.5.0-rc.3` is public prerelease. Stable promotion remains pending the fresh standard-init warning decision.
+- Current prerelease npm status: `next=0.5.0-rc.3`; stable `latest=0.4.6` remains unchanged.
+- Current prerelease GitHub status: `v0.5.0-rc.3` is public with `isPrerelease=true`, `isDraft=false`, and no custom assets currently attached.
+- RC3 public consumer status: T-0763 verified registry metadata, installed version, command surface, init, task create/status, validation/evidence, close, same-close zero-write retry, fresh status idle, and no recommendation from the published `hadara@next` package.
+- RC3 artifact status: the exact original `.tgz`, `.sha256`, and manifest were not retained in the capsule; T-0765 attempts read-only registry recovery and keeps each file's provenance separate.
 - Previous prerelease: `hadara@0.5.0-rc.1` and `v0.5.0-rc.1` remain historical context.
 - Current stable npm publish target is `0.4.6` on dist-tag `latest`.
 - Current published stable npm release target is `0.4.6`.
@@ -183,7 +186,7 @@ Current package metadata preparation mode:
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.
 - MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist.
-- Publish target decision: npm package first, GitHub Release second, Docker image deferred.
+- Publish target decision: npm package first, GitHub Release second, Docker image deferred. npm publication and GitHub release publication are independent targets; a GitHub Release note/prerelease record is required for release handling, but custom GitHub asset parity is not a default acceptance gate.
 - Installed CLI verification must use `hadara doctor --json`.
 - Post-publish installed-package recycle should use `node --import tsx tools/dev-surfaces.ts package recycle --execute --package hadara@latest --expected-version <version> --source-root . --evidence-root . --task <task-id> --attach-evidence --json` for stable or `--package hadara@next --expected-version <version>` for release candidates from a dedicated release follow-up capsule. The command is dry-run-first by default, reports source/evidence/smoke project root roles, uses an isolated temporary prefix and disposable smoke project in execute mode, does not propagate source `HADARA_PROJECT_ROOT` into installed subprocesses, verifies registry metadata, installed version, init/task status/session/finalize/context pack/context slice surfaces, and cleanup, and must not publish packages or create release artifacts. Package smoke/recycle reports include per-step timeout policy with a 300-second npm/recycle default and timeoutStepIds for slow-step attribution. Broad installed `context graph --json` diagnostics require explicit `--include-graph`.
 - T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only.
@@ -196,11 +199,11 @@ T-0139 decides what release means before any publish or deploy script exists.
 Release target decision:
 
 - Primary release target: npm package.
-- Secondary release target: GitHub Release with tarball, checksum, and manifest.
+- Secondary release target: GitHub Release as an independent public release-note/prerelease surface. Tarball, checksum, and manifest assets are optional per release contract; if selected, each must be the exact reviewed bytes or be explicitly labeled as reconstructed/non-original.
 - Deferred release target: Docker image.
 - Docker image publishing is deferred unless HADARA adds a server/runtime product surface that needs container distribution.
 - npm package publish is the first approval-gated mutation path because HADARA is currently a Node CLI/workbench.
-- GitHub Release is secondary for portable archive distribution and checksum/manifest inspection.
+- GitHub Release is secondary for public release visibility and optional portable archive distribution/checksum/manifest inspection; its asset set does not retroactively define npm package provenance.
 
 Required secret names:
 
@@ -219,7 +222,7 @@ Release target provider model:
 
 - T-0244 introduces release target descriptors so release readiness can name ecosystem-specific targets without claiming every ecosystem is executable.
 - The active primary descriptor is `npm-package` with ecosystem `npm`, manifest `package.json`, artifact kind `npm-tarball`, smoke profile `npm-package-smoke`, and publish provider `npm`.
-- The active secondary descriptor is `github-release` with ecosystem `github-release`, retained tarball/checksum/manifest artifacts, and approval-gated publishing still blocked by the current implementation.
+- The active secondary descriptor is `github-release` with ecosystem `github-release`, an optional exact-asset set selected by the release capsule, and approval-gated publishing still blocked by the current implementation. npm and GitHub are verified independently.
 - The deferred descriptor is `docker-image` with ecosystem `docker`; Docker build and publish execution remain deferred.
 - If `pyproject.toml` is present, release dry-run may surface `python-package-preview` with ecosystem `python`, artifact kinds `wheel` and `sdist`, smoke profile `python-package-preview`, and publish provider `pypi`.
 - Python release target detection is read-only preview only. HADARA does not currently run `python -m build`, create wheels or sdists, run `pip install` smoke, run `twine check`, load PyPI credentials, or publish to PyPI.

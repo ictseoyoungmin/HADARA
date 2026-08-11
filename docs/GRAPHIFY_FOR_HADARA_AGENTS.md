@@ -58,7 +58,7 @@ graphify --help
 graphify check-update .
 ```
 
-If `graphify-out/graph.json` already exists, use it for read-only exploration first. The current HADARA-dev checkout uses the installed executable at `/home/ymin/.local/bin/graphify` when `graphify` is not on `PATH`.
+If `graphify-out/graph.json` already exists, use it for read-only exploration first. Resolve the executable through `command -v graphify`; if a user-local fallback is needed, use `"$HOME/.local/bin/graphify"` rather than a machine-specific absolute path.
 
 Refresh the local code graph after source changes when the relationship view matters:
 

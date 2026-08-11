@@ -72,6 +72,7 @@ Schema: `hadara.docs.registry.v1`
 | `docs/DECISIONS.md` | decision-log | reference | only-when-linked | no | hadara-docs |
 | `docs/DEVELOPMENT_SLICES.md` | roadmap | active | task-start | yes | hadara-docs |
 | `docs/GETTING_STARTED.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
+| `docs/GRAPHIFY_FOR_HADARA_AGENTS.md` | implementation-guide | active | only-when-linked | no | project |
 | `docs/HADARA_WORKFLOW.md` | workflow-guide | canonical | session-start | yes | hadara-docs |
 | `docs/RC2_CONTRACT_FREEZE.md` | release | active | release-work | no | project |
 | `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
