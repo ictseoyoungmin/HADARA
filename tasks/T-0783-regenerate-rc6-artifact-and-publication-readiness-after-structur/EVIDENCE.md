@@ -33,5 +33,5 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.residuals -->
 | Evidence ID | Outcome | Summary | Disposition | Reference |
 |---|---|---|---|---|
-| ev:T-0783:9ec98fa06a184bf5a8c2549f | failed | Package smoke local failed with reduced public evidence. | Unresolved | evidence.jsonl |
+| ev:T-0783:9ec98fa06a184bf5a8c2549f | failed | Package smoke local failed with reduced public evidence. | Resolved | TASK.md#Risks / Follow-ups |
 <!-- /hadara:slot -->

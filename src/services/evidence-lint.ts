@@ -6,6 +6,7 @@ import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } f
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
 import { resolveTaskEvidenceReferences } from '../evidence/reference-resolver';
+import { readTaskEvidenceDocs } from '../evidence/task-docs';
 import { parseAcceptanceRows } from '../task/acceptance';
 import { findTaskCapsule } from '../task/task-capsule';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
@@ -93,7 +94,7 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
   }
 
   const normalizedRecords = normalizeEvidenceRecordsWithSourceLines(parsedRecords, { taskDir: task.dir });
-  const taskDocs = readTaskDocs(task.dir);
+  const taskDocs = readTaskEvidenceDocs(task.dir);
   const referenceResolution = resolveTaskEvidenceReferences(projectRoot, task);
   for (const reference of referenceResolution.unresolved) {
     issues.push({
@@ -372,19 +373,7 @@ function readTaskBoardStatus(projectRoot: string, taskId: string): string {
   return cells[2] ?? '';
 }
 
-export function readTaskDocs(taskDir: string): { acceptance?: string; risks?: string; handoff?: string } {
-  const taskPath = path.join(taskDir, 'TASK.md');
-  const taskContent = readOptionalFile(taskPath);
-  return {
-    acceptance: readOptionalFile(path.join(taskDir, 'ACCEPTANCE.md')) ?? (taskContent ? readMarkdownSection(taskContent, '## Acceptance') : undefined),
-    risks: readOptionalFile(path.join(taskDir, 'RISKS.md')) ?? (taskContent ? readMarkdownSection(taskContent, '## Risks / Follow-ups') : undefined),
-    handoff: readOptionalFile(path.join(taskDir, 'HANDOFF.md'))
-  };
-}
-
-function readOptionalFile(filePath: string): string | undefined {
-  return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : undefined;
-}
+export const readTaskDocs = readTaskEvidenceDocs;
 
 function isDoneStatus(status: string | null | undefined): boolean {
   return (status ?? '').trim().toLowerCase() === 'done';

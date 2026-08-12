@@ -63,8 +63,12 @@ export function createReleaseCurrentStateReport(
   const verification = latestForVersion(artifacts, 'hadara.releasePublicVerification.v1', publicationVersion);
   const lifecycle = latestLifecycle(artifacts, publicationVersion);
   const currentReleaseInputHash = computeReleaseInputHash(projectRoot);
-  const publicationReleaseInputHash = stringValue(publication?.report?.lineage?.releaseInputHash);
-  const sourceMatchesPublication = Boolean(currentReleaseInputHash && publicationReleaseInputHash && currentReleaseInputHash === publicationReleaseInputHash);
+  const publicationLineage = publication?.report?.lineage;
+  const publicationReleaseInputHash = stringValue(publicationLineage?.releaseInputHash);
+  const publicationArtifactSourceCommit = stringValue(publicationLineage?.artifactSourceCommit);
+  const publicationOperatorCommit = stringValue(publicationLineage?.operatorCommit);
+  const completeNewLineage = Boolean(publicationReleaseInputHash && publicationArtifactSourceCommit && publicationOperatorCommit);
+  const sourceMatchesPublication = Boolean(completeNewLineage && currentReleaseInputHash && currentReleaseInputHash === publicationReleaseInputHash);
   const facts: ReleaseCurrentStateFacts = {
     sourceVersion: sourceVersion ?? 'unknown',
     publishedPrerelease: stringValue(publication?.report?.package?.version) ?? 'unknown',
@@ -72,14 +76,18 @@ export function createReleaseCurrentStateReport(
     npmLatest: stringValue(verification?.report?.package?.distTags?.latest) ?? stringValue(publication?.report?.package?.distTagsAfter?.latest) ?? 'unknown',
     githubPrerelease: publicPrereleaseTag(verification),
     publicTerminalLifecycle: lifecycle ? 'passed' : 'pending command-generated acceptance',
-    stablePromotion: sourceMatchesPublication && lifecycle ? 'pending decision' : publication && !publicationReleaseInputHash
-      ? 'blocked pending publication release-input lineage'
-      : 'blocked pending compatible release-input regeneration'
+    stablePromotion: publication && !completeNewLineage
+      ? 'blocked pending complete publication lineage'
+      : !sourceMatchesPublication
+        ? 'blocked pending compatible release-input regeneration'
+        : lifecycle
+          ? 'pending decision'
+          : 'blocked pending public terminal lifecycle'
   };
   if (!publication) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_PUBLICATION_OBSERVATION_MISSING', message: 'No byte-bound operator publication report was found.' });
   if (!verification) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_GITHUB_OBSERVATION_MISSING', message: 'No byte-bound public GitHub verification report was found.' });
   if (!lifecycle) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_TERMINAL_LIFECYCLE_PENDING', message: 'No byte-bound command-generated public terminal lifecycle acceptance matches the published version.' });
-  if (publication && !publicationReleaseInputHash) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_PUBLICATION_RELEASE_INPUT_MISSING', message: 'Publication report has no releaseInputHash; it cannot establish stable compatibility.' });
+  if (publication && !completeNewLineage) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_PUBLICATION_LINEAGE_INCOMPLETE', message: 'Publication report lacks the complete new lineage tuple; it cannot establish stable compatibility.' });
   if (publication && publicationReleaseInputHash && currentReleaseInputHash && publicationReleaseInputHash !== currentReleaseInputHash) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_RELEASE_INPUT_MISMATCH', message: 'Current releaseInputHash differs from the published artifact releaseInputHash.' });
   const rendered = before ? renderReleaseCurrentState(before, facts, issues) : before;
   const changed = rendered !== before;

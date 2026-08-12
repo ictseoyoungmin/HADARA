@@ -73,13 +73,46 @@ describe('evidence projection', () => {
     });
     const failedId = failed.evidence.schemaVersion === 'hadara.evidence.v2' ? failed.evidence.id : 'evidence.jsonl';
     const taskPath = path.join(task.dir, 'TASK.md');
-    fs.appendFileSync(taskPath, `\nMitigation record ${failedId}: fresh-path rerun passed; state Mitigated.\n`, 'utf8');
+    const taskContent = fs.readFileSync(taskPath, 'utf8');
+    fs.writeFileSync(taskPath, taskContent.replace(
+      '## Close Summary',
+      `| RF-1 | Risk | Fresh-path rerun passed for ${failedId}. | Mitigated | ${failedId} |\n\n## Close Summary`
+    ), 'utf8');
 
     const projection = createEvidenceProjectionReport(root, task.id, true);
     const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
 
     expect(projection.ok).toBe(true);
     expect(evidence).toContain(`| ${failedId} | failed | Disposable consumer smoke failed after reusing an initialized path | Resolved | TASK.md#Risks / Follow-ups |`);
+  });
+
+  it('resolves legacy v1 residuals through the normalized record index', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection legacy fallback');
+    const legacy = {
+      schemaVersion: 'hadara.evidence.v1',
+      time: '2026-08-12T10:00:00.000Z',
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Legacy command failed',
+      result: 'failed',
+      visibility: 'public'
+    };
+    const later = {
+      schemaVersion: 'hadara.evidence.v1',
+      time: '2026-08-12T10:01:00.000Z',
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Legacy command passed on retry',
+      result: 'passed',
+      visibility: 'public'
+    };
+    fs.writeFileSync(path.join(task.dir, 'evidence.jsonl'), `${JSON.stringify(legacy)}\n${JSON.stringify(later)}\n`, 'utf8');
+    const projection = createEvidenceProjectionReport(root, task.id, true);
+    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+
+    expect(projection.ok).toBe(true);
+    expect(evidence).toMatch(/\| evidence\.jsonl \| failed \| Legacy command failed \| Resolved \| legacy:T-0001:\d+:[a-f0-9]+ \|/);
   });
 
   it('reports projection drift and execute rewrites only EVIDENCE.md', () => {

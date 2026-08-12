@@ -57,6 +57,32 @@ describe('runtime schema validation', () => {
     expect(validateSchema('hadara.releaseOperatorPublication.v1', report).ok).toBe(true);
   });
 
+  it('requires complete new publication lineage and rejects mixed lineage', () => {
+    const base = {
+      schemaVersion: 'hadara.releaseOperatorPublication.v1',
+      generatedAt: '2026-08-11T10:26:37.624Z',
+      package: {
+        name: 'hadara', version: '0.5.0-rc.6', registry: 'https://registry.npmjs.org', distTag: 'next', npmMutationPerformed: true,
+        observedVersion: '0.5.0-rc.6', distTagsBefore: { latest: '0.4.6' }, distTagsAfter: { latest: '0.4.6', next: '0.5.0-rc.6' }
+      },
+      github: { mutationPerformed: false, draftRequested: false, prerelease: true, assets: [
+        { name: 'a', sha256: `sha256:${'a'.repeat(64)}`, uploaded: false },
+        { name: 'b', sha256: `sha256:${'b'.repeat(64)}`, uploaded: false },
+        { name: 'c', sha256: `sha256:${'c'.repeat(64)}`, uploaded: false }
+      ] },
+      mutationBoundary: { dockerMutationPerformed: false, stableLatestMutationPerformed: false, substituteArtifactUsed: false },
+      commands: { npmPublish: ['npm', 'publish'], githubRelease: null }
+    };
+    expect(validateSchema('hadara.releaseOperatorPublication.v1', {
+      ...base,
+      lineage: { taskId: 'T-0785', artifactSourceCommit: 'a'.repeat(40), releaseInputHash: `sha256:${'b'.repeat(64)}`, approvalActor: 'operator', approvalReason: 'missing operator commit' }
+    }).ok).toBe(false);
+    expect(validateSchema('hadara.releaseOperatorPublication.v1', {
+      ...base,
+      lineage: { taskId: 'T-0785', sourceCommit: 'a'.repeat(40), releaseInputHash: `sha256:${'b'.repeat(64)}`, approvalActor: 'operator', approvalReason: 'mixed lineage' }
+    }).ok).toBe(false);
+  });
+
   it('validates Phase 6 common context fixtures', () => {
     expect(
       validateSchema('hadara.actor_context.v1', {

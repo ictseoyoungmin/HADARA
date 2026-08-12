@@ -7,7 +7,7 @@ import { ensureDir } from '../../src/core/fs';
 import { HadaraPaths } from '../../src/core/paths';
 import { assertSchema } from '../../src/core/schema';
 import { startMonotonicTimer } from '../../src/core/timing';
-import { computeReleaseInputHash } from './release-input';
+import { computeReleaseInputHash, RELEASE_PACKAGE_FILES } from './release-input';
 
 export interface ReleaseArtifactIssue {
   severity: 'warning' | 'error';
@@ -173,7 +173,7 @@ interface PackResult {
   files: PackFile[];
 }
 
-const requiredFiles = ['package.json', 'README.md', 'LICENSE', 'dist/cli/main.js'];
+const requiredFiles = [...RELEASE_PACKAGE_FILES, 'dist/cli/main.js'];
 const allowedRoots = ['dist/', 'README.md', 'LICENSE', 'package.json'];
 
 export function createReleaseArtifactReport(options: ReleaseArtifactOptions): ReleaseArtifactReport {
@@ -345,6 +345,14 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
   }
 
   const releaseInputHash = computeReleaseInputHash(options.paths.projectRoot);
+  if (!releaseInputHash) {
+    issues.push({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_RELEASE_INPUT_IDENTITY_UNAVAILABLE',
+      message: 'Release artifact construction requires a complete release-input inventory with no relevant untracked inputs.',
+      stepId: 'release-identity'
+    });
+  }
   const report: ReleaseArtifactReport = {
     schemaVersion: 'hadara.releaseArtifact.v1',
     command: 'release.artifact',

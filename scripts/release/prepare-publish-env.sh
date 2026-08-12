@@ -173,11 +173,13 @@ echo "built dist version:   $DIST_VERSION"
 
 echo
 echo "== 2b. Ensure public GitHub Release note artifact =="
+RELEASE_NOTE=""
 TASK_DIR="$(find tasks -maxdepth 1 -type d -name "$TASK-*" | sort | head -1 || true)"
 if [ -z "$TASK_DIR" ]; then
   echo "WARN: task capsule not found for $TASK; cannot prepare GITHUB_RELEASE_NOTE.md."
 else
-  RELEASE_NOTE="$TASK_DIR/GITHUB_RELEASE_NOTE.md"
+  RELEASE_NOTE=".hadara/local/release-notes/$TASK.md"
+  mkdir -p "$(dirname "$RELEASE_NOTE")"
   if [ -f "$RELEASE_NOTE" ]; then
     echo "GitHub Release note already exists: $RELEASE_NOTE"
   else
@@ -230,15 +232,19 @@ fi
 
 echo
 echo "== 5. Manual helper dry-run boundary =="
+HELPER_ARGS=("$TASK")
+if [ -n "$RETAINED_ARTIFACT_DIR" ]; then HELPER_ARGS+=(--retained-artifact-dir "$RETAINED_ARTIFACT_DIR"); fi
+if [ -n "$RETAINED_ARTIFACT_REPORT" ]; then HELPER_ARGS+=(--retained-artifact-report "$RETAINED_ARTIFACT_REPORT"); fi
+if [ -n "$RELEASE_NOTE" ]; then HELPER_ARGS+=(--github-release-note "$RELEASE_NOTE"); fi
 if [ "$RUN_HELPER_DRY_RUN" != "1" ]; then
   echo "skipped by default."
   echo "The end-to-end dry-run, release evidence, npm dry-run, and npm publish stay in:"
-  echo "  bash scripts/release/manual-publish-rc.sh $TASK --execute"
+  printf "  bash scripts/release/manual-publish-rc.sh"; printf " %q" "${HELPER_ARGS[@]}"; printf " --execute\\n"
 elif npm whoami --registry="$REGISTRY" >/dev/null 2>&1; then
   echo "npm user: $(npm whoami --registry="$REGISTRY")"
-  echo "Running: bash scripts/release/manual-publish-rc.sh $TASK   (dry-run, no --execute)"
+  printf "Running: bash scripts/release/manual-publish-rc.sh"; printf " %q" "${HELPER_ARGS[@]}"; printf " (dry-run, no --execute)\\n"
   set +e
-  bash scripts/release/manual-publish-rc.sh "$TASK"
+  bash scripts/release/manual-publish-rc.sh "${HELPER_ARGS[@]}"
   DRY_STATUS=$?
   set -e
   echo "helper dry-run exit status: $DRY_STATUS"
@@ -279,7 +285,7 @@ fi
 if [[ -n "$RETAINED_ARTIFACT_REPORT" ]]; then
   echo "    --retained-artifact-report $RETAINED_ARTIFACT_REPORT \\"
 fi
-echo "    --github-release-note tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md"
+echo "    --github-release-note .hadara/local/release-notes/$TASK_ID.md"
 echo "  # then type exactly: publish"
 echo "  # then type exactly: github-draft"
 echo
@@ -291,7 +297,7 @@ echo
 echo "  # Or create a draft from the source/workspace repo, then review and publish:"
 echo "  gh release create v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA \\"
 echo "    --target \$(git rev-parse HEAD) --title \"HADARA \$(node -p \"require('./package.json').version\")\" \\"
-echo "    --notes-file tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md --draft --prerelease  # for RC versions"
+echo "    --notes-file .hadara/local/release-notes/$TASK_ID.md --draft --prerelease  # for RC versions"
 echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false --prerelease  # for RC versions"
 echo
 echo "Notes:"

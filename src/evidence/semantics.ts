@@ -390,7 +390,16 @@ function hasResidualRiskDocumentation(
   const content = joinTaskDocs(taskDocs);
   if (!content) return false;
   if (!mentionsRecord(content, record)) return false;
-  return /\b(residual risk|accepted risk|risk accepted|known failure|mitigated|resolved|deferred|out of scope)\b/i.test(content);
+  const risks = taskDocs?.risks ?? '';
+  const controlledRow = risks.split(/\r?\n/).some((line) => {
+    if (!line.trim().startsWith('|')) return false;
+    const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+    if (cells.length < 4 || !mentionsRecord(line, record)) return false;
+    return /^(mitigated|resolved|accepted risk)$/i.test(cells[3]);
+  });
+  if (controlledRow) return true;
+  return /\b(residual risk|accepted risk|risk accepted|known failure|deferred|out of scope)\b/i.test(content)
+    && !/\b(?:not|never|no longer)\s+(?:resolved|mitigated|accepted)\b/i.test(content);
 }
 
 function hasBlockedDocumentation(record: NormalizedEvidenceRecord, taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs']): boolean {

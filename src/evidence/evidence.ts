@@ -10,6 +10,7 @@ import type { ResolvedEvidenceReference } from './reference-resolver';
 import { writePrivateEvidenceManifest } from './private-manifest';
 import { normalizeEvidenceRecordsInMemoryOrder } from './normalizer';
 import { resolveNegativeEvidence } from './semantics';
+import { readTaskEvidenceDocs } from './task-docs';
 
 export interface EvidenceRecord {
   time: string;
@@ -539,7 +540,7 @@ function projectEvidenceMarkdown(taskDir: string, taskId: string, execute: boole
   const source = path.join(taskDir, 'evidence.jsonl');
   const target = path.join(taskDir, 'EVIDENCE.md');
   const records = readEvidenceIndex(taskDir);
-  const next = renderEvidenceProjection(records, readProjectionTaskDocs(taskDir));
+  const next = renderEvidenceProjection(records, readTaskEvidenceDocs(taskDir));
   const previous = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
   const wouldChange = previous !== next;
   if (execute && wouldChange) fs.writeFileSync(target, next, 'utf8');
@@ -561,7 +562,7 @@ function projectEvidenceMarkdown(taskDir: string, taskId: string, execute: boole
 
 function renderEvidenceProjection(
   records: PersistedEvidenceRecord[],
-  taskDocs: { risks?: string; handoff?: string } = {}
+  taskDocs: { acceptance?: string; risks?: string; handoff?: string } = {}
 ): string {
   const validationRows = records.filter((record) => !isCloseProofRecord(record) && !isResidualRecord(record));
   const closeRows = records.filter(isCloseProofRecord);
@@ -642,26 +643,16 @@ function isResidualRecord(record: PersistedEvidenceRecord): boolean {
 function findResidualResolution(
   record: PersistedEvidenceRecord,
   records: PersistedEvidenceRecord[],
-  taskDocs: { risks?: string; handoff?: string } = {}
+  taskDocs: { acceptance?: string; risks?: string; handoff?: string } = {}
 ): { disposition: 'Resolved' | 'Unresolved'; reference: string } {
-  const id = evidenceProjectionId(record);
-  if (!id.startsWith('ev:')) return { disposition: 'Unresolved', reference: 'evidence.jsonl' };
   const normalized = normalizeEvidenceRecordsInMemoryOrder(records, { taskDir: undefined });
-  const recordIndex = normalized.findIndex((candidate) => candidate.id === id);
+  const recordIndex = records.indexOf(record);
   if (recordIndex < 0) return { disposition: 'Unresolved', reference: 'evidence.jsonl' };
-  const resolution = resolveNegativeEvidence(recordIndex >= 0 ? normalized[recordIndex] : normalized[0], normalized.slice(recordIndex + 1), taskDocs);
+  const resolution = resolveNegativeEvidence(normalized[recordIndex], normalized.slice(recordIndex + 1), taskDocs);
+  const fallbackReference = normalized[recordIndex].sourceLine ? `evidence.jsonl#${normalized[recordIndex].sourceLine}` : 'evidence.jsonl';
   return resolution.resolved
-    ? { disposition: 'Resolved', reference: resolution.reference ?? 'evidence.jsonl' }
-    : { disposition: 'Unresolved', reference: 'evidence.jsonl' };
-}
-
-function readProjectionTaskDocs(taskDir: string): { risks?: string; handoff?: string } {
-  const taskPath = path.join(taskDir, 'TASK.md');
-  const handoffPath = path.join(taskDir, 'HANDOFF.md');
-  return {
-    ...(fs.existsSync(taskPath) ? { risks: fs.readFileSync(taskPath, 'utf8') } : {}),
-    ...(fs.existsSync(handoffPath) ? { handoff: fs.readFileSync(handoffPath, 'utf8') } : {})
-  };
+    ? { disposition: 'Resolved', reference: resolution.reference ?? fallbackReference }
+    : { disposition: 'Unresolved', reference: fallbackReference };
 }
 
 function hashText(content: string): string {

@@ -22,6 +22,7 @@ DIST_TAGS_AFTER_JSON="{}"
 ARTIFACT_SOURCE_COMMIT=""
 ARTIFACT_RELEASE_INPUT_HASH=""
 OPERATOR_COMMIT=""
+REINVOKE_ARGS=()
 
 usage() {
 cat <<'EOF'
@@ -170,6 +171,24 @@ echo "TASK_ID is required."
 usage
 exit 1
 fi
+
+build_reinvoke_args() {
+REINVOKE_ARGS=("${0}" "${TASK_ID}")
+if [[ "${MODE}" == "execute" ]]; then REINVOKE_ARGS+=(--execute); fi
+if [[ "${CREATE_GITHUB_DRAFT}" == "true" ]]; then REINVOKE_ARGS+=(--github-draft); fi
+if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then REINVOKE_ARGS+=(--github-release-note "${GITHUB_RELEASE_NOTE}"); fi
+if [[ -n "${GITHUB_TOKEN_ENV}" ]]; then REINVOKE_ARGS+=(--github-token-env "${GITHUB_TOKEN_ENV}"); fi
+if [[ -n "${RETAINED_ARTIFACT_DIR}" ]]; then REINVOKE_ARGS+=(--retained-artifact-dir "${RETAINED_ARTIFACT_DIR}"); fi
+if [[ -n "${RETAINED_ARTIFACT_REPORT}" ]]; then REINVOKE_ARGS+=(--retained-artifact-report "${RETAINED_ARTIFACT_REPORT}"); fi
+if [[ "${NPM_TAG}" != "" ]]; then REINVOKE_ARGS+=(--npm-tag "${NPM_TAG}"); fi
+}
+
+print_reinvoke_command() {
+build_reinvoke_args
+printf '  '
+printf '%q ' "${REINVOKE_ARGS[@]}"
+printf '\n'
+}
 
 require_cmd() {
 command -v "$1" >/dev/null 2>&1 || {
@@ -743,10 +762,14 @@ echo "DRY-RUN COMPLETED"
 echo "No npm publish, git tag push, or GitHub Release was created."
 echo
 echo "To publish through this helper, re-run:"
-echo "  $0 ${TASK_ID} --execute"
+print_reinvoke_command
 echo
 echo "To publish and then create a GitHub Release draft:"
-echo "  $0 ${TASK_ID} --execute --github-draft"
+build_reinvoke_args
+REINVOKE_ARGS+=(--execute --github-draft)
+printf '  '
+printf '%q ' "${REINVOKE_ARGS[@]}"
+printf '\n'
 echo
 echo "After reviewing a GitHub draft, publish it publicly with:"
 echo "  gh release edit v${VERSION} --repo ictseoyoungmin/HADARA --draft=false"

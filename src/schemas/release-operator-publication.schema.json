@@ -63,7 +63,30 @@
     "lineage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["taskId", "approvalActor", "approvalReason"],
+      "oneOf": [
+        {
+          "required": ["taskId", "sourceCommit", "approvalActor", "approvalReason"],
+          "additionalProperties": false,
+          "properties": {
+            "taskId": { "type": "string", "pattern": "^T-[0-9]+$" },
+            "sourceCommit": { "type": "string", "pattern": "^[a-f0-9]{7,64}$" },
+            "approvalActor": { "type": "string", "minLength": 1 },
+            "approvalReason": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "required": ["taskId", "artifactSourceCommit", "releaseInputHash", "operatorCommit", "approvalActor", "approvalReason"],
+          "additionalProperties": false,
+          "properties": {
+            "taskId": { "type": "string", "pattern": "^T-[0-9]+$" },
+            "artifactSourceCommit": { "type": "string", "pattern": "^[a-f0-9]{7,64}$" },
+            "releaseInputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+            "operatorCommit": { "type": "string", "pattern": "^[a-f0-9]{7,64}$" },
+            "approvalActor": { "type": "string", "minLength": 1 },
+            "approvalReason": { "type": "string", "minLength": 1 }
+          }
+        }
+      ],
       "properties": {
         "taskId": { "type": "string", "pattern": "^T-[0-9]+$" },
         "sourceCommit": { "type": "string", "pattern": "^[a-f0-9]{7,64}$" },

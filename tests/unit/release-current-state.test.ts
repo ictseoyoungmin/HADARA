@@ -32,7 +32,7 @@ describe('release current-state projection', () => {
       npmLatest: '0.4.6',
       githubPrerelease: 'v0.5.0-rc.5',
       publicTerminalLifecycle: 'pending command-generated acceptance',
-      stablePromotion: 'blocked pending compatible release-input regeneration'
+      stablePromotion: 'blocked pending public terminal lifecycle'
     });
     expect(report.sources.map((source) => source.schemaVersion)).toEqual([
       'hadara.releaseOperatorPublication.v1',
@@ -97,7 +97,6 @@ function attachReleaseFacts(root: string): void {
     },
     lineage: {
       taskId: task.id,
-      sourceCommit: 'a'.repeat(40),
       artifactSourceCommit: 'b'.repeat(40),
       releaseInputHash: computeReleaseInputHash(root),
       operatorCommit: 'c'.repeat(40),

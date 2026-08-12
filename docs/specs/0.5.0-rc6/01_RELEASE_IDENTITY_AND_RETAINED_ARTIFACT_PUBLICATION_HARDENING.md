@@ -10,10 +10,16 @@ the operator capsule.
 
 ### Release identity
 
-`releaseInputHash` is the compatibility identity of a package candidate. It is computed from the
-tracked release inputs under `src/`, `tools/`, `scripts/`, and the release package/toolchain files
-defined by `release-input.ts`. Task capsules, evidence, HANDOFF, and other evidence-only commits do
-not change this identity.
+`releaseInputHash` is the compatibility identity of a package candidate. A single canonical
+inventory in `release-input.ts` is used by both release-artifact construction and current-state
+compatibility checks. It covers the tracked implementation/build inputs under `src/`, `tools/`, and
+`scripts/`, the package/toolchain configuration, and package-distributed metadata such as
+`package.json`, `README.md`, and `LICENSE`. Relevant untracked or ignored inputs in those roots make
+the identity unavailable and fail artifact construction closed; they must not be silently omitted.
+Task capsules, evidence, HANDOFF, and other evidence-only commits do not change this identity.
+
+The hash is the source/build-input identity, while the tarball, checksum, and manifest digests bind
+the produced package bytes. A commit SHA alone is never a substitute for either identity.
 
 Publication lineage must distinguish:
 
@@ -29,8 +35,10 @@ Publication lineage must distinguish:
 identifies the checkout that performed the external mutation. Neither commit is the stable
 compatibility gate; the current computed `releaseInputHash` must equal the published report's hash.
 
-Legacy publication reports without `releaseInputHash` remain readable for historical/public facts,
-but cannot establish stable compatibility.
+New publication reports require the complete tuple `artifactSourceCommit`, `releaseInputHash`, and
+`operatorCommit`. Legacy publication reports with only `sourceCommit` remain readable for
+historical/public facts, but cannot establish stable compatibility. A partially populated new
+lineage is invalid for readiness; it must not be treated as a legacy report or as compatible.
 
 ### Retained artifact publication
 
@@ -47,11 +55,18 @@ digests before using the same bytes for npm and GitHub.
 The preparation helper must carry the retained artifact locator into the printed operator command.
 The logical locator is public; the actual path remains local/ignored operator state.
 
+Generated GitHub release notes are operator-local ignored state and are passed by their exact path
+through prepare, dry-run, and execute guidance. They must not create a tracked dirty-tree exception
+or be removed before the printed command consumes them. A retained re-invocation must preserve the
+retained directory, report, npm tag, release-note, and draft flags.
+
 ### Evidence projection
 
-`EVIDENCE.md` residual disposition and close readiness must use the same semantic resolver. A failed
-record resolved by a later evidence record, same-category fallback, or documented residual-risk
-mitigation must not be projected as `Unresolved`.
+`EVIDENCE.md` residual disposition and close readiness must use the same task-document parser and
+semantic resolver. A failed record resolved by a later evidence record, legacy same-category
+fallback, or a structured residual-risk row with state `Mitigated`, `Resolved`, or `Accepted Risk`
+must not be projected as `Unresolved`. Free-text negation such as “not resolved” must not create a
+false resolution.
 
 ### Timestamp contract
 
@@ -62,10 +77,11 @@ suffix. Generated task metadata must not mix host-local time with container UTC 
 
 | Capsule | Purpose | External mutation |
 |---|---|---|
-| T-0784 | Implement this hardening and regression coverage. | None |
-| T-0785 | Regenerate exact RC6 artifact/readiness after source changes. | None |
-| T-0786 | Publish retained RC6 bytes to npm/GitHub under operator approval. | npm/GitHub only |
-| T-0787 | Public terminal-lifecycle recycle and stable decision evidence. | Public consumer only; stable promotion separately approved |
+| T-0784 | Establish release identity, lineage, retained publication, and initial evidence-binding hardening. | None |
+| T-0785 | Complete reviewer-driven release-input, operator-helper, Release Note, and evidence-semantics hardening. | None |
+| T-0786 | Regenerate the exact RC6 artifact and readiness from the post-T-0785 source. | None |
+| T-0787 | Publish retained RC6 bytes to npm/GitHub under operator approval. | npm/GitHub only |
+| T-0788 | Public terminal-lifecycle recycle and stable decision evidence. | Public consumer only; stable promotion separately approved |
 
 If a P1 fails, the affected later capsule is invalidated and the same version is regenerated while
 it remains unpublished. No RC number is incremented merely because preparation source changed.

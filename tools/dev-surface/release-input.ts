@@ -3,18 +3,29 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const RELEASE_INPUT_ROOTS = ['src/', 'tools/', 'scripts/'];
-const RELEASE_INPUT_FILES = new Set([
+export const RELEASE_INPUT_ROOTS = ['src/', 'tools/', 'scripts/'] as const;
+export const RELEASE_INPUT_FILES = new Set([
   'package.json',
   'package-lock.json',
   'tsconfig.json',
   'tsconfig.tools.json',
   'vitest.config.ts',
-  'vitest.dev.config.ts'
+  'vitest.dev.config.ts',
+  'README.md',
+  'LICENSE'
 ]);
 
+export const RELEASE_PACKAGE_FILES = ['package.json', 'README.md', 'LICENSE'] as const;
+
+export interface ReleaseInputInventory {
+  files: string[];
+  relevantUntrackedFiles: string[];
+}
+
 export function computeReleaseInputHash(projectRoot: string): string | undefined {
-  const files = listReleaseInputFiles(projectRoot);
+  const inventory = inspectReleaseInputInventory(projectRoot);
+  if (inventory.relevantUntrackedFiles.length > 0) return undefined;
+  const files = inventory.files;
   if (files.length === 0) return undefined;
   const hash = crypto.createHash('sha256');
   for (const relativePath of files) {
@@ -28,6 +39,14 @@ export function computeReleaseInputHash(projectRoot: string): string | undefined
   return `sha256:${hash.digest('hex')}`;
 }
 
+export function inspectReleaseInputInventory(projectRoot: string): ReleaseInputInventory {
+  const relevantUntrackedFiles = listRelevantUntrackedFiles(projectRoot);
+  return {
+    files: listReleaseInputFiles(projectRoot),
+    relevantUntrackedFiles
+  };
+}
+
 function listReleaseInputFiles(projectRoot: string): string[] {
   const gitFiles = spawnSync('git', ['ls-files', '-z'], { cwd: projectRoot, encoding: 'buffer', timeout: 10_000 });
   if (gitFiles.status === 0 && gitFiles.stdout) {
@@ -38,6 +57,25 @@ function listReleaseInputFiles(projectRoot: string): string[] {
   for (const root of RELEASE_INPUT_ROOTS) collectFiles(projectRoot, root.slice(0, -1), files);
   for (const file of RELEASE_INPUT_FILES) if (fs.existsSync(path.join(projectRoot, file))) files.push(file);
   return files.filter(isReleaseInputPath).sort();
+}
+
+function listRelevantUntrackedFiles(projectRoot: string): string[] {
+  const result = spawnSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignored'], {
+    cwd: projectRoot,
+    encoding: 'buffer',
+    timeout: 10_000
+  });
+  if (result.status !== 0 || !result.stdout) return [];
+  const entries = result.stdout.toString('utf8').split('\0').filter(Boolean);
+  const paths: string[] = [];
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    const status = entry.slice(0, 2);
+    const firstPath = entry.slice(3);
+    if (status.includes('R') || status.includes('C')) index += 1;
+    if ((status === '??' || status === '!!') && isReleaseInputPath(firstPath)) paths.push(firstPath);
+  }
+  return paths.sort();
 }
 
 function isReleaseInputPath(relativePath: string): boolean {
