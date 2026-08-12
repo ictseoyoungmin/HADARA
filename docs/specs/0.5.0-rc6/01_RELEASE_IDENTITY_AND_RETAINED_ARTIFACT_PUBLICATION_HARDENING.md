@@ -60,6 +60,18 @@ dry-run, execute reinvocation, npm authentication/observation/publish calls, and
 publication report. A prepare-time custom registry must never silently fall back to the public npm
 registry.
 
+The GitHub destination is equally explicit. A clone created from a mounted workspace must not
+retain the mounted path as its publication origin: preparation must rewrite and verify the clone
+origin against the configured GitHub remote. The manual helper must use that same remote for tag
+push and pass the configured `owner/name` to `gh release create --repo`; GitHub destination must
+not be inferred from a local clone.
+
+After npm publication and registry verification succeed, the helper must write and evidence-bind
+an immutable npm-only publication report before GitHub authentication, tag, or release mutation.
+If a later GitHub step fails, the npm mutation and its observed destination remain durable. A
+successful GitHub draft must create a separate final report/evidence record and must not overwrite
+the npm-only report or reuse its idempotency key.
+
 Generated GitHub release notes are operator-local ignored state and are passed by their exact path
 through prepare, dry-run, and execute guidance. They must not create a tracked dirty-tree exception
 or be removed before the printed command consumes them. A retained re-invocation must preserve the

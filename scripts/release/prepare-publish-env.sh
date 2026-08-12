@@ -55,6 +55,12 @@
 #   --clone-dir <path>   Clone path inside the container. Default: /root/hadara-publish
 #   --workspace <path>   Mounted repo path inside the container. Default: /workspace
 #   --registry <url>     npm registry. Default: https://registry.npmjs.org
+#   --github-repo <owner/name>
+#                        Explicit GitHub repository for tag/release publication.
+#                        Default: ictseoyoungmin/HADARA.
+#   --git-remote-url <url>
+#                        Explicit Git remote for tag publication. Defaults to the
+#                        HTTPS remote derived from --github-repo.
 #   --retained-artifact-dir <path>
 #                        Container-visible directory containing the exact .tgz, .sha256,
 #                        .manifest.json, and release-artifact-report.json to publish.
@@ -76,6 +82,8 @@ CONTAINER="${HADARA_DEV_CONTAINER:-hadara-dev}"
 CLONE_DIR="/root/hadara-publish"
 WORKSPACE="/workspace"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
+GITHUB_REPO="${HADARA_GITHUB_REPO:-ictseoyoungmin/HADARA}"
+GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-https://github.com/${GITHUB_REPO}.git}"
 RETAINED_ARTIFACT_DIR="${HADARA_RETAINED_ARTIFACT_DIR:-}"
 RETAINED_ARTIFACT_REPORT="${HADARA_RETAINED_ARTIFACT_REPORT:-}"
 RUN_HELPER_DRY_RUN="${HADARA_RUN_HELPER_DRY_RUN:-0}"
@@ -92,6 +100,8 @@ while [[ $# -gt 0 ]]; do
     --clone-dir) CLONE_DIR="${2:-}"; [[ -n "$CLONE_DIR" ]] || { echo "--clone-dir requires a value"; exit 1; }; shift 2;;
     --workspace) WORKSPACE="${2:-}"; [[ -n "$WORKSPACE" ]] || { echo "--workspace requires a value"; exit 1; }; shift 2;;
     --registry) REGISTRY="${2:-}"; [[ -n "$REGISTRY" ]] || { echo "--registry requires a value"; exit 1; }; shift 2;;
+    --github-repo) GITHUB_REPO="${2:-}"; [[ -n "$GITHUB_REPO" ]] || { echo "--github-repo requires a value"; exit 1; }; shift 2;;
+    --git-remote-url) GIT_REMOTE_URL="${2:-}"; [[ -n "$GIT_REMOTE_URL" ]] || { echo "--git-remote-url requires a value"; exit 1; }; shift 2;;
     --retained-artifact-dir) RETAINED_ARTIFACT_DIR="${2:-}"; [[ -n "$RETAINED_ARTIFACT_DIR" ]] || { echo "--retained-artifact-dir requires a value"; exit 1; }; shift 2;;
     --retained-artifact-report) RETAINED_ARTIFACT_REPORT="${2:-}"; [[ -n "$RETAINED_ARTIFACT_REPORT" ]] || { echo "--retained-artifact-report requires a value"; exit 1; }; shift 2;;
     --run-helper-dry-run) RUN_HELPER_DRY_RUN="1"; shift;;
@@ -106,6 +116,7 @@ if [[ -z "$TASK_ID" ]]; then
   usage
   exit 1
 fi
+[[ "$GITHUB_REPO" =~ ^[^/]+/[^/]+$ ]] || { echo "--github-repo must be owner/name"; exit 1; }
 
 command -v docker >/dev/null 2>&1 || { echo "docker not found on host."; exit 1; }
 if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
@@ -119,6 +130,8 @@ echo "Container:  $CONTAINER"
 echo "Clone dir:  $CLONE_DIR (container ext4)"
 echo "Workspace:  $WORKSPACE (mounted repo)"
 echo "Registry:   $REGISTRY"
+echo "GitHub repo: $GITHUB_REPO"
+echo "Git remote:  $GIT_REMOTE_URL"
 echo "Retained artifact: $([[ -n "$RETAINED_ARTIFACT_DIR" ]] && echo "$RETAINED_ARTIFACT_DIR" || echo "not supplied; helper regeneration mode")"
 if [[ -n "$RETAINED_ARTIFACT_REPORT" ]]; then echo "Retained report:   $RETAINED_ARTIFACT_REPORT"; fi
 echo "Helper dry-run: $([[ "$RUN_HELPER_DRY_RUN" == "1" ]] && echo "opt-in enabled" || echo "skipped by default")"
@@ -129,6 +142,8 @@ docker exec \
   -e HADARA_CLONE_DIR="$CLONE_DIR" \
   -e HADARA_WORKSPACE_DIR="$WORKSPACE" \
   -e HADARA_REGISTRY="$REGISTRY" \
+  -e HADARA_GITHUB_REPO="$GITHUB_REPO" \
+  -e HADARA_GIT_REMOTE_URL="$GIT_REMOTE_URL" \
   -e HADARA_RETAINED_ARTIFACT_DIR="$RETAINED_ARTIFACT_DIR" \
   -e HADARA_RETAINED_ARTIFACT_REPORT="$RETAINED_ARTIFACT_REPORT" \
   -e HADARA_RUN_HELPER_DRY_RUN="$RUN_HELPER_DRY_RUN" \
@@ -138,6 +153,8 @@ TASK="$HADARA_TASK_ID"
 CLONE="$HADARA_CLONE_DIR"
 WORKSPACE="$HADARA_WORKSPACE_DIR"
 REGISTRY="$HADARA_REGISTRY"
+GITHUB_REPO="$HADARA_GITHUB_REPO"
+GIT_REMOTE_URL="$HADARA_GIT_REMOTE_URL"
 RETAINED_ARTIFACT_DIR="$HADARA_RETAINED_ARTIFACT_DIR"
 RETAINED_ARTIFACT_REPORT="$HADARA_RETAINED_ARTIFACT_REPORT"
 RUN_HELPER_DRY_RUN="$HADARA_RUN_HELPER_DRY_RUN"
@@ -157,7 +174,10 @@ rm -rf "$CLONE"
 git clone "$WORKSPACE" "$CLONE"
 add_git_safe_directory "$CLONE"
 cd "$CLONE"
+git remote set-url origin "$GIT_REMOTE_URL"
+[ "$(git remote get-url origin)" = "$GIT_REMOTE_URL" ] || { echo "ERROR: publish clone origin is not the explicit GitHub remote: $(git remote get-url origin)"; exit 1; }
 echo "HEAD: $(git log --oneline -1)"
+echo "Publish origin: $(git remote get-url origin)"
 DIRTY="$(git status --porcelain)"
 [ -z "$DIRTY" ] || { echo "ERROR: fresh clone is unexpectedly dirty:"; echo "$DIRTY"; exit 1; }
 
@@ -234,6 +254,7 @@ echo
 echo "== 5. Manual helper dry-run boundary =="
 HELPER_ARGS=("$TASK")
 HELPER_ARGS+=(--registry "$REGISTRY")
+HELPER_ARGS+=(--github-repo "$GITHUB_REPO" --git-remote-url "$GIT_REMOTE_URL")
 if [ -n "$RETAINED_ARTIFACT_DIR" ]; then HELPER_ARGS+=(--retained-artifact-dir "$RETAINED_ARTIFACT_DIR"); fi
 if [ -n "$RETAINED_ARTIFACT_REPORT" ]; then HELPER_ARGS+=(--retained-artifact-report "$RETAINED_ARTIFACT_REPORT"); fi
 if [ -n "$RELEASE_NOTE" ]; then HELPER_ARGS+=(--github-release-note "$RELEASE_NOTE"); fi
@@ -283,6 +304,7 @@ if [[ -n "$RETAINED_ARTIFACT_DIR" ]]; then
 else
   echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --registry $REGISTRY --execute --github-draft \\"
 fi
+echo "    --github-repo $GITHUB_REPO --git-remote-url $GIT_REMOTE_URL \\\"
 if [[ -n "$RETAINED_ARTIFACT_REPORT" ]]; then
   echo "    --retained-artifact-report $RETAINED_ARTIFACT_REPORT \\"
 fi

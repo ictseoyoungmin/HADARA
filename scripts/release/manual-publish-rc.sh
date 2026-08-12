@@ -5,6 +5,8 @@ TASK_ID=""
 MODE="dry-run"
 CREATE_GITHUB_DRAFT="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
+GITHUB_REPO="${HADARA_GITHUB_REPO:-ictseoyoungmin/HADARA}"
+GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-https://github.com/${GITHUB_REPO}.git}"
 PACKAGE_NAME="hadara"
 DIST_DIR="dist-release"
 RELEASE_RESULTS_DIR="${HADARA_RELEASE_RESULTS_DIR:-/tmp/hadara-release-results}"
@@ -42,6 +44,10 @@ Options:
 --approval-reason <text>
                    Approval reason recorded in HADARA publish dry-run gates.
 --registry <url>  npm registry URL. Default: https://registry.npmjs.org
+--github-repo <owner/name>
+                   Explicit GitHub repository for release creation. Default: ictseoyoungmin/HADARA
+--git-remote-url <url>
+                   Explicit Git remote for tag publication. Defaults to the HTTPS remote for --github-repo.
 --dist-dir <dir>  Release artifact output directory. Default: dist-release
 --retained-artifact-dir <dir>
                    Consume exact retained .tgz/.sha256/.manifest.json bytes from this directory.
@@ -129,6 +135,16 @@ REGISTRY="${2:-}"
 [[ -n "${REGISTRY}" ]] || { echo "--registry requires a value"; exit 1; }
 shift 2
 ;;
+--github-repo)
+GITHUB_REPO="${2:-}"
+[[ -n "${GITHUB_REPO}" ]] || { echo "--github-repo requires a value"; exit 1; }
+shift 2
+;;
+--git-remote-url)
+GIT_REMOTE_URL="${2:-}"
+[[ -n "${GIT_REMOTE_URL}" ]] || { echo "--git-remote-url requires a value"; exit 1; }
+shift 2
+;;
 --dist-dir)
 DIST_DIR="${2:-}"
 [[ -n "${DIST_DIR}" ]] || { echo "--dist-dir requires a value"; exit 1; }
@@ -171,12 +187,14 @@ echo "TASK_ID is required."
 usage
 exit 1
 fi
+[[ "${GITHUB_REPO}" =~ ^[^/]+/[^/]+$ ]] || { echo "--github-repo must be owner/name"; exit 1; }
 
 build_reinvoke_args() {
 local target_mode="${1:-${MODE}}"
 REINVOKE_ARGS=("${0}" "${TASK_ID}")
 if [[ "${target_mode}" == "execute" ]]; then REINVOKE_ARGS+=(--execute); fi
 REINVOKE_ARGS+=(--registry "${REGISTRY}")
+REINVOKE_ARGS+=(--github-repo "${GITHUB_REPO}" --git-remote-url "${GIT_REMOTE_URL}")
 if [[ "${CREATE_GITHUB_DRAFT}" == "true" ]]; then REINVOKE_ARGS+=(--github-draft); fi
 if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then REINVOKE_ARGS+=(--github-release-note "${GITHUB_RELEASE_NOTE}"); fi
 if [[ -n "${GITHUB_TOKEN_ENV}" ]]; then REINVOKE_ARGS+=(--github-token-env "${GITHUB_TOKEN_ENV}"); fi
@@ -495,7 +513,7 @@ fi
 }
 
 write_operator_publication_report() {
-local report_path="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
+local report_path="${1:-${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json}"
 mkdir -p "$(dirname "${report_path}")"
 OP_REPORT_PATH="${report_path}" \
 OP_TASK_ID="${TASK_ID}" \
@@ -592,6 +610,8 @@ echo "GitHub Release draft: ${CREATE_GITHUB_DRAFT}"
 echo "GitHub Release note: ${GITHUB_RELEASE_NOTE:-<default inline note>}"
 echo "GitHub token env: ${GITHUB_TOKEN_ENV:-<gh existing auth or GH_TOKEN>}"
 echo "Registry: ${REGISTRY}"
+echo "GitHub repo: ${GITHUB_REPO}"
+echo "Git remote: ${GIT_REMOTE_URL}"
 echo "Package: ${PACKAGE_NAME}"
 echo "Dist dir: ${DIST_DIR}"
 echo "Package smoke timeout: ${PACKAGE_SMOKE_TIMEOUT}s"
@@ -626,6 +646,12 @@ echo "Developer surface command: ${DEV_SURFACE_CMD[*]}"
 echo "Task capsule: ${TASK_CAPSULE_DIR}"
 
 GIT_STATUS="$(git status --porcelain)"
+PARTIAL_NPM_REPORT="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-npm-publication-report.json"
+if [[ "${MODE}" == "execute" && -f "${PARTIAL_NPM_REPORT}" ]]; then
+echo "A prior npm publication report exists: ${PARTIAL_NPM_REPORT}"
+echo "Refusing to clean or overwrite partial publication evidence; reconcile the GitHub outcome in a new operator run."
+exit 1
+fi
 if [[ -n "${GIT_STATUS}" ]]; then
 cleanup_release_dry_run_outputs
 GIT_STATUS="$(git status --porcelain)"
@@ -843,16 +869,22 @@ echo "npm dist-tag verification failed; refusing to write an operator publicatio
 exit 1
 fi
 
-if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
-write_operator_publication_report
+if [[ "${CREATE_GITHUB_DRAFT}" == "true" ]]; then
+NPM_PUBLICATION_REPORT_PATH="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-npm-publication-report.json"
+else
+NPM_PUBLICATION_REPORT_PATH="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
+fi
+write_operator_publication_report "${NPM_PUBLICATION_REPORT_PATH}"
 run_hadara_cli evidence add-command \
   --task "${TASK_ID}" \
-  --summary "Operator publication report recorded npm ${PACKAGE_NAME}@${VERSION}, mutation boundaries, and exact release asset digests." \
+  --summary "Operator publication report durably recorded npm ${PACKAGE_NAME}@${VERSION} before optional GitHub mutation." \
   --result passed \
   --category release \
-  --artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
-  --idempotency-key "operator-publication:${TASK_ID}:${VERSION}" \
+  --artifact-file "${NPM_PUBLICATION_REPORT_PATH}" \
+  --idempotency-key "operator-publication:npm:${TASK_ID}:${VERSION}" \
   --json
+
+if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
 echo
 echo "Skipping GitHub Release draft."
 echo "Re-run with --execute --github-draft if you want to create a draft release."
@@ -903,11 +935,11 @@ else
 git tag -a "${TAG}" -m "HADARA ${VERSION}"
 fi
 
-REMOTE_TAG="$(git ls-remote --tags origin "refs/tags/${TAG}" || true)"
+REMOTE_TAG="$(git ls-remote "${GIT_REMOTE_URL}" "refs/tags/${TAG}" || true)"
 if [[ -n "${REMOTE_TAG}" ]]; then
-echo "Git tag already exists on origin: ${TAG}"
+echo "Git tag already exists on GitHub remote ${GIT_REMOTE_URL}: ${TAG}"
 else
-git push origin "${TAG}"
+git push "${GIT_REMOTE_URL}" "${TAG}"
 fi
 
 echo
@@ -926,13 +958,14 @@ gh release create "${TAG}" \
   "${CHECKSUM_FILE}" \
   "${MANIFEST_FILE}" \
   --title "HADARA ${VERSION}" \
+  --repo "${GITHUB_REPO}" \
   "${GH_RELEASE_NOTE_ARGS[@]}" \
   --draft \
   "${GH_PRERELEASE_ARGS[@]}" \
   --verify-tag
 
 GITHUB_MUTATION_PERFORMED="true"
-write_operator_publication_report
+write_operator_publication_report "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
 
 echo
 echo "GitHub Release draft created."
@@ -948,5 +981,5 @@ run_hadara_cli evidence add-command \
   --result passed \
   --category release \
   --artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
-  --idempotency-key "operator-publication:${TASK_ID}:${VERSION}" \
+  --idempotency-key "operator-publication:github:${TASK_ID}:${VERSION}" \
   --json

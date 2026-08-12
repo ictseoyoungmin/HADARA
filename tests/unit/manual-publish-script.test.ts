@@ -75,11 +75,22 @@ describe('manual publish release script', () => {
     expect(script).toContain('dockerMutationPerformed: false');
     expect(script).toContain('substituteArtifactUsed: false');
     expect(script).toContain('sha256:${hashFile(filePath)}');
-    expect(script).toContain('--idempotency-key "operator-publication:${TASK_ID}:${VERSION}"');
+    expect(script).toContain('--idempotency-key "operator-publication:npm:${TASK_ID}:${VERSION}"');
     expect(script).toContain('print_reinvoke_command()');
     expect(script).toContain('print_reinvoke_command execute');
     expect(script).toContain('REINVOKE_ARGS+=(--registry "${REGISTRY}")');
+    expect(script).toContain('REINVOKE_ARGS+=(--github-repo "${GITHUB_REPO}" --git-remote-url "${GIT_REMOTE_URL}")');
+    expect(script).toContain('git push "${GIT_REMOTE_URL}" "${TAG}"');
+    expect(script).toContain('--repo "${GITHUB_REPO}"');
+    expect(script).toContain('operator-publication:npm:${TASK_ID}:${VERSION}');
+    expect(script).toContain('operator-publication:github:${TASK_ID}:${VERSION}');
     expect(script).not.toContain('--artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
+    expect(script.indexOf('npm view verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION}')).toBeLessThan(
+      script.indexOf('write_operator_publication_report "${NPM_PUBLICATION_REPORT_PATH}"'),
+    );
+    expect(script.indexOf('write_operator_publication_report "${NPM_PUBLICATION_REPORT_PATH}"')).toBeLessThan(
+      script.indexOf('ensure_gh_auth\n\nTAG'),
+    );
   });
 
   it('refreshes and verifies dist immediately before building release artifacts', () => {
@@ -126,7 +137,7 @@ describe('manual publish release script', () => {
     fs.writeFileSync(path.join(root, 'tools', 'dev-surface', 'release-input.ts'), fs.readFileSync(path.join(process.cwd(), 'tools', 'dev-surface', 'release-input.ts')));
     const devSurfaceLog = path.join(retained, 'dev-surface.log');
     fs.writeFileSync(path.join(root, 'tools', 'dev-surfaces.ts'), `require('node:fs').appendFileSync(process.env.DEV_SURFACE_LOG, JSON.stringify(process.argv.slice(2)) + '\\n'); console.log(JSON.stringify({ ok: true, args: process.argv.slice(2) }));\n`);
-    fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), `if (process.argv[2] === 'version') console.log('0.5.0-rc.6');\n`);
+    fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), `const fs = require('node:fs');\nif (process.argv[2] === 'version') console.log('0.5.0-rc.6');\nif (process.argv[2] === 'evidence' && process.env.EVIDENCE_LOG) fs.appendFileSync(process.env.EVIDENCE_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');\n`);
     fs.writeFileSync(path.join(root, 'tasks', 'T-0785-fixture', 'TASK.md'), '# T-0785 fixture 0.5.0-rc.6\n');
     fs.symlinkSync(path.join(process.cwd(), 'node_modules'), path.join(root, 'node_modules'), 'dir');
     const packageJson = {
@@ -164,10 +175,10 @@ describe('manual publish release script', () => {
     };
     fs.writeFileSync(path.join(retained, 'release-artifact-report.json'), JSON.stringify(report) + '\n');
     const npmLog = path.join(retained, 'npm.log');
-    fs.writeFileSync(path.join(bin, 'npm'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "${npmLog}"\ncase "$1 $2" in\n  "view hadara@0.5.0-rc.6") if [ -f "${npmLog}.published" ]; then echo 0.5.0-rc.6; else exit 1; fi;;\n  "view hadara") echo '{"latest":"0.4.6","next":"0.5.0-rc.6"}';;\n  "whoami --registry="*) echo fixture;;\n  "run check"|"run build") exit 0;;\n  publish*) if [[ "$*" == *"--dry-run"* ]]; then exit 0; else touch "${npmLog}.published"; exit 0; fi;;\nesac\nexit 0\n`);
+    fs.writeFileSync(path.join(bin, 'npm'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "$FAKE_NPM_LOG"\ncase "$1 $2" in\n  "view hadara@0.5.0-rc.6") if [ -f "$FAKE_NPM_LOG.published" ]; then echo 0.5.0-rc.6; else exit 1; fi;;\n  "view hadara") echo '{"latest":"0.4.6","next":"0.5.0-rc.6"}';;\n  "whoami --registry="*) echo fixture;;\n  "run check"|"run build") exit 0;;\n  publish*) if [[ "$*" == *"--dry-run"* ]]; then exit 0; else touch "$FAKE_NPM_LOG.published"; exit 0; fi;;\nesac\nexit 0\n`);
     fs.chmodSync(path.join(bin, 'npm'), 0o755);
     const ghLog = path.join(retained, 'gh.log');
-    fs.writeFileSync(path.join(bin, 'gh'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "${ghLog}"\ncase "$1 $2" in\n  "auth status") exit 0;;\n  "release create") exit 0;;\nesac\nexit 0\n`);
+    fs.writeFileSync(path.join(bin, 'gh'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "$FAKE_GH_LOG"\ncase "$1 $2" in\n  "auth status") if [[ "\${FAKE_GH_FAIL:-0}" == "1" ]]; then exit 1; fi; exit 0;;\n  "release create") exit 0;;\nesac\nexit 0\n`);
     fs.chmodSync(path.join(bin, 'gh'), 0o755);
     execFileSync('git', ['add', 'bin/npm'], { cwd: root });
     execFileSync('git', ['add', 'bin/gh'], { cwd: root });
@@ -175,8 +186,9 @@ describe('manual publish release script', () => {
     const remote = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-retained-remote-'));
     execFileSync('git', ['init', '--bare', '-q', remote]);
     execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: root });
-    const env = { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}`, DEV_SURFACE_LOG: devSurfaceLog };
-    const result = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--retained-artifact-dir', retained], { cwd: root, env, encoding: 'utf8' });
+    const evidenceLog = path.join(retained, 'evidence.log');
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}`, DEV_SURFACE_LOG: devSurfaceLog, EVIDENCE_LOG: evidenceLog, FAKE_NPM_LOG: npmLog, FAKE_GH_LOG: ghLog };
+    const result = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', retained], { cwd: root, env, encoding: 'utf8' });
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
     const output = result.stdout;
 
@@ -188,7 +200,28 @@ describe('manual publish release script', () => {
     expect(fs.readFileSync(npmLog, 'utf8')).not.toContain('release artifact --execute');
     expect(fs.readFileSync(devSurfaceLog, 'utf8')).not.toContain('release artifact --execute');
 
-    const execute = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--retained-artifact-dir', retained, '--execute', '--github-draft'], {
+    const failureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-retained-gh-failure-'));
+    const failureRetained = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-retained-gh-failure-artifact-'));
+    fs.cpSync(root, failureRoot, { recursive: true, verbatimSymlinks: true });
+    fs.cpSync(retained, failureRetained, { recursive: true, verbatimSymlinks: true });
+    const failureNpmLog = path.join(failureRetained, 'npm.log');
+    const failureGhLog = path.join(failureRetained, 'gh.log');
+    const failureEvidenceLog = path.join(failureRetained, 'evidence.log');
+    const failureEnv = { ...env, PATH: `${path.join(failureRoot, 'bin')}:${process.env.PATH ?? ''}`, DEV_SURFACE_LOG: path.join(failureRetained, 'dev-surface.log'), EVIDENCE_LOG: failureEvidenceLog, FAKE_NPM_LOG: failureNpmLog, FAKE_GH_LOG: failureGhLog, FAKE_GH_FAIL: '1' };
+    const failedGithub = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', failureRetained, '--execute', '--github-draft'], {
+      cwd: failureRoot,
+      env: failureEnv,
+      input: 'publish\ngithub-draft\n',
+      encoding: 'utf8'
+    });
+    expect(failedGithub.status).not.toBe(0);
+    expect(failedGithub.stdout + failedGithub.stderr).toContain('GitHub CLI is not authenticated');
+    expect(fs.existsSync(path.join(failureRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-npm-publication-report.json'))).toBe(true);
+    expect(fs.readFileSync(failureEvidenceLog, 'utf8')).toContain('evidence');
+    fs.rmSync(failureRoot, { recursive: true, force: true });
+    fs.rmSync(failureRetained, { recursive: true, force: true });
+
+    const execute = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', retained, '--execute', '--github-draft'], {
       cwd: root,
       env,
       input: 'publish\ngithub-draft\n',
@@ -197,10 +230,12 @@ describe('manual publish release script', () => {
     expect(execute.status, `${execute.stdout}\n${execute.stderr}`).toBe(0);
     expect(fs.existsSync(ghLog), `${execute.stdout}\n${execute.stderr}`).toBe(true);
     expect(fs.readFileSync(ghLog, 'utf8')).toContain('release create v0.5.0-rc.6');
+    expect(fs.readFileSync(ghLog, 'utf8')).toContain('--repo ictseoyoungmin/HADARA');
     expect(fs.readFileSync(ghLog, 'utf8')).toContain(path.basename(tarball));
     expect(fs.readFileSync(ghLog, 'utf8')).toContain(path.basename(checksum));
     expect(fs.readFileSync(ghLog, 'utf8')).toContain(path.basename(manifest));
     expect(fs.existsSync(path.join(root, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-npm-publication-report.json'))).toBe(true);
     fs.rmSync(remote, { recursive: true, force: true });
     fs.rmSync(root, { recursive: true, force: true });
   });
@@ -214,6 +249,10 @@ describe('manual publish release script', () => {
     expect(script.indexOf('add_git_safe_directory "$WORKSPACE/.git"')).toBeLessThan(
       script.indexOf('git clone "$WORKSPACE" "$CLONE"'),
     );
+    expect(script).toContain('git remote set-url origin "$GIT_REMOTE_URL"');
+    expect(script).toContain('Publish origin: $(git remote get-url origin)');
+    expect(script).toContain('HADARA_GIT_REMOTE_URL="$GIT_REMOTE_URL"');
+    expect(script).toContain('HELPER_ARGS+=(--github-repo "$GITHUB_REPO" --git-remote-url "$GIT_REMOTE_URL")');
   });
 
   it('does not run the manual publish helper dry-run by default', () => {
