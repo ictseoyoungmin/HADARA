@@ -89,6 +89,7 @@ export function parseAcceptanceRows(content: string): AcceptanceRow[] {
 
   return dataRows.map((cells) => {
     const allText = cells.join(' ');
+    const evidenceText = cellByHeader(cells, header, 'evidence') ?? '';
     const statusText = cellByHeaderAny(cells, header, ['status', 'state']) ?? cells[2] ?? '';
     const status = normalizeAcceptanceStatus(statusText);
     const decision = cellByHeader(cells, header, 'decision');
@@ -100,7 +101,7 @@ export function parseAcceptanceRows(content: string): AcceptanceRow[] {
       deferrable: deferrableFromDecision(decision, normalizeBooleanCell(cellByHeader(cells, header, 'deferrable'), false)),
       status,
       rawStatus: statusText,
-      evidenceRefs: extractRefs(allText, /\bev:T-\d{4}:[A-Za-z0-9]+\b/g),
+      evidenceRefs: extractRefs(evidenceText, /\bev:T-\d{4}:[a-f0-9]{24}\b/g),
       decisionRefs: extractRefs(allText, /\bD-[A-Za-z0-9._-]+\b/g),
       riskRefs: extractRefs(allText, /\bR-[A-Za-z0-9._-]+\b/g),
       followUpRefs: extractRefs(allText, /\b(?:T-\d{4}|DEBT-[A-Za-z0-9._-]+|GH-\d+)\b|hadara\s+task\s+create\s+["'`][^"'`]+["'`]/gi)

@@ -847,7 +847,7 @@ describe('Task Capsule validation', () => {
     fs.writeFileSync(
       path.join(task.dir, 'HANDOFF.md'),
       fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')
-        .replace('Task validation result.', `ev:${task.id}:missingevidenceref000001`),
+        .replace('Task validation result.', `ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`),
       'utf8'
     );
     appendEvidence(root, {
@@ -863,7 +863,7 @@ describe('Task Capsule validation', () => {
     expect(result.issues).toContainEqual(
       expect.objectContaining({
         severity: 'error',
-        code: 'HANDOFF_EVIDENCE_REF_MISSING',
+        code: 'STRUCTURED_EVIDENCE_REF_MISSING',
         path: `tasks/${task.id}-missing-handoff-evidence/HANDOFF.md`,
         heading: 'Last Completed'
       })

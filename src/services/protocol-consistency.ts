@@ -6,6 +6,7 @@ import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { ProtocolRemediationFix } from './protocol-remediation';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
+import { resolveTaskEvidenceReferences } from '../evidence/reference-resolver';
 import { findTaskCapsule, isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 import { parseTaskBoard } from '../task/task-board';
 
@@ -88,7 +89,6 @@ const DONE_STATUSES = new Set(['done']);
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
 const STANDARD_MINIMAL_DOCS = ['.hadara/context/HADARA_CONTEXT.md'];
 const GOVERNED_MINIMAL_DOCS: string[] = [];
-const EVIDENCE_REF_PATTERN = /\bev:T-\d{4}:[A-Za-z0-9]+\b/g;
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
   const task = findTaskCapsule(projectRoot, taskId);
@@ -790,18 +790,20 @@ function checkTaskHandoffEvidenceRefs(projectRoot: string, task: TaskCapsule, ch
   checkedDocs.add(toPortablePath(path.relative(projectRoot, handoffPath)));
   if (!fs.existsSync(handoffPath)) return;
   const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
-  const refs = extractEvidenceRefs(fs.readFileSync(handoffPath, 'utf8'));
-  const missingRefs = refs.filter((ref) => !protocolEvidenceRefExists(projectRoot, ref));
-  for (const ref of missingRefs) {
+  const resolution = resolveTaskEvidenceReferences(projectRoot, task);
+  for (const ref of resolution.unresolved) {
+    checkedDocs.add(ref.sourcePath);
     pushIssue(issues, {
-      code: 'TASK_HANDOFF_EVIDENCE_REF_MISSING',
+      code: ref.syntaxValid ? 'TASK_STRUCTURED_EVIDENCE_REF_MISSING' : 'TASK_STRUCTURED_EVIDENCE_REF_MALFORMED',
       severity: 'warning',
-      area: 'handoff',
+      area: ref.sourcePath.endsWith('/HANDOFF.md') ? 'handoff' : 'evidence',
       taskId: task.id,
-      path: relativePath,
-      message: `${relativePath} references missing evidence id ${ref}.`,
-      expected: 'reference an evidence id that exists in the referenced task evidence.jsonl',
-      actual: ref
+      path: ref.sourcePath,
+      message: ref.syntaxValid
+        ? `${ref.sourcePath} ${ref.section}/${ref.field} references missing evidence id ${ref.id}.`
+        : `${ref.sourcePath} ${ref.section}/${ref.field} contains malformed or truncated evidence id ${ref.id}.`,
+      expected: 'a complete durable evidence id that exists in the referenced task evidence.jsonl',
+      actual: ref.id
     });
   }
 }
@@ -846,20 +848,6 @@ function parseMetadataStatus(content: string): string | null {
     if ((cells[0] ?? '').toLowerCase() === 'status') return cells[1] ?? '';
   }
   return null;
-}
-
-function extractEvidenceRefs(content: string): string[] {
-  return Array.from(new Set(content.match(EVIDENCE_REF_PATTERN) ?? []));
-}
-
-function protocolEvidenceRefExists(projectRoot: string, ref: string): boolean {
-  const taskId = /\bev:(T-\d{4}):/.exec(ref)?.[1];
-  if (!taskId) return false;
-  const task = findTaskCapsule(projectRoot, taskId);
-  if (!task) return false;
-  const evidencePath = path.join(task.dir, 'evidence.jsonl');
-  if (!fs.existsSync(evidencePath)) return false;
-  return fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/).some((line) => line.includes(`"id":"${ref}"`) || line.includes(`"id": "${ref}"`));
 }
 
 interface TaskBoardRow {

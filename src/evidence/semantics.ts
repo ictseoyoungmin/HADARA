@@ -56,6 +56,7 @@ export interface AnalyzeTaskEvidenceSemanticsInput {
   taskDir: string;
   taskLooksDone: boolean;
   records: NormalizedEvidenceRecord[];
+  acceptanceEvidenceRecords?: NormalizedEvidenceRecord[];
   acceptanceRows?: AcceptanceRow[];
   taskDocs?: {
     acceptance?: string;
@@ -164,7 +165,7 @@ export function analyzeTaskEvidenceSemantics(input: AnalyzeTaskEvidenceSemantics
   const summary = summarizeEvidenceSemantics(input.records);
   const issues = analyzeAcceptanceEvidenceSemantics(
     input.acceptanceRows ?? [],
-    input.records,
+    input.acceptanceEvidenceRecords ?? input.records,
     input.taskDir
   );
 

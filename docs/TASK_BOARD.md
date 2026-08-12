@@ -780,3 +780,4 @@
 | T-0778 | Publish exact retained RC5 bytes to npm next and GitHub prerelease, then recycle public package and verify terminal lifecycle | Done | tasks/T-0778-publish-exact-retained-rc5-bytes-to-npm-next-and-github-prerelea | |
 | T-0779 | Freeze RC6 lifecycle evidence and close-currentness hardening design | Done | tasks/T-0779-freeze-rc6-lifecycle-evidence-and-close-currentness-hardening-de | |
 | T-0780 | Implement command-generated terminal lifecycle acceptance | Done | tasks/T-0780-implement-command-generated-terminal-lifecycle-acceptance | |
+| T-0781 | Implement structured evidence reference integrity | Done | tasks/T-0781-implement-structured-evidence-reference-integrity | |

@@ -35,6 +35,41 @@ afterEach(() => {
 });
 
 describe('task close report', () => {
+  it('includes resolved structured reference sources in new close snapshots', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close snapshot reference sources');
+    completeTask(root, task.id, task.dir);
+
+    const report = createTaskCloseReport(root, task.id, 'dry-run');
+
+    expect(report.ok).toBe(true);
+    expect(report.closeEvidence.closeEvidenceSnapshot).toMatchObject({
+      unresolvedEvidenceRefs: [],
+      evidenceReferenceSources: [
+        expect.objectContaining({ sourcePath: expect.stringContaining('/ACCEPTANCE.md'), section: 'ACCEPTANCE.md', rowId: 'AC-1', field: 'Evidence' })
+      ]
+    });
+  });
+
+  it('blocks close without writes when a structured readiness reference is truncated', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close truncated reference');
+    completeTask(root, task.id, task.dir);
+    rewriteFile(path.join(task.dir, 'ACCEPTANCE.md'), (content) => content.replace(/ev:T-\d{4}:[a-f0-9]{24}/, `ev:${task.id}:abc123`));
+
+    const report = createTaskCloseReport(root, task.id, 'dry-run');
+
+    expect(report.ok).toBe(false);
+    expect(report.closeEvidence.planned).toBe(false);
+    expect(report.closeEvidence.closeEvidenceSnapshot?.evidenceRefsUsedForReadiness).toEqual([]);
+    expect(report.closeEvidence.closeEvidenceSnapshot?.unresolvedEvidenceRefs).toEqual([
+      expect.objectContaining({ id: `ev:${task.id}:abc123`, syntaxValid: false, resolved: false })
+    ]);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ severity: 'error', code: 'TASK_VALIDATION_STRUCTURED_EVIDENCE_REF_MALFORMED' })
+    ]));
+  });
+
   it('closes a clean capsule through the public v3 transaction without an exposed plan hash', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction clean');
@@ -2259,6 +2294,10 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use fixture. | Accepted | Test closePlan. | Test. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n', 'utf8');
+}
+
+function rewriteFile(filePath: string, update: (content: string) => string): void {
+  fs.writeFileSync(filePath, update(fs.readFileSync(filePath, 'utf8')), 'utf8');
 }
 
 function updateTaskBoardDone(root: string, taskId: string): void {

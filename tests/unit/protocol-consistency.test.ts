@@ -198,7 +198,7 @@ describe('Docs protocol consistency report', () => {
     const task = createTaskCapsule(root, 'Docs handoff evidence');
     fs.writeFileSync(
       path.join(task.dir, 'HANDOFF.md'),
-      `# HANDOFF\n\n## Current Handoff\n\nLatest check: ev:${task.id}:missinghandoffevidence0001\n`,
+      `# HANDOFF\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Latest check. | ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa |\n`,
       'utf8'
     );
 
@@ -208,10 +208,10 @@ describe('Docs protocol consistency report', () => {
     expect(report.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: 'TASK_HANDOFF_EVIDENCE_REF_MISSING',
+          code: 'TASK_STRUCTURED_EVIDENCE_REF_MISSING',
           severity: 'warning',
           path: `tasks/${task.id}-docs-handoff-evidence/HANDOFF.md`,
-          actual: `ev:${task.id}:missinghandoffevidence0001`
+          actual: `ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`
         })
       ])
     );

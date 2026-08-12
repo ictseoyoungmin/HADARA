@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { appendEvidenceWithResult, CloseEvidenceSnapshot } from '../../evidence/evidence';
 import { normalizeEvidenceRecordsWithSourceLines } from '../../evidence/normalizer';
+import { resolveTaskEvidenceReferences } from '../../evidence/reference-resolver';
 import { findUnexplainedBlockedEvidence, findUnresolvedFailedEvidence } from '../../evidence/semantics';
 import { createEvidenceLintReport, EvidenceLintReport, readTaskDocs, readValidPersistedEvidenceRecords } from '../../services/evidence-lint';
 import { createTaskValidationReport, TaskValidationResult } from '../../services/task-validation';
@@ -177,7 +178,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const validationReportHash = hashValidationInputs(validation, evidenceLint, protocolDoctor);
   const sourceHash = hashCloseRelevantSource(projectRoot, task.dir);
   const slotRegistry = readSlotRegistryMetadata(projectRoot);
-  const closeEvidenceSnapshot = createCloseEvidenceSnapshot(task.dir, taskId);
+  const closeEvidenceSnapshot = createCloseEvidenceSnapshot(projectRoot, task.dir, taskId);
   const slotRegistryVersion = slotRegistry.slotRegistryVersion == null ? 'unknown' : String(slotRegistry.slotRegistryVersion);
   const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}; slotRegistryVersion ${slotRegistryVersion}; slotRegistryHash ${slotRegistry.slotRegistryHash}.`;
 
@@ -615,7 +616,7 @@ export function createTaskCloseSourceReport(projectRoot: string, taskId: string)
       kind: 'derived-projection',
       path: evidencePath,
       selector: 'readiness-summary',
-      sha256: createCloseEvidenceSnapshot(task.dir, taskId).evidenceSummaryHash,
+      sha256: createCloseEvidenceSnapshot(projectRoot, task.dir, taskId).evidenceSummaryHash,
       closeSourceRole: 'snapshot'
     },
     {
@@ -1160,7 +1161,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const latestHash = latest ? extractReportHash(latest.summary) : undefined;
   const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
   const latestSlotRegistryHash = latest ? extractSlotRegistryHash(latest.summary) : undefined;
-  const currentSnapshot = closePlan.closeEvidence.closeEvidenceSnapshot ?? createCloseEvidenceSnapshot(task.dir, taskId);
+  const currentSnapshot = closePlan.closeEvidence.closeEvidenceSnapshot ?? createCloseEvidenceSnapshot(projectRoot, task.dir, taskId);
   if (latest && latest.kind !== 'command-log') {
     issues.push({
       severity: 'error',
@@ -1418,12 +1419,13 @@ function createAuditVerdict(
   };
 }
 
-function createCloseEvidenceSnapshot(taskDir: string, taskId: string): CloseEvidenceSnapshot {
+function createCloseEvidenceSnapshot(projectRoot: string, taskDir: string, taskId: string): CloseEvidenceSnapshot {
   const taskPath = path.join(taskDir, 'TASK.md');
   const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
   const acceptancePath = path.join(taskDir, 'ACCEPTANCE.md');
   const acceptanceContent = fs.existsSync(acceptancePath) ? fs.readFileSync(acceptancePath, 'utf8') : taskContent;
   const acceptance = analyzeAcceptanceReadiness(acceptanceContent);
+  const referenceResolution = resolveTaskEvidenceReferences(projectRoot, taskId);
   // Reuse the same resolution-aware analyzer evidence lint uses (resolves:/supersedes:
   // markers, legacy same-category fallback, residual-risk documentation) instead of an
   // independent outcome-only check, so a failure this snapshot has already cleared does
@@ -1437,7 +1439,12 @@ function createCloseEvidenceSnapshot(taskDir: string, taskId: string): CloseEvid
   ].filter((item) => !normalizedRecords.find((record) => record.id === item.evidenceRef)?.tags.includes('close-proof'));
   const snapshotWithoutHash = {
     requiredAcceptanceIds: acceptance.rows.filter((row) => row.required).map((row) => row.id).sort(),
-    evidenceRefsUsedForReadiness: Array.from(new Set([...acceptance.rows.flatMap((row) => row.evidenceRefs), ...extractEvidenceRefs(taskContent)])).sort(),
+    evidenceRefsUsedForReadiness: referenceResolution.resolvedIds,
+    evidenceReferenceSources: referenceResolution.references
+      .filter((reference) => reference.resolved)
+      .map(({ id, sourcePath, section, rowId, field }) => ({ id, sourcePath, section, ...(rowId ? { rowId } : {}), field }))
+      .sort((a, b) => `${a.sourcePath}:${a.section}:${a.rowId ?? ''}:${a.field}:${a.id}`.localeCompare(`${b.sourcePath}:${b.section}:${b.rowId ?? ''}:${b.field}:${b.id}`)),
+    unresolvedEvidenceRefs: referenceResolution.unresolved,
     latestFailedOrBlockedEvidenceRefs: unresolvedEvidenceClassifications.map((item) => item.evidenceRef).sort(),
     unresolvedEvidenceClassifications: unresolvedEvidenceClassifications.sort((a, b) => a.evidenceRef.localeCompare(b.evidenceRef))
   };
@@ -1447,16 +1454,14 @@ function createCloseEvidenceSnapshot(taskDir: string, taskId: string): CloseEvid
   };
 }
 
-function extractEvidenceRefs(content: string): string[] {
-  return Array.from(new Set(content.match(/\bev:T-\d{4}:[A-Za-z0-9]+\b/g) ?? []));
-}
-
 function isCloseEvidenceSnapshot(value: unknown): value is CloseEvidenceSnapshot {
   if (!value || typeof value !== 'object') return false;
   const snapshot = value as CloseEvidenceSnapshot;
   return (
     Array.isArray(snapshot.requiredAcceptanceIds) &&
     Array.isArray(snapshot.evidenceRefsUsedForReadiness) &&
+    (snapshot.evidenceReferenceSources === undefined || Array.isArray(snapshot.evidenceReferenceSources)) &&
+    (snapshot.unresolvedEvidenceRefs === undefined || (Array.isArray(snapshot.unresolvedEvidenceRefs) && snapshot.unresolvedEvidenceRefs.length === 0)) &&
     Array.isArray(snapshot.latestFailedOrBlockedEvidenceRefs) &&
     Array.isArray(snapshot.unresolvedEvidenceClassifications) &&
     typeof snapshot.evidenceSummaryHash === 'string'

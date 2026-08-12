@@ -5,6 +5,7 @@ import { countEvidenceProjectionRows } from '../evidence/evidence';
 import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
+import { resolveTaskEvidenceReferences } from '../evidence/reference-resolver';
 import { parseAcceptanceRows } from '../task/acceptance';
 import { findTaskCapsule } from '../task/task-capsule';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
@@ -93,11 +94,25 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
 
   const normalizedRecords = normalizeEvidenceRecordsWithSourceLines(parsedRecords, { taskDir: task.dir });
   const taskDocs = readTaskDocs(task.dir);
+  const referenceResolution = resolveTaskEvidenceReferences(projectRoot, task);
+  for (const reference of referenceResolution.unresolved) {
+    issues.push({
+      severity: 'error',
+      code: reference.syntaxValid ? 'STRUCTURED_EVIDENCE_REF_MISSING' : 'STRUCTURED_EVIDENCE_REF_MALFORMED',
+      message: reference.syntaxValid
+        ? `${reference.section} ${reference.field} references missing canonical evidence id ${reference.id}.`
+        : `${reference.section} ${reference.field} contains malformed or truncated durable evidence id ${reference.id}.`,
+      evidenceId: reference.id,
+      path: reference.sourcePath
+    });
+  }
+  const acceptanceEvidenceRecords = readAcceptanceEvidenceRecords(projectRoot, task.id, normalizedRecords, referenceResolution.references);
   const semanticAnalysis = analyzeTaskEvidenceSemantics({
     taskId,
     taskDir: toPortablePath(path.relative(projectRoot, task.dir)),
     taskLooksDone: taskLooksDone(projectRoot, task),
     records: normalizedRecords,
+    acceptanceEvidenceRecords,
     acceptanceRows: parseAcceptanceRows(taskDocs.acceptance ?? ''),
     taskDocs
   });
@@ -107,6 +122,24 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
   }
 
   return buildReport(projectRoot, taskId, records, markdownRows, issues, semanticAnalysis.summary, projectedRows, omittedRows);
+}
+
+function readAcceptanceEvidenceRecords(
+  projectRoot: string,
+  currentTaskId: string,
+  currentRecords: ReturnType<typeof normalizeEvidenceRecordsWithSourceLines>,
+  references: ReturnType<typeof resolveTaskEvidenceReferences>['references']
+): ReturnType<typeof normalizeEvidenceRecordsWithSourceLines> {
+  const taskIds = Array.from(new Set(references
+    .filter((reference) => reference.resolved && (reference.section === 'Acceptance' || reference.sourcePath.endsWith('/ACCEPTANCE.md')) && reference.evidenceTaskId)
+    .map((reference) => reference.evidenceTaskId as string)));
+  return taskIds.flatMap((taskId) => {
+    if (taskId === currentTaskId) return currentRecords;
+    const task = findTaskCapsule(projectRoot, taskId);
+    if (!task) return [];
+    const entries = readValidPersistedEvidenceRecords(path.join(task.dir, 'evidence.jsonl'), taskId);
+    return normalizeEvidenceRecordsWithSourceLines(entries, { taskDir: task.dir });
+  });
 }
 
 function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: string, issues: EvidenceLintIssue[]): EvidenceIndexRecordWithSourceLine[] {

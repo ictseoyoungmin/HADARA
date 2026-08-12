@@ -6,6 +6,7 @@ import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, Reda
 import { startMonotonicTimer } from '../core/timing';
 import { resolveProjectFile } from '../core/workspace';
 import type { HadaraActorContext } from '../core/actor-context';
+import type { ResolvedEvidenceReference } from './reference-resolver';
 import { writePrivateEvidenceManifest } from './private-manifest';
 
 export interface EvidenceRecord {
@@ -96,6 +97,8 @@ export interface EvidenceV2IndexRecord {
 export interface CloseEvidenceSnapshot {
   requiredAcceptanceIds: string[];
   evidenceRefsUsedForReadiness: string[];
+  evidenceReferenceSources?: Array<Omit<ResolvedEvidenceReference, 'resolved' | 'syntaxValid' | 'evidenceTaskId' | 'evidenceSourceLine'>>;
+  unresolvedEvidenceRefs?: ResolvedEvidenceReference[];
   latestFailedOrBlockedEvidenceRefs: string[];
   unresolvedEvidenceClassifications: Array<{
     evidenceRef: string;
