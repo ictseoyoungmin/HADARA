@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.publicLifecycleAcceptance.v1",
+  "x-hadara-schema-id": "hadara.publicLifecycleAcceptance.v1",
+  "title": "HADARA Public Terminal Lifecycle Acceptance Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "ok", "taskId", "packageVersion", "initialDryRun", "initialExecute", "stalePlanProbe", "freshTerminalDryRun", "freshTerminalExecute", "audit", "freshStatus", "assertions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.publicLifecycleAcceptance.v1" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "packageVersion": { "type": ["string", "null"] },
+    "initialDryRun": { "$ref": "#/$defs/observation" },
+    "initialExecute": { "$ref": "#/$defs/observation" },
+    "stalePlanProbe": {
+      "allOf": [
+        { "$ref": "#/$defs/observation" },
+        { "type": "object", "required": ["expectedRefusal"], "properties": { "expectedRefusal": { "type": "boolean" } } }
+      ]
+    },
+    "freshTerminalDryRun": { "$ref": "#/$defs/observation" },
+    "freshTerminalExecute": { "$ref": "#/$defs/observation" },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "exitCode", "elapsedMs", "ok", "verdict"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": ["integer", "null"] },
+        "elapsedMs": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "boolean" },
+        "verdict": { "type": ["string", "null"] }
+      }
+    },
+    "freshStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "exitCode", "elapsedMs", "ok", "phase", "recommendations", "noStaleContinuation"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": ["integer", "null"] },
+        "elapsedMs": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "boolean" },
+        "phase": { "type": ["string", "null"] },
+        "recommendations": { "type": ["integer", "null"], "minimum": 0 },
+        "noStaleContinuation": { "type": "boolean" }
+      }
+    },
+    "assertions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialClose", "stalePlanFencing", "freshPlanIdempotency", "finalAudit", "freshRouting"],
+      "properties": {
+        "initialClose": { "type": "boolean" },
+        "stalePlanFencing": { "type": "boolean" },
+        "freshPlanIdempotency": { "type": "boolean" },
+        "finalAudit": { "type": "boolean" },
+        "freshRouting": { "type": "boolean" }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "const": "error" },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "exitCode", "elapsedMs", "reportSchemaVersion", "planHash", "ok", "closeState", "terminal", "writesExecuted", "closeProofAppended", "idempotentNoop", "reason"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": ["integer", "null"] },
+        "elapsedMs": { "type": "integer", "minimum": 0 },
+        "reportSchemaVersion": { "type": ["string", "null"] },
+        "planHash": { "type": ["string", "null"] },
+        "ok": { "type": "boolean" },
+        "closeState": { "type": ["string", "null"] },
+        "terminal": { "type": "boolean" },
+        "writesExecuted": { "type": "integer", "minimum": 0 },
+        "closeProofAppended": { "type": "boolean" },
+        "idempotentNoop": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

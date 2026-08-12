@@ -450,6 +450,13 @@
       "notes": "Documents reduced installed-package recycle reports for npm registry/package consumer smoke validation."
     },
     {
+      "id": "hadara.publicLifecycleAcceptance.v1",
+      "path": "src/schemas/public-lifecycle-acceptance.schema.json",
+      "status": "fixture",
+      "owner": "tools/dev-surface/terminal-lifecycle-acceptance",
+      "notes": "Documents command-generated initial close, stale-plan fencing, fresh-plan execute idempotency, audit, and idle routing acceptance."
+    },
+    {
       "id": "hadara.plan_context.v1",
       "path": "src/schemas/plan-context.schema.json",
       "status": "fixture",

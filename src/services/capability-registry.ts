@@ -1602,7 +1602,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'package.recycle',
-    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--include-graph] [--json]',
+    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--source-root <dir>] [--evidence-root <dir>] [--smoke-project-root <dir>] [--include-graph] [--terminal-lifecycle] [--json]',
     summary: 'Preview or execute installed-package recycle validation from the package registry.',
     exposure: 'repo-local',
     canonical: true,
@@ -1624,7 +1624,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Preview installed-package recycle', 'hadara package recycle --package hadara@latest --expected-version 0.4.0 --json', 'Before running registry-backed consumer install validation.'),
       example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --source-root . --evidence-root . --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.'),
       example('Execute recycle with explicit consumer root', 'hadara package recycle --execute --package hadara@next --expected-version 0.5.0-rc.1 --source-root . --evidence-root . --smoke-project-root /tmp/hadara-recycle-consumer --task T-XXXX --attach-evidence --json', 'When the installed smoke project must be isolated from the source and evidence roots.'),
-      example('Execute recycle with graph diagnostics', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --include-graph --json', 'When intentionally running the broader context graph smoke.')
+      example('Execute recycle with graph diagnostics', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --include-graph --json', 'When intentionally running the broader context graph smoke.'),
+      example('Execute terminal lifecycle acceptance', 'hadara package recycle --execute --terminal-lifecycle --package hadara@next --expected-version 0.5.0-rc.6 --task T-XXXX --attach-evidence --json', 'When release acceptance must prove real close, stale-plan fencing, fresh-plan execute idempotency, audit, and idle routing.')
     ],
     related: ['smoke.package', 'release.closeout', 'release.publish'],
     conflictsWith: [],

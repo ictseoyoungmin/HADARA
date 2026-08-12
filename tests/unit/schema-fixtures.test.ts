@@ -78,6 +78,7 @@ describe('schema fixtures', () => {
       'hadara.protocol.remediation.v1',
       'hadara.provider.call.v1',
       'hadara.provider.config.v1',
+      'hadara.publicLifecycleAcceptance.v1',
       'hadara.releaseArtifact.manifest.v1',
       'hadara.releaseArtifact.v1',
       'hadara.releaseCloseout.v1',

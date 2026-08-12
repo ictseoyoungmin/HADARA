@@ -6,6 +6,10 @@ import { HadaraPaths } from '../../src/core/paths';
 import { assertSchema } from '../../src/core/schema';
 import { startMonotonicTimer } from '../../src/core/timing';
 import { attachReducedSmokeEvidence } from './smoke-evidence';
+import {
+  PublicLifecycleAcceptanceReport,
+  runTerminalLifecycleAcceptance
+} from './terminal-lifecycle-acceptance';
 
 export interface PackageRecycleIssue {
   severity: 'warning' | 'error';
@@ -60,6 +64,7 @@ export interface PackageRecycleReport {
     lifecycleHelpExecuted: boolean;
     initExecuted: boolean;
     taskStatusExecuted: boolean;
+    terminalLifecycleExecuted: boolean;
     contextSmokeExecuted: boolean;
     releaseMutationExecuted: false;
     publishExecuted: false;
@@ -91,6 +96,7 @@ export interface PackageRecycleReport {
     environmentSecretsIncluded: false;
     privateStorePathsIncluded: false;
   };
+  terminalLifecycle?: PublicLifecycleAcceptanceReport;
   issues: PackageRecycleIssue[];
 }
 
@@ -108,6 +114,7 @@ export interface PackageRecycleOptions {
   noEvidence?: boolean;
   keepTemp?: boolean;
   includeGraph?: boolean;
+  terminalLifecycle?: boolean;
   timeoutSeconds?: number;
   runner?: PackageRecycleCommandRunner;
 }
@@ -205,6 +212,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
   ];
   const execution = createExecutionFlags();
   const artifacts = createArtifacts(options);
+  const terminalLifecycleResult: { value?: PublicLifecycleAcceptanceReport } = {};
   const runner = options.runner ?? runCommand;
   const timeoutMs = (options.timeoutSeconds ?? DEFAULT_PACKAGE_RECYCLE_TIMEOUT_SECONDS) * 1000;
 
@@ -301,11 +309,13 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
             workspacePath: workspaceSetup.path,
             smokeProjectRoot,
             includeGraph: options.includeGraph === true,
+            terminalLifecycle: options.terminalLifecycle === true,
             timeoutMs,
             packageInfo,
             execution,
             steps,
-            issues
+            issues,
+            terminalLifecycleResult
           });
         } else {
           steps.push(...createSkippedInstalledSteps());
@@ -362,6 +372,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
     steps,
     artifacts,
     privacy: createPrivacy(),
+    ...(terminalLifecycleResult.value ? { terminalLifecycle: terminalLifecycleResult.value } : {}),
     issues
   };
 
@@ -395,11 +406,13 @@ function runInstalledSmokes(input: {
   workspacePath: string;
   smokeProjectRoot: string;
   includeGraph: boolean;
+  terminalLifecycle: boolean;
   timeoutMs: number;
   packageInfo: PackageRecycleReport['package'];
   execution: PackageRecycleReport['execution'];
   steps: PackageRecycleStep[];
   issues: PackageRecycleIssue[];
+  terminalLifecycleResult: { value?: PublicLifecycleAcceptanceReport };
 }): void {
   const env = installPathEnv(input.installPrefix);
 
@@ -461,8 +474,9 @@ function runInstalledSmokes(input: {
     env
   });
   const createTaskStep = commandStep('task-create', 'Create disposable task with installed CLI', 'hadara task create <title> --json', createTask);
-  const taskId = parseTaskId(createTask.stdout);
-  if (!isOkJson(createTask) || !taskId) {
+  const createdTask = parseCreatedTask(createTask.stdout);
+  const taskId = createdTask?.taskId;
+  if (!isOkJson(createTask) || !taskId || (input.terminalLifecycle && !createdTask?.capsule)) {
     failStep(createTaskStep, createTask.timedOut ? 'Installed task create timed out.' : 'Installed task create failed or returned no task id.');
     input.issues.push({
       severity: 'error',
@@ -490,13 +504,40 @@ function runInstalledSmokes(input: {
       args: ['task', 'status', '--json'],
       cwd: disposableProject
     });
-    pushTaskCloseSmokeStep(input, {
-      id: 'task-close',
-      label: 'Verify task close dry-run report',
-      command: 'hadara task close --task <task-id> --dry-run --json',
-      args: ['task', 'close', '--task', taskId, '--dry-run', '--json'],
-      cwd: disposableProject
-    });
+    if (input.terminalLifecycle && createdTask?.capsule) {
+      input.execution.terminalLifecycleExecuted = true;
+      const acceptance = runTerminalLifecycleAcceptance({
+        runner: input.runner,
+        installedBin: input.installedBin,
+        installPrefix: input.installPrefix,
+        disposableProject,
+        taskId,
+        taskCapsule: createdTask.capsule,
+        packageVersion: input.packageInfo.observedVersion,
+        timeoutMs: input.timeoutMs,
+        env
+      });
+      assertSchema('hadara.publicLifecycleAcceptance.v1', acceptance);
+      input.terminalLifecycleResult.value = acceptance;
+      input.steps.push({
+        id: 'terminal-lifecycle',
+        label: 'Verify terminal close lifecycle with stale and fresh plan semantics',
+        command: 'hadara package recycle --terminal-lifecycle',
+        status: acceptance.ok ? 'passed' : 'failed',
+        summary: acceptance.ok
+          ? 'Initial close, stale-plan fencing, fresh-plan zero-write execute, audit, and idle routing passed.'
+          : 'One or more required terminal lifecycle assertions failed.'
+      });
+      for (const issue of acceptance.issues) input.issues.push({ ...issue, stepId: 'terminal-lifecycle' });
+    } else {
+      pushTaskCloseSmokeStep(input, {
+        id: 'task-close',
+        label: 'Verify task close dry-run report',
+        command: 'hadara task close --task <task-id> --dry-run --json',
+        args: ['task', 'close', '--task', taskId, '--dry-run', '--json'],
+        cwd: disposableProject
+      });
+    }
   }
 
   if (input.includeGraph) {
@@ -671,6 +712,7 @@ function createExecutionFlags(): PackageRecycleReport['execution'] {
     lifecycleHelpExecuted: false,
     initExecuted: false,
     taskStatusExecuted: false,
+    terminalLifecycleExecuted: false,
     contextSmokeExecuted: false,
     releaseMutationExecuted: false,
     publishExecuted: false
@@ -902,13 +944,21 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
       status: 'planned',
       summary: 'Would verify task status as the primary project/session ingress in the disposable project.'
     },
-    {
-      id: 'task-close',
-      label: 'Verify task close dry-run report',
-      command: 'hadara task close --task <task-id> --dry-run --json',
-      status: 'planned',
-      summary: 'Would verify task close dry-run guidance on the disposable task.'
-    },
+    options.terminalLifecycle === true
+      ? {
+          id: 'terminal-lifecycle',
+          label: 'Verify terminal close lifecycle with stale and fresh plan semantics',
+          command: 'hadara package recycle --terminal-lifecycle',
+          status: 'planned',
+          summary: 'Would prove initial close, stale-plan fencing, fresh-plan execute idempotency, audit, and idle routing.'
+        }
+      : {
+          id: 'task-close',
+          label: 'Verify task close dry-run report',
+          command: 'hadara task close --task <task-id> --dry-run --json',
+          status: 'planned',
+          summary: 'Would verify task close dry-run guidance on the disposable task.'
+        },
     ...(options.includeGraph === true
       ? [
           {
@@ -1154,10 +1204,15 @@ function parsePackageVersion(stdout: string): string | null {
   }
 }
 
-function parseTaskId(stdout: string): string | null {
+function parseCreatedTask(stdout: string): { taskId: string; capsule: string | null } | null {
   try {
     const parsed = JSON.parse(stdout);
-    return typeof parsed?.task?.id === 'string' ? parsed.task.id : typeof parsed?.id === 'string' ? parsed.id : null;
+    const taskId = typeof parsed?.task?.id === 'string' ? parsed.task.id : typeof parsed?.id === 'string' ? parsed.id : null;
+    if (!taskId) return null;
+    return {
+      taskId,
+      capsule: typeof parsed?.task?.capsule === 'string' ? parsed.task.capsule : typeof parsed?.capsule === 'string' ? parsed.capsule : null
+    };
   } catch {
     return null;
   }

@@ -45,6 +45,7 @@ import packageRecycleSchemaJson from '../schemas/package-recycle.schema.json';
 import packageSmokeSchemaJson from '../schemas/package-smoke.schema.json';
 import planContextSchemaJson from '../schemas/plan-context.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
+import publicLifecycleAcceptanceSchemaJson from '../schemas/public-lifecycle-acceptance.schema.json';
 import protocolConsistencySchemaJson from '../schemas/protocol-consistency.schema.json';
 import protocolMigrationSchemaJson from '../schemas/protocol-migration.schema.json';
 import protocolRemediationSchemaJson from '../schemas/protocol-remediation.schema.json';
@@ -161,6 +162,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.packageSmoke.v1': packageSmokeSchemaJson as JsonObject,
   'hadara.plan_context.v1': planContextSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
+  'hadara.publicLifecycleAcceptance.v1': publicLifecycleAcceptanceSchemaJson as JsonObject,
   'hadara.protocol.consistency.v1': protocolConsistencySchemaJson as JsonObject,
   'hadara.protocol.migration.v1': protocolMigrationSchemaJson as JsonObject,
   'hadara.protocol.remediation.v1': protocolRemediationSchemaJson as JsonObject,

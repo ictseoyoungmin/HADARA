@@ -5,11 +5,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handlePackageCommand } from '../../tools/dev-surface-handlers';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
+import { createTaskCapsule } from '../../src/task/task-capsule';
 import {
   createPackageRecycleDryRunReport,
   createPackageRecycleExecuteReport,
   PackageRecycleCommandRunner
 } from '../../tools/dev-surface/package-recycle';
+import {
+  deriveTerminalLifecycleAssertions,
+  runTerminalLifecycleAcceptance,
+  terminalLifecycleAssertionIssues
+} from '../../tools/dev-surface/terminal-lifecycle-acceptance';
 
 const roots: string[] = [];
 
@@ -267,6 +273,66 @@ describe('installed package recycle', () => {
     });
     expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
   });
+
+  it('proves stale-plan fencing separately from fresh-plan execute idempotency', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
+    const task = createTaskCapsule(root, 'Installed package recycle smoke');
+    let initialExecuteCount = 0;
+    const runner: PackageRecycleCommandRunner = (_command, args) => {
+      const joined = args.join(' ');
+      if (joined.startsWith('evidence add-command ')) return passed(JSON.stringify({ ok: true, evidence: { id: `ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa` } }));
+      if (joined === `task close --task ${task.id} --dry-run --json`) {
+        const postClose = initialExecuteCount > 0;
+        return passed(closeJson({ mode: 'dry-run', planHash: postClose ? 'sha256:fresh' : 'sha256:initial', closeProofAppended: false, writesExecuted: 0, idempotentNoop: postClose }));
+      }
+      if (joined === `task close --task ${task.id} --execute --plan-hash sha256:initial --json`) {
+        initialExecuteCount += 1;
+        if (initialExecuteCount === 1) return passed(closeJson({ mode: 'execute', planHash: 'sha256:initial', closeProofAppended: true, writesExecuted: 2, idempotentNoop: false }));
+        return { status: 6, stdout: JSON.stringify({ ok: false, mode: 'execute-refused', closeState: 'blocked', terminal: false, planHash: 'sha256:initial', writes: { executed: 0, closeProofAppended: false }, issues: [{ code: 'TASK_CLOSE_PLAN_PLAN_HASH_MISMATCH' }] }), stderr: '', elapsedMs: 1 };
+      }
+      if (joined === `task close --task ${task.id} --execute --plan-hash sha256:fresh --json`) {
+        return passed(closeJson({ mode: 'execute', planHash: 'sha256:fresh', closeProofAppended: false, writesExecuted: 0, idempotentNoop: true }));
+      }
+      if (joined === `task audit-close --task ${task.id} --json`) return passed(JSON.stringify({ ok: true, auditVerdict: { verdict: 'closed-valid' } }));
+      if (joined === 'task status --json') return passed(JSON.stringify({ ok: true, phase: 'idle', recommendations: 0 }));
+      return failed();
+    };
+
+    const report = runTerminalLifecycleAcceptance({
+      runner,
+      installedBin: 'hadara',
+      installPrefix: path.join(root, 'prefix'),
+      disposableProject: root,
+      taskId: task.id,
+      taskCapsule: path.relative(root, task.dir),
+      packageVersion: '0.5.0-rc.6',
+      timeoutMs: 1000,
+      env: process.env
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.assertions).toEqual({
+      initialClose: true,
+      stalePlanFencing: true,
+      freshPlanIdempotency: true,
+      finalAudit: true,
+      freshRouting: true
+    });
+    expect(report.stalePlanProbe).toMatchObject({ expectedRefusal: true, ok: false, writesExecuted: 0 });
+    expect(report.freshTerminalExecute).toMatchObject({ ok: true, writesExecuted: 0, closeProofAppended: false, idempotentNoop: true });
+    expect(validateSchema('hadara.publicLifecycleAcceptance.v1', report).ok).toBe(true);
+
+    const failedAssertions = deriveTerminalLifecycleAssertions({
+      ...report,
+      freshTerminalExecute: { ...report.freshTerminalExecute, ok: false }
+    });
+    expect(failedAssertions.freshPlanIdempotency).toBe(false);
+    expect(terminalLifecycleAssertionIssues(failedAssertions)).toEqual([
+      expect.objectContaining({ severity: 'error', code: 'PUBLIC_LIFECYCLE_FRESH_PLAN_IDEMPOTENCY_FAILED' })
+    ]);
+  });
 });
 
 function passed(stdout: string) {
@@ -294,5 +360,19 @@ function commandsJson(ids: string[]) {
       id,
       command: `hadara ${id.replace('.', ' ')} [--json]`
     }))
+  });
+}
+
+function closeJson(input: { mode: string; planHash: string; writesExecuted: number; closeProofAppended: boolean; idempotentNoop: boolean }) {
+  return JSON.stringify({
+    schemaVersion: 'hadara.task.close.summary.v1',
+    ok: true,
+    mode: input.mode,
+    closeState: 'closed-valid',
+    terminal: true,
+    planHash: input.planHash,
+    writes: { executed: input.writesExecuted, closeProofAppended: input.closeProofAppended },
+    writeSummary: { executedWrites: input.writesExecuted, closeProofAppended: input.closeProofAppended, idempotentNoop: input.idempotentNoop },
+    issues: []
   });
 }

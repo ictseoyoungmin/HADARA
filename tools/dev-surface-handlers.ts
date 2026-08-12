@@ -194,6 +194,7 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
     noEvidence: getFlag(input.args, '--no-evidence'),
     keepTemp: getFlag(input.args, '--keep-temp'),
     includeGraph: getFlag(input.args, '--include-graph'),
+    terminalLifecycle: getFlag(input.args, '--terminal-lifecycle'),
     timeoutSeconds: getIntegerOption(input.args, '--timeout', { min: 1 })
   });
 
