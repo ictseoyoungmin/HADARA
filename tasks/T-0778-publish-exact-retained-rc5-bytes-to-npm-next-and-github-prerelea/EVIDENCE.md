@@ -10,6 +10,11 @@ Do not hand-edit this file.
 | Evidence ID | Outcome | Category | Summary |
 |---|---|---|---|
 | ev:T-0778:da43a3e5cb8b490b94891d25 | passed | release | Prepared the Docker ext4 publish clone and verified the retained exact RC5 tarball, checksum, and manifest by SHA-256; no external mutation performed. |
+| ev:T-0778:0fb7269586c4445e8228083d | passed | release | hadara release artifact --execute generated and attached the RC5 tarball/checksum/manifest report; retained release bytes match the expected RC5 artifact set. |
+| ev:T-0778:79f63f1f7c6b4ce98d2c60e7 | passed | release | Public-package candidate package smoke passed with reduced evidence. |
+| ev:T-0778:6236b462099849edab8ca1f1 | passed | release | Clean-checkout smoke passed with reduced public evidence. |
+| ev:T-0778:c4798cf9909f42b6a97493d7 | passed | release | Operator publication report recorded npm hadara@0.5.0-rc.5, npm dist-tag transitions, and exact release asset digests; GitHub mutation was completed separately by the operator. |
+| ev:T-0778:a14983a2a9ba4e99a0c2b527 | passed | release | GitHub v0.5.0-rc.5 is public prerelease with exactly three uploaded assets whose observed digests and byte lengths match the retained RC5 tarball, checksum, and manifest; npm latest/next tags remain correct. |
 <!-- /hadara:slot -->
 
 ## Close Proof

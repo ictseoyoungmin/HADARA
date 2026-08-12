@@ -23,8 +23,7 @@
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Verify retained artifact set and authenticated operator sessions before any mutation. | pending | no | Required before npm/GitHub publication. | `docs/RELEASE_READINESS.md`; T-0777 HANDOFF; `docs/TASK_WORKFLOW_COMMANDS.md` |
-| Do not run `manual-publish-rc.sh` against the retained artifact directory. | blocking-warning | no | The current helper regenerates release bytes; using it would break exact-artifact identity. | `scripts/release/manual-publish-rc.sh`; T-0778 TASK.md |
+| Run the public RC5 consumer recycle and record real close execute, `closed-valid`, idempotent retry, and fresh idle status. | actionable | no | Publication and GitHub asset parity are complete; lifecycle acceptance remains. | `docs/RELEASE_READINESS.md`; T-0778 TASK.md; `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Post-Close Continuation
 
@@ -38,4 +37,4 @@
 |---|---|---|
 | Retained artifact is outside the git worktree. | The logical locator must resolve inside the operator container; do not substitute a regenerated tarball. | Verify all three SHA-256 values immediately before publish and attach the operator report. |
 | Public lifecycle raw consumer logs are disposable. | Repository evidence must retain a sanitized structured acceptance artifact with byte-bound evidence refs. | Attach the reduced report to canonical evidence before close. |
-| Publication has not been authorized or executed by this preparation step. | npm/GitHub state is intentionally unchanged. | Operator must separately review and approve each external mutation. |
+| Publication is complete but public lifecycle recycle is not. | T-0778 cannot close as release-ready until installed public RC5 lifecycle evidence is attached. | Use `hadara@next` at `0.5.0-rc.5` in a disposable consumer and attach the sanitized acceptance report. |

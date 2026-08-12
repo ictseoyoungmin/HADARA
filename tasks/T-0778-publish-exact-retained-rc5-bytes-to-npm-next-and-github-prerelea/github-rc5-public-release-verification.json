@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "hadara.releasePublicVerification.v1",
+  "verifiedAt": "2026-08-12T16:21:36+09:00",
+  "package": {
+    "name": "hadara",
+    "version": "0.5.0-rc.5",
+    "distTags": {
+      "latest": "0.4.6",
+      "next": "0.5.0-rc.5"
+    }
+  },
+  "github": {
+    "repository": "ictseoyoungmin/HADARA",
+    "tagName": "v0.5.0-rc.5",
+    "isDraft": false,
+    "isPrerelease": true,
+    "assetCount": 3,
+    "assets": [
+      {
+        "name": "hadara-0.5.0-rc.5.tgz",
+        "byteLength": 430628,
+        "sha256": "e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6"
+      },
+      {
+        "name": "hadara-0.5.0-rc.5.tgz.sha256",
+        "byteLength": 88,
+        "sha256": "e3a903cca75160585e22b1ee138e0e80abb5a7e389219694aa38020d31275d17"
+      },
+      {
+        "name": "hadara-0.5.0-rc.5.tgz.manifest.json",
+        "byteLength": 23535,
+        "sha256": "2c9f4bcda84704bbb0c5e8bcd15bf9a90a8214e7e5fe8281f436127fc39b6b22"
+      }
+    ]
+  },
+  "mutationBoundary": {
+    "npmPublishPerformed": true,
+    "githubAssetsUploaded": true,
+    "dockerMutationPerformed": false,
+    "stableLatestMutationPerformed": false
+  },
+  "publicLifecycleRecycle": "pending"
+}

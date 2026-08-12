@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "hadara.releaseOperatorPublication.v1",
+  "generatedAt": "2026-08-12T07:17:46.307Z",
+  "package": {
+    "name": "hadara",
+    "version": "0.5.0-rc.5",
+    "registry": "https://registry.npmjs.org",
+    "distTag": "next",
+    "npmMutationPerformed": true,
+    "observedVersion": "0.5.0-rc.5",
+    "distTagsBefore": {
+      "latest": "0.4.6",
+      "next": "0.5.0-rc.4"
+    },
+    "distTagsAfter": {
+      "latest": "0.4.6",
+      "next": "0.5.0-rc.5"
+    }
+  },
+  "github": {
+    "mutationPerformed": false,
+    "draftRequested": false,
+    "prerelease": true,
+    "assets": [
+      {
+        "name": "hadara-0.5.0-rc.5.tgz",
+        "sha256": "sha256:e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6",
+        "uploaded": false
+      },
+      {
+        "name": "hadara-0.5.0-rc.5.tgz.sha256",
+        "sha256": "sha256:e3a903cca75160585e22b1ee138e0e80abb5a7e389219694aa38020d31275d17",
+        "uploaded": false
+      },
+      {
+        "name": "hadara-0.5.0-rc.5.tgz.manifest.json",
+        "sha256": "sha256:2c9f4bcda84704bbb0c5e8bcd15bf9a90a8214e7e5fe8281f436127fc39b6b22",
+        "uploaded": false
+      }
+    ]
+  },
+  "lineage": {
+    "taskId": "T-0778",
+    "sourceCommit": "8444b9da730e618732ee9bda66d28384cdae05b3",
+    "approvalActor": "local-operator",
+    "approvalReason": "Manual approval-gated npm publish for current package version"
+  },
+  "mutationBoundary": {
+    "dockerMutationPerformed": false,
+    "stableLatestMutationPerformed": false,
+    "substituteArtifactUsed": false
+  },
+  "commands": {
+    "npmPublish": [
+      "npm",
+      "publish",
+      "hadara-0.5.0-rc.5.tgz",
+      "--tag",
+      "next"
+    ],
+    "githubRelease": null
+  }
+}

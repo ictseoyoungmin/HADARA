@@ -32,7 +32,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Step | Action | Status |
 |---|---|---|
 | 1 | Verify the retained RC5 artifact set and operator environment. | Completed |
-| 2 | Publish exact retained bytes to npm and GitHub under explicit operator approval. | Pending |
+| 2 | Publish exact retained bytes to npm and GitHub under explicit operator approval. | Completed |
 | 3 | Recycle the public RC5 consumer and record terminal lifecycle evidence. | Pending |
 | 4 | Reconcile current-state docs and close with proof-last evidence. | Pending |
 
@@ -41,10 +41,10 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | ID | Criterion | State | Evidence | Reference |
 |---|---|---|---|---|
 | AC-1 | Retained RC5 tarball, checksum, and manifest are present at the operator locator and match the expected bytes. | Met for preparation | `ev:T-0778:da43a3e5cb8b490b94891d25` | `$HADARA_RELEASE_WORKSPACE/0.5.0-rc.5` |
-| AC-2 | npm publishes exactly `hadara@0.5.0-rc.5` under `next`; `latest` remains unchanged. | Pending | TBD | External operator publication |
-| AC-3 | GitHub `v0.5.0-rc.5` is public, `isPrerelease=true`, and has the tarball/checksum/manifest assets with digest parity. | Pending | TBD | External operator publication |
+| AC-2 | npm publishes exactly `hadara@0.5.0-rc.5` under `next`; `latest` remains unchanged. | Met | `ev:T-0778:c4798cf9909f42b6a97493d7`; npm verification | External operator publication |
+| AC-3 | GitHub `v0.5.0-rc.5` is public, `isPrerelease=true`, and has the tarball/checksum/manifest assets with digest parity. | Met | `ev:T-0778:a14983a2a9ba4e99a0c2b527` | GitHub public verification artifact |
 | AC-4 | Public RC5 consumer passes fresh init, validation/evidence, close dry-run, real close execute, `closed-valid`, same-close zero-write retry, and fresh idle status with no stale continuation. | Pending | TBD | Public consumer recycle evidence |
-| AC-5 | No source/runtime/package changes are introduced by publication; Docker and stable/latest mutation boundaries are recorded as false. | Pending | T-0777 readiness evidence; T-0778 operator report | Release operation report |
+| AC-5 | No source/runtime/package changes are introduced by publication; Docker and stable/latest mutation boundaries are recorded as false. | Met for publication | `ev:T-0778:c4798cf9909f42b6a97493d7`; `ev:T-0778:a14983a2a9ba4e99a0c2b527` | Release operation report |
 
 ## Validation
 
@@ -52,7 +52,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 |---|---|---|---|---|
 | Retained artifact byte verification | Yes | Passed in T-0777 | Tarball SHA-256 `e6e740773f0db1df1716436b45b2d68e48e3874deabf002f439c4e2b1fd20df6`; checksum SHA-256 `e3a903cca75160585e22b1ee138e0e80abb5a7e389219694aa38020d31275d17`; manifest SHA-256 `2c9f4bcda84704bbb0c5e8bcd15bf9a90a8214e7e5fe8281f436127fc39b6b22`. | T-0777 release artifact evidence |
 | Publish environment preparation | Yes | Passed | Clean Docker ext4 clone at `/root/hadara-publish`, commit `295a645b`, package/build version `0.5.0-rc.5`, strict release gate passed; exact retained bytes verified. | `ev:T-0778:da43a3e5cb8b490b94891d25` |
-| Public npm/GitHub publication | Yes | Not Run | Human approval and authenticated npm/gh sessions required. | AC-2, AC-3 |
+| Public npm/GitHub publication | Yes | Passed | npm `next=0.5.0-rc.5`, `latest=0.4.6`; GitHub public prerelease with 3 exact assets. | `ev:T-0778:c4798cf9909f42b6a97493d7`; `ev:T-0778:a14983a2a9ba4e99a0c2b527` |
 | Public RC5 lifecycle recycle | Yes | Not Run | Execute only after public package publication is verified. | AC-4 |
 
 ## Inputs / Constraints
@@ -70,13 +70,13 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 |---|---|
 | Capsule | Created the separate RC5 publication/recycle boundary. |
 | Release input | Retained exact RC5 bytes from T-0777; no regeneration permitted. |
-| External state | No npm, GitHub, Docker, or stable/latest mutation performed by this preparation step. |
+| External state | npm RC5 publication and GitHub prerelease/assets completed; Docker and stable/latest mutation remained false. |
 
 ## Risks / Follow-ups
 
 | ID | Type | Summary | State | Link |
 |---|---|---|---|---|
-| RF-1 | Operator safety | `manual-publish-rc.sh` currently rebuilds the artifact before publishing; exact retained RC5 publication must use a verified exact-input workflow or be blocked. | Open | `scripts/release/manual-publish-rc.sh` |
+| RF-1 | Operator safety | `manual-publish-rc.sh` was not used as the exact-input publication path because it rebuilds artifacts; the observed RC5 publication matched the retained bytes. | Resolved for RC5 | `ev:T-0778:c4798cf9909f42b6a97493d7` |
 | RF-2 | Evidence | Publication report and public lifecycle acceptance must bind structured artifacts with SHA-256/byte length. | Open | T-0776 contract |
 
 ## Close Summary
@@ -90,3 +90,4 @@ Publication is intentionally not complete until the operator has authenticated n
 |---|---|---|
 | 2026-08-11 | Draft | Initial task scaffold. |
 | 2026-08-11 | Prepared | Scoped as a separate operator publication/recycle capsule; exact retained bytes are mandatory and helper regeneration is explicitly out of scope. |
+| 2026-08-12 | Published | npm RC5 publication and GitHub public prerelease asset parity completed; public consumer recycle remains before close. |
