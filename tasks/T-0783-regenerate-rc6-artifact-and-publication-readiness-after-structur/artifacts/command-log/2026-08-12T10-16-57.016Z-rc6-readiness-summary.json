@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "hadara.t0783.rc6-readiness-summary.v1",
+  "taskId": "T-0783",
+  "package": {
+    "name": "hadara",
+    "version": "0.5.0-rc.6",
+    "publishTag": "next",
+    "observedPublicPrerelease": "0.5.0-rc.5",
+    "observedStableLatest": "0.4.6"
+  },
+  "source": {
+    "commit": "7ccd1634fad7cef818f473d2aaa09a415faad20a",
+    "releaseInputHash": "sha256:be594d360f0aba19e18b9fe703d5a9727982ae3cd658bcc125cbafae6d1bfdb0",
+    "clean": true
+  },
+  "artifactLocator": {
+    "logicalRoot": "$HADARA_RELEASE_WORKSPACE/0.5.0-rc.6",
+    "files": [
+      {
+        "name": "hadara-0.5.0-rc.6.tgz",
+        "sha256": "sha256:49fd93dd1aa0da3a3602078e70898cf4bc690c9be831b31feaf7b4767ee92d56",
+        "byteLength": 435856
+      },
+      {
+        "name": "hadara-0.5.0-rc.6.tgz.sha256",
+        "sha256": "sha256:90ee06acc0ae85047273d2038e4903893d3243f15065e47b7ab37e322bed0098",
+        "byteLength": 88
+      },
+      {
+        "name": "hadara-0.5.0-rc.6.tgz.manifest.json",
+        "sha256": "sha256:3c8d33e8cc4b0248acab86c7dbfeeb4ef4d72a3e9c59fb125c03e9289b8276ad",
+        "byteLength": 23955
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "focused-managed-current-state-gate-tests",
+      "status": "passed",
+      "tests": 42
+    },
+    {
+      "id": "docker-build-and-built-version",
+      "status": "passed",
+      "packageVersion": "0.5.0-rc.6"
+    },
+    {
+      "id": "release-artifact",
+      "status": "passed",
+      "evidenceId": "ev:T-0783:0805a5338ba34c87aefe2100"
+    },
+    {
+      "id": "package-smoke",
+      "status": "passed",
+      "sourceKind": "tarball",
+      "tarballSha256": "sha256:49fd93dd1aa0da3a3602078e70898cf4bc690c9be831b31feaf7b4767ee92d56",
+      "evidenceId": "ev:T-0783:a73305de831142dfa4faa695"
+    },
+    {
+      "id": "clean-checkout-smoke",
+      "status": "passed",
+      "checkCommand": "npm run check",
+      "evidenceId": "ev:T-0783:c5950329c26a495fb8dad272"
+    },
+    {
+      "id": "strict-release-gate",
+      "status": "passed"
+    },
+    {
+      "id": "release-dry-run",
+      "status": "passed",
+      "readiness": "ready"
+    },
+    {
+      "id": "publish-dry-run",
+      "status": "passed",
+      "mutationExecuted": false,
+      "operatorApprovalRequired": true
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "id": "managed-current-state-consumer-drift",
+      "resolution": "The strict release gate now reads the managed Source version row instead of stale historical Current version prose; focused regressions pass."
+    },
+    {
+      "id": "smoke-project-reuse",
+      "resolution": "One failed package smoke is retained as canonical evidence; the failure was caused by reusing an initialized disposable path, and the fresh-path rerun passed against the same exact tarball."
+    }
+  ],
+  "mutationBoundary": {
+    "npmPublishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false,
+    "stableLatestMutationExecuted": false,
+    "publicConsumerRecycleExecuted": false
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "tokensIncluded": false,
+    "machineAbsolutePathsIncluded": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "hadara.t0783.evidence-integrity-summary.v1",
+  "taskId": "T-0783",
+  "lint": {
+    "ok": true,
+    "records": 8,
+    "markdownRows": 8,
+    "errors": 0,
+    "warnings": 0
+  },
+  "artifactBinding": {
+    "recordsWithArtifacts": 8,
+    "recordsWithSha256AndByteLength": 8,
+    "missingArtifacts": 0,
+    "hashMismatches": 0,
+    "byteLengthMismatches": 0
+  },
+  "latestSubstantiveEvidenceId": "ev:T-0783:f12f21e3e0884a24ade77e45",
+  "failedAttemptPreserved": {
+    "evidenceId": "ev:T-0783:9ec98fa06a184bf5a8c2549f",
+    "resolvedBy": "ev:T-0783:a73305de831142dfa4faa695",
+    "cause": "An initialized disposable smoke path was reused; a fresh-path rerun against the same exact tarball passed."
+  }
+}
