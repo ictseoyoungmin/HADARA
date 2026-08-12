@@ -55,6 +55,11 @@ digests before using the same bytes for npm and GitHub.
 The preparation helper must carry the retained artifact locator into the printed operator command.
 The logical locator is public; the actual path remains local/ignored operator state.
 
+The npm registry is an explicit publication destination. `--registry` must survive prepare,
+dry-run, execute reinvocation, npm authentication/observation/publish calls, and the operator
+publication report. A prepare-time custom registry must never silently fall back to the public npm
+registry.
+
 Generated GitHub release notes are operator-local ignored state and are passed by their exact path
 through prepare, dry-run, and execute guidance. They must not create a tracked dirty-tree exception
 or be removed before the printed command consumes them. A retained re-invocation must preserve the
@@ -64,9 +69,16 @@ retained directory, report, npm tag, release-note, and draft flags.
 
 `EVIDENCE.md` residual disposition and close readiness must use the same task-document parser and
 semantic resolver. A failed record resolved by a later evidence record, legacy same-category
-fallback, or a structured residual-risk row with state `Mitigated`, `Resolved`, or `Accepted Risk`
-must not be projected as `Unresolved`. Free-text negation such as “not resolved” must not create a
-false resolution.
+fallback, or a structured residual-risk row whose exact Link contains the evidence id and whose
+state is `Mitigated`, `Resolved`, or `Accepted Risk` must not be projected as `Unresolved`. Blocked
+records use the same exact-link rule with an explicit deferred/accepted/out-of-scope state. Free
+text is informational only; negated prose such as “not resolved” or “not deferred” never creates a
+resolution.
+
+The package distribution inventory is also canonical: required files, allowed roots, staged
+metadata files, and package `files` metadata derive from one exported inventory. Generated `dist/`
+is distinguished from source/input hash files but must not be maintained as a second hardcoded
+package allowlist.
 
 ### Timestamp contract
 
@@ -79,9 +91,10 @@ suffix. Generated task metadata must not mix host-local time with container UTC 
 |---|---|---|
 | T-0784 | Establish release identity, lineage, retained publication, and initial evidence-binding hardening. | None |
 | T-0785 | Complete reviewer-driven release-input, operator-helper, Release Note, and evidence-semantics hardening. | None |
-| T-0786 | Regenerate the exact RC6 artifact and readiness from the post-T-0785 source. | None |
-| T-0787 | Publish retained RC6 bytes to npm/GitHub under operator approval. | npm/GitHub only |
-| T-0788 | Public terminal-lifecycle recycle and stable decision evidence. | Public consumer only; stable promotion separately approved |
+| T-0786 | Complete publish-destination, evidence fail-closed, execute-reinvoke, and package-inventory hardening. | None |
+| T-0787 | Regenerate the exact RC6 artifact and readiness from the post-T-0786 source. | None |
+| T-0788 | Publish retained RC6 bytes to npm/GitHub under operator approval. | npm/GitHub only |
+| T-0789 | Public terminal-lifecycle recycle and stable decision evidence. | Public consumer only; stable promotion separately approved |
 
 If a P1 fails, the affected later capsule is invalidated and the same version is regenerated while
 it remains unpublished. No RC number is incremented merely because preparation source changed.

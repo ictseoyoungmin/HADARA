@@ -785,3 +785,4 @@
 | T-0783 | Regenerate RC6 artifact and publication readiness after structural hardening | Done | tasks/T-0783-regenerate-rc6-artifact-and-publication-readiness-after-structur | |
 | T-0784 | Harden release identity retained artifact publication and projection consistency | Done | tasks/T-0784-harden-release-identity-retained-artifact-publication-and-projec | |
 | T-0785 | Harden release contract identity retained publication and evidence semantics | Done | tasks/T-0785-harden-release-contract-identity-retained-publication-and-eviden | |
+| T-0786 | Harden publish destination and evidence fail-closed contracts | Done | tasks/T-0786-harden-publish-destination-and-evidence-fail-closed-contracts | |

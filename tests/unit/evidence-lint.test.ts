@@ -260,7 +260,7 @@ describe('evidence lint', () => {
       path.join(task.dir, 'TASK.md'),
       fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace(
         '| RF-1 | Follow-up | TBD | Open | TBD |',
-        `| RF-1 | Risk | Accepted risk for ${failed.evidence.id}; optional broad check remains outside required gate. | Accepted | ${failed.evidence.id} |`
+        `| RF-1 | Risk | Accepted risk for ${failed.evidence.id}; optional broad check remains outside required gate. | Accepted Risk | ${failed.evidence.id} |`
       ),
       'utf8'
     );

@@ -77,6 +77,8 @@ describe('manual publish release script', () => {
     expect(script).toContain('sha256:${hashFile(filePath)}');
     expect(script).toContain('--idempotency-key "operator-publication:${TASK_ID}:${VERSION}"');
     expect(script).toContain('print_reinvoke_command()');
+    expect(script).toContain('print_reinvoke_command execute');
+    expect(script).toContain('REINVOKE_ARGS+=(--registry "${REGISTRY}")');
     expect(script).not.toContain('--artifact-file "artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
   });
 
@@ -122,7 +124,8 @@ describe('manual publish release script', () => {
     fs.writeFileSync(path.join(root, 'LICENSE'), 'fixture license\n');
     fs.writeFileSync(path.join(root, 'package-lock.json'), '{}\n');
     fs.writeFileSync(path.join(root, 'tools', 'dev-surface', 'release-input.ts'), fs.readFileSync(path.join(process.cwd(), 'tools', 'dev-surface', 'release-input.ts')));
-    fs.writeFileSync(path.join(root, 'tools', 'dev-surfaces.ts'), `console.log(JSON.stringify({ ok: true, args: process.argv.slice(2) }));\n`);
+    const devSurfaceLog = path.join(retained, 'dev-surface.log');
+    fs.writeFileSync(path.join(root, 'tools', 'dev-surfaces.ts'), `require('node:fs').appendFileSync(process.env.DEV_SURFACE_LOG, JSON.stringify(process.argv.slice(2)) + '\\n'); console.log(JSON.stringify({ ok: true, args: process.argv.slice(2) }));\n`);
     fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), `if (process.argv[2] === 'version') console.log('0.5.0-rc.6');\n`);
     fs.writeFileSync(path.join(root, 'tasks', 'T-0785-fixture', 'TASK.md'), '# T-0785 fixture 0.5.0-rc.6\n');
     fs.symlinkSync(path.join(process.cwd(), 'node_modules'), path.join(root, 'node_modules'), 'dir');
@@ -161,19 +164,44 @@ describe('manual publish release script', () => {
     };
     fs.writeFileSync(path.join(retained, 'release-artifact-report.json'), JSON.stringify(report) + '\n');
     const npmLog = path.join(retained, 'npm.log');
-    fs.writeFileSync(path.join(bin, 'npm'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "${npmLog}"\ncase "$1 $2" in\n  "view hadara@0.5.0-rc.6") exit 1;;\n  "whoami --registry="*) echo fixture;;\n  "run check"|"run build"|"publish hadara-0.5.0-rc.6.tgz") exit 0;;\nesac\nexit 0\n`);
+    fs.writeFileSync(path.join(bin, 'npm'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "${npmLog}"\ncase "$1 $2" in\n  "view hadara@0.5.0-rc.6") if [ -f "${npmLog}.published" ]; then echo 0.5.0-rc.6; else exit 1; fi;;\n  "view hadara") echo '{"latest":"0.4.6","next":"0.5.0-rc.6"}';;\n  "whoami --registry="*) echo fixture;;\n  "run check"|"run build") exit 0;;\n  publish*) if [[ "$*" == *"--dry-run"* ]]; then exit 0; else touch "${npmLog}.published"; exit 0; fi;;\nesac\nexit 0\n`);
     fs.chmodSync(path.join(bin, 'npm'), 0o755);
+    const ghLog = path.join(retained, 'gh.log');
+    fs.writeFileSync(path.join(bin, 'gh'), `#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "${ghLog}"\ncase "$1 $2" in\n  "auth status") exit 0;;\n  "release create") exit 0;;\nesac\nexit 0\n`);
+    fs.chmodSync(path.join(bin, 'gh'), 0o755);
     execFileSync('git', ['add', 'bin/npm'], { cwd: root });
+    execFileSync('git', ['add', 'bin/gh'], { cwd: root });
     execFileSync('git', ['commit', '-qm', 'fixture fake npm'], { cwd: root });
-    const env = { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}` };
-    const result = spawnSync('bash', [scriptPath, 'T-0785', '--retained-artifact-dir', retained], { cwd: root, env, encoding: 'utf8' });
+    const remote = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-retained-remote-'));
+    execFileSync('git', ['init', '--bare', '-q', remote]);
+    execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: root });
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}`, DEV_SURFACE_LOG: devSurfaceLog };
+    const result = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--retained-artifact-dir', retained], { cwd: root, env, encoding: 'utf8' });
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
     const output = result.stdout;
 
     expect(output).toContain('Retained releaseInputHash:');
     expect(output).toContain('--retained-artifact-dir');
     expect(output).toContain('DRY-RUN COMPLETED');
+    expect(output).toContain('Registry: https://registry.example.test');
+    expect(fs.readFileSync(npmLog, 'utf8').split(/\r?\n/).filter((line) => /whoami|view|publish/.test(line)).every((line) => line.includes('registry.example.test'))).toBe(true);
     expect(fs.readFileSync(npmLog, 'utf8')).not.toContain('release artifact --execute');
+    expect(fs.readFileSync(devSurfaceLog, 'utf8')).not.toContain('release artifact --execute');
+
+    const execute = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--retained-artifact-dir', retained, '--execute', '--github-draft'], {
+      cwd: root,
+      env,
+      input: 'publish\ngithub-draft\n',
+      encoding: 'utf8'
+    });
+    expect(execute.status, `${execute.stdout}\n${execute.stderr}`).toBe(0);
+    expect(fs.existsSync(ghLog), `${execute.stdout}\n${execute.stderr}`).toBe(true);
+    expect(fs.readFileSync(ghLog, 'utf8')).toContain('release create v0.5.0-rc.6');
+    expect(fs.readFileSync(ghLog, 'utf8')).toContain(path.basename(tarball));
+    expect(fs.readFileSync(ghLog, 'utf8')).toContain(path.basename(checksum));
+    expect(fs.readFileSync(ghLog, 'utf8')).toContain(path.basename(manifest));
+    expect(fs.existsSync(path.join(root, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'))).toBe(true);
+    fs.rmSync(remote, { recursive: true, force: true });
     fs.rmSync(root, { recursive: true, force: true });
   });
 
@@ -198,6 +226,8 @@ describe('manual publish release script', () => {
     expect(script).toContain('bash scripts/release/manual-publish-rc.sh"; printf " %q" "${HELPER_ARGS[@]}"; printf " --execute');
     expect(script).toContain('--retained-artifact-dir');
     expect(script).toContain('HADARA_RETAINED_ARTIFACT_DIR');
+    expect(script).toContain('HELPER_ARGS+=(--registry "$REGISTRY")');
+    expect(script).toContain('--registry $REGISTRY --execute --github-draft');
     expect(script).toContain('.hadara/local/release-notes/$TASK_ID.md');
     expect(script).toContain('HELPER_ARGS=("$TASK")');
     expect(script).not.toContain('auto (only if npm is logged in)');

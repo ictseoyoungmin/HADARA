@@ -173,8 +173,10 @@ exit 1
 fi
 
 build_reinvoke_args() {
+local target_mode="${1:-${MODE}}"
 REINVOKE_ARGS=("${0}" "${TASK_ID}")
-if [[ "${MODE}" == "execute" ]]; then REINVOKE_ARGS+=(--execute); fi
+if [[ "${target_mode}" == "execute" ]]; then REINVOKE_ARGS+=(--execute); fi
+REINVOKE_ARGS+=(--registry "${REGISTRY}")
 if [[ "${CREATE_GITHUB_DRAFT}" == "true" ]]; then REINVOKE_ARGS+=(--github-draft); fi
 if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then REINVOKE_ARGS+=(--github-release-note "${GITHUB_RELEASE_NOTE}"); fi
 if [[ -n "${GITHUB_TOKEN_ENV}" ]]; then REINVOKE_ARGS+=(--github-token-env "${GITHUB_TOKEN_ENV}"); fi
@@ -184,7 +186,7 @@ if [[ "${NPM_TAG}" != "" ]]; then REINVOKE_ARGS+=(--npm-tag "${NPM_TAG}"); fi
 }
 
 print_reinvoke_command() {
-build_reinvoke_args
+build_reinvoke_args "${1:-${MODE}}"
 printf '  '
 printf '%q ' "${REINVOKE_ARGS[@]}"
 printf '\n'
@@ -762,11 +764,11 @@ echo "DRY-RUN COMPLETED"
 echo "No npm publish, git tag push, or GitHub Release was created."
 echo
 echo "To publish through this helper, re-run:"
-print_reinvoke_command
+print_reinvoke_command execute
 echo
 echo "To publish and then create a GitHub Release draft:"
-build_reinvoke_args
-REINVOKE_ARGS+=(--execute --github-draft)
+build_reinvoke_args execute
+if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then REINVOKE_ARGS+=(--github-draft); fi
 printf '  '
 printf '%q ' "${REINVOKE_ARGS[@]}"
 printf '\n'

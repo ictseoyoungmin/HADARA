@@ -16,7 +16,7 @@
 # - A container may have a stale global `hadara` on PATH. `manual-publish-rc.sh`
 #   prefers the clone's freshly built `dist/cli/main.js` when it exists, but this script
 #   still removes the stale global binary to keep diagnostics unambiguous.
-# 
+#
 # Example flow:
 # docker exec -it hadara-dev bash
 # cd /root/hadara-publish
@@ -233,6 +233,7 @@ fi
 echo
 echo "== 5. Manual helper dry-run boundary =="
 HELPER_ARGS=("$TASK")
+HELPER_ARGS+=(--registry "$REGISTRY")
 if [ -n "$RETAINED_ARTIFACT_DIR" ]; then HELPER_ARGS+=(--retained-artifact-dir "$RETAINED_ARTIFACT_DIR"); fi
 if [ -n "$RETAINED_ARTIFACT_REPORT" ]; then HELPER_ARGS+=(--retained-artifact-report "$RETAINED_ARTIFACT_REPORT"); fi
 if [ -n "$RELEASE_NOTE" ]; then HELPER_ARGS+=(--github-release-note "$RELEASE_NOTE"); fi
@@ -278,9 +279,9 @@ echo "  docker exec -it $CONTAINER bash"
 echo "  cd $CLONE_DIR"
 echo "  npm login --registry=$REGISTRY        # if 'npm whoami' is not already set"
 if [[ -n "$RETAINED_ARTIFACT_DIR" ]]; then
-  echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --retained-artifact-dir $RETAINED_ARTIFACT_DIR --execute --github-draft \\"
+  echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --registry $REGISTRY --retained-artifact-dir $RETAINED_ARTIFACT_DIR --execute --github-draft \\"
 else
-  echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --execute --github-draft \\"
+  echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --registry $REGISTRY --execute --github-draft \\"
 fi
 if [[ -n "$RETAINED_ARTIFACT_REPORT" ]]; then
   echo "    --retained-artifact-report $RETAINED_ARTIFACT_REPORT \\"

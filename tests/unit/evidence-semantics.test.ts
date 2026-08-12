@@ -217,10 +217,24 @@ describe('evidence semantics', () => {
 
   it('requires blocked evidence explanation', () => {
     const blocked = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'blocked', summary: 'vitest unavailable' }));
-    const explained = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'blocked', summary: 'blocked because dependency is deferred' }));
+    const explained = normalizeEvidenceRecord(v2({ id: 'ev:T-0001:blockedblockedblockedx', outcome: 'blocked', summary: 'vitest unavailable' }));
+    const taskDocs = {
+      risks: `| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Risk | Dependency is deferred. | Deferred | ${explained.id} |`
+    };
 
     expect(findUnexplainedBlockedEvidence([blocked])).toEqual([blocked]);
-    expect(findUnexplainedBlockedEvidence([explained])).toEqual([]);
+    expect(findUnexplainedBlockedEvidence([explained], taskDocs)).toEqual([]);
+  });
+
+  it('does not resolve negated prose and requires exact structured risk links', () => {
+    const failed = normalizeEvidenceRecord(v2({ id: 'ev:T-0001:failedfailedfailedfailed', outcome: 'failed', summary: 'command failed' }));
+    const blocked = normalizeEvidenceRecord(v2({ id: 'ev:T-0001:blockedblockedblockedx', outcome: 'blocked', summary: 'command blocked' }));
+    const negated = { risks: `The failure is not mitigated, not deferred, and not out of scope.` };
+    const wrongLink = { risks: `| ID | Type | Summary | State | Link |\n|---|---|---|---|---|\n| RF-1 | Risk | Other issue | Mitigated | ev:T-0001:other |` };
+
+    expect(findUnresolvedFailedEvidence([failed], negated)).toEqual([failed]);
+    expect(findUnexplainedBlockedEvidence([blocked], negated)).toEqual([blocked]);
+    expect(findUnresolvedFailedEvidence([failed], wrongLink)).toEqual([failed]);
   });
 
   it('treats exact resolution markers as blocked evidence explanation', () => {

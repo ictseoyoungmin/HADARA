@@ -16,6 +16,9 @@ export const RELEASE_INPUT_FILES = new Set([
 ]);
 
 export const RELEASE_PACKAGE_FILES = ['package.json', 'README.md', 'LICENSE'] as const;
+export const RELEASE_PACKAGE_GENERATED_ROOTS = ['dist/'] as const;
+export const RELEASE_PACKAGE_REQUIRED_FILES = [...RELEASE_PACKAGE_FILES, 'dist/cli/main.js'] as const;
+export const RELEASE_PACKAGE_ALLOWED_ROOTS = [...RELEASE_PACKAGE_GENERATED_ROOTS, ...RELEASE_PACKAGE_FILES] as const;
 
 export interface ReleaseInputInventory {
   files: string[];

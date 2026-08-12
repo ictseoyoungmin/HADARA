@@ -178,15 +178,12 @@ export function resolveNegativeEvidence(
     if (usesLegacySameCategoryFallback(record, laterRecords)) {
       return { resolved: true, reference: legacyResolver?.id };
     }
-    if (hasResidualRiskDocumentation(record, taskDocs)) {
+    if (hasStructuredRiskDisposition(record, taskDocs, ['mitigated', 'resolved', 'accepted risk'])) {
       return { resolved: true, reference: 'TASK.md#Risks / Follow-ups' };
     }
   }
   if (record.outcome === 'blocked') {
-    if (/\b(blocked because|blocked:|cannot|deferred|out of scope)\b/i.test(record.summary)) {
-      return { resolved: true, reference: 'evidence summary' };
-    }
-    if (hasBlockedDocumentation(record, taskDocs)) {
+    if (hasStructuredRiskDisposition(record, taskDocs, ['deferred', 'accepted risk', 'out of scope', 'not applicable', 'blocked'])) {
       return { resolved: true, reference: 'TASK.md#Risks / Follow-ups' };
     }
   }
@@ -383,41 +380,31 @@ function usesLegacySameCategoryFallback(record: NormalizedEvidenceRecord, laterR
   );
 }
 
-function hasResidualRiskDocumentation(
+function hasStructuredRiskDisposition(
   record: NormalizedEvidenceRecord,
-  taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs']
+  taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs'],
+  allowedStates: string[]
 ): boolean {
-  const content = joinTaskDocs(taskDocs);
-  if (!content) return false;
-  if (!mentionsRecord(content, record)) return false;
   const risks = taskDocs?.risks ?? '';
-  const controlledRow = risks.split(/\r?\n/).some((line) => {
-    if (!line.trim().startsWith('|')) return false;
-    const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
-    if (cells.length < 4 || !mentionsRecord(line, record)) return false;
-    return /^(mitigated|resolved|accepted risk)$/i.test(cells[3]);
+  const lines = risks.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.startsWith('|'));
+  const headerLine = lines.find((line) => /\bID\b/i.test(line) && /\bState\b/i.test(line) && /\bLink\b/i.test(line));
+  if (!headerLine) return false;
+  const headers = splitMarkdownTableCells(headerLine).map((cell) => cell.toLowerCase());
+  const stateIndex = headers.indexOf('state');
+  const linkIndex = headers.indexOf('link');
+  if (stateIndex < 0 || linkIndex < 0) return false;
+  return lines.some((line) => {
+    if (line === headerLine || /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?$/.test(line)) return false;
+    const cells = splitMarkdownTableCells(line);
+    if (cells.length <= Math.max(stateIndex, linkIndex)) return false;
+    const state = cells[stateIndex].replace(/`/g, '').trim().toLowerCase();
+    const links = cells[linkIndex].split(',').map((link) => link.replace(/`/g, '').trim());
+    return allowedStates.includes(state) && links.includes(record.id);
   });
-  if (controlledRow) return true;
-  return /\b(residual risk|accepted risk|risk accepted|known failure|deferred|out of scope)\b/i.test(content)
-    && !/\b(?:not|never|no longer)\s+(?:resolved|mitigated|accepted)\b/i.test(content);
 }
 
-function hasBlockedDocumentation(record: NormalizedEvidenceRecord, taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs']): boolean {
-  const content = joinTaskDocs(taskDocs);
-  if (!content) return false;
-  if (!mentionsRecord(content, record)) return false;
-  return /\b(blocked|deferred|not applicable|accepted risk|out of scope|next step)\b/i.test(content);
-}
-
-function mentionsRecord(content: string, record: NormalizedEvidenceRecord): boolean {
-  const lowered = content.toLowerCase();
-  if (lowered.includes(record.id.toLowerCase())) return true;
-  const fragment = record.summary.toLowerCase().replace(/\s+/g, ' ').slice(0, 32).trim();
-  return fragment.length >= 12 && lowered.includes(fragment);
-}
-
-function joinTaskDocs(taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs']): string {
-  return [taskDocs?.acceptance, taskDocs?.risks, taskDocs?.handoff].filter(Boolean).join('\n');
+function splitMarkdownTableCells(line: string): string[] {
+  return line.replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
 }
 
 function isSupportedReleaseArtifact(artifact: EvidenceArtifactRef): boolean {

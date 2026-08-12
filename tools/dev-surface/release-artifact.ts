@@ -7,7 +7,12 @@ import { ensureDir } from '../../src/core/fs';
 import { HadaraPaths } from '../../src/core/paths';
 import { assertSchema } from '../../src/core/schema';
 import { startMonotonicTimer } from '../../src/core/timing';
-import { computeReleaseInputHash, RELEASE_PACKAGE_FILES } from './release-input';
+import {
+  computeReleaseInputHash,
+  RELEASE_PACKAGE_ALLOWED_ROOTS,
+  RELEASE_PACKAGE_FILES,
+  RELEASE_PACKAGE_REQUIRED_FILES
+} from './release-input';
 
 export interface ReleaseArtifactIssue {
   severity: 'warning' | 'error';
@@ -173,8 +178,8 @@ interface PackResult {
   files: PackFile[];
 }
 
-const requiredFiles = [...RELEASE_PACKAGE_FILES, 'dist/cli/main.js'];
-const allowedRoots = ['dist/', 'README.md', 'LICENSE', 'package.json'];
+const requiredFiles = [...RELEASE_PACKAGE_REQUIRED_FILES];
+const allowedRoots = [...RELEASE_PACKAGE_ALLOWED_ROOTS];
 
 export function createReleaseArtifactReport(options: ReleaseArtifactOptions): ReleaseArtifactReport {
   const issues: ReleaseArtifactIssue[] = [];
@@ -557,7 +562,7 @@ function prepareStaging(): { path: string } {
 }
 
 function validateRequiredSources(projectRoot: string, issues: ReleaseArtifactIssue[]): void {
-  for (const required of ['dist/cli/main.js', 'README.md', 'LICENSE']) {
+  for (const required of RELEASE_PACKAGE_REQUIRED_FILES.filter((file) => file !== 'package.json')) {
     if (!fs.existsSync(path.join(projectRoot, required))) {
       issues.push({
         severity: 'error',
@@ -572,8 +577,9 @@ function validateRequiredSources(projectRoot: string, issues: ReleaseArtifactIss
 function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: PackageMetadata, issues: ReleaseArtifactIssue[]): void {
   try {
     fs.cpSync(path.join(projectRoot, 'dist'), path.join(staging, 'dist'), { recursive: true });
-    fs.copyFileSync(path.join(projectRoot, 'README.md'), path.join(staging, 'README.md'));
-    fs.copyFileSync(path.join(projectRoot, 'LICENSE'), path.join(staging, 'LICENSE'));
+    for (const file of RELEASE_PACKAGE_FILES.filter((entry) => entry !== 'package.json')) {
+      fs.copyFileSync(path.join(projectRoot, file), path.join(staging, file));
+    }
     fs.writeFileSync(
       path.join(staging, 'package.json'),
       `${JSON.stringify(
@@ -588,7 +594,7 @@ function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: 
           homepage: metadata.homepage,
           bugs: metadata.bugs,
           bin: { hadara: './dist/cli/main.js' },
-          files: ['dist/', 'README.md', 'LICENSE', 'package.json']
+          files: [...RELEASE_PACKAGE_ALLOWED_ROOTS]
         },
         null,
         2
