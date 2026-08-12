@@ -460,10 +460,12 @@ function checkPackageMetadataReadiness(
     licenseText !== null &&
     includesAny(validationHistory, ['hadara.packageSmoke.v1', 'PACKAGE_SMOKE_EVIDENCE']);
   const metadataMarkers = [
+    '<!-- hadara:release-current:start -->',
+    `| Source version | ${currentVersion} |`,
+    '<!-- hadara:release-current:end -->',
     'Package Metadata Release Readiness',
     'Package name decision: `hadara`',
     'npm registry observation:',
-    `Current version is \`${currentVersion}\``,
     'Current package is `private: false`',
     'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
     'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',

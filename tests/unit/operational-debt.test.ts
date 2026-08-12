@@ -77,6 +77,9 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
   fs.writeFileSync(
     path.join(root, 'docs', 'RELEASE_READINESS.md'),
     [
+      '<!-- hadara:release-current:start -->',
+      `| Source version | ${version} |`,
+      '<!-- hadara:release-current:end -->',
       'Clean Checkout Package Smoke Plan',
       'npm ci',
       'npm run build',
@@ -113,7 +116,7 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation:',
-      `Current version is \`${version}\``,
+      'Current version is `0.0.0-historical`',
       'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
@@ -1046,10 +1049,13 @@ describe('operational debt track', () => {
     fs.writeFileSync(
       path.join(root, 'docs', 'RELEASE_READINESS.md'),
       [
+        '<!-- hadara:release-current:start -->',
+        '| Source version | 0.2.0-rc.0 |',
+        '<!-- hadara:release-current:end -->',
         'Package Metadata Release Readiness',
         'Package name decision: `hadara`',
         'npm registry observation:',
-        'Current version is `0.2.0-rc.0`',
+        'Current version is `0.1.0-historical`',
         'Current package is `private: false`',
         'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
         'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
