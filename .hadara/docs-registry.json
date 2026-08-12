@@ -2275,6 +2275,45 @@
       "editPolicy": "agent-editable-with-review"
     },
     {
+      "path": "docs/specs/0.5.0-rc6/00_TERMINAL_LIFECYCLE_EVIDENCE_AND_CLOSE_CURRENTNESS_HARDENING.md",
+      "title": "RC6 Terminal Lifecycle Evidence and Close Currentness Hardening",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": true,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "normative",
+      "activeForTasks": [
+        "T-0779",
+        "T-0780",
+        "T-0781",
+        "T-0782"
+      ],
+      "drift": {
+        "risk": "high",
+        "reviewRequiredBeforeUse": true,
+        "reason": "RC6 implementation and release acceptance must remain aligned with the frozen semantic evidence contract."
+      }
+    },
+    {
       "path": "docs/TASK_BOARD.md",
       "title": "TASK_BOARD",
       "owner": "hadara-docs",
@@ -2357,7 +2396,7 @@
       "authority": "historical"
     }
   ],
-  "generatedAt": "2026-08-11T05:46:44.451Z",
+  "generatedAt": "2026-08-12T09:17:18.827Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"
