@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { validateSchema } from '../../src/core/schema';
 import { listTaskCapsules } from '../../src/task/task-capsule';
+import { computeReleaseInputHash } from './release-input';
 
 export interface ReleaseCurrentStateFacts {
   sourceVersion: string;
@@ -62,9 +62,9 @@ export function createReleaseCurrentStateReport(
   const publicationVersion = stringValue(publication?.report?.package?.version);
   const verification = latestForVersion(artifacts, 'hadara.releasePublicVerification.v1', publicationVersion);
   const lifecycle = latestLifecycle(artifacts, publicationVersion);
-  const currentCommit = readGitHead(projectRoot);
-  const publicationCommit = stringValue(publication?.report?.lineage?.sourceCommit);
-  const sourceMatchesPublication = Boolean(currentCommit && publicationCommit && currentCommit === publicationCommit);
+  const currentReleaseInputHash = computeReleaseInputHash(projectRoot);
+  const publicationReleaseInputHash = stringValue(publication?.report?.lineage?.releaseInputHash);
+  const sourceMatchesPublication = Boolean(currentReleaseInputHash && publicationReleaseInputHash && currentReleaseInputHash === publicationReleaseInputHash);
   const facts: ReleaseCurrentStateFacts = {
     sourceVersion: sourceVersion ?? 'unknown',
     publishedPrerelease: stringValue(publication?.report?.package?.version) ?? 'unknown',
@@ -72,11 +72,15 @@ export function createReleaseCurrentStateReport(
     npmLatest: stringValue(verification?.report?.package?.distTags?.latest) ?? stringValue(publication?.report?.package?.distTagsAfter?.latest) ?? 'unknown',
     githubPrerelease: publicPrereleaseTag(verification),
     publicTerminalLifecycle: lifecycle ? 'passed' : 'pending command-generated acceptance',
-    stablePromotion: sourceMatchesPublication && lifecycle ? 'pending decision' : 'blocked pending current-source RC regeneration'
+    stablePromotion: sourceMatchesPublication && lifecycle ? 'pending decision' : publication && !publicationReleaseInputHash
+      ? 'blocked pending publication release-input lineage'
+      : 'blocked pending compatible release-input regeneration'
   };
   if (!publication) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_PUBLICATION_OBSERVATION_MISSING', message: 'No byte-bound operator publication report was found.' });
   if (!verification) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_GITHUB_OBSERVATION_MISSING', message: 'No byte-bound public GitHub verification report was found.' });
   if (!lifecycle) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_TERMINAL_LIFECYCLE_PENDING', message: 'No byte-bound command-generated public terminal lifecycle acceptance matches the published version.' });
+  if (publication && !publicationReleaseInputHash) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_PUBLICATION_RELEASE_INPUT_MISSING', message: 'Publication report has no releaseInputHash; it cannot establish stable compatibility.' });
+  if (publication && publicationReleaseInputHash && currentReleaseInputHash && publicationReleaseInputHash !== currentReleaseInputHash) issues.push({ severity: 'warning', code: 'RELEASE_CURRENT_RELEASE_INPUT_MISMATCH', message: 'Current releaseInputHash differs from the published artifact releaseInputHash.' });
   const rendered = before ? renderReleaseCurrentState(before, facts, issues) : before;
   const changed = rendered !== before;
   const writes: string[] = [];
@@ -205,11 +209,6 @@ function publicPrereleaseTag(verification: BoundTypedArtifact | undefined): stri
 
 function readPackageVersion(packagePath: string): string | null {
   try { return stringValue(JSON.parse(fs.readFileSync(packagePath, 'utf8')).version); } catch { return null; }
-}
-
-function readGitHead(projectRoot: string): string | null {
-  const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: projectRoot, encoding: 'utf8' });
-  return result.status === 0 && /^[a-f0-9]{40,64}$/.test(result.stdout.trim()) ? result.stdout.trim() : null;
 }
 
 function stringValue(value: unknown): string | null {

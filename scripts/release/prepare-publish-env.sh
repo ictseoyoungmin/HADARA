@@ -55,6 +55,12 @@
 #   --clone-dir <path>   Clone path inside the container. Default: /root/hadara-publish
 #   --workspace <path>   Mounted repo path inside the container. Default: /workspace
 #   --registry <url>     npm registry. Default: https://registry.npmjs.org
+#   --retained-artifact-dir <path>
+#                        Container-visible directory containing the exact .tgz, .sha256,
+#                        .manifest.json, and release-artifact-report.json to publish.
+#                        When supplied, the publish helper never regenerates bytes.
+#   --retained-artifact-report <path>
+#                        Optional explicit retained release artifact report path.
 #   --run-helper-dry-run Run `manual-publish-rc.sh <TASK>` dry-run after prepare.
 #                        Off by default so --execute remains the end-to-end boundary.
 #   --skip-dry-run       Compatibility no-op; helper dry-run is already skipped by default.
@@ -70,6 +76,8 @@ CONTAINER="${HADARA_DEV_CONTAINER:-hadara-dev}"
 CLONE_DIR="/root/hadara-publish"
 WORKSPACE="/workspace"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
+RETAINED_ARTIFACT_DIR="${HADARA_RETAINED_ARTIFACT_DIR:-}"
+RETAINED_ARTIFACT_REPORT="${HADARA_RETAINED_ARTIFACT_REPORT:-}"
 RUN_HELPER_DRY_RUN="${HADARA_RUN_HELPER_DRY_RUN:-0}"
 
 usage() { sed -n '2,64p' "$0"; }
@@ -84,6 +92,8 @@ while [[ $# -gt 0 ]]; do
     --clone-dir) CLONE_DIR="${2:-}"; [[ -n "$CLONE_DIR" ]] || { echo "--clone-dir requires a value"; exit 1; }; shift 2;;
     --workspace) WORKSPACE="${2:-}"; [[ -n "$WORKSPACE" ]] || { echo "--workspace requires a value"; exit 1; }; shift 2;;
     --registry) REGISTRY="${2:-}"; [[ -n "$REGISTRY" ]] || { echo "--registry requires a value"; exit 1; }; shift 2;;
+    --retained-artifact-dir) RETAINED_ARTIFACT_DIR="${2:-}"; [[ -n "$RETAINED_ARTIFACT_DIR" ]] || { echo "--retained-artifact-dir requires a value"; exit 1; }; shift 2;;
+    --retained-artifact-report) RETAINED_ARTIFACT_REPORT="${2:-}"; [[ -n "$RETAINED_ARTIFACT_REPORT" ]] || { echo "--retained-artifact-report requires a value"; exit 1; }; shift 2;;
     --run-helper-dry-run) RUN_HELPER_DRY_RUN="1"; shift;;
     --skip-dry-run) RUN_HELPER_DRY_RUN="0"; shift;;
     -h|--help) usage; exit 0;;
@@ -109,6 +119,8 @@ echo "Container:  $CONTAINER"
 echo "Clone dir:  $CLONE_DIR (container ext4)"
 echo "Workspace:  $WORKSPACE (mounted repo)"
 echo "Registry:   $REGISTRY"
+echo "Retained artifact: $([[ -n "$RETAINED_ARTIFACT_DIR" ]] && echo "$RETAINED_ARTIFACT_DIR" || echo "not supplied; helper regeneration mode")"
+if [[ -n "$RETAINED_ARTIFACT_REPORT" ]]; then echo "Retained report:   $RETAINED_ARTIFACT_REPORT"; fi
 echo "Helper dry-run: $([[ "$RUN_HELPER_DRY_RUN" == "1" ]] && echo "opt-in enabled" || echo "skipped by default")"
 echo
 
@@ -117,6 +129,8 @@ docker exec \
   -e HADARA_CLONE_DIR="$CLONE_DIR" \
   -e HADARA_WORKSPACE_DIR="$WORKSPACE" \
   -e HADARA_REGISTRY="$REGISTRY" \
+  -e HADARA_RETAINED_ARTIFACT_DIR="$RETAINED_ARTIFACT_DIR" \
+  -e HADARA_RETAINED_ARTIFACT_REPORT="$RETAINED_ARTIFACT_REPORT" \
   -e HADARA_RUN_HELPER_DRY_RUN="$RUN_HELPER_DRY_RUN" \
   "$CONTAINER" bash -lc '
 set -euo pipefail
@@ -124,6 +138,8 @@ TASK="$HADARA_TASK_ID"
 CLONE="$HADARA_CLONE_DIR"
 WORKSPACE="$HADARA_WORKSPACE_DIR"
 REGISTRY="$HADARA_REGISTRY"
+RETAINED_ARTIFACT_DIR="$HADARA_RETAINED_ARTIFACT_DIR"
+RETAINED_ARTIFACT_REPORT="$HADARA_RETAINED_ARTIFACT_REPORT"
 RUN_HELPER_DRY_RUN="$HADARA_RUN_HELPER_DRY_RUN"
 
 echo "== 1. Fresh clone from the mounted repo =="
@@ -255,7 +271,14 @@ echo
 echo "  docker exec -it $CONTAINER bash"
 echo "  cd $CLONE_DIR"
 echo "  npm login --registry=$REGISTRY        # if 'npm whoami' is not already set"
-echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --execute --github-draft \\"
+if [[ -n "$RETAINED_ARTIFACT_DIR" ]]; then
+  echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --retained-artifact-dir $RETAINED_ARTIFACT_DIR --execute --github-draft \\"
+else
+  echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --execute --github-draft \\"
+fi
+if [[ -n "$RETAINED_ARTIFACT_REPORT" ]]; then
+  echo "    --retained-artifact-report $RETAINED_ARTIFACT_REPORT \\"
+fi
 echo "    --github-release-note tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md"
 echo "  # then type exactly: publish"
 echo "  # then type exactly: github-draft"

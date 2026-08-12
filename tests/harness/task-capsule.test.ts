@@ -32,8 +32,8 @@ describe('Task Capsule harness', () => {
     );
     const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMarkdown).toContain('| Field | Value |');
-    expect(taskMarkdown).toMatch(/\| Created \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
-    expect(taskMarkdown).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
+    expect(taskMarkdown).toMatch(/\| Created \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z \|/);
+    expect(taskMarkdown).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z \|/);
     expect(taskMarkdown.indexOf('## Goal')).toBeLessThan(taskMarkdown.indexOf('## Inputs / Constraints'));
     expect(taskMarkdown).toContain('| Step | Action | Status |');
     expect(taskMarkdown).toContain('| ID | Criterion | State | Evidence | Reference |');
@@ -42,8 +42,8 @@ describe('Task Capsule harness', () => {
     expect(handoffMarkdown).toContain('## Identity');
     expect(handoffMarkdown).toContain(`| ID | ${task.id} |`);
     expect(handoffMarkdown).toContain('| Status | Draft |');
-    expect(handoffMarkdown).toMatch(/\| Created \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
-    expect(handoffMarkdown).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2} \|/);
+    expect(handoffMarkdown).toMatch(/\| Created \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z \|/);
+    expect(handoffMarkdown).toMatch(/\| Updated \| \d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z \|/);
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(task.id);
   });
 

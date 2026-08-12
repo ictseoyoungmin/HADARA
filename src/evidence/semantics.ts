@@ -137,11 +137,7 @@ export function findUnresolvedFailedEvidence(
 ): NormalizedEvidenceRecord[] {
   return records.filter((record, index) => {
     if (record.outcome !== 'failed') return false;
-    const laterRecords = records.slice(index + 1);
-    if (laterRecords.some((candidate) => hasExactResolutionMarker(candidate, record.id))) return false;
-    if (usesLegacySameCategoryFallback(record, laterRecords)) return false;
-    if (hasResidualRiskDocumentation(record, taskDocs)) return false;
-    return true;
+    return !resolveNegativeEvidence(record, records.slice(index + 1), taskDocs).resolved;
   });
 }
 
@@ -151,11 +147,50 @@ export function findUnexplainedBlockedEvidence(
 ): NormalizedEvidenceRecord[] {
   return records.filter((record, index) => {
     if (record.outcome !== 'blocked') return false;
-    if (records.slice(index + 1).some((candidate) => hasExactResolutionMarker(candidate, record.id))) return false;
-    if (/\b(blocked because|blocked:|cannot|deferred|out of scope)\b/i.test(record.summary)) return false;
-    if (hasBlockedDocumentation(record, taskDocs)) return false;
-    return true;
+    return !resolveNegativeEvidence(record, records.slice(index + 1), taskDocs).resolved;
   });
+}
+
+export interface EvidenceResolution {
+  resolved: boolean;
+  reference?: string;
+}
+
+/**
+ * Shared negative-evidence resolution semantics for close validation and the
+ * human EVIDENCE.md projection. Keeping this in one place prevents a task from
+ * being closed as resolved while its generated projection still says pending.
+ */
+export function resolveNegativeEvidence(
+  record: NormalizedEvidenceRecord,
+  laterRecords: NormalizedEvidenceRecord[],
+  taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs'] = {}
+): EvidenceResolution {
+  const exactResolver = laterRecords.find((candidate) => hasExactResolutionMarker(candidate, record.id));
+  if (exactResolver) return { resolved: true, reference: exactResolver.id };
+  if (record.outcome === 'failed') {
+    const legacyResolver = laterRecords.find(
+      (candidate) =>
+        candidate.persistedSchemaVersion === 'hadara.evidence.v1' &&
+        candidate.outcome === 'passed' &&
+        candidate.category === record.category
+    );
+    if (usesLegacySameCategoryFallback(record, laterRecords)) {
+      return { resolved: true, reference: legacyResolver?.id };
+    }
+    if (hasResidualRiskDocumentation(record, taskDocs)) {
+      return { resolved: true, reference: 'TASK.md#Risks / Follow-ups' };
+    }
+  }
+  if (record.outcome === 'blocked') {
+    if (/\b(blocked because|blocked:|cannot|deferred|out of scope)\b/i.test(record.summary)) {
+      return { resolved: true, reference: 'evidence summary' };
+    }
+    if (hasBlockedDocumentation(record, taskDocs)) {
+      return { resolved: true, reference: 'TASK.md#Risks / Follow-ups' };
+    }
+  }
+  return { resolved: false };
 }
 
 export function analyzeTaskEvidenceSemantics(input: AnalyzeTaskEvidenceSemanticsInput): {
@@ -355,7 +390,7 @@ function hasResidualRiskDocumentation(
   const content = joinTaskDocs(taskDocs);
   if (!content) return false;
   if (!mentionsRecord(content, record)) return false;
-  return /\b(residual risk|accepted risk|risk accepted|known failure|deferred|out of scope)\b/i.test(content);
+  return /\b(residual risk|accepted risk|risk accepted|known failure|mitigated|resolved|deferred|out of scope)\b/i.test(content);
 }
 
 function hasBlockedDocumentation(record: NormalizedEvidenceRecord, taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs']): boolean {

@@ -6,6 +6,7 @@ import { validateSchema } from '../../src/core/schema';
 import { appendEvidenceTextArtifact } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createReleaseCurrentStateReport } from '../../tools/dev-surface/release-current-state';
+import { computeReleaseInputHash } from '../../tools/dev-surface/release-input';
 
 const roots: string[] = [];
 
@@ -31,7 +32,7 @@ describe('release current-state projection', () => {
       npmLatest: '0.4.6',
       githubPrerelease: 'v0.5.0-rc.5',
       publicTerminalLifecycle: 'pending command-generated acceptance',
-      stablePromotion: 'blocked pending current-source RC regeneration'
+      stablePromotion: 'blocked pending compatible release-input regeneration'
     });
     expect(report.sources.map((source) => source.schemaVersion)).toEqual([
       'hadara.releaseOperatorPublication.v1',
@@ -94,7 +95,15 @@ function attachReleaseFacts(root: string): void {
         { name: 'hadara.manifest.json', sha256: `sha256:${'c'.repeat(64)}`, uploaded: false }
       ]
     },
-    lineage: { taskId: task.id, sourceCommit: 'a'.repeat(40), approvalActor: 'operator', approvalReason: 'fixture' },
+    lineage: {
+      taskId: task.id,
+      sourceCommit: 'a'.repeat(40),
+      artifactSourceCommit: 'b'.repeat(40),
+      releaseInputHash: computeReleaseInputHash(root),
+      operatorCommit: 'c'.repeat(40),
+      approvalActor: 'operator',
+      approvalReason: 'fixture'
+    },
     mutationBoundary: { dockerMutationPerformed: false, stableLatestMutationPerformed: false, substituteArtifactUsed: false },
     commands: { npmPublish: ['npm', 'publish'], githubRelease: null }
   });

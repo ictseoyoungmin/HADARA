@@ -2314,6 +2314,34 @@
       }
     },
     {
+      "path": "docs/specs/0.5.0-rc6/01_RELEASE_IDENTITY_AND_RETAINED_ARTIFACT_PUBLICATION_HARDENING.md",
+      "title": "Release Identity and Retained Artifact Publication Hardening",
+      "owner": "project",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "origin": {
+        "type": "project-authored"
+      },
+      "readWhen": [
+        "release-work"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "editPolicy": "agent-editable-with-review",
+      "readTier": "active-spec",
+      "authority": "normative"
+    },
+    {
       "path": "docs/TASK_BOARD.md",
       "title": "TASK_BOARD",
       "owner": "hadara-docs",
@@ -2396,7 +2424,7 @@
       "authority": "historical"
     }
   ],
-  "generatedAt": "2026-08-12T09:17:18.827Z",
+  "generatedAt": "2026-08-12T11:33:22.965Z",
   "project": {
     "id": "hadara-dev",
     "hadaraProfile": "governed"

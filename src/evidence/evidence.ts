@@ -8,6 +8,8 @@ import { resolveProjectFile } from '../core/workspace';
 import type { HadaraActorContext } from '../core/actor-context';
 import type { ResolvedEvidenceReference } from './reference-resolver';
 import { writePrivateEvidenceManifest } from './private-manifest';
+import { normalizeEvidenceRecordsInMemoryOrder } from './normalizer';
+import { resolveNegativeEvidence } from './semantics';
 
 export interface EvidenceRecord {
   time: string;
@@ -537,7 +539,7 @@ function projectEvidenceMarkdown(taskDir: string, taskId: string, execute: boole
   const source = path.join(taskDir, 'evidence.jsonl');
   const target = path.join(taskDir, 'EVIDENCE.md');
   const records = readEvidenceIndex(taskDir);
-  const next = renderEvidenceProjection(records);
+  const next = renderEvidenceProjection(records, readProjectionTaskDocs(taskDir));
   const previous = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
   const wouldChange = previous !== next;
   if (execute && wouldChange) fs.writeFileSync(target, next, 'utf8');
@@ -557,7 +559,10 @@ function projectEvidenceMarkdown(taskDir: string, taskId: string, execute: boole
   };
 }
 
-function renderEvidenceProjection(records: PersistedEvidenceRecord[]): string {
+function renderEvidenceProjection(
+  records: PersistedEvidenceRecord[],
+  taskDocs: { risks?: string; handoff?: string } = {}
+): string {
   const validationRows = records.filter((record) => !isCloseProofRecord(record) && !isResidualRecord(record));
   const closeRows = records.filter(isCloseProofRecord);
   const residualRows = records.filter(isResidualRecord);
@@ -590,7 +595,7 @@ function renderEvidenceProjection(records: PersistedEvidenceRecord[]): string {
     '| Evidence ID | Outcome | Summary | Disposition | Reference |',
     '|---|---|---|---|---|',
     ...residualRows.map((record) => {
-      const resolution = findResidualResolution(record, records);
+      const resolution = findResidualResolution(record, records, taskDocs);
       return `| ${evidenceProjectionId(record)} | ${evidenceProjectionOutcome(record)} | ${evidenceProjectionSummary(record)} | ${resolution.disposition} | ${resolution.reference} |`;
     }),
     '<!-- /hadara:slot -->',
@@ -634,15 +639,29 @@ function isResidualRecord(record: PersistedEvidenceRecord): boolean {
   return outcome === 'failed' || outcome === 'blocked';
 }
 
-function findResidualResolution(record: PersistedEvidenceRecord, records: PersistedEvidenceRecord[]): { disposition: 'Resolved' | 'Unresolved'; reference: string } {
+function findResidualResolution(
+  record: PersistedEvidenceRecord,
+  records: PersistedEvidenceRecord[],
+  taskDocs: { risks?: string; handoff?: string } = {}
+): { disposition: 'Resolved' | 'Unresolved'; reference: string } {
   const id = evidenceProjectionId(record);
   if (!id.startsWith('ev:')) return { disposition: 'Unresolved', reference: 'evidence.jsonl' };
-  const resolver = records.find((candidate) => {
-    if (candidate.schemaVersion !== 'hadara.evidence.v2') return false;
-    if (candidate.outcome !== 'passed' && candidate.outcome !== 'recorded') return false;
-    return candidate.tags.includes(`resolves:${id}`) || candidate.tags.includes(`supersedes:${id}`);
-  });
-  return resolver ? { disposition: 'Resolved', reference: evidenceProjectionId(resolver) } : { disposition: 'Unresolved', reference: 'evidence.jsonl' };
+  const normalized = normalizeEvidenceRecordsInMemoryOrder(records, { taskDir: undefined });
+  const recordIndex = normalized.findIndex((candidate) => candidate.id === id);
+  if (recordIndex < 0) return { disposition: 'Unresolved', reference: 'evidence.jsonl' };
+  const resolution = resolveNegativeEvidence(recordIndex >= 0 ? normalized[recordIndex] : normalized[0], normalized.slice(recordIndex + 1), taskDocs);
+  return resolution.resolved
+    ? { disposition: 'Resolved', reference: resolution.reference ?? 'evidence.jsonl' }
+    : { disposition: 'Unresolved', reference: 'evidence.jsonl' };
+}
+
+function readProjectionTaskDocs(taskDir: string): { risks?: string; handoff?: string } {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  const handoffPath = path.join(taskDir, 'HANDOFF.md');
+  return {
+    ...(fs.existsSync(taskPath) ? { risks: fs.readFileSync(taskPath, 'utf8') } : {}),
+    ...(fs.existsSync(handoffPath) ? { handoff: fs.readFileSync(handoffPath, 'utf8') } : {})
+  };
 }
 
 function hashText(content: string): string {

@@ -60,6 +60,28 @@ describe('evidence projection', () => {
     expect(evidence).not.toContain('set -e\nnpm test');
   });
 
+  it('uses close semantics for documented mitigated failures', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection documented mitigation');
+    const failed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Disposable consumer smoke failed after reusing an initialized path',
+      result: 'failed',
+      visibility: 'public',
+      category: 'release'
+    });
+    const failedId = failed.evidence.schemaVersion === 'hadara.evidence.v2' ? failed.evidence.id : 'evidence.jsonl';
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.appendFileSync(taskPath, `\nMitigation record ${failedId}: fresh-path rerun passed; state Mitigated.\n`, 'utf8');
+
+    const projection = createEvidenceProjectionReport(root, task.id, true);
+    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+
+    expect(projection.ok).toBe(true);
+    expect(evidence).toContain(`| ${failedId} | failed | Disposable consumer smoke failed after reusing an initialized path | Resolved | TASK.md#Risks / Follow-ups |`);
+  });
+
   it('reports projection drift and execute rewrites only EVIDENCE.md', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Projection repair');

@@ -31,8 +31,8 @@ describe('task create templates', () => {
     expect(report.ok).toBe(true);
     const taskMd = fs.readFileSync(path.join(root, report.task?.capsule ?? '', 'TASK.md'), 'utf8');
     const today = formatLocalDate();
-    expect(taskMd).toMatch(new RegExp(`\\| Created \\| ${today}T\\d{2}:\\d{2} \\|`));
-    expect(taskMd).toMatch(new RegExp(`\\| Updated \\| ${today}T\\d{2}:\\d{2} \\|`));
+    expect(taskMd).toMatch(new RegExp(`\\| Created \\| ${today}T\\d{2}:\\d{2}Z \\|`));
+    expect(taskMd).toMatch(new RegExp(`\\| Updated \\| ${today}T\\d{2}:\\d{2}Z \\|`));
     expect(taskMd).toContain('Schema hint: use `hadara schema --json`');
     expect(taskMd).not.toContain('| Created | TBD |');
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);

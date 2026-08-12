@@ -79,6 +79,7 @@ Schema: `hadara.docs.registry.v1`
 | `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
 | `docs/specs/0.5.0-rc2/HADARA Task Close Transaction Specification.md` | spec | active | only-when-linked | no | project |
 | `docs/specs/0.5.0-rc6/00_TERMINAL_LIFECYCLE_EVIDENCE_AND_CLOSE_CURRENTNESS_HARDENING.md` | spec | active | only-when-linked | yes | project |
+| `docs/specs/0.5.0-rc6/01_RELEASE_IDENTITY_AND_RETAINED_ARTIFACT_PUBLICATION_HARDENING.md` | spec | active | release-work | no | project |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
 | `docs/VALIDATION_HISTORY.md` | implementation-guide | historical | release-work | no | project |

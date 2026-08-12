@@ -12,11 +12,16 @@ PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"
 NPM_TAG="${NPM_TAG:-}"
 GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
+RETAINED_ARTIFACT_DIR="${HADARA_RETAINED_ARTIFACT_DIR:-}"
+RETAINED_ARTIFACT_REPORT="${HADARA_RETAINED_ARTIFACT_REPORT:-}"
 APPROVAL_ACTOR="${HADARA_RELEASE_APPROVAL_ACTOR:-local-operator}"
 APPROVAL_REASON="${HADARA_RELEASE_APPROVAL_REASON:-Manual approval-gated npm publish for current package version}"
 GITHUB_MUTATION_PERFORMED="false"
 DIST_TAGS_BEFORE_JSON="{}"
 DIST_TAGS_AFTER_JSON="{}"
+ARTIFACT_SOURCE_COMMIT=""
+ARTIFACT_RELEASE_INPUT_HASH=""
+OPERATOR_COMMIT=""
 
 usage() {
 cat <<'EOF'
@@ -37,6 +42,12 @@ Options:
                    Approval reason recorded in HADARA publish dry-run gates.
 --registry <url>  npm registry URL. Default: https://registry.npmjs.org
 --dist-dir <dir>  Release artifact output directory. Default: dist-release
+--retained-artifact-dir <dir>
+                   Consume exact retained .tgz/.sha256/.manifest.json bytes from this directory.
+                   This mode never regenerates the release artifact.
+--retained-artifact-report <path>
+                   Release-artifact journal/report for retained-input lineage. Defaults to
+                   <retained-artifact-dir>/release-artifact-report.json.
 --package <name>  npm package name. Default: hadara
 --npm-tag <tag>   npm dist-tag for publish. Default: next for rc versions, latest otherwise.
 -h, --help         Show this help.
@@ -120,6 +131,16 @@ shift 2
 --dist-dir)
 DIST_DIR="${2:-}"
 [[ -n "${DIST_DIR}" ]] || { echo "--dist-dir requires a value"; exit 1; }
+shift 2
+;;
+--retained-artifact-dir)
+RETAINED_ARTIFACT_DIR="${2:-}"
+[[ -n "${RETAINED_ARTIFACT_DIR}" ]] || { echo "--retained-artifact-dir requires a value"; exit 1; }
+shift 2
+;;
+--retained-artifact-report)
+RETAINED_ARTIFACT_REPORT="${2:-}"
+[[ -n "${RETAINED_ARTIFACT_REPORT}" ]] || { echo "--retained-artifact-report requires a value"; exit 1; }
 shift 2
 ;;
 --package)
@@ -263,6 +284,7 @@ case "${path}" in
 "${DIST_DIR}"|"${DIST_DIR}"/*|\
 "${TASK_CAPSULE_DIR}/EVIDENCE.md"|\
 "${TASK_CAPSULE_DIR}/evidence.jsonl"|\
+"${TASK_CAPSULE_DIR}/GITHUB_RELEASE_NOTE.md"|\
 "${TASK_CAPSULE_DIR}/artifacts"|\
 "${TASK_CAPSULE_DIR}/artifacts"/*)
 ;;
@@ -319,6 +341,7 @@ if (parsed.version !== expectedVersion) issues.push(`version expected ${expected
 if (typeof parsed.description !== 'string' || !parsed.description.includes('Local-first evidence control plane')) {
   issues.push('description is missing the release discovery wording');
 }
+
 for (const keyword of ['ai', 'agent', 'coding-agent', 'developer-tools', 'hadara']) {
   if (!Array.isArray(parsed.keywords) || !parsed.keywords.includes(keyword)) {
     issues.push(`keywords missing ${keyword}`);
@@ -337,6 +360,78 @@ if (issues.length > 0) {
 }
 
 console.log(`Release tarball package metadata verified: ${parsed.name}@${parsed.version}`);
+NODE
+}
+
+read_artifact_lineage() {
+local report_path="$1"
+local tarball="$2"
+local checksum_file="$3"
+local manifest_file="$4"
+
+node --import tsx - "${report_path}" "${tarball}" "${checksum_file}" "${manifest_file}" "${PACKAGE_NAME}" "${VERSION}" <<'NODE'
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const { computeReleaseInputHash } = require('./tools/dev-surface/release-input.ts');
+
+const [reportPath, tarball, checksumFile, manifestFile, expectedName, expectedVersion] = process.argv.slice(2);
+const fail = (message) => {
+  console.error(`Retained release artifact validation failed: ${message}`);
+  process.exit(1);
+};
+const hash = (filePath) => `sha256:${crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')}`;
+const size = (filePath) => fs.statSync(filePath).size;
+const requiredFiles = [tarball, checksumFile, manifestFile];
+for (const filePath of requiredFiles) {
+  if (!fs.existsSync(filePath)) fail(`missing artifact file ${filePath}`);
+}
+if (!fs.existsSync(reportPath)) fail(`missing release artifact report ${reportPath}`);
+
+let report;
+try {
+  report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+} catch (error) {
+  fail(`invalid release artifact report JSON: ${error.message}`);
+}
+if (report.schemaVersion !== 'hadara.releaseArtifact.v1' || report.command !== 'release.artifact' || report.ok !== true) {
+  fail('report is not a successful hadara.releaseArtifact.v1 report');
+}
+if (report.package?.name !== expectedName || report.package?.version !== expectedVersion) {
+  fail(`report package identity does not match ${expectedName}@${expectedVersion}`);
+}
+const sourceCommit = report.source?.gitCommit;
+const releaseInputHash = report.source?.releaseInputHash;
+if (!/^[a-f0-9]{40}$/i.test(sourceCommit || '')) fail('report source.gitCommit is missing or malformed');
+if (!/^sha256:[a-f0-9]{64}$/.test(releaseInputHash || '')) fail('report source.releaseInputHash is missing or malformed');
+const currentReleaseInputHash = computeReleaseInputHash(process.cwd());
+if (!currentReleaseInputHash || currentReleaseInputHash !== releaseInputHash) {
+  fail(`retained artifact releaseInputHash ${releaseInputHash || '<missing>'} does not match current source ${currentReleaseInputHash || '<missing>'}`);
+}
+
+const expected = [
+  ['tarball', tarball],
+  ['checksum', checksumFile],
+  ['manifest', manifestFile]
+];
+for (const [kind, filePath] of expected) {
+  const entry = Array.isArray(report.artifacts) && report.artifacts.find((artifact) => artifact.kind === kind && artifact.fileName === path.basename(filePath));
+  if (!entry) fail(`report is missing ${kind} metadata for ${path.basename(filePath)}`);
+  if (entry.hash !== hash(filePath)) fail(`${kind} hash does not match the retained bytes`);
+  if (entry.byteLength !== size(filePath)) fail(`${kind} byteLength does not match the retained bytes`);
+}
+
+let manifest;
+try {
+  manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+} catch (error) {
+  fail(`invalid manifest JSON: ${error.message}`);
+}
+if (manifest.schemaVersion !== 'hadara.releaseArtifact.manifest.v1') fail('manifest schemaVersion is invalid');
+if (manifest.package?.name !== expectedName || manifest.package?.version !== expectedVersion) fail('manifest package identity does not match the release');
+if (manifest.tarball?.fileName !== path.basename(tarball) || manifest.tarball?.hash !== hash(tarball)) fail('manifest tarball digest does not match the retained tarball');
+
+process.stdout.write(`${sourceCommit}\t${releaseInputHash}\n`);
 NODE
 }
 
@@ -397,7 +492,9 @@ OP_CHECKSUM_FILE="${CHECKSUM_FILE}" \
 OP_MANIFEST_FILE="${MANIFEST_FILE}" \
 OP_APPROVAL_ACTOR="${APPROVAL_ACTOR}" \
 OP_APPROVAL_REASON="${APPROVAL_REASON}" \
-OP_SOURCE_COMMIT="$(git rev-parse HEAD)" \
+OP_ARTIFACT_SOURCE_COMMIT="${ARTIFACT_SOURCE_COMMIT}" \
+OP_RELEASE_INPUT_HASH="${ARTIFACT_RELEASE_INPUT_HASH}" \
+OP_OPERATOR_COMMIT="${OPERATOR_COMMIT}" \
 node - <<'NODE'
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -446,7 +543,9 @@ const report = {
   },
   lineage: {
     taskId: process.env.OP_TASK_ID,
-    sourceCommit: process.env.OP_SOURCE_COMMIT,
+    artifactSourceCommit: process.env.OP_ARTIFACT_SOURCE_COMMIT,
+    releaseInputHash: process.env.OP_RELEASE_INPUT_HASH,
+    operatorCommit: process.env.OP_OPERATOR_COMMIT,
     approvalActor: process.env.OP_APPROVAL_ACTOR,
     approvalReason: process.env.OP_APPROVAL_REASON
   },
@@ -511,7 +610,7 @@ cleanup_release_dry_run_outputs
 GIT_STATUS="$(git status --porcelain)"
 fi
 
-if [[ -n "${GIT_STATUS}" ]]; then
+if [[ -n "${GIT_STATUS}" ]] && ! dirty_paths_are_release_outputs_only "${GIT_STATUS}"; then
 echo "Git worktree must be clean before manual publish."
 echo "${GIT_STATUS}"
 exit 1
@@ -542,6 +641,22 @@ exit 1
 fi
 
 echo
+if [[ -n "${RETAINED_ARTIFACT_DIR}" ]]; then
+echo "== 3. Load exact retained release artifact =="
+RETAINED_ARTIFACT_DIR="$(cd "${RETAINED_ARTIFACT_DIR}" && pwd)"
+if [[ -z "${RETAINED_ARTIFACT_REPORT}" ]]; then
+  RETAINED_ARTIFACT_REPORT="${RETAINED_ARTIFACT_DIR}/release-artifact-report.json"
+fi
+TARBALL="${RETAINED_ARTIFACT_DIR}/${PACKAGE_NAME}-${VERSION}.tgz"
+CHECKSUM_FILE="${TARBALL}.sha256"
+MANIFEST_FILE="${TARBALL}.manifest.json"
+LINEAGE="$(read_artifact_lineage "${RETAINED_ARTIFACT_REPORT}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}")"
+IFS=$'\t' read -r ARTIFACT_SOURCE_COMMIT ARTIFACT_RELEASE_INPUT_HASH <<< "${LINEAGE}"
+echo "Retained artifact directory: ${RETAINED_ARTIFACT_DIR}"
+echo "Retained artifact report: ${RETAINED_ARTIFACT_REPORT}"
+echo "Retained releaseInputHash: ${ARTIFACT_RELEASE_INPUT_HASH}"
+echo "Retained artifact source commit: ${ARTIFACT_SOURCE_COMMIT}"
+else
 echo "== 3. Build release artifact =="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
@@ -559,9 +674,13 @@ fi
 
 CHECKSUM_FILE="${TARBALL}.sha256"
 MANIFEST_FILE="${TARBALL}.manifest.json"
-NPM_TARBALL="$(npm_local_file_arg "${TARBALL}")"
-
+LINEAGE="$(read_artifact_lineage "${ARTIFACT_JOURNAL}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}")"
+IFS=$'\t' read -r ARTIFACT_SOURCE_COMMIT ARTIFACT_RELEASE_INPUT_HASH <<< "${LINEAGE}"
 echo "Generated tarball: ${TARBALL}"
+fi
+
+NPM_TARBALL="$(npm_local_file_arg "${TARBALL}")"
+OPERATOR_COMMIT="$(git rev-parse HEAD)"
 
 if [[ -f "${CHECKSUM_FILE}" ]]; then
 echo "Checking checksum: ${CHECKSUM_FILE}"

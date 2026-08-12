@@ -59,6 +59,11 @@ describe('manual publish release script', () => {
 
     expect(script).toContain('write_operator_publication_report()');
     expect(script).toContain("schemaVersion: 'hadara.releaseOperatorPublication.v1'");
+    expect(script).toContain('read_artifact_lineage()');
+    expect(script).toContain('RETAINED_ARTIFACT_DIR');
+    expect(script).toContain('artifactSourceCommit: process.env.OP_ARTIFACT_SOURCE_COMMIT');
+    expect(script).toContain('releaseInputHash: process.env.OP_RELEASE_INPUT_HASH');
+    expect(script).toContain('operatorCommit: process.env.OP_OPERATOR_COMMIT');
     expect(script).toContain('--artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
     expect(script).toContain('read_npm_dist_tags()');
     expect(script).toContain('distTagsBefore');
@@ -86,6 +91,18 @@ describe('manual publish release script', () => {
     expect(script).toContain('built dist version (${DIST_VERSION}) does not match package.json version (${VERSION}).');
   });
 
+  it('offers retained-input publication without invoking artifact regeneration', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+    const retainedBranch = script.indexOf('if [[ -n "${RETAINED_ARTIFACT_DIR}" ]]; then');
+    const regenerationBranch = script.indexOf('run_dev_surface release artifact --execute', retainedBranch);
+
+    expect(retainedBranch).toBeGreaterThan(-1);
+    expect(script).toContain('Release-artifact journal/report for retained-input lineage.');
+    expect(script).toContain('TARBALL="${RETAINED_ARTIFACT_DIR}/${PACKAGE_NAME}-${VERSION}.tgz"');
+    expect(script).toContain('read_artifact_lineage "${RETAINED_ARTIFACT_REPORT}"');
+    expect(regenerationBranch).toBeGreaterThan(retainedBranch);
+  });
+
   it('marks both mounted workspace paths as git safe directories before cloning', () => {
     const script = fs.readFileSync(prepareScriptPath, 'utf8');
 
@@ -105,6 +122,8 @@ describe('manual publish release script', () => {
     expect(script).toContain('if [ "$RUN_HELPER_DRY_RUN" != "1" ]; then');
     expect(script).toContain('skipped by default.');
     expect(script).toContain('manual-publish-rc.sh $TASK --execute');
+    expect(script).toContain('--retained-artifact-dir');
+    expect(script).toContain('HADARA_RETAINED_ARTIFACT_DIR');
     expect(script).not.toContain('auto (only if npm is logged in)');
     expect(script).not.toContain('HADARA_SKIP_DRY_RUN');
   });
