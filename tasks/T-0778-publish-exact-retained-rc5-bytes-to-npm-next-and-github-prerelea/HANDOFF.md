@@ -6,11 +6,9 @@
 |---|---|
 | ID | T-0778 |
 | Title | Publish exact retained RC5 bytes to npm next and GitHub prerelease, then recycle public package and verify terminal lifecycle |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-08-11T22:17 |
-| Updated | 2026-08-11T22:17 |
-
-> Command-owned identity: do not hand-edit `ID`, `Title`, `Status`, `Created`, or `Updated`; use `task create` and `task close`.
+| Updated | 2026-08-12T16:55 |
 
 ## Last Completed
 
@@ -23,13 +21,13 @@
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Run the public RC5 consumer recycle and record real close execute, `closed-valid`, idempotent retry, and fresh idle status. | actionable | no | Publication and GitHub asset parity are complete; lifecycle acceptance remains. | `docs/RELEASE_READINESS.md`; T-0778 TASK.md; `docs/TASK_WORKFLOW_COMMANDS.md` |
+| Complete proof-last close for T-0778 after reviewing the public RC5 lifecycle evidence. | waiting-for-operator | no | Publication, asset parity, and public lifecycle acceptance are complete. | `docs/RELEASE_READINESS.md`; T-0778 TASK.md; `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Post-Close Continuation
 
 | Step | Disposition | Create Task | Reason | Required Reading |
 |---|---|---|---|---|
-| Reconcile `docs/RELEASE_READINESS.md` with the observed RC5 npm/GitHub state and record any stable-promotion blocker. | pending | yes | Only after public recycle and close proof are complete. | `docs/RELEASE_READINESS.md`; `docs/ROADMAP.md` |
+| Reconcile `docs/RELEASE_READINESS.md` with the observed RC5 npm/GitHub state and record any stable-promotion blocker. | waiting-for-operator | no | Only after public recycle and close proof are complete; stable promotion remains a separate operator decision. | `docs/RELEASE_READINESS.md`; `docs/ROADMAP.md` |
 
 ## Carry Forward Warnings
 
@@ -37,4 +35,4 @@
 |---|---|---|
 | Retained artifact is outside the git worktree. | The logical locator must resolve inside the operator container; do not substitute a regenerated tarball. | Verify all three SHA-256 values immediately before publish and attach the operator report. |
 | Public lifecycle raw consumer logs are disposable. | Repository evidence must retain a sanitized structured acceptance artifact with byte-bound evidence refs. | Attach the reduced report to canonical evidence before close. |
-| Publication is complete but public lifecycle recycle is not. | T-0778 cannot close as release-ready until installed public RC5 lifecycle evidence is attached. | Use `hadara@next` at `0.5.0-rc.5` in a disposable consumer and attach the sanitized acceptance report. |
+| RC5 stable promotion remains a separate decision. | T-0778 closes the prerelease publication/recycle capsule; it does not promote npm `latest` or create a stable release. | Review stable-promotion readiness in a separate operator capsule. |

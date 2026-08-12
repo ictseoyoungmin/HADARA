@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "hadara.publicRcLifecycleAcceptance.v1",
+  "packageVersion": "0.5.0-rc.5",
+  "taskId": "T-0001",
+  "commandTool": "codex-exec",
+  "init": {
+    "dryRun": {
+      "ok": true,
+      "mode": "dry-run",
+      "planned": 9,
+      "planHash": "sha256:6572c5cd3218678b346cb25892b7db55959bffe55f5281c744fbbc209a448a53"
+    },
+    "brownfieldApplyConfirmation": {
+      "ok": false,
+      "reason": "INIT_ADOPTION_CONFIRMATION_REQUIRED",
+      "writes": 0
+    },
+    "execute": {
+      "ok": true,
+      "mode": "applied",
+      "applied": 9,
+      "planHash": "sha256:6572c5cd3218678b346cb25892b7db55959bffe55f5281c744fbbc209a448a53",
+      "adopted": true
+    }
+  },
+  "doctor": {
+    "initial": {
+      "ok": false,
+      "checks": {
+        "docs": "missing",
+        "tasks": "missing",
+        "projectContext": "missing"
+      }
+    },
+    "final": {
+      "ok": true,
+      "checks": {
+        "docs": "ok",
+        "tasks": "ok",
+        "projectContext": "ok"
+      }
+    }
+  },
+  "validationEvidence": {
+    "validationRun": {
+      "ok": true,
+      "status": "Passed",
+      "result": "Passed",
+      "directResult": true,
+      "evidenceId": "ev:T-0001:6d1d42e898f34a55b938b252"
+    },
+    "evidenceAddCommand": {
+      "ok": true,
+      "outcome": "passed",
+      "category": "validation",
+      "evidenceId": "ev:T-0001:24318dbe2bee4028b36e7ed1"
+    }
+  },
+  "closeDryRun": {
+    "ok": false,
+    "closeState": "in-progress",
+    "terminal": false,
+    "planStatus": "executable-with-deferred-checks",
+    "writesPlanned": 1,
+    "writesExecuted": 0,
+    "closeProofAppended": false,
+    "planHash": "sha256:98d3809b72529028c7c9ce8e39cb30facace166b40f55516f832f5a2d4bca94d"
+  },
+  "closeExecute": {
+    "ok": true,
+    "mode": "execute",
+    "closeState": "closed-valid",
+    "terminal": true,
+    "planStatus": "satisfied",
+    "writesPlanned": 0,
+    "writesExecuted": 2,
+    "closeProofAppended": true,
+    "planHash": "sha256:98d3809b72529028c7c9ce8e39cb30facace166b40f55516f832f5a2d4bca94d"
+  },
+  "retry": {
+    "sameReviewedExecute": {
+      "ok": false,
+      "mode": "execute-refused",
+      "reason": "TASK_CLOSE_PLAN_PLAN_HASH_MISMATCH",
+      "writesPlanned": 0,
+      "writesExecuted": 0,
+      "closeProofAppended": false
+    },
+    "postCloseDryRun": {
+      "ok": true,
+      "closeState": "closed-valid",
+      "terminal": true,
+      "planStatus": "satisfied",
+      "writesPlanned": 0,
+      "writesExecuted": 0,
+      "closeProofAppended": false,
+      "idempotentZeroWrite": true
+    }
+  },
+  "freshStatus": {
+    "ok": true,
+    "mode": "select-work",
+    "phase": "idle",
+    "health": "ok",
+    "readiness": "terminal",
+    "recommendations": 0,
+    "noStaleContinuation": true
+  },
+  "cleanup": {
+    "performed": true,
+    "removed": ["disposable consumer state after report capture"],
+    "stateRetained": false,
+    "reason": "Sanitized report was captured before the disposable consumer was removed."
+  }
+}
