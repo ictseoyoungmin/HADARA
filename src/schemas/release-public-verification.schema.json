@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.releasePublicVerification.v1",
+  "x-hadara-schema-id": "hadara.releasePublicVerification.v1",
+  "title": "HADARA Public Release Verification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "verifiedAt", "package", "github", "mutationBoundary", "publicLifecycleRecycle"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.releasePublicVerification.v1" },
+    "verifiedAt": { "type": "string", "format": "date-time" },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "distTags"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "distTags": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 },
+          "required": ["latest", "next"]
+        }
+      }
+    },
+    "github": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "tagName", "isDraft", "isPrerelease", "assetCount", "assets"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tagName": { "type": "string", "minLength": 1 },
+        "isDraft": { "const": false },
+        "isPrerelease": { "type": "boolean" },
+        "assetCount": { "type": "integer", "minimum": 0 },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "byteLength", "sha256"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "byteLength": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "mutationBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["npmPublishPerformed", "githubAssetsUploaded", "dockerMutationPerformed", "stableLatestMutationPerformed"],
+      "properties": {
+        "npmPublishPerformed": { "type": "boolean" },
+        "githubAssetsUploaded": { "type": "boolean" },
+        "dockerMutationPerformed": { "type": "boolean" },
+        "stableLatestMutationPerformed": { "type": "boolean" }
+      }
+    },
+    "publicLifecycleRecycle": { "type": "string", "enum": ["pending", "passed", "failed", "blocked"] }
+  }
+}

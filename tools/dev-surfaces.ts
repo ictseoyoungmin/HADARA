@@ -6,6 +6,7 @@ import {
   handlePackageCommand,
   handleReleaseArtifactCommand,
   handleReleaseCloseoutCommand,
+  handleReleaseCurrentStateCommand,
   handleReleaseDryRunCommand,
   handleReleaseGateCommand,
   handleReleasePublishCommand,
@@ -56,6 +57,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
     case 'release': {
+      if (handleReleaseCurrentStateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       if (handleReleaseCloseoutCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       if (handleReleaseDryRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       if (handleReleasePublishCommand({ args, paths, jsonOutput })) return;

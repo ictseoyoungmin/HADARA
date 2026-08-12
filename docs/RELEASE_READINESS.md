@@ -4,6 +4,22 @@ This document is the dedicated tracked source for release, install, installer, p
 
 `node --import tsx tools/dev-surfaces.ts release gate --mode strict --json` may read this document and other tracked evidence, but it must remain read-only. It must not run installer scripts, package smoke, `npm pack`, install packages, publish packages, create GitHub releases, build Docker images, mutate PATH, write shell profiles, call GitHub, execute remote CI, or perform registry mutation.
 
+## Current Release State (Managed)
+
+This block is the sole current release-state authority. Version-specific narrative below is historical context or policy unless this block links it as current.
+
+<!-- hadara:release-current:start -->
+| Field | Value |
+|---|---|
+| Source version | 0.5.0-rc.5 |
+| Published prerelease | 0.5.0-rc.5 |
+| npm next | 0.5.0-rc.5 |
+| npm latest | 0.4.6 |
+| GitHub prerelease | v0.5.0-rc.5 |
+| Public terminal lifecycle | pending command-generated acceptance |
+| Stable promotion | blocked pending current-source RC regeneration |
+<!-- hadara:release-current:end -->
+
 ## Release Readiness Recycle Runbook
 
 Use this canonical recycle order for release-candidate or stable publish preparation. The objective is to keep build source, evidence writes, and installed-package dogfood separated so validation does not dirty the source it is validating.

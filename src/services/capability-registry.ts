@@ -1679,6 +1679,34 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'release.current-state',
+    command: 'hadara release current-state [--execute --before-hash <hash>] [--json]',
+    summary: 'Project the single current release-state block from byte-bound typed evidence.',
+    exposure: 'repo-local',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'release-package',
+    scope: 'release',
+    lifecycleStage: 'ready',
+    requiredness: 'release-only',
+    writeBoundary: 'shared-doc-write',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'release-operator',
+    status: 'experimental',
+    since: '0.5.0-rc.6',
+    schemaVersion: 'hadara.releaseCurrentStateProjection.v1',
+    docs: ['docs/RELEASE_READINESS.md', 'docs/specs/0.5.0-rc6/00_TERMINAL_LIFECYCLE_EVIDENCE_AND_CLOSE_CURRENTNESS_HARDENING.md'],
+    implementationFiles: ['tools/dev-surface-handlers.ts', 'tools/dev-surface/release-current-state.ts'],
+    testFiles: ['tests/unit/release-current-state.test.ts'],
+    examples: [
+      example('Preview release current state', 'hadara release current-state --json', 'Before updating the managed release current-state block.'),
+      example('Apply reviewed release current state', 'hadara release current-state --execute --before-hash sha256:<hash> --json', 'After reviewing the dry-run facts and exact before hash.')
+    ],
+    related: ['release.dry-run', 'release.closeout', 'release.gate'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'release.closeout',
     command: 'hadara release closeout --version <version> --task <task-id> [--json]',
     summary: 'Plan release closeout document updates without writing files.',

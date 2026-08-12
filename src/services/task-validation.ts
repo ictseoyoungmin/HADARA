@@ -1292,6 +1292,7 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Tas
   const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
   const lastCompleted = readSectionBody(handoffPath, '## Last Completed').trim();
   const handoffContent = fs.readFileSync(handoffPath, 'utf8');
+  validateCanonicalHandoffClosePhases(task, handoffContent, relativePath, issues);
   const nextStep = readHandoffContinuationSection(handoffContent, 'post-close').content.trim();
   if (isPlaceholderSection(lastCompleted) || isPlaceholderSection(nextStep)) {
     issues.push({
@@ -1333,6 +1334,87 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Tas
       }
     });
   }
+}
+
+function validateCanonicalHandoffClosePhases(task: TaskCapsule, content: string, relativePath: string, issues: TaskValidationIssue[]): void {
+  const hasCanonicalPhase = content.includes('## Pre-Close Operator Action') || content.includes('## Post-Close Continuation');
+  if (!hasCanonicalPhase) return;
+  const pre = continuationTable(content, 'pre-close');
+  const post = continuationTable(content, 'post-close');
+  if (!pre || !post) {
+    issues.push(taskTableIssue('HANDOFF_CLOSE_PHASE_TABLE_MISSING', 'Canonical HANDOFF close phases require both Pre-Close Operator Action and Post-Close Continuation tables.', relativePath, 'Pre-Close / Post-Close'));
+    return;
+  }
+
+  for (const row of pre.rows) {
+    if (normalizeContinuationToken(row.disposition) !== 'terminal') {
+      issues.push(taskTableIssue('HANDOFF_PRE_CLOSE_NOT_TERMINAL', `Pre-Close row must be terminal before Done close; got "${row.disposition || 'missing'}".`, relativePath, pre.heading));
+    }
+    if (normalizeCreateTaskToken(row.createTask) !== 'no') {
+      issues.push(taskTableIssue('HANDOFF_PRE_CLOSE_CREATE_TASK_INVALID', 'A terminal Pre-Close row must use Create Task = no.', relativePath, pre.heading));
+    }
+    if (hasExplicitSameTaskCloseInstruction(row.step, task.id)) {
+      issues.push(taskTableIssue('HANDOFF_PRE_CLOSE_SAME_TASK_CLOSE_STALE', 'Pre-Close row still instructs the operator to close or review close for this same capsule.', relativePath, pre.heading));
+    }
+  }
+
+  for (const row of post.rows) {
+    const disposition = normalizeContinuationToken(row.disposition);
+    const createTask = normalizeCreateTaskToken(row.createTask);
+    if (disposition === 'terminal' && createTask !== 'no') {
+      issues.push(taskTableIssue('HANDOFF_POST_CLOSE_TERMINAL_CREATE_TASK_INVALID', 'A terminal Post-Close row must use Create Task = no.', relativePath, post.heading));
+    }
+    if (explicitSeparateCapsuleIntent(row.step) && createTask !== 'yes') {
+      issues.push(taskTableIssue('HANDOFF_POST_CLOSE_SEPARATE_TASK_REQUIRES_CREATE', 'A Post-Close continuation explicitly assigned to a separate or future capsule must use Create Task = yes.', relativePath, post.heading));
+    }
+  }
+}
+
+interface HandoffClosePhaseRow {
+  step: string;
+  disposition: string;
+  createTask: string;
+}
+
+function continuationTable(content: string, phase: 'pre-close' | 'post-close'): { heading: string; rows: HandoffClosePhaseRow[] } | null {
+  const section = readHandoffContinuationSection(content, phase);
+  if (section.legacy || !section.content.trim()) return null;
+  const rows = parseMarkdownRows(section.content);
+  const header = rows[0] ?? [];
+  const stepIndex = header.findIndex((cell) => normalizeFieldName(cell) === 'step');
+  const dispositionIndex = header.findIndex((cell) => normalizeFieldName(cell) === 'disposition');
+  const createTaskIndex = header.findIndex((cell) => normalizeFieldName(cell) === 'create task');
+  if (stepIndex < 0 || dispositionIndex < 0 || createTaskIndex < 0) return null;
+  return {
+    heading: section.heading.replace(/^##\s*/, ''),
+    rows: rows.slice(1).filter((row) => row.some(Boolean)).map((row) => ({
+      step: row[stepIndex]?.trim() ?? '',
+      disposition: row[dispositionIndex]?.trim() ?? '',
+      createTask: row[createTaskIndex]?.trim() ?? ''
+    }))
+  };
+}
+
+function normalizeContinuationToken(value: string): string {
+  return value.trim().toLowerCase().replace(/[_\s]+/g, '-');
+}
+
+function normalizeCreateTaskToken(value: string): 'yes' | 'no' | 'unknown' {
+  const normalized = value.trim().toLowerCase();
+  if (/^(yes|y|true|allowed|create)$/.test(normalized)) return 'yes';
+  if (/^(no|n|false|not allowed|review only|review-only)$/.test(normalized)) return 'no';
+  return 'unknown';
+}
+
+function hasExplicitSameTaskCloseInstruction(step: string, taskId: string): boolean {
+  const escapedTaskId = taskId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b(?:hadara\\s+)?task\\s+(?:close|finalize)\\b[^.\\n]{0,120}\\b${escapedTaskId}\\b`, 'i').test(step)
+    || /\b(?:run|review|execute|finish|complete)\b[^.\n]{0,80}\b(?:task\s+close|close\s+(?:dry-run|execute|plan|proof))\b/i.test(step);
+}
+
+function explicitSeparateCapsuleIntent(step: string): boolean {
+  return /\b(?:separate|separately|future|new|next)\b[^.\n]{0,80}\b(?:capsule|task)\b/i.test(step)
+    || /\bcreate\b[^.\n]{0,80}\b(?:capsule|task|T-\d{4})\b/i.test(step);
 }
 
 function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsule, issues: TaskValidationIssue[]): void {

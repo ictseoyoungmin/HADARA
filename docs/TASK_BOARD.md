@@ -781,3 +781,4 @@
 | T-0779 | Freeze RC6 lifecycle evidence and close-currentness hardening design | Done | tasks/T-0779-freeze-rc6-lifecycle-evidence-and-close-currentness-hardening-de | |
 | T-0780 | Implement command-generated terminal lifecycle acceptance | Done | tasks/T-0780-implement-command-generated-terminal-lifecycle-acceptance | |
 | T-0781 | Implement structured evidence reference integrity | Done | tasks/T-0781-implement-structured-evidence-reference-integrity | |
+| T-0782 | Enforce close currentness and release state projection | Done | tasks/T-0782-enforce-close-currentness-and-release-state-projection | |

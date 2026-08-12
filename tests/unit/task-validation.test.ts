@@ -870,6 +870,53 @@ describe('Task Capsule validation', () => {
     );
   });
 
+  it('accepts terminalized canonical pre-close and terminal post-close guidance', () => {
+    const { root, task } = completedValidationFixture('Terminal handoff phases');
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), canonicalHandoff(
+      '| No pending same-task action. | terminal | no | Ready for proof-last close. | docs/TASK_WORKFLOW_COMMANDS.md |',
+      '| No post-close continuation. | terminal | no | Capsule ends after close. | docs/TASK_BOARD.md |'
+    ), 'utf8');
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it('blocks non-terminal and same-task close instructions in canonical pre-close guidance', () => {
+    const { root, task } = completedValidationFixture('Stale pre-close guidance');
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), canonicalHandoff(
+      `| Review task close --task ${task.id} and execute it. | waiting-for-operator | no | Close is pending. | docs/TASK_WORKFLOW_COMMANDS.md |`,
+      '| No post-close continuation. | terminal | no | Capsule ends after close. | docs/TASK_BOARD.md |'
+    ), 'utf8');
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'HANDOFF_PRE_CLOSE_NOT_TERMINAL' }),
+      expect.objectContaining({ code: 'HANDOFF_PRE_CLOSE_SAME_TASK_CLOSE_STALE' })
+    ]));
+  });
+
+  it('requires Create Task yes for an explicit separate post-close capsule', () => {
+    const { root, task } = completedValidationFixture('Separate post-close capsule');
+    const pre = '| No pending same-task action. | terminal | no | Ready for proof-last close. | docs/TASK_WORKFLOW_COMMANDS.md |';
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), canonicalHandoff(
+      pre,
+      '| Create a separate release capsule. | actionable | no | Publication follows separately. | docs/RELEASE_READINESS.md |'
+    ), 'utf8');
+
+    const blocked = validateTaskCapsule(root, task.id, { level: 'done' });
+    expect(blocked.issues).toContainEqual(expect.objectContaining({ code: 'HANDOFF_POST_CLOSE_SEPARATE_TASK_REQUIRES_CREATE' }));
+
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), canonicalHandoff(
+      pre,
+      '| Create a separate release capsule. | actionable | yes | Publication follows separately. | docs/RELEASE_READINESS.md |'
+    ), 'utf8');
+    const allowed = validateTaskCapsule(root, task.id, { level: 'done' });
+    expect(allowed.ok).toBe(true);
+  });
+
   it('blocks done-level validation for note-only evidence', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Weak done evidence');
@@ -1199,6 +1246,40 @@ function markTaskDone(projectRoot: string, taskId: string): void {
     fs.readFileSync(taskPath, 'utf8').replace(/\| Status \| Draft \|/g, '| Status | Done |').replace(/\nDraft\n/, '\nDone\n'),
     'utf8'
   );
+}
+
+function completedValidationFixture(title: string) {
+  const root = tempProject();
+  const task = createTaskCapsule(root, title);
+  markTaskDone(root, task.id);
+  markTaskBoardDone(root, task.id);
+  markAcceptanceDone(task.dir);
+  writeCompletedCapsuleDocs(task.dir);
+  appendEvidence(root, { taskId: task.id, kind: 'test-log', summary: 'Done-level handoff fixture passed.', result: 'passed' });
+  return { root, task };
+}
+
+function canonicalHandoff(preCloseRow: string, postCloseRow: string): string {
+  return `# Handoff
+
+## Last Completed
+
+| Item | Evidence |
+|---|---|
+| Done-level validation fixture completed. | Task validation result. |
+
+## Pre-Close Operator Action
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+${preCloseRow}
+
+## Post-Close Continuation
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+${postCloseRow}
+`;
 }
 
 function markTaskBoardDone(projectRoot: string, taskId: string): void {

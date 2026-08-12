@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.releaseCurrentStateProjection.v1",
+  "x-hadara-schema-id": "hadara.releaseCurrentStateProjection.v1",
+  "title": "HADARA Release Current State Projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "command", "ok", "mode", "readOnly", "path", "beforeHash", "changed", "facts", "sources", "writes", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.releaseCurrentStateProjection.v1" },
+    "command": { "const": "release.current-state" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "readOnly": { "type": "boolean" },
+    "path": { "const": "docs/RELEASE_READINESS.md" },
+    "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "changed": { "type": "boolean" },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceVersion", "publishedPrerelease", "npmNext", "npmLatest", "githubPrerelease", "publicTerminalLifecycle", "stablePromotion"],
+      "properties": {
+        "sourceVersion": { "type": "string" },
+        "publishedPrerelease": { "type": "string" },
+        "npmNext": { "type": "string" },
+        "npmLatest": { "type": "string" },
+        "githubPrerelease": { "type": "string" },
+        "publicTerminalLifecycle": { "type": "string" },
+        "stablePromotion": { "type": "string" }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schemaVersion", "evidenceId", "taskId", "artifactPath"],
+        "properties": {
+          "schemaVersion": { "type": "string" },
+          "evidenceId": { "type": "string", "pattern": "^ev:T-[0-9]{4}:[a-f0-9]{24}$" },
+          "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+          "artifactPath": { "type": "string" }
+        }
+      }
+    },
+    "writes": { "type": "array", "items": { "type": "string" } },
+    "executeCommand": { "type": "string" },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["error", "warning"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

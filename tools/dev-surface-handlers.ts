@@ -7,6 +7,7 @@ import { createReleaseCloseoutReport, formatReleaseCloseoutReport } from './dev-
 import { createReleaseDryRunReport } from './dev-surface/release-dry-run';
 import { createReleasePublishReport, type ReleasePublishMode } from './dev-surface/release-publish';
 import { createReleaseGateReport } from './dev-surface/operational-debt';
+import { createReleaseCurrentStateReport } from './dev-surface/release-current-state';
 import { createCleanCheckoutSmokeReport } from './dev-surface/clean-checkout-smoke';
 import { createFeatureSmokeReport } from './dev-surface/feature-smoke';
 import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport } from './dev-surface/package-smoke';
@@ -60,6 +61,12 @@ export interface ReleaseArtifactCommandInput {
 }
 
 export interface ReleaseGateCommandInput {
+  args: string[];
+  projectRoot: string;
+  jsonOutput: boolean;
+}
+
+export interface ReleaseCurrentStateCommandInput {
   args: string[];
   projectRoot: string;
   jsonOutput: boolean;
@@ -224,6 +231,26 @@ export function handleReleaseCloseoutCommand(input: ReleaseCloseoutCommandInput)
     console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(formatReleaseCloseoutReport(report));
+  }
+  if (!report.ok) process.exitCode = 6;
+  return true;
+}
+
+export function handleReleaseCurrentStateCommand(input: ReleaseCurrentStateCommandInput): boolean {
+  if (input.args[0] !== 'release' || input.args[1] !== 'current-state') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('release.current-state'));
+    return true;
+  }
+  const report = createReleaseCurrentStateReport(input.projectRoot, {
+    execute: getFlag(input.args, '--execute'),
+    beforeHash: getStringOption(input.args, '--before-hash')
+  });
+  if (input.jsonOutput) console.log(JSON.stringify(report, null, 2));
+  else {
+    console.log(`${report.ok ? 'passed' : 'failed'} | release current-state | ${report.mode}`);
+    for (const [field, value] of Object.entries(report.facts)) console.log(`${field} | ${value}`);
+    for (const issue of report.issues) console.log(`${issue.severity} | ${issue.code} | ${issue.message}`);
   }
   if (!report.ok) process.exitCode = 6;
   return true;

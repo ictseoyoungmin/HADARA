@@ -548,6 +548,20 @@
       "notes": "Documents sanitized operator publication reports with npm/GitHub mutation state, exact asset digests, lineage, and stable/Docker mutation boundaries."
     },
     {
+      "id": "hadara.releaseCurrentStateProjection.v1",
+      "path": "src/schemas/release-current-state-projection.schema.json",
+      "status": "fixture",
+      "owner": "tools/dev-surface/release-current-state",
+      "notes": "Documents dry-run-first, before-hash guarded RELEASE_READINESS current-state projection from byte-bound typed release evidence."
+    },
+    {
+      "id": "hadara.releasePublicVerification.v1",
+      "path": "src/schemas/release-public-verification.schema.json",
+      "status": "fixture",
+      "owner": "release/public-verification",
+      "notes": "Documents public npm dist-tag and GitHub prerelease/asset observations used by the guarded release current-state projection."
+    },
+    {
       "id": "hadara.smokeEvidenceSummary.v1",
       "path": "src/schemas/smoke-evidence-summary.schema.json",
       "status": "fixture",
