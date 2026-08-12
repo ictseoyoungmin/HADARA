@@ -782,3 +782,4 @@
 | T-0780 | Implement command-generated terminal lifecycle acceptance | Done | tasks/T-0780-implement-command-generated-terminal-lifecycle-acceptance | |
 | T-0781 | Implement structured evidence reference integrity | Done | tasks/T-0781-implement-structured-evidence-reference-integrity | |
 | T-0782 | Enforce close currentness and release state projection | Done | tasks/T-0782-enforce-close-currentness-and-release-state-projection | |
+| T-0783 | Regenerate RC6 artifact and publication readiness after structural hardening | Draft | tasks/T-0783-regenerate-rc6-artifact-and-publication-readiness-after-structur | |

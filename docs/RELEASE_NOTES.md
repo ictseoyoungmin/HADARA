@@ -1,8 +1,25 @@
 # RELEASE_NOTES
 
+## 0.5.0-rc.6
+
+RC6 is the post-hardening source candidate after T-0779 froze the lifecycle evidence/currentness
+contract and T-0780 through T-0782 implemented command-generated terminal lifecycle acceptance,
+structured evidence-reference integrity, close-time HANDOFF currentness, and the managed release
+current-state projection. This preparation line performs no npm or GitHub mutation.
+
+- Public lifecycle acceptance now requires a fresh post-close plan execute that succeeds as a
+  zero-write idempotent no-op; stale-plan refusal remains a separate safety assertion.
+- Structured Acceptance, Validation, Risk, and HANDOFF evidence references resolve through one
+  canonical source-location-aware resolver and block close when malformed or missing.
+- Canonical HANDOFF Pre-Close/Post-Close phase consistency is enforced before close.
+- RELEASE_READINESS current facts are projected from byte-bound, schema-valid release observations
+  through a reviewed before-hash guarded command.
+- Exact RC6 artifact, package/clean-checkout smoke, release gates, publication, and public terminal
+  lifecycle recycle must use newly generated RC6 bytes; RC5 bytes must not be promoted as RC6.
+
 ## 0.5.0-rc.5
 
-RC5 is the current unpublished source candidate after T-0776 hardened exact evidence artifact binding and release operator report execution. This section records readiness preparation only; npm/GitHub publication and public consumer recycle require a separate operator-approved capsule.
+RC5 is the published prerelease preceding the structural hardening carried by RC6. T-0776 hardened exact evidence artifact binding and release operator report execution; T-0778 records npm/GitHub publication and public consumer observations.
 
 ## 0.5.0-rc.4
 

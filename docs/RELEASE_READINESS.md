@@ -11,7 +11,7 @@ This block is the sole current release-state authority. Version-specific narrati
 <!-- hadara:release-current:start -->
 | Field | Value |
 |---|---|
-| Source version | 0.5.0-rc.5 |
+| Source version | 0.5.0-rc.6 |
 | Published prerelease | 0.5.0-rc.5 |
 | npm next | 0.5.0-rc.5 |
 | npm latest | 0.4.6 |
