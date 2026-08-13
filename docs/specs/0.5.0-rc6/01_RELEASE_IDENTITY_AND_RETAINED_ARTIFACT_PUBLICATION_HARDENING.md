@@ -104,9 +104,11 @@ suffix. Generated task metadata must not mix host-local time with container UTC 
 | T-0784 | Establish release identity, lineage, retained publication, and initial evidence-binding hardening. | None |
 | T-0785 | Complete reviewer-driven release-input, operator-helper, Release Note, and evidence-semantics hardening. | None |
 | T-0786 | Complete publish-destination, evidence fail-closed, execute-reinvoke, and package-inventory hardening. | None |
-| T-0787 | Regenerate the exact RC6 artifact and readiness from the post-T-0786 source. | None |
-| T-0788 | Publish retained RC6 bytes to npm/GitHub under operator approval. | npm/GitHub only |
-| T-0789 | Public terminal-lifecycle recycle and stable decision evidence. | Public consumer only; stable promotion separately approved |
+| T-0787 | Complete GitHub destination and partial-publication evidence hardening. | None |
+| T-0788 | Absorb the standalone documentation site and reconcile its content to the current RC6 CLI contract. | None |
+| T-0789 | Regenerate the exact RC6 artifact and readiness from the post-T-0788 source. | None |
+| T-0790 | Publish retained RC6 bytes to npm/GitHub under operator approval. | npm/GitHub only |
+| T-0791 | Public terminal-lifecycle recycle and stable decision evidence. | Public consumer only; stable promotion separately approved |
 
 If a P1 fails, the affected later capsule is invalidated and the same version is regenerated while
 it remains unpublished. No RC number is incremented merely because preparation source changed.

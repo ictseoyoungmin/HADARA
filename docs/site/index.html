@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HADARA Documentation</title>
+    <meta
+      name="description"
+      content="Documentation for HADARA — the continuity-first, evidence-backed agentic development harness."
+    />
+    <meta property="og:title" content="HADARA Documentation" />
+    <meta
+      property="og:description"
+      content="Unbroken context. Verified development. Docs for the HADARA agentic development harness."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:image" content="__SITE_URL__/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="HADARA Documentation — Unbroken context. Verified development." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HADARA Documentation" />
+    <meta
+      name="twitter:description"
+      content="Unbroken context. Verified development. Docs for the HADARA agentic development harness."
+    />
+    <meta name="twitter:image" content="__SITE_URL__/og-image.png" />
+    <link rel="canonical" href="__SITE_URL__/" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <!-- Apply the saved/preferred theme before first paint to avoid a flash of the wrong theme. -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem("hadara-docs-theme");
+          if (theme !== "light" && theme !== "dark") {
+            theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          }
+          document.documentElement.dataset.theme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

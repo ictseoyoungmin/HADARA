@@ -16,6 +16,9 @@ current-state projection. This preparation line performs no npm or GitHub mutati
   through a reviewed before-hash guarded command.
 - Exact RC6 artifact, package/clean-checkout smoke, release gates, publication, and public terminal
   lifecycle recycle must use newly generated RC6 bytes; RC5 bytes must not be promoted as RC6.
+- The operator-supplied `hadara-docs-concept` site is absorbed under `docs/site/` as a reproducible
+  static documentation surface. Its external GitHub Pages deployment remains a separate operator
+  action and is not implied by RC6 source readiness.
 
 ## 0.5.0-rc.5
 
