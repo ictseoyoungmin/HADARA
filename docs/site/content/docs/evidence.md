@@ -1,107 +1,73 @@
 ---
 id: evidence
 group: Core model
-label: Evidence & Gates
-short: Make validation outcomes inspectable.
-icon: file-check
-eyebrow: Canonical evidence
-title: A result should be replayable, not rhetorical.
-lead: Evidence records what ran, what happened, and what artifact supports the claim. Close then evaluates whether that proof is sufficient.
-callout: Canonical outcomes: passed, failed, blocked, unknown, recorded, and not-applicable.
-order: 12
+label: Evidence & Projections
+short: Canonical append-only proof and the human-readable view over it.
+eyebrow: Verification model
+title: Agents record evidence. Humans inspect the projection.
+lead: HADARA keeps evidence as append-only machine-authoritative history, then exposes a human-readable projection so people can review validation, close proof, and unresolved failure without typing evidence commands or editing the log.
+callout: In ordinary use, a human should never need to type evidence records. `evidence.jsonl` is agent/tool-written canonical history; `EVIDENCE.md` is the review surface.
+audience: shared
+order: 6
 ---
 
-## Record
-### Exact execution
-Evidence records what ran, what happened, and which task it belongs to.
+## 01 · Canonical
+### `evidence.jsonl` is the authority
+Evidence is append-only. Failed or blocked history is not rewritten away. New records resolve, supersede, or accept residuals through explicit relationships.
 
-## Relate
-### Acceptance linkage
-Acceptance rows should point to durable evidence ids so close can explain why a criterion was considered satisfied.
+## 02 · Project
+### `EVIDENCE.md` is for people
+Current Task Capsule source scaffolds `EVIDENCE.md` with the sentence “This file is a human-readable projection from `evidence.jsonl`” and immediately marks it “Do not hand-edit this file.”
 
-## Gate
-### Close decision
-Close derives `closed-valid` from evidence and audit. A confident summary is not proof.
+## 03 · Audit
+### Close proof can become stale
+A close proof is valid only for the source and validation identity it audited. Later close-source drift changes the derived close state rather than silently rewriting history.
 
-## Commands
-```shell
-hadara validation run --task T-0042 --check "unit tests" -- npm test
-hadara evidence add-command --task T-0042 --summary "manual smoke passed" --result passed --category validation --json
-hadara evidence list --task T-0042 --json
-```
-
-## Canonical evidence
-
-Canonical evidence lives in:
+## Canonical state versus human-readable projection
 
 ```text
-tasks/T-XXXX-<slug>/evidence.jsonl
+Agent / validation tool
+        │
+        │ append
+        ▼
+  evidence.jsonl              ← canonical append-only evidence
+        │
+        │ project / summarize
+        ▼
+   EVIDENCE.md                ← human-readable projection
+        │
+        ▼
+  Human review
 ```
 
-Each line is an append-only JSON record. Records are not edited or deleted. If a failed check later passes, append a newer passed record; do not rewrite the old failure.
+A **human-readable projection** is a representation designed for inspection rather than authority. It may summarize, group, or format canonical records, but it must not invent successful evidence, hide unresolved failure, or become a second independently edited evidence database.
 
-`EVIDENCE.md` is a generated projection for humans. Use it for review, but treat `evidence.jsonl` as the source of truth.
+For `EVIDENCE.md` specifically:
 
-## Outcomes
+- the human reads it;
+- HADARA/agent tooling maintains it through supported paths;
+- `evidence.jsonl` remains canonical;
+- failed/blocked evidence must stay visible until explicitly resolved or dispositioned;
+- durable relationships use persisted `ev:` evidence identities rather than vague text matching.
 
-Evidence outcome tokens are fixed:
+## What humans should expect to see
 
-| Outcome | Meaning |
+A useful projection answers questions such as:
+
+| Question | Projection should expose |
 |---|---|
-| `passed` | The check or recorded result succeeded. |
-| `failed` | The check ran and failed. |
-| `blocked` | The check could not complete because of an external blocker. |
-| `unknown` | The result could not be classified. |
-| `recorded` | A non-pass/fail fact was recorded. |
-| `not-applicable` | The check or criterion does not apply and the reason should be documented. |
+| What was actually checked? | Validation summary and outcome. |
+| Did anything fail or block? | Failed/blocked/residual records remain visible. |
+| What proves acceptance? | Durable evidence references tied to the relevant criteria. |
+| Is the task really closed? | Close proof and current derived close state. |
+| Did proof go stale? | Currentness mismatch rather than an old success presented as current. |
 
-Do not invent new outcome spellings. Use schema/help output when uncertain.
+## What the agent does behind the scenes
 
-## Two evidence paths
+The detailed Evidence & Validation protocol page documents the CLI used by agents and integrations. Conceptually, the loop is simply:
 
-| Path | Use when | Important property |
-|---|---|---|
-| `validation run` | HADARA should execute the command and capture the real exit status. | Runs the child command. |
-| `evidence add-command` | You already have a result from outside HADARA. | Does not execute anything. |
-
-## What close proof adds
-
-`task close` appends close-proof evidence after readiness checks pass. Close proof records the acceptance ids, evidence refs used for readiness, close-source hashes, validation report hash, and related snapshot information. This makes `closed-valid` reconstructable later.
-
-Close evidence is excluded from the pre-close validation loop because it is created after readiness is established. Requiring close evidence as a same-run precondition would create a fixed-point loop.
-
-## Honesty rule
-
-Evidence must reflect real execution or a real external observation. Invalid examples:
-
-- marking tests `passed` without running them
-- turning a blocked tool launch into a passed validation
-- deleting a failed record after a fix
-- putting secrets or private binary payloads into public evidence
-- using `EVIDENCE.md` as if it were canonical
-
-When the wrapper cannot launch a command but the command was run directly, record that direct result explicitly:
-
-```shell
-hadara validation run --task T-0042 --check "Focused tests" \
-  --direct-result passed \
-  --direct-summary "npm test passed directly after wrapper launch failed" \
-  --update-task \
-  --json
+```text
+run a real check → append reduced evidence → reference durable IDs → close/audit against current state
 ```
 
-## Idempotency and locking
-
-Evidence appends are task-scoped and serialized. Concurrent appends expose append-lock information in JSON output when applicable, so agents can detect contention instead of corrupting the log.
-
-Use idempotency keys for retry-safe direct evidence:
-
-```shell
-hadara evidence add-command \
-  --task T-0042 \
-  --summary "manual smoke passed" \
-  --result passed \
-  --category validation \
-  --idempotency-key "manual-smoke:T-0042" \
-  --json
-```
+The human does not need to reproduce that sequence at a shell prompt. The important human contract is that the resulting proof is inspectable and that failure history has not been silently erased.

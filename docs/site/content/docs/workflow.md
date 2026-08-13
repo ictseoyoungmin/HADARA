@@ -2,113 +2,63 @@
 id: workflow
 group: Core model
 label: Lifecycle Workflow
-short: Orient, execute, validate, finalize.
+short: The agent's status-first, proof-last work loop.
 icon: workflow
-eyebrow: Finalize-first lifecycle
-title: Completion is a derived state.
-lead: A task moves from intent to verified closure through explicit artifacts. Close evaluates acceptance and evidence; it does not merely stamp a status field.
-callout: Status describes the current state. Close decides whether closure is valid — and it will not move a task to done on its own say-so.
+eyebrow: Agent loop
+title: The agent reads current state, does bounded work, and proves the close.
+lead: HADARA's lifecycle is compressed for agent execution: status to orient, create only when necessary, evidence while working, and one guarded close transaction at the end.
+callout: Humans normally state the goal and review the result. The lifecycle below describes what the coding agent executes on their behalf.
+audience: agent-protocol
 order: 10
 ---
 
-## 01 · Frame
-### Create or select the capsule
-Start from `task status`; create a new capsule only when the read model cannot find a suitable open task.
+## 01 · Select
+### Current instruction wins
+The agent starts from the current human/reviewer request, then uses `task status` to find matching active work or a justified creation path.
 
-## 02 · Verify
-### Record real evidence
-Run validation through HADARA when possible, or record a direct result when the tool environment prevents wrapper execution.
+## 02 · Execute
+### Keep the task contract current
+The agent updates implementation, checks, evidence, risks, acceptance, and handoff as the task evolves—not after the fact from memory.
 
-## 03 · Derive
-### Close the task
-`task close` derives lifecycle completion from the authored contract, evidence, readiness checks, and close audit.
+## 03 · Close
+### Proof is appended last
+Close validates the virtual post-write state, applies bounded lifecycle writes, records readiness/close evidence, and performs final audit.
 
-## Commands
-```shell
-hadara task status --json
-hadara task status --task T-0042 --json
-hadara validation run --task T-0042 --check "unit tests" --json -- npm test
-hadara task close --task T-0042 --json
-```
+## Agent protocol trace
 
-## The primary loop
-
-| Step | Command or action | Purpose |
-|---:|---|---|
-| 1 | `hadara task status --json` | Select next work or route to an active task. |
-| 2 | `hadara task create "..." --json` | Open a capsule only when needed. |
-| 3 | `hadara task status --task T-XXXX --json` | Read selected-capsule phase and next action. |
-| 4 | Edit `TASK.md` | Author goal, scope, plan, acceptance, validation, changes, risks. |
-| 5 | Implement the scoped change | Modify project files within the task boundary. |
-| 6 | `hadara validation run ...` or `hadara evidence add-command ...` | Append durable evidence. |
-| 7 | Update task docs and close-time handoff | Keep close-source prose current before closure. |
-| 8 | `hadara task close --task T-XXXX --json` | Run guarded close transaction. |
-
-The implementation step has no special HADARA command. It is the project work itself. HADARA controls the envelope around that work.
-
-## Status-first, not document-first
-
-A new session should not begin by rereading every doc. Use read models:
+This is the normal agent loop. The human does not normally type it line by line.
 
 ```shell
 hadara task status --json
 hadara task status --task T-XXXX --json
-hadara context pack --task T-XXXX --json
-```
-
-Open only the files those reports route. This keeps agents from making decisions based on stale prose or historical specs.
-
-## Close is proof-last
-
-`task close --json` internally runs the close machinery in order:
-
-```text
-finish → ready → close → audit
-```
-
-It records readiness evidence when required, appends close proof last, and reports success only when the final audit reaches `closed-valid`.
-
-The public `hadara.task.close.v2` report exposes:
-
-| Field | Meaning |
-|---|---|
-| `closeState` | `blocked`, `ready-to-close`, `closed-valid`, `closed-stale`, or `in-progress` |
-| `planStatus` | Whether the current close plan is blocked, executable, satisfied, or pending |
-| `transaction.planHash` | Reviewed-plan identity for dry-run/execute flows |
-| `transaction.lockOrder` | Lifecycle locks used by close |
-| `writeSummary` | Planned/applied writes and whether close proof was appended |
-| `primaryNextAction` | Agent-facing recovery or next command |
-| `source.finalize` | Diagnostic compatibility metadata, not the primary public contract |
-
-## When to use dry-run
-
-Ordinary work:
-
-```shell
+hadara task create "task title" --json
+hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 hadara task close --task T-XXXX --json
 ```
 
-Reviewed close across a human or automation boundary:
+## Lifecycle diagram
+
+![Status, contract, implementation, validation, evidence, and close](hadara-lifecycle.svg)
+
+## Close entry gate
+
+Before ordinary close, the agent ensures the capsule has a concrete Goal, relevant Source Documents or an explicit none, a real Plan, Acceptance, Validation, satisfying Evidence, and current close-time Handoff.
+
+## Current-state routing
+
+`task status --json` is the normal public ingress. The agent then reads the selected Task Capsule and registered read-map sources. `context graph --task T-XXXX --json` is an explicit diagnostic projection; removed public `context pack` routing must not be presented as the normal path.
+
+## Close is proof-last
+
+`task close --json` owns the guarded transaction and succeeds only when final audit reaches `closed-valid`. A reviewer may use:
 
 ```shell
 hadara task close --task T-XXXX --dry-run --json
 hadara task close --task T-XXXX --execute --plan-hash sha256:<hash> --json
 ```
 
-Do not carry old plan hashes from memory. Re-run the dry-run when close-source files changed.
+Do not carry an old plan hash after close-source files change.
 
-## Two supported work styles
+## Stop boundary
 
-![Two supported work styles](two-supported-work-styles.png)
-*Two operating patterns for the same underlying Task Capsule loop — not two different protocols.*
-
-| Style | Use when | Guardrail |
-|---|---|---|
-| Tight loop | You want frequent review after each small change. | Close one capsule at a time. |
-| Delegated loop | You let an agent perform a broader scoped task. | The agent must still use status, evidence, and task close surfaces. |
-
-## Handoff and continuation
-
-`HANDOFF.md` is not a place for same-capsule chores such as “run validation” or “update acceptance.” Those belong in the current task before close.
-
-Use close-time handoff for the next meaningful project step after this capsule closes. HADARA can promote a real next step into structured current-state continuation. If no further work is queued, say that explicitly and avoid phrasing it as a new task to create.
+When the agent encounters a blocker, stale proof, or an external approval boundary, it records the condition and stops at the correct layer. It must not turn an unexecuted check into passed evidence or make the human replay internal lifecycle commands merely to recover state.

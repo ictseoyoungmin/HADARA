@@ -788,3 +788,4 @@
 | T-0786 | Harden publish destination and evidence fail-closed contracts | Done | tasks/T-0786-harden-publish-destination-and-evidence-fail-closed-contracts | |
 | T-0787 | Harden GitHub publish destination and partial publication evidence | Done | tasks/T-0787-harden-github-publish-destination-and-partial-publication-eviden | |
 | T-0788 | Absorb hadara-docs-concept site into RC6 | Done | tasks/T-0788-absorb-hadara-docs-concept-site-into-rc6 | |
+| T-0789 | Reframe docs site around human-agent protocol | Done | tasks/T-0789-reframe-docs-site-around-human-agent-protocol | |

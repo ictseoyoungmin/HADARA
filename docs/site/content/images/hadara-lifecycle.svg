@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 260" role="img" aria-labelledby="title desc">
+  <title id="title">HADARA agent lifecycle</title>
+  <desc id="desc">The agent selects current work, authors a capsule contract, implements bounded changes, validates, appends evidence, and closes with final audit.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#78a5a0"/></marker>
+    <style>.box{fill:#182123;stroke:#bda46a;stroke-width:2}.num{fill:#dbc482;font:700 15px monospace}.title{fill:#eee5cf;font:600 19px sans-serif}.sub{fill:#aeb7ae;font:14px monospace}.arrow{fill:none;stroke:#78a5a0;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="260" rx="24" fill="#0b1113"/>
+  <g transform="translate(25 55)"><rect class="box" width="185" height="120" rx="14"/><text class="num" x="20" y="28">01</text><text class="title" x="92" y="62" text-anchor="middle">Select</text><text class="sub" x="92" y="90" text-anchor="middle">task status</text><text class="sub" x="92" y="110" text-anchor="middle">current route</text></g>
+  <g transform="translate(250 55)"><rect class="box" width="185" height="120" rx="14"/><text class="num" x="20" y="28">02</text><text class="title" x="92" y="62" text-anchor="middle">Contract</text><text class="sub" x="92" y="90" text-anchor="middle">goal + scope</text><text class="sub" x="92" y="110" text-anchor="middle">acceptance</text></g>
+  <g transform="translate(475 55)"><rect class="box" width="185" height="120" rx="14"/><text class="num" x="20" y="28">03</text><text class="title" x="92" y="62" text-anchor="middle">Implement</text><text class="sub" x="92" y="90" text-anchor="middle">bounded change</text><text class="sub" x="92" y="110" text-anchor="middle">keep docs current</text></g>
+  <g transform="translate(700 55)"><rect class="box" width="185" height="120" rx="14"/><text class="num" x="20" y="28">04</text><text class="title" x="92" y="62" text-anchor="middle">Validate</text><text class="sub" x="92" y="90" text-anchor="middle">real checks</text><text class="sub" x="92" y="110" text-anchor="middle">capture result</text></g>
+  <g transform="translate(925 55)"><rect class="box" width="185" height="120" rx="14"/><text class="num" x="20" y="28">05</text><text class="title" x="92" y="62" text-anchor="middle">Evidence</text><text class="sub" x="92" y="90" text-anchor="middle">append proof</text><text class="sub" x="92" y="110" text-anchor="middle">durable refs</text></g>
+  <g transform="translate(1150 55)"><rect class="box" width="210" height="120" rx="14"/><text class="num" x="20" y="28">06</text><text class="title" x="105" y="62" text-anchor="middle">Close</text><text class="sub" x="105" y="90" text-anchor="middle">guarded writes</text><text class="sub" x="105" y="110" text-anchor="middle">closed-valid audit</text></g>
+  <path class="arrow" d="M210 115h35M435 115h35M660 115h35M885 115h35M1110 115h35"/>
+</svg>

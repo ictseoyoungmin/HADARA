@@ -1,137 +1,56 @@
 ---
 id: cli-task-lifecycle
-group: CLI Reference
-label: Task Lifecycle Commands
-short: status, create, close — with real flags and the close gate.
-icon: git-branch
-eyebrow: Command reference
-title: Three commands carry the whole loop.
-lead: The public task lifecycle is deliberately small — status to orient, create to open a capsule, close to end one. Older fine-grained commands (finish, ready, audit-close) were removed from public routing; close runs that machinery internally now.
-callout: task close will not succeed until the Close Entry Gate is satisfied — a missing acceptance criterion blocks close, it doesn't just warn.
+group: Agent protocol
+label: Task Lifecycle
+short: Agent-facing status, create, and close semantics.
+eyebrow: Agent protocol reference
+title: Three public commands carry the agent task loop.
+lead: Status orients, create opens a capsule only when needed, and close owns the guarded lifecycle transaction. These are protocol surfaces for the coding agent and integrations, not commands a normal human must replay for every task.
+callout: If you are reading this as an ordinary HADARA user, you can usually stop here: tell the agent what you want and let it execute this protocol.
+audience: agent-protocol
 order: 21
 ---
 
-## Orient
+## 01 · Orient
 ### task status
-Read project/task state before acting. `task status` is read-only and is the normal way to select work or inspect a selected capsule.
+Read-only selection and selected-task cockpit. `ok:true` means the report was generated, not that a task is ready or closed.
 
-## Open
+## 02 · Open
 ### task create
-Create a new Draft capsule and Task Board row only when no suitable capsule already exists.
+Creates a Draft capsule and matching board state when no suitable capsule exists. The agent then authors the bounded task contract.
 
-## Close
+## 03 · Close
 ### task close
-Run the guarded close transaction. It owns lifecycle status updates, readiness evidence, and close proof.
+Runs the proof-last close transaction and succeeds only when the final audit is `closed-valid`.
 
-## Commands
+## Agent commands
+
 ```shell
 hadara task status --json
 hadara task status --task T-0042 --json
 hadara task status --task T-0042 --detail full --json
-hadara task create "Fix the retry backoff" --json
+hadara task create "Fix retry backoff" --json
 hadara task close --task T-0042 --json
 hadara task close --task T-0042 --dry-run --json
-hadara task close --task T-0042 --execute --plan-hash sha256:<hash> --json
+hadara task close --task T-0042 --execute --plan-hash sha256:... --json
 ```
 
 ## `task status --json`
 
-Use this when no task is selected. It returns `hadara.taskSelection.status.v2`, a read-only next-work selection cockpit.
+The agent uses it when no task is selected. It can route to active work, recommend creation when structured next work warrants it, report waiting/terminal state, or surface degraded sources. It does not create tasks or append evidence.
 
-It can recommend:
+## Selected task status
 
-| Situation | Typical next action |
-|---|---|
-| Active task exists | Inspect it with `task status --task`. |
-| Structured next work exists | Create or review the recommended capsule. |
-| Continuation exists | Review or create a continuation task, depending on disposition. |
-| No work found | Report idle/terminal state. |
-| Sources are degraded | Stop and inspect issues. |
+The default report is compact and fast. Complete close-grade diagnostics are available through `--detail full`. When the specific question is “what would close do now?”, the agent can use close dry-run instead of forcing every loop through heavyweight diagnostics.
 
-It does not create tasks or mutate files.
+## `task close`
 
-## `task status --task T-XXXX --json`
+Ordinary close is the primary path. The reviewed dry-run + plan-hash form exists when a separate human or automation boundary must explicitly carry the reviewed plan identity.
 
-Use this at loop boundaries for a selected capsule. The default output is compact and fast. It may skip close-grade diagnostics, so it must not claim close readiness unless those checks have actually been evaluated.
+The transaction reviews the current plan, guards writes, applies lifecycle-owned mutations, records readiness evidence when required, appends close proof last, and runs final audit. Partial close recovery completes by rerunning `task close`; lifecycle-owned fields should not be hand-edited to force closure.
 
-Use full detail when blocked:
+## Removed / non-primary surfaces
 
-```shell
-hadara task status --task T-0042 --detail full --json
-```
+New agent-facing flows should not rely on removed public routes such as `task finish`, `task ready`, `task audit-close`, `task complete`, or `task lifecycle`. `task finalize` is compatibility/debug machinery rather than the new primary workflow.
 
-Use close dry-run when the question is specifically “what would close do?”:
-
-```shell
-hadara task close --task T-0042 --dry-run --json
-```
-
-## `task create`
-
-```shell
-hadara task create "Fix the retry backoff" --json
-```
-
-`task create` creates:
-
-- a `Draft` Task Capsule under `tasks/`
-- a matching `docs/TASK_BOARD.md` row
-- scaffolded `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl`
-
-After creating, immediately inspect the selected task:
-
-```shell
-hadara task status --task T-0042 --json
-```
-
-Then fill the task contract. Do not close a scaffold-only capsule.
-
-## Close entry gate
-
-Before ordinary close, the capsule needs:
-
-| Gate | Required state |
-|---|---|
-| Goal | Concrete goal, not placeholder prose |
-| Source Documents | Relevant sources listed, or absence explicitly justified |
-| Plan | Concrete steps |
-| Acceptance | Real criteria with requiredness and disposition |
-| Validation | At least one validation method, or documented not-applicable rationale |
-| Evidence | Required acceptance has satisfying evidence or accepted residual disposition |
-| Handoff | Close-time continuation is current, not same-capsule chores |
-
-## `task close --json`
-
-```shell
-hadara task close --task T-0042 --json
-```
-
-This is the ordinary close path. It internally reviews the current plan, acquires transaction locks, applies bounded lifecycle writes, records readiness evidence when required, appends close proof last, and succeeds only after the final audit reaches `closed-valid`.
-
-If close is blocked, follow top-level `primaryNextAction` / `nextActions`. Treat `source.finalize` as diagnostic compatibility metadata.
-
-## Reviewed close
-
-Use this only when a separate human or automation boundary must approve the plan:
-
-```shell
-hadara task close --task T-0042 --dry-run --json
-hadara task close --task T-0042 --execute --plan-hash sha256:<hash> --json
-```
-
-Do not reuse an old hash after editing close-source docs.
-
-## Removed public surfaces
-
-These standalone lifecycle commands are no longer public routes:
-
-| Removed surface | Replacement |
-|---|---|
-| `task finish` | `task close --task T-XXXX --json` |
-| `task ready` | `task close --task T-XXXX --dry-run --json` or `task status --detail full` |
-| standalone close step | `task close --task T-XXXX --json` |
-| `task audit-close` | `task close --dry-run` or `task status --detail full` |
-| `task complete` | `task status --task T-XXXX --json` |
-| `task lifecycle` | `task status --task T-XXXX --json` |
-
-`task finalize` remains a compatibility/debug route for the internal engine. New agent-facing flows should use `task close`.
+Public `context pack` routing is also removed; selected status plus read maps and exact source reads now carry that routing role.

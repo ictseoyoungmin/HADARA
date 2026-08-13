@@ -23,7 +23,8 @@ function resolveImage(href: string): string {
 
 export type PageId = string;
 
-export type PageGroup = "Start here" | "Core model" | "CLI Reference" | "Reference";
+export type PageGroup = "Start here" | "Core model" | "Setup reference" | "Agent protocol" | "Reference";
+export type PageAudience = "human" | "shared" | "agent-protocol" | "release-operator";
 
 export type DocBlock =
   | { type: "paragraph"; tokens: Token[] }
@@ -39,7 +40,8 @@ export type DocContent = {
   group: PageGroup;
   label: string;
   short: string;
-  icon: string;
+  icon?: string;
+  audience: PageAudience;
   eyebrow: string;
   title: string;
   lead: string;
@@ -175,7 +177,12 @@ function parsePage(source: string): DocContent {
   if (cards.length !== 3)
     throw new Error(`Expected three documentation cards for "${meta.id}", found ${cards.length}`);
 
-  const trailingMarkdown = commandMatch ? body.slice(commandMatch.index! + commandMatch[0].length) : "";
+  // The three hero cards are presentation metadata. Everything after the
+  // third card remains article content, whether or not that page has a shell
+  // transcript. Concept pages intentionally do not need a command block.
+  const cardMatches = Array.from(body.matchAll(/^## (?!Commands$)(.+)\n### (.+)\n([^\n]+)(?=\n\n## |\n\n```|$)/gm));
+  const afterCards = cardMatches[2] ? body.slice((cardMatches[2].index ?? 0) + cardMatches[2][0].length) : body;
+  const trailingMarkdown = commandMatch ? afterCards.replace(commandMatch[0], "") : afterCards;
 
   return {
     id: meta.id as PageId,
@@ -183,6 +190,7 @@ function parsePage(source: string): DocContent {
     label: meta.label,
     short: meta.short,
     icon: meta.icon,
+    audience: (meta.audience as PageAudience | undefined) ?? "shared",
     eyebrow: meta.eyebrow,
     title: meta.title.replace(/\\n/g, "\n"),
     lead: meta.lead,

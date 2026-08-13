@@ -2,115 +2,63 @@
 id: release-boundaries
 group: Reference
 label: Release Boundaries
-short: Separate source completion from deployment.
-icon: shield-check
-eyebrow: Safety boundary
-title: Source completion is not production authority.
-lead: HADARA can help produce a reviewable source state, but deployment, secrets, destructive actions and widened access remain explicit boundaries.
-callout: A passed release gate means the declared evidence contract was satisfied—not that every external risk disappeared.
+short: Read-only gates vs operator-approved mutation.
+eyebrow: Trust boundary
+title: Readiness may be automated. Publication stays explicit.
+lead: HADARA separates source validation, artifact identity, package smoke, and read-only release gates from the authority to mutate npm or GitHub.
+callout: A green release gate is evidence of readiness. It is not permission to publish.
+audience: release-operator
 order: 30
 ---
 
-## Source
-### Complete the repository
-HADARA can help make source state reviewable: code, docs, tests, release notes, evidence, and close gates.
+## 01 · Prepare
+### Build exact source
+Release identity starts from a clean committed source state and an exact artifact, checksum, manifest, and retained operator workspace policy.
 
-## Authority
-### Keep deployment policy explicit
-Publish/deploy authority belongs to the project policy: manual, CI/CD, or hybrid. HADARA should not assume operator-only release.
+## 02 · Observe
+### Gates stay read-only
+Strict release gate and dry-run surfaces may inspect tracked evidence and current managed release state, but must not publish packages or create releases.
 
-## Audit
-### Preserve the decision
-Release reports should make it clear which evidence was evaluated and which boundary, if any, authorized publication.
+## 03 · Mutate
+### Operator boundary
+npm publication, tag push, and GitHub Release creation remain explicit operator-controlled external mutations with publication evidence afterward.
 
-## Commands
-```shell
-hadara release gate --mode strict --json
-hadara release closeout --version <version> --task T-XXXX --json
-hadara release publish --mode dry-run --json
-hadara package recycle --package hadara@<version> --expected-version <version> --json
-```
+## Current RC6 source state
 
-## The core boundary
+| Field | RC6 documentation target |
+|---|---|
+| Source version | `0.5.0-rc.6` |
+| Latest published prerelease at snapshot | `0.5.0-rc.5` |
+| Stable npm `latest` | `0.4.6` |
+| Stable promotion | Blocked pending current-source RC regeneration/public lifecycle acceptance |
 
-A passed release gate means the declared repository evidence contract was satisfied. It does not mean:
+This page describes the release boundary, not a claim that RC6 has already been publicly published.
 
-- an npm package has been published
-- a GitHub Release exists
-- production has been deployed
-- secrets were approved
-- external systems were mutated
-- every operational risk disappeared
+## Root separation
 
-Prepared source, published package, GitHub Release, and deployed service are different states.
+Current release-readiness guidance separates three roles:
 
-## Manual, CI, or hybrid
+| Root | Purpose |
+|---|---|
+| `sourceRoot` | Clean source used for build/artifact/package/gate/publish checks. |
+| `evidenceRoot` | Reviewed workspace where capsule evidence is appended. |
+| `smokeProjectRoot` | Disposable consumer project for installed-package smoke/recycle. |
 
-HADARA should support all three release styles:
+That separation prevents evidence writes or consumer installs from dirtying the exact source identity being validated.
 
-| Style | Example | HADARA role |
-|---|---|---|
-| Manual | A maintainer reviews evidence and runs publish commands. | Produce release gate, dry-run, and closeout evidence. |
-| CI/CD | GitHub Actions publishes from a tag, branch protection, or workflow dispatch. | Emit machine-readable reports and fail closed on missing evidence. |
-| Hybrid | Human approval triggers an automated workflow. | Record the evidence/approval boundary without hardcoding the platform. |
-
-Do not document HADARA as “operator-only publish.” The correct rule is **policy-controlled publish/deploy**.
-
-## Release gate
-
-`hadara release gate --mode strict --json` is a read/evaluation surface. It should not publish packages, create GitHub releases, deploy services, write secrets, or mutate registries.
-
-Use it to answer:
-
-- Are required release docs present and current?
-- Is there validation evidence for the release task?
-- Are release notes and package/source metadata aligned?
-- Are known blockers or accepted risks recorded?
-- Is the release evidence sufficient for the declared policy?
-
-## Release closeout
-
-`release closeout` is a planning/reporting surface over release readiness, release notes, shared state docs, and selected release capsule docs. It should classify surfaces as current, stale, or missing and provide suggested fragments, not apply broad writes automatically.
-
-## Package recycle
-
-`hadara package recycle` checks a package from the consumer path. It can install into an isolated prefix, inspect command surfaces, run lightweight init/status/task-close smokes, and clean up. It is not the same as publishing.
-
-Use it after an artifact exists:
+## Read-only release surfaces
 
 ```shell
-hadara package recycle --package hadara@next --expected-version <version> --execute --json
+node --import tsx tools/dev-surfaces.ts release gate --mode strict --json
+node --import tsx tools/dev-surfaces.ts release dry-run --json
 ```
 
-## Secrets and external mutation
+The strict release gate is deliberately observational. It must not publish, create GitHub Releases, mutate registry state, or turn a dry-run into implicit execution.
 
-Do not put secret values into:
+## Publication evidence
 
-- task docs
-- evidence summaries
-- command logs
-- context exports
-- release reports
-- public artifacts
+Operator publication should bind the actual destination and mutation outcome. Partial external mutation—such as npm success followed by GitHub failure—must remain durably reconstructable rather than being collapsed into a single ambiguous “release failed” line.
 
-Reports may state that a required token is present or absent, but should not print its value.
+## Why this is part of HADARA
 
-Blocked or high-risk operations include destructive filesystem commands, broad reset/clean operations, `curl | sh`-style installers, privilege escalation, disk formatting, and unreviewed writes outside the project root.
-
-## Source completion vs publication
-
-A task or release capsule can close with valid evidence while publication remains pending. That is not a contradiction. It means the repository is prepared according to its evidence contract; the project’s release policy still decides when and how to publish.
-
-## Practical release sequence
-
-```shell
-hadara task status --json
-hadara task create "Prepare release <version>" --json
-# update release notes / metadata / validation docs
-hadara validation run --task T-XXXX --check "Release gate" -- hadara release gate --mode strict --json
-hadara task close --task T-XXXX --json
-# policy-controlled publish/deploy occurs outside the close proof
-hadara package recycle --package hadara@<version> --expected-version <version> --execute --json
-```
-
-The exact publish/deploy step may be manual, GitHub Actions, another CI/CD system, or a hybrid approval flow.
+Release tooling is not the product runtime, but it is a consequential test of HADARA's own thesis: irreversible work should have explicit authority, exact identity, durable evidence, and a recoverable handoff.

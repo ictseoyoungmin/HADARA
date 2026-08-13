@@ -13,7 +13,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const CONTENT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "content", "docs");
-const GROUPS = new Set(["Start here", "Core model", "CLI Reference", "Reference"]);
+const GROUPS = new Set(["Start here", "Core model", "Setup reference", "Agent protocol", "Reference"]);
+const AUDIENCES = new Set(["human", "shared", "agent-protocol", "release-operator"]);
 const ICONS = new Set([
   "compass",
   "rocket",
@@ -27,7 +28,7 @@ const ICONS = new Set([
   "clipboard-check",
 ]);
 const IMAGES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "content", "images");
-const REQUIRED_META = ["id", "group", "label", "short", "icon", "eyebrow", "title", "lead", "order"];
+const REQUIRED_META = ["id", "group", "label", "short", "eyebrow", "title", "lead", "audience", "order"];
 
 function parse(source, file) {
   const normalized = source.replace(/\r\n/g, "\n");
@@ -57,7 +58,8 @@ test("every page carries the full frontmatter contract", () => {
       assert.ok(meta[key]?.length, `${file}: frontmatter "${key}" is missing or empty`);
     }
     assert.ok(GROUPS.has(meta.group), `${file}: unknown group "${meta.group}"`);
-    assert.ok(ICONS.has(meta.icon), `${file}: unknown icon "${meta.icon}" (would fall back silently)`);
+    if (meta.icon) assert.ok(ICONS.has(meta.icon), `${file}: unknown icon "${meta.icon}" (would fall back silently)`);
+    assert.ok(AUDIENCES.has(meta.audience), `${file}: unknown audience "${meta.audience}"`);
     assert.ok(Number.isFinite(Number(meta.order)), `${file}: order must be numeric`);
   }
 });
@@ -84,14 +86,21 @@ test("every page has exactly three cards in the ## kicker / ### title / body sha
   }
 });
 
-test("every page has a non-empty required command block", () => {
-  // docs-content.ts's parsePage() takes the FIRST shell/sh/bash block as the
-  // required hero command; free-form sections below it may add their own
-  // extra examples, so this only pins down that first one.
+test("agent protocol pages have a non-empty command transcript", () => {
   for (const { file, body } of parsed) {
+    const { meta } = parsed.find((entry) => entry.file === file);
+    if (meta.audience !== "agent-protocol" && meta.audience !== "release-operator") continue;
     const match = body.match(/```(?:shell|sh|bash)\n([\s\S]*?)```/);
-    assert.ok(match, `${file}: expected at least one shell block`);
-    assert.ok(match[1].trim().length > 0, `${file}: required command block is empty`);
+    assert.ok(match, `${file}: agent-facing page expected at least one shell block`);
+    assert.ok(match[1].trim().length > 0, `${file}: agent-facing command block is empty`);
+  }
+});
+
+test("public docs do not teach removed routing or lifecycle commands", () => {
+  const stale = [/hadara context pack/, /hadara task finish/, /hadara task ready/, /hadara task audit-close/, /--profile standard/];
+  for (const { file, meta, body } of parsed) {
+    for (const pattern of stale) assert.doesNotMatch(body, pattern, `${file}: stale public command ${pattern}`);
+    if (meta.audience === "agent-protocol") assert.match(body, /agent/i, `${file}: agent page must name the agent boundary`);
   }
 });
 

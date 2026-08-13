@@ -47,12 +47,25 @@ const iconMap: Record<string, IconType> = {
   "clipboard-check": ClipboardCheck,
 };
 
+const fallbackIcons: Record<string, keyof typeof iconMap> = {
+  home: "compass",
+  "getting-started": "rocket",
+  "what-is-hadara": "orbit",
+  workflow: "workflow",
+  "task-capsules": "boxes",
+  evidence: "file-check",
+  "cli-init": "folder-tree",
+  "cli-task-lifecycle": "git-branch",
+  "cli-evidence-validation": "clipboard-check",
+  "release-boundaries": "shield-check",
+};
+
 const pages: DocPage[] = pageContent.map((page) => ({
   ...page,
-  icon: iconMap[page.icon] ?? BookOpen,
+  icon: iconMap[page.icon ?? fallbackIcons[page.id]] ?? BookOpen,
 }));
 
-const groups = ["Start here", "Core model", "CLI Reference", "Reference"] as const;
+const groups = ["Start here", "Core model", "Setup reference", "Agent protocol", "Reference"] as const;
 
 /** #getting-started style hash <-> page id. Returns null for unknown hashes
  *  (e.g. in-page anchors like #commands), so they never hijack navigation. */
@@ -523,6 +536,9 @@ export default function App() {
                 <div className="eyebrow">
                   <Sparkles size={13} />
                   {active.eyebrow}
+                </div>
+                <div className={`audience-badge audience-${active.audience}`}>
+                  {active.audience === "agent-protocol" ? "Agent protocol" : active.audience.replaceAll("-", " ")}
                 </div>
                 <h1>
                   {active.title.split("\n").map((line, index) => (

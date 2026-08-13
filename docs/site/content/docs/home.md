@@ -2,76 +2,78 @@
 id: home
 group: Start here
 label: Home
-short: A local-first evidence control plane for agentic development.
+short: What the human does, what the agent does, and where HADARA sits.
 icon: compass
-eyebrow: Agentic development harness
-title: Unbroken context.\nVerified development.
-lead: HADARA turns non-deterministic agent work into inspectable Task Capsules, append-only evidence, and explicit project state—so the next session resumes from facts, not chat history.
-callout: Start every session with status, not a re-read of the whole project. Setup is optional; project state is authoritative.
+eyebrow: Local-first evidence control plane
+title: You set intent.\nAgents run the protocol.
+lead: HADARA lets a human state goals and constraints while a coding agent runs the repeatable task, validation, evidence, and close protocol. The workspace keeps the state and proof reviewable after the session changes.
+callout: After initialization, you normally do not type lifecycle commands yourself. The agent operates the protocol; you review the result and approve explicit boundaries.
+audience: human
 order: 1
 ---
 
-## 01 · Orient
-### Start from status
-`hadara task status --json` is the project/session ingress. It reads the structured current-state and task-selection sources and returns the safest next action before an agent scans files or starts editing.
+## 01 · Human
+### Initialize, then state intent
+Install HADARA, initialize the project boundary, and tell your coding agent what you want changed. Human input stays at the level of goals, constraints, review, and explicit approvals.
 
-## 02 · Work
-### Carry a Task Capsule
-A Task Capsule keeps the goal, scope, acceptance, validation, change notes, risks, handoff, and evidence together so work can survive model switches and session loss.
+## 02 · Agent
+### Use HADARA as the work protocol
+The agent starts from current state, resumes or creates the right Task Capsule, performs bounded work, runs checks, appends evidence, and closes only when the proof is current.
 
-## 03 · Prove
-### Close with evidence
-`hadara task close --task T-XXXX --json` is the ordinary guarded close path. It succeeds only after readiness evidence and close audit reach `closed-valid`.
+## 03 · Review
+### Read projections, not internal logs
+HADARA keeps machine-authoritative state and exposes human-readable projections so you can inspect what happened without operating the evidence machinery by hand.
 
-## Commands
-```shell
-hadara task status --json
-hadara task status --json
-hadara task close --task T-XXXX --json
+## The intended interaction model
+
+| Actor | Normal responsibility | Typical interaction |
+|---|---|---|
+| Human | Set intent, constraints, priorities, and approvals. | Initialize once, then talk to the agent in natural language and review its result. |
+| Coding agent | Execute the development loop. | Calls status, task, validation, evidence, and close CLI surfaces. |
+| HADARA | Preserve project state and proof across sessions. | Returns read models, guards writes, appends evidence, and derives close state. |
+| Human-readable projection | Make machine state inspectable. | Shows authoritative state for review; it is not necessarily the source of truth. |
+
+## What this feels like
+
+```text
+Human:  "Add retry backoff. Keep compatibility and run the focused tests."
+                         │
+                         ▼
+Agent:   status → task → work → validation/evidence → close
+                         │
+                         ▼
+Human:  reviews the change, summary, evidence projection, and approval boundaries
 ```
 
-## What HADARA is
+Not this:
 
-HADARA is a **local-first evidence control plane for trustworthy agentic development**.
+```text
+Human manually types every HADARA lifecycle and evidence command.
+```
 
-It does not try to replace a coding agent, a CI system, a project manager, or a release platform. Instead, it gives them a shared local protocol:
+## The control plane
 
-- a structured current-state canon under `.hadara/state/`
-- bounded read models that tell an agent what to inspect next
-- Task Capsules for scoped work
-- append-only evidence records
-- close gates that derive completion from proof instead of prose
-- release gates that separate prepared source from publish/deploy authority
+![Human intent, agent protocol, canonical state, and projections](hadara-operating-model.svg)
 
-The important design point is that the CLI is not primarily a human terminal UI. It is a deterministic local API for agents and automation. Human-readable Markdown remains important because it makes review possible, but the agent should start from JSON reports instead of reconstructing state from historical documents.
+HADARA is the local protocol between human intent, agent execution, authoritative project state, and review surfaces. It does not replace the coding model, CI provider, source-control host, or release platform.
 
-## The shortest useful loop
+## Agent protocol trace
+
+The following commands are normally executed by the coding agent, not copied step-by-step by the human:
 
 ```shell
 hadara task status --json
-hadara task status --json
 hadara task create "ship the smallest useful change" --json
-hadara task status --task T-0001 --json
-hadara validation run --task T-0001 --check "Smoke test" -- npm test
+hadara validation run --task T-0001 --check "Focused tests" -- npm test
 hadara task close --task T-0001 --json
 ```
 
-Use `task close --dry-run --json` and `--execute --plan-hash ...` only when a separate human or automation boundary must review and carry the plan hash. Ordinary clean work should use `task close --json`.
+Use the reviewed dry-run plus plan-hash form only when a human or automation boundary must explicitly carry the close plan.
 
-## Why status comes first
+## Human-readable projections
 
-A project that has been touched by multiple agents cannot rely on chat history. `hadara task status --json` reports the current task-selection state, active/latest task, readiness, known problems, and next-action guidance from structured sources.
+`evidence.jsonl` is canonical append-only evidence. `EVIDENCE.md` is a generated human-readable projection. The human reads the projection; the agent/tooling maintains evidence through supported CLI paths. A projection must not invent success, hide unresolved failure, or become a second evidence database.
 
-That sequence prevents the common agent failure mode: opening old docs, seeing plausible prose, and acting on stale intent.
+## RC6 source state
 
-## What the website covers
-
-| Page | Use it for |
-|---|---|
-| Getting Started | First scaffold and first capsule |
-| What is HADARA? | Product boundary and mental model |
-| Lifecycle Workflow | The ordinary task loop |
-| Task Capsules | The durable work unit |
-| Evidence & Gates | How proof and close decisions relate |
-| CLI Reference | Exact command surfaces and flags |
-| Release Boundaries | What HADARA does and does not authorize |
+This documentation targets the current **HADARA 0.5.0-rc.6 source candidate**. Stable remains `0.4.6`; RC publication and deployment are separate release-authority decisions.

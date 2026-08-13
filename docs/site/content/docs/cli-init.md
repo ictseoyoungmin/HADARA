@@ -1,135 +1,59 @@
 ---
 id: cli-init
-group: CLI Reference
-label: hadara init
-short: Scaffold a fresh project, or safely adopt an existing one.
-icon: folder-tree
-eyebrow: Command reference
-title: One command, two very different projects.
-lead: hadara init behaves differently depending on what it finds. On an empty directory it scaffolds directly. On a project that already has files, it classifies the repository first and defaults to a plan that writes nothing at all.
-callout: A bare init on an existing project is a zero-write dry run. Nothing is written until you explicitly confirm the plan it proposed.
+group: Setup reference
+label: Init (human setup)
+short: The main CLI surface a human is expected to use directly.
+eyebrow: Human setup reference
+title: Init is the human-facing project boundary.
+lead: Unlike the normal task/evidence lifecycle, initialization is commonly invoked directly by a human to bring HADARA into a workspace and review the first managed write plan.
+callout: After init, ordinary development should move back to natural-language human instructions while the coding agent operates the HADARA protocol.
+audience: human
 order: 20
 ---
 
-## Fresh project
-### Direct scaffold
-On an empty directory, `hadara init --json` creates the scaffold. The writes are additive and should not overwrite project files.
+## 01 · Plan
+### Review before write
+Interactive TTY init can print a reviewed plan and ask before applying it. JSON and non-interactive invocations return a plan/hash without implicit write.
 
-## Existing project
-### Review before adoption
-On a directory with existing files, init treats the project as brownfield and returns a zero-write adoption plan unless you explicitly execute the reviewed plan.
+## 02 · Apply
+### Human-friendly interactive path
+For a normal local setup, `hadara init` is intentionally the shortest path.
 
-## Presets
-### Choose the governance level
-Presets control the initial scaffold and documentation packs. They do not become the project’s canonical authority and do not change evidence integrity or close semantics.
+## 03 · Repair
+### Upgrade managed core state
+Base init is a no-op on an initialized project. `init upgrade` repairs managed Init v1 core artifacts; it is not a hidden profile-change command.
 
-## Commands
+## Typical human setup
+
 ```shell
-hadara init --json
-hadara init --preset minimal --json
+mkdir my-workspace
+cd my-workspace
+hadara init
+```
+
+Optional preset selection:
+
+```shell
+hadara init --preset minimal
+hadara init --preset standard
+hadara init --preset governed
+```
+
+Plain `hadara init` in a real TTY prints the reviewed plan, asks `Apply this reviewed plan? [y/N]`, and applies in the same process only after `y`/`yes`.
+
+## Automation / agent init boundary
+
+When initialization itself is being driven by JSON, CI, a pipe, or an agent, it remains two-step:
+
+```shell
 hadara init --preset standard --json
-hadara init --preset governed --json
-hadara init doctor --json
-hadara init --preset governed --adopt --execute --plan-hash sha256:<hash> --json
+hadara init --preset standard --execute --plan-hash sha256:... --json
 ```
 
-## What init returns
+Piped output, redirected shells, JSON callers, CI, and agents never get implicit write behavior.
 
-`hadara init --json` returns a structured init report. Agents should inspect `schemaVersion`, `ok`, classification/state fields, planned actions, and any execute command before acting.
+## Adoption and repair
 
-Important rule:
+`--adopt` exists for bringing HADARA into an existing project through the reviewed plan boundary. Unsafe or ambiguous existing states should fail closed rather than being silently overwritten.
 
-```text
-empty project  → scaffold can be written directly
-existing files → plan first, write only after explicit adoption execute
-```
-
-This is how HADARA avoids silently taking ownership of a project that already has source files, docs, or local install artifacts.
-
-## Greenfield scaffold
-
-A normal scaffold includes the local HADARA control plane:
-
-```text
-.hadara/
-├── context/
-│   └── READ_MAP.md
-├── project.json
-└── documents.json
-docs/
-├── PROJECT_STATE.md
-├── TASK_BOARD.md
-└── HADARA_WORKFLOW.md
-AGENTS.md
-.gitignore
-tasks/
-```
-
-Depending on profile and later docs commands, additional project docs may be present. Do not assume optional docs exist until a read model, registry, or file check confirms them.
-
-## Current state after init
-
-Init v1 uses two canonical files for project and document routing authority:
-
-| Field | Purpose |
-|---|---|
-| `.hadara/project.json` | Validated project features, document packs, and preset provenance |
-| `.hadara/documents.json` | Document-routing registry and authority |
-| `.hadara/context/READ_MAP.md` | Generated routing projection, not a replacement for canonical state |
-
-`docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md` may project selected current-state facts for humans. Do not hand-edit managed current-state blocks.
-
-## Brownfield adoption
-
-When init detects existing content, review the dry-run report. If the report is safe and adoption is intended, execute the exact reviewed command:
-
-```shell
-hadara init --preset governed --adopt --execute --plan-hash sha256:<hash> --json
-```
-
-Do not invent the hash. Use the one returned by the dry-run/adoption report.
-
-Brownfield adoption should preserve project-owned files and mark existing docs as project-owned rather than converting them into HADARA-owned templates. HADARA may add bounded scaffold files and managed sections only through reviewed writes.
-
-## Presets
-
-| Profile | Typical use |
-|---|---|
-| `minimal` | Small project that needs task/evidence discipline with minimal docs. |
-| `standard` | Default multi-session project with current-state, workflow, task board, and docs registry. |
-| `governed` | Long-lived project where handoff, security, release, or operational governance matters. |
-
-Profiles do not authorize broader writes, release publication, shell execution, or destructive operations.
-
-## Output capture warning
-
-If you save the first init JSON report, write it outside the project directory:
-
-```shell
-hadara init --json > /tmp/hadara-init.json
-```
-
-A non-empty file created inside the target directory before init runs is project content and can make an otherwise empty directory look brownfield.
-
-## Project-local install warning
-
-A project-local install under a path such as `.hadara-install/` can also make a directory look non-empty before init. That is not fatal, but it means init may take the adoption path.
-
-A project-local install also does not shadow a global `hadara` earlier on `PATH`. Before delegating, run:
-
-```shell
-hadara version --json
-```
-
-Check that `packageVersion` and `cliEntry` match the intended binary.
-
-## After init
-
-Use:
-
-```shell
-hadara task status --json
-hadara task status --json
-```
-
-Then create the first capsule only if task status recommends no existing task to inspect.
+`hadara init upgrade` repairs only managed Init v1 core artifacts. Configuration changes remain a separate reviewed decision.

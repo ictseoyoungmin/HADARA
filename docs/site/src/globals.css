@@ -817,6 +817,24 @@ button {
   padding: 18px 0 48px;
 }
 
+.audience-badge {
+  display: inline-flex;
+  width: max-content;
+  margin: 5px 0 14px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--teal) 38%, transparent);
+  border-radius: 999px;
+  color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 10%, transparent);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.audience-human { border-color: color-mix(in srgb, var(--gold) 45%, transparent); color: var(--gold-bright); background: color-mix(in srgb, var(--gold) 9%, transparent); }
+.audience-release-operator { border-color: color-mix(in srgb, #d78989 42%, transparent); color: #d78989; background: color-mix(in srgb, #d78989 9%, transparent); }
+
 .eyebrow {
   display: flex;
   align-items: center;

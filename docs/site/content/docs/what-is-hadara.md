@@ -1,89 +1,67 @@
 ---
 id: what-is-hadara
-group: Start here
+group: Core model
 label: What is HADARA?
-short: A harness built for agents, not humans.
+short: A control plane and agent protocol, not another agent runtime.
 icon: orbit
-eyebrow: Category & boundary
-title: A harness for work that outlives a session.
-lead: HADARA is a local-first evidence control plane for agentic development. Its runbook guides behavior, while its artifacts preserve the state needed to resume, review, and release work.
-callout: HADARA coordinates evidence-backed development. It does not certify that an agent is fully autonomous or universally safe.
+eyebrow: Product boundary
+title: A continuity and evidence layer around agents.
+lead: HADARA gives a coding agent a deterministic project protocol while preserving authoritative state and human-reviewable proof outside any single chat session.
+callout: The human supplies intent. The agent operates the protocol. HADARA preserves the state. Projections make that state reviewable.
+audience: shared
 order: 3
 ---
 
-## Continuity
-### State survives sessions
-The next agent starts from `hadara task status --json` and the routed Task Capsule/read-map sources, not from old chat memory or broad document scanning.
+## 01 · Protocol
+### CLI for agents and automation
+HADARA's CLI is a deterministic local API that coding agents and automation call while doing project work. It is not primarily a sequence of terminal chores for the human developer.
 
-## Verification
-### Claims point to evidence
-A task closes only when acceptance and validation are backed by durable evidence records. “The agent says it passed” is not enough.
+## 02 · State
+### Authority survives the agent
+Task Capsules, structured project state, registered docs, and append-only evidence live with the workspace rather than in one model's conversation context.
 
-## Boundaries
-### Capabilities stay explicit
-HADARA separates read models, task-local writes, evidence appends, lifecycle close, and release authority into distinct surfaces.
+## 03 · Projection
+### Humans inspect without becoming the state machine
+HADARA exposes Markdown and read models that project machine-authoritative state into a form humans can review.
 
-## Commands
-```shell
-hadara task status --json
-hadara commands --json
-```
+## The three-layer mental model
 
-## The category
+![HADARA's human, agent, state, and projection layers](hadara-operating-model.svg)
 
-HADARA is a **local-first evidence control plane for agentic development**.
+| Layer | Purpose | Example |
+|---|---|---|
+| Canonical state | Source of truth for a domain. | `evidence.jsonl`; validated `.hadara/` state. |
+| Read model / protocol report | Machine-oriented interpretation for the next safe action. | `task status --json`; close dry-run. |
+| Human-readable projection | Review-oriented representation of authoritative state. | `EVIDENCE.md`; generated Markdown. |
 
-That phrase is precise:
+“Projection” does not mean “a second truth.” If it disagrees with its canonical source, the canonical source wins and the projection is refreshed through its supported ownership path.
 
-| Term | Meaning |
+## What HADARA owns
+
+| Surface | HADARA responsibility |
 |---|---|
-| Local-first | Project state lives in the repository, not in a cloud service. |
-| Evidence | Completion claims must point to inspectable records. |
-| Control plane | HADARA coordinates state, routing, gates, and authority boundaries; it does not become the worker itself. |
-| Agentic development | The primary operator may be an LLM/coding agent that needs deterministic surfaces and explicit recovery instructions. |
+| Task Capsules | Keep one unit of work scoped, resumable, and reviewable. |
+| Evidence | Append reduced proof without rewriting failure history. |
+| Status/read models | Route the next read/action from current project state. |
+| Close | Review acceptance, write bounded lifecycle state, append proof, and audit. |
+| Document governance | Register and route canonical, active, reference, historical, and archived docs. |
+| Release gates | Observe readiness without silently publishing. |
 
-## What HADARA is not
+## What HADARA does not own
 
-HADARA is not:
+- model reasoning or model hosting
+- source-control hosting or remote CI implementation
+- package registry or GitHub Release authority
+- broad autonomous writes by default
+- reconstructing current state from old chat history
 
-- a general autonomous agent runtime
-- a model provider abstraction
-- a cloud queue
-- a CI replacement
-- a deployment platform
-- a secret manager
-- a guarantee that an arbitrary agent is safe
+## Where the human normally interacts
 
-It is the local protocol that keeps agent work bounded, resumable, and reviewable.
+The normal human boundaries are:
 
-## Built for agents first
+1. install and initialize HADARA;
+2. express goals and constraints to the agent;
+3. review the implementation and human-readable projections;
+4. approve explicitly guarded or external mutations when policy requires it.
 
-HADARA’s CLI is an agent API first and a human terminal interface second.
-
-Primary commands return JSON with stable fields such as `schemaVersion`, `command`, `ok`, `phase`, `readiness`, `primaryNextAction`, `issues`, and evidence identifiers. Human-readable Markdown documents are still first-class, but agents should not infer current state by scraping prose when a JSON read model exists.
-
-The default read order is:
-
-1. `hadara task status --json`
-2. `hadara task status --task T-XXXX --json`
-3. the selected Task Capsule and registered read-map sources
-4. only then, the specific files routed by those reports
-
-## The core artifacts
-
-| Artifact | Role |
-|---|---|
-| `.hadara/project.json` and `.hadara/documents.json` | Init v1 canonical project and document-routing authority |
-| `.hadara/context/READ_MAP.md` | Generated compact document-routing projection |
-| `docs/PROJECT_STATE.md` | Human-readable projection of selected current-state facts plus product context |
-| `docs/TASK_BOARD.md` | Task index and lifecycle status rows |
-| `tasks/T-*/TASK.md` | Task contract: goal, scope, acceptance, validation, changes, risks |
-| `tasks/T-*/HANDOFF.md` | Close-time continuation guidance for the next session/capsule |
-| `tasks/T-*/evidence.jsonl` | Canonical append-only task evidence |
-| `tasks/T-*/EVIDENCE.md` | Generated evidence projection for humans |
-
-## Conservative by design
-
-HADARA deliberately keeps write surfaces narrow. It should read broadly enough to route an agent, but it should not silently mutate unrelated project files, rewrite history, publish packages, deploy services, or touch secrets.
-
-This is why many workflows are dry-run-first, why close proof is appended last, and why release publication remains policy-controlled: manual, CI-driven, or hybrid, depending on the project.
+The detailed CLI pages are therefore protocol references for agents, integrations, debugging, and advanced operators—not a checklist every human must execute.

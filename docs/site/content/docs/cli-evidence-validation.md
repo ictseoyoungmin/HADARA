@@ -1,154 +1,68 @@
 ---
 id: cli-evidence-validation
-group: CLI Reference
-label: Evidence & Validation Commands
-short: validation run vs. evidence add-command, flag by flag.
-icon: clipboard-check
-eyebrow: Command reference
-title: Executing proof and recording proof are different commands.
-lead: HADARA keeps "run this and capture what happens" separate from "record a result I already have." Knowing which one you need keeps evidence honest about what was actually executed.
-callout: HADARA flags must precede the -- separator; everything after -- belongs to the child command being validated.
+group: Agent protocol
+label: Evidence & Validation
+short: Agent-facing check execution and append-only evidence protocol.
+eyebrow: Agent protocol reference
+title: The agent runs the check and preserves the proof.
+lead: Validation execution and evidence recording are related but distinct protocol surfaces. They exist so an agent can leave durable, reduced proof without asking the human to operate an evidence ledger.
+callout: Ordinary users should inspect the evidence projection rather than type these commands. This page is for agents, integrations, debugging, and advanced protocol review.
+audience: agent-protocol
 order: 22
 ---
 
-## Execute
+## 01 · Execute
 ### validation run
-Use `validation run` when HADARA should execute the command and capture the actual exit status.
+Wrap a real command when HADARA should execute the check and capture its reduced result.
 
-## Record
+## 02 · Append
 ### evidence add-command
-Use `evidence add-command` when the result already exists and you only need to append an evidence record.
+Use it for checks that already ran or for explicitly reduced command evidence with category/outcome metadata.
 
-## Guard
-### Idempotency & locking
-Evidence appends are task-scoped, idempotency-aware, and locally locked to avoid corrupting `evidence.jsonl`.
+## 03 · Inspect
+### list and lint
+Discover persisted evidence IDs before creating durable structured references; lint when evidence shape or integrity is in doubt.
 
-## Commands
-```shell
-hadara validation run --task T-0042 --check "unit tests" --json -- npm test
-hadara validation run --task T-0042 --check "unit tests" --update-task -- npm test
-hadara validation run --task T-0042 --check "unit tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
-hadara evidence add-command --task T-0042 --summary "manual smoke test passed" --result passed --category validation --idempotency-key "smoke:T-0042:manual" --json
-hadara evidence list --task T-0042 --json
-```
-
-## Flag placement
-
-HADARA flags must appear before the child-command separator `--`.
-
-Correct:
-
-```shell
-hadara validation run --task T-0042 --check "unit tests" --json -- npm test
-```
-
-Incorrect:
-
-```shell
-hadara validation run --task T-0042 --check "unit tests" -- npm test --json
-```
-
-Everything after `--` belongs to the child command. In the incorrect example, `--json` is passed to `npm test`, not to HADARA.
-
-## `validation run`
-
-Use this for ordinary validation:
+## Agent commands
 
 ```shell
 hadara validation run --task T-0042 --check "Focused tests" -- npm test
+hadara evidence add-command --task T-0042 --summary "Focused tests passed" --result passed --category validation --json
+hadara evidence list --task T-0042 --json
+hadara evidence lint --task T-0042 --json
 ```
 
-It executes the child command, captures exit code/signal, appends canonical evidence, and refreshes the generated evidence projection.
+## Direct result mode
 
-Add JSON output:
-
-```shell
-hadara validation run --task T-0042 --check "Focused tests" --json -- npm test
-```
-
-Update the matching `TASK.md` Validation row only when intended:
+An agent or integration may supply a direct validation observation when it genuinely owns that observation. Unverified assumptions must not be converted into `passed` evidence.
 
 ```shell
-hadara validation run --task T-0042 --check "Focused tests" --update-task -- npm test
-```
-
-## Direct result through validation run
-
-If the tool environment cannot launch the command but the command was run directly, record the direct result through `validation run`:
-
-```shell
-hadara validation run --task T-0042 --check "Focused tests" \
+hadara validation run \
+  --task T-0042 \
+  --check "External validation" \
   --direct-result passed \
-  --direct-summary "npm test passed directly after wrapper launch failed" \
+  --direct-summary "External check passed" \
   --update-task \
   --json
 ```
 
-This preserves validation-check resolution tags and optional task-row synchronization.
+## Categories and outcomes
 
-## `evidence add-command`
+Evidence v2 outcomes include `passed`, `failed`, `blocked`, `unknown`, `recorded`, and `not-applicable`. Legacy `--result` remains supported; incompatible legacy/result and v2 outcome combinations fail before append.
 
-Use this only to record an already-run result:
+## Resolution references
+
+The agent should list evidence, copy the durable persisted `ev:` identity, and use that identity in explicit `resolves`/`supersedes` relationships. Free-text similarity is not resolution integrity.
 
 ```shell
+hadara evidence list --task T-0042
 hadara evidence add-command \
   --task T-0042 \
-  --summary "manual smoke test passed" \
+  --summary "Fix verified" \
   --result passed \
   --category validation \
-  --idempotency-key "smoke:T-0042:manual" \
+  --resolves ev:T-0042:aaaaaaaaaaaaaaaaaaaaaaaa \
   --json
 ```
 
-It does not execute shell commands. The caller is responsible for the truth of the supplied result.
-
-## Side by side
-
-| Capability | `validation run` | `evidence add-command` |
-|---|---|---|
-| Executes command | Yes | No |
-| Captures real exit code | Yes | Caller supplies result |
-| Can update TASK.md validation row | Yes, with `--update-task` | No ordinary row sync |
-| Best for | Tests and checks HADARA can run | Manual/external results |
-| Failure honesty | Failed command becomes failed evidence | Caller must not misreport |
-
-## Outcomes
-
-Valid result/outcome tokens include:
-
-```text
-passed
-failed
-blocked
-unknown
-recorded
-not-applicable
-```
-
-Use exact spellings. Do not introduce custom words such as “success”, “ok”, or “n/a”.
-
-## Idempotency keys
-
-Use stable idempotency keys for retry-safe recording:
-
-```text
-command:T-0042:unit-tests
-manual-smoke:T-0042:windows
-release-preflight:T-0042:strict-gate
-```
-
-A timestamp is usually a bad idempotency key because it prevents duplicate detection.
-
-## Concurrency
-
-Do not run multiple evidence appends against the same task in parallel unless you deliberately accept lock contention. JSON responses expose append-lock information such as `contended`, `waitedMs`, and `timeoutMs` when relevant.
-
-## Evidence discovery
-
-Use:
-
-```shell
-hadara evidence list --task T-0042 --json
-```
-
-to find durable ids for `TASK.md` Acceptance/Validation rows and close-source documentation. Do not copy ids from memory when the evidence list can provide them.
+Humans normally encounter the result through status, Task Capsule review, and `EVIDENCE.md` rather than by constructing these records manually.
