@@ -71,3 +71,28 @@ run a real check → append reduced evidence → reference durable IDs → close
 ```
 
 The human does not need to reproduce that sequence at a shell prompt. The important human contract is that the resulting proof is inspectable and that failure history has not been silently erased.
+
+## What an actual projection looks like
+
+A generated `EVIDENCE.md` is ordinary inspectable Markdown, but a `validation run` row is deliberately denser than a hand-written test sentence. It normally retains a redacted command preview, argument hash, exit code, signal, duration, and stdout/stderr hashes in the Summary cell so the projected claim keeps machine-checkable lineage.
+
+This representative example shortens hash values with `…` for the website only; the generated file contains their complete values:
+
+```markdown
+# EVIDENCE
+
+This file is a human-readable projection from `evidence.jsonl`.
+Do not hand-edit this file.
+
+## Validation Evidence
+| Evidence ID | Outcome | Category | Summary |
+|---|---|---|---|
+| ev:T-0042:7d91... | passed | validation | Validation "Focused retry tests" passed; command: npm test -- retry; argvHash: sha256:2ad1…; exitCode: 0; signal: null; durationMs: 1842; stdoutHash: sha256:87c4…; stderrHash: sha256:e3b0… |
+
+## Failed / Blocked / Residual Evidence
+| Evidence ID | Outcome | Summary | Disposition | Reference |
+|---|---|---|---|---|
+| ev:T-0042:1ac0... | failed | Initial timeout assertion failed. | Resolved | ev:T-0042:7d91... |
+```
+
+The projection preserves the initial failure and its explicit resolution. “Human-readable” here means reviewable Markdown rather than a guaranteed one-line executive summary: validation rows can be long because execution identity is retained. The append-only `evidence.jsonl` record remains canonical and may contain additional structured fields that the Markdown table does not project.

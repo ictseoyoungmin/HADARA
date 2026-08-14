@@ -24,16 +24,22 @@ function resolveImage(href: string): string {
 export type PageId = string;
 
 export type PageGroup = "Start here" | "Core model" | "Setup reference" | "Agent protocol" | "Reference";
-export type PageAudience = "human" | "shared" | "agent-protocol" | "release-operator";
+export type PageAudience = "human" | "shared" | "agent-protocol";
+export type CommandAudience = "human" | "agent-protocol";
+export type NativeDiagramKind = "operating-model" | "agent-lifecycle";
 
 export type DocBlock =
   | { type: "paragraph"; tokens: Token[] }
   | { type: "code"; language: string; code: string }
   | { type: "image"; src: string; alt: string; caption?: string }
-  | { type: "table"; header: string[]; rows: string[][] }
-  | { type: "list"; ordered: boolean; items: Token[][] };
+  | { type: "table"; header: Token[][]; rows: Token[][][] }
+  | { type: "list"; ordered: boolean; start?: number; items: Token[][] }
+  | { type: "subheading"; level: 3 | 4; tokens: Token[] }
+  | { type: "blockquote"; blocks: DocBlock[] }
+  | { type: "divider" }
+  | { type: "diagram"; kind: NativeDiagramKind };
 
-export type DocSection = { id: string; heading: string; blocks: DocBlock[] };
+export type DocSection = { id: string; heading: string; headingTokens: Token[]; blocks: DocBlock[] };
 
 export type DocContent = {
   id: PageId;
@@ -47,8 +53,16 @@ export type DocContent = {
   lead: string;
   callout?: string;
   command?: string;
+  commandAudience?: CommandAudience;
   order: number;
-  cards: Array<{ kicker: string; title: string; body: string }>;
+  searchText: string;
+  cards: Array<{
+    kicker: string;
+    title: string;
+    body: string;
+    titleTokens: Token[];
+    bodyTokens: Token[];
+  }>;
   sections: DocSection[];
 };
 
@@ -119,19 +133,34 @@ function buildBlocks(tokens: Token[]): DocBlock[] {
       }
       blocks.push({ type: "paragraph", tokens: tokensOf(token) });
     } else if (token.type === "code") {
-      blocks.push({ type: "code", language: token.lang ?? "text", code: token.text });
+      if (token.lang === "hadara-diagram") {
+        const kind = token.text.trim();
+        if (kind !== "operating-model" && kind !== "agent-lifecycle") {
+          throw new Error(`Unknown HADARA diagram kind "${kind}"`);
+        }
+        blocks.push({ type: "diagram", kind });
+      } else {
+        blocks.push({ type: "code", language: token.lang ?? "text", code: token.text });
+      }
     } else if (token.type === "table") {
       blocks.push({
         type: "table",
-        header: token.header.map((cell: Tokens.TableCell) => cell.text),
-        rows: token.rows.map((row: Tokens.TableCell[]) => row.map((cell) => cell.text)),
+        header: token.header.map((cell: Tokens.TableCell) => cell.tokens),
+        rows: token.rows.map((row: Tokens.TableCell[]) => row.map((cell) => cell.tokens)),
       });
     } else if (token.type === "list") {
       blocks.push({
         type: "list",
         ordered: token.ordered,
+        start: typeof token.start === "number" ? token.start : undefined,
         items: token.items.map(inlineTokensOfListItem),
       });
+    } else if (token.type === "heading" && (token.depth === 3 || token.depth === 4)) {
+      blocks.push({ type: "subheading", level: token.depth, tokens: tokensOf(token) });
+    } else if (token.type === "blockquote") {
+      blocks.push({ type: "blockquote", blocks: buildBlocks(token.tokens ?? []) });
+    } else if (token.type === "hr") {
+      blocks.push({ type: "divider" });
     }
   }
   return blocks;
@@ -147,20 +176,30 @@ function buildSections(markdown: string): DocSection[] {
   if (!markdown.trim()) return [];
   const tokens = marked.lexer(markdown);
   const sections: DocSection[] = [];
-  let current: { heading: string; tokens: Token[] } | null = null;
+  let current: { heading: string; headingTokens: Token[]; tokens: Token[] } | null = null;
 
   for (const token of tokens) {
     if (token.type === "heading" && token.depth === 2) {
       if (current) {
-        sections.push({ id: slugify(current.heading), heading: current.heading, blocks: buildBlocks(current.tokens) });
+        sections.push({
+          id: slugify(current.heading),
+          heading: current.heading,
+          headingTokens: current.headingTokens,
+          blocks: buildBlocks(current.tokens),
+        });
       }
-      current = { heading: token.text, tokens: [] };
+      current = { heading: token.text, headingTokens: tokensOf(token), tokens: [] };
     } else if (current) {
       current.tokens.push(token);
     }
   }
   if (current) {
-    sections.push({ id: slugify(current.heading), heading: current.heading, blocks: buildBlocks(current.tokens) });
+    sections.push({
+      id: slugify(current.heading),
+      heading: current.heading,
+      headingTokens: current.headingTokens,
+      blocks: buildBlocks(current.tokens),
+    });
   }
   return sections;
 }
@@ -171,7 +210,13 @@ function parsePage(source: string): DocContent {
   const command = commandMatch?.[1].trim();
   const cards = Array.from(
     body.matchAll(/^## (?!Commands$)(.+)\n### (.+)\n([^\n]+)(?=\n\n## |\n\n```|$)/gm),
-    (match) => ({ kicker: match[1].trim(), title: match[2].trim(), body: match[3].trim() }),
+    (match) => ({
+      kicker: match[1].trim(),
+      title: match[2].trim(),
+      body: match[3].trim(),
+      titleTokens: marked.Lexer.lexInline(match[2].trim()),
+      bodyTokens: marked.Lexer.lexInline(match[3].trim()),
+    }),
   );
 
   if (cards.length !== 3)
@@ -196,7 +241,12 @@ function parsePage(source: string): DocContent {
     lead: meta.lead,
     callout: meta.callout,
     command,
+    commandAudience: command
+      ? ((meta.commandAudience as CommandAudience | undefined) ??
+        (meta.audience === "human" ? "human" : "agent-protocol"))
+      : undefined,
     order: Number(meta.order),
+    searchText: body,
     cards,
     sections: buildSections(trailingMarkdown),
   };

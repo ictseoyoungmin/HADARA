@@ -6,8 +6,9 @@ short: Agent-facing check execution and append-only evidence protocol.
 eyebrow: Agent protocol reference
 title: The agent runs the check and preserves the proof.
 lead: Validation execution and evidence recording are related but distinct protocol surfaces. They exist so an agent can leave durable, reduced proof without asking the human to operate an evidence ledger.
-callout: Ordinary users should inspect the evidence projection rather than type these commands. This page is for agents, integrations, debugging, and advanced protocol review.
+callout: Ordinary users should inspect the evidence projection rather than type these commands. This page is a command reference for coding agents and integrations.
 audience: agent-protocol
+commandAudience: agent-protocol
 order: 22
 ---
 
@@ -32,6 +33,15 @@ hadara evidence list --task T-0042 --json
 hadara evidence lint --task T-0042 --json
 ```
 
+## Choosing the evidence path
+
+| Situation | Agent command | Executes the check? | Human-visible result |
+|---|---|---:|---|
+| HADARA should run a real command | `validation run` | Yes | Reduced result and durable evidence projection |
+| A trustworthy external/direct observation already exists | `evidence add-command` | No | Explicitly attributed evidence record |
+| A durable evidence ID is needed | `evidence list` | No | Persisted `ev:` identity for acceptance/resolution |
+| Bound artifacts or evidence shape may be stale | `evidence lint` | No | Missing/hash/byte-length or semantic integrity issue |
+
 ## Direct result mode
 
 An agent or integration may supply a direct validation observation when it genuinely owns that observation. Unverified assumptions must not be converted into `passed` evidence.
@@ -48,7 +58,13 @@ hadara validation run \
 
 ## Categories and outcomes
 
-Evidence v2 outcomes include `passed`, `failed`, `blocked`, `unknown`, `recorded`, and `not-applicable`. Legacy `--result` remains supported; incompatible legacy/result and v2 outcome combinations fail before append.
+Evidence outcomes include `passed`, `failed`, `blocked`, `unknown`, `recorded`, and `not-applicable`. The supplied result and outcome must agree; invalid combinations fail before append.
+
+## Artifact binding
+
+When an evidence record attaches a public reduced artifact, HADARA stores its task-local path, SHA-256, and byte length. Lint rechecks those bytes. The agent must treat a missing or changed bound artifact as an integrity failure rather than relying on a summary that merely says the check passed.
+
+`evidence add-command` does not run the claimed check; it appends the supplied observation to the evidence ledger. The agent must therefore review the result and summary before recording it.
 
 ## Resolution references
 

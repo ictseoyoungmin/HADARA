@@ -1,37 +1,32 @@
 ---
 id: cli-init
 group: Setup reference
-label: Init (human setup)
-short: The main CLI surface a human is expected to use directly.
+label: Init Reference
+short: Preset, automation, and existing-project initialization details.
 eyebrow: Human setup reference
-title: Init is the human-facing project boundary.
-lead: Unlike the normal task/evidence lifecycle, initialization is commonly invoked directly by a human to bring HADARA into a workspace and review the first managed write plan.
-callout: After init, ordinary development should move back to natural-language human instructions while the coding agent operates the HADARA protocol.
+title: Use the Init reference when the default first run is not enough.
+lead: Getting Started owns the plain interactive path. This page covers non-default scaffold selection, reviewed non-interactive execution, and adoption into an existing repository.
+callout: Start with Getting Started if this is your first HADARA project. Return here only when you need a preset choice, automation boundary, or existing-project plan.
 audience: human
+commandAudience: human
 order: 20
 ---
 
-## 01 · Plan
-### Review before write
-Interactive TTY init can print a reviewed plan and ask before applying it. JSON and non-interactive invocations return a plan/hash without implicit write.
+## 01 · Choose
+### Select an initial scaffold
+Presets change the initial document set, not the lifecycle the agent follows.
 
-## 02 · Apply
-### Human-friendly interactive path
-For a normal local setup, `hadara init` is intentionally the shortest path.
+## 02 · Automate
+### Carry a reviewed plan identity
+JSON and non-interactive callers receive a plan hash and never get an implicit write.
 
-## 03 · Repair
-### Upgrade managed core state
-Base init is a no-op on an initialized project. `init upgrade` repairs managed Init v1 core artifacts; it is not a hidden profile-change command.
+## 03 · Adopt
+### Preserve existing project ownership
+Existing repositories use an explicit adoption plan instead of silent overwrite.
 
-## Typical human setup
+## Choose an initial scaffold
 
-```shell
-mkdir my-workspace
-cd my-workspace
-hadara init
-```
-
-Optional preset selection:
+The default plain setup uses `standard`. Choose another preset only when its initial document scope is a better fit:
 
 ```shell
 hadara init --preset minimal
@@ -39,7 +34,13 @@ hadara init --preset standard
 hadara init --preset governed
 ```
 
-Plain `hadara init` in a real TTY prints the reviewed plan, asks `Apply this reviewed plan? [y/N]`, and applies in the same process only after `y`/`yes`.
+| Preset | Initial document scope | Intended starting point |
+|---|---|---|
+| `minimal` | Shared core only | Small experiments and tightly bounded work. |
+| `standard` | Core + `PROJECT_OVERVIEW.md` | Most products and team projects; this is the default. |
+| `governed` | Core + project overview, architecture, security, and governance docs | Long-running or policy-sensitive projects that need explicit documentation. |
+
+All three presets use the same lifecycle. `governed` supplies document scaffolding, not a policy engine or compliance guarantee. A preset is an initial scaffold choice, not a permanent project identity.
 
 ## Automation / agent init boundary
 
@@ -52,8 +53,8 @@ hadara init --preset standard --execute --plan-hash sha256:... --json
 
 Piped output, redirected shells, JSON callers, CI, and agents never get implicit write behavior.
 
-## Adoption and repair
+## Existing-project adoption and recovery
 
 `--adopt` exists for bringing HADARA into an existing project through the reviewed plan boundary. Unsafe or ambiguous existing states should fail closed rather than being silently overwritten.
 
-`hadara init upgrade` repairs only managed Init v1 core artifacts. Configuration changes remain a separate reviewed decision.
+If adoption reports a conflict, partial state, stale plan hash, symlink boundary, or ancestor root, preserve the report and follow [Limits & Recovery](#limits-and-recovery) rather than editing HADARA-managed project state by hand.

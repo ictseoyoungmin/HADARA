@@ -27,7 +27,13 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Token, Tokens } from "marked";
-import { pageContent, type DocContent, type DocBlock, type PageId } from "./docs-content";
+import {
+  pageContent,
+  type DocContent,
+  type DocBlock,
+  type NativeDiagramKind,
+  type PageId,
+} from "./docs-content";
 import { docsUpdatedAt, hadaraVersion } from "virtual:hadara-meta";
 
 type Theme = "light" | "dark";
@@ -41,10 +47,10 @@ const iconMap: Record<string, IconType> = {
   workflow: Workflow,
   boxes: Boxes,
   "file-check": FileCheck2,
-  "shield-check": ShieldCheck,
   "folder-tree": FolderTree,
   "git-branch": GitBranch,
   "clipboard-check": ClipboardCheck,
+  "shield-check": ShieldCheck,
 };
 
 const fallbackIcons: Record<string, keyof typeof iconMap> = {
@@ -57,7 +63,7 @@ const fallbackIcons: Record<string, keyof typeof iconMap> = {
   "cli-init": "folder-tree",
   "cli-task-lifecycle": "git-branch",
   "cli-evidence-validation": "clipboard-check",
-  "release-boundaries": "shield-check",
+  "project-protocol-files": "folder-tree",
 };
 
 const pages: DocPage[] = pageContent.map((page) => ({
@@ -66,6 +72,25 @@ const pages: DocPage[] = pageContent.map((page) => ({
 }));
 
 const groups = ["Start here", "Core model", "Setup reference", "Agent protocol", "Reference"] as const;
+
+function commandSectionCopy(page: DocPage) {
+  switch (page.commandAudience) {
+    case "human":
+      return {
+        eyebrow: "Human setup command",
+        title: "Establish the project boundary",
+        detail: "These are setup commands a human may intentionally run before handing normal development back to the agent.",
+        nav: "Setup commands",
+      };
+    default:
+      return {
+        eyebrow: "Agent protocol trace",
+        title: "How the agent carries the lifecycle",
+        detail: "The coding agent runs this protocol on the human's behalf and reports the resulting state, evidence, or blocker for review.",
+        nav: "Agent protocol",
+      };
+  }
+}
 
 /** #getting-started style hash <-> page id. Returns null for unknown hashes
  *  (e.g. in-page anchors like #commands), so they never hijack navigation. */
@@ -78,15 +103,6 @@ function pageIdFromHash(): PageId | null {
 function initialTheme(): Theme {
   const applied = document.documentElement.dataset.theme;
   return applied === "light" ? "light" : "dark";
-}
-
-function BrandMark() {
-  return (
-    <div className="brand-mark" aria-hidden="true">
-      <span>H</span>
-      <i />
-    </div>
-  );
 }
 
 function CommandBlock({ command, variant = "shell" }: { command: string; variant?: "shell" | "plain" }) {
@@ -152,18 +168,236 @@ function renderInline(tokens: Token[]): ReactNode[] {
         return <code key={index}>{(token as Tokens.Codespan).text}</code>;
       case "link": {
         const link = token as Tokens.Link;
+        const external = /^(?:https?:)?\/\//.test(link.href);
         return (
-          <a key={index} href={link.href} target="_blank" rel="noreferrer">
+          <a key={index} href={link.href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}>
             {renderInline(link.tokens)}
           </a>
         );
       }
+      case "del":
+        return <del key={index}>{renderInline((token as Tokens.Del).tokens)}</del>;
       case "br":
         return <br key={index} />;
       default:
         return <span key={index}>{"text" in token ? token.text : ""}</span>;
     }
   });
+}
+
+const lifecycleStages = [
+  {
+    number: "01",
+    name: "Orient",
+    summary: "Current state",
+    title: "Read current state before choosing work.",
+    detail: "The agent asks task status for the selected capsule, lifecycle phase, blockers, and next safe action instead of reconstructing state from chat history.",
+    reads: "Task Board, selected capsule, registered current-state sources",
+    produces: "A reasoned resume, create, wait, or stop decision",
+    surface: "hadara task status --json",
+    invariant: "Current project state is read before work is selected.",
+  },
+  {
+    number: "02",
+    name: "Contract",
+    summary: "Bounded intent",
+    title: "Keep one bounded Task Capsule current.",
+    detail: "The active TASK.md records goal, scope, plan, acceptance, validation, constraints, risks, and meaningful changes while the work evolves.",
+    reads: "Human intent, AGENTS.md, workflow rules, routed specifications",
+    produces: "A reviewable work contract rather than an implicit chat plan",
+    surface: "TASK.md + HANDOFF.md",
+    invariant: "One bounded capsule owns the work contract.",
+  },
+  {
+    number: "03",
+    name: "Implement",
+    summary: "Scoped change",
+    title: "Change only what the bounded task authorizes.",
+    detail: "The coding agent performs the actual engineering work. HADARA preserves boundaries and continuity without replacing model reasoning or implementation tools.",
+    reads: "Current source, task constraints, exact referenced documents",
+    produces: "Source and documentation changes within capsule scope",
+    surface: "Project tools inside the capsule boundary",
+    invariant: "Implementation authority never expands silently.",
+  },
+  {
+    number: "04",
+    name: "Validate",
+    summary: "Disprovable checks",
+    title: "Run checks that can actually disprove success.",
+    detail: "Tests, builds, smoke checks, lint, and visual review are real observations. A command returning output is not by itself evidence that acceptance passed.",
+    reads: "Acceptance criteria and validation plan",
+    produces: "Passed, failed, blocked, or explicitly skipped observations",
+    surface: "hadara validation run",
+    invariant: "A check must be capable of disproving success.",
+  },
+  {
+    number: "05",
+    name: "Evidence",
+    summary: "Durable proof",
+    title: "Append proof without erasing failure history.",
+    detail: "The agent records reduced durable evidence, binds artifacts when needed, and links follow-up evidence that resolves an earlier failure.",
+    reads: "Validation outcome, artifact identity, prior unresolved evidence",
+    produces: "Durable ev: identities and a human-readable projection",
+    surface: "hadara evidence add-command",
+    invariant: "New proof is appended; earlier failure is not erased.",
+  },
+  {
+    number: "06",
+    name: "Close",
+    summary: "Proof-last",
+    title: "Finish with a guarded proof-last transaction.",
+    detail: "Close checks acceptance, current evidence, task and handoff state, applies bounded lifecycle writes, appends proof last, and succeeds only at closed-valid.",
+    reads: "Current capsule, evidence, board projection, close plan",
+    produces: "Closed-valid proof or a concrete recovery action",
+    surface: "hadara task close --json",
+    invariant: "Proof is appended last and closed-valid is terminal.",
+  },
+] as const;
+
+function NativeDiagram({ kind }: { kind: NativeDiagramKind }) {
+  const [selectedStage, setSelectedStage] = useState(0);
+
+  if (kind === "operating-model") {
+    return (
+      <figure className="native-diagram operating-model" aria-labelledby="operating-model-title">
+        <figcaption className="diagram-intro">
+          <span>Responsibility and continuity</span>
+          <strong id="operating-model-title">Intent enters once. Durable state carries the work forward.</strong>
+          <p>Arrows show normal information flow. The lower return rail brings inspectable results back to the human.</p>
+        </figcaption>
+        <div className="operating-flow">
+          <article className="flow-node human-node external-node">
+            <span>Human</span>
+            <strong>State intent and constraints</strong>
+            <p>Initialize once, state intent, and review results.</p>
+          </article>
+          <div className="flow-connector" aria-hidden="true"><span>request</span><i /></div>
+          <article className="flow-node agent-node">
+            <span>Coding agent</span>
+            <strong>Perform bounded engineering work</strong>
+            <p>Read current state, implement, validate, and explain the outcome.</p>
+          </article>
+          <div className="flow-connector accent-connector" aria-hidden="true"><span>operate</span><i /></div>
+          <article className="flow-node protocol-node focal-node">
+            <span>HADARA protocol</span>
+            <strong>Route and guard the lifecycle</strong>
+            <p>Status, Task Capsules, validation, evidence, document routing, and close.</p>
+          </article>
+        </div>
+        <div className="commit-drop" aria-hidden="true">
+          <span>guarded write</span>
+          <i />
+        </div>
+        <div className="authority-flow">
+          <article className="authority-card projection-card external-node">
+            <span>Human-readable projections</span>
+            <strong>Inspect state without becoming the state machine</strong>
+            <p>Status summaries, READ_MAP.md, EVIDENCE.md, and reports expose authority for review.</p>
+          </article>
+          <div className="authority-bridge" aria-hidden="true">
+            <span>project</span><i />
+          </div>
+          <article className="authority-card canonical-card store-node">
+            <span>Canonical project state</span>
+            <strong>Durable authority by domain</strong>
+            <p>Task contract, document registry, project capability, and append-only evidence remain with the repository.</p>
+          </article>
+        </div>
+        <div className="review-rail">
+          <span>Review</span>
+          <i aria-hidden="true" />
+          <p>Projections return results, evidence, blockers, and open questions to the human.</p>
+        </div>
+        <div className="diagram-legend" aria-label="Diagram role legend">
+          <span><i className="legend-focal" />Protocol guard</span>
+          <span><i className="legend-store" />Canonical store</span>
+          <span><i className="legend-external" />Human or projection boundary</span>
+        </div>
+      </figure>
+    );
+  }
+
+  const selected = lifecycleStages[selectedStage];
+  return (
+    <figure className="native-diagram lifecycle-diagram" aria-labelledby="lifecycle-diagram-title">
+      <figcaption className="diagram-intro">
+        <span>Agent-operated lifecycle</span>
+        <strong id="lifecycle-diagram-title">Every stage leaves the next session a safer starting point.</strong>
+        <p>Select a stage to inspect its responsibility. All stage names remain visible at once.</p>
+      </figcaption>
+      <div className="lifecycle-workbench">
+        <div className="stage-rail" role="tablist" aria-orientation="horizontal" aria-label="HADARA lifecycle stages">
+          {lifecycleStages.map((stage, index) => (
+            <button
+              type="button"
+              role="tab"
+              id={`lifecycle-tab-${stage.number}`}
+              aria-controls="lifecycle-stage-detail"
+              aria-selected={index === selectedStage}
+              className={index === selectedStage ? "active" : undefined}
+              onClick={() => setSelectedStage(index)}
+              key={stage.name}
+            >
+              <span>{stage.number}</span>
+              <span className="stage-label">
+                <strong>{stage.name}</strong>
+                <small>{stage.summary}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+        <article
+          className="stage-detail"
+          id="lifecycle-stage-detail"
+          role="tabpanel"
+          aria-labelledby={`lifecycle-tab-${selected.number}`}
+        >
+          <header className="stage-detail-copy">
+            <span>Stage {selected.number} · {selected.name}</span>
+            <h3>{selected.title}</h3>
+            <p>{selected.detail}</p>
+          </header>
+          <div className="stage-contract">
+            <div className="stage-io">
+              <section>
+                <strong>Reads</strong>
+                <p>{selected.reads}</p>
+              </section>
+              <i aria-hidden="true" />
+              <section>
+                <strong>Produces</strong>
+                <p>{selected.produces}</p>
+              </section>
+            </div>
+            <section className="stage-surface">
+              <strong>Agent protocol surface</strong>
+              <code>{selected.surface}</code>
+            </section>
+          </div>
+          <div className="stage-invariant">
+            <span>Invariant</span>
+            <strong>{selected.invariant}</strong>
+          </div>
+        </article>
+      </div>
+      <div className="persistence-band">
+        <strong><span>Durable foundation</span>What survives between agent sessions</strong>
+        <div className="persistence-path">
+          <span>Task Board</span><i aria-hidden="true" />
+          <span>TASK.md</span><i aria-hidden="true" />
+          <span>Evidence</span><i aria-hidden="true" />
+          <span>HANDOFF.md</span><i aria-hidden="true" />
+          <span>Close proof</span>
+        </div>
+      </div>
+      <div className="lifecycle-guarantee">
+        <strong>Lifecycle guards</strong>
+        <span><b>01</b>Failures stay visible</span>
+        <span><b>02</b>Conflicts stop guarded writes</span>
+        <span><b>03</b>Close succeeds only at closed-valid</span>
+      </div>
+    </figure>
+  );
 }
 
 function DocBlockView({ block }: { block: DocBlock }) {
@@ -186,7 +420,7 @@ function DocBlockView({ block }: { block: DocBlock }) {
             <thead>
               <tr>
                 {block.header.map((cell, index) => (
-                  <th key={index}>{cell}</th>
+                  <th key={index}>{renderInline(cell)}</th>
                 ))}
               </tr>
             </thead>
@@ -194,7 +428,7 @@ function DocBlockView({ block }: { block: DocBlock }) {
               {block.rows.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex}>{cell}</td>
+                    <td key={cellIndex}>{renderInline(cell)}</td>
                   ))}
                 </tr>
               ))}
@@ -205,13 +439,29 @@ function DocBlockView({ block }: { block: DocBlock }) {
     case "list": {
       const Tag = block.ordered ? "ol" : "ul";
       return (
-        <Tag className="doc-list">
+        <Tag className="doc-list" start={block.ordered ? block.start : undefined}>
           {block.items.map((item, index) => (
             <li key={index}>{renderInline(item)}</li>
           ))}
         </Tag>
       );
     }
+    case "subheading": {
+      const Tag = block.level === 3 ? "h3" : "h4";
+      return <Tag className={`doc-subheading doc-subheading-${block.level}`}>{renderInline(block.tokens)}</Tag>;
+    }
+    case "blockquote":
+      return (
+        <blockquote className="doc-quote">
+          {block.blocks.map((child, index) => (
+            <DocBlockView block={child} key={index} />
+          ))}
+        </blockquote>
+      );
+    case "divider":
+      return <hr className="doc-divider" />;
+    case "diagram":
+      return <NativeDiagram kind={block.kind} />;
   }
 }
 
@@ -228,6 +478,7 @@ export default function App() {
   const active = pages.find((page) => page.id === activeId) ?? pages[0];
   const pageIndex = Math.max(0, pages.findIndex((page) => page.id === active.id));
   const nextPage = pages[(pageIndex + 1) % pages.length];
+  const commandCopy = commandSectionCopy(active);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -322,6 +573,7 @@ export default function App() {
           page.title,
           page.lead,
           page.callout ?? "",
+          page.searchText,
           ...page.cards.flatMap((card) => [card.title, card.body]),
         ]
           .join(" ")
@@ -353,7 +605,6 @@ export default function App() {
         <aside id="docs-navigation" className={`sidebar ${menuOpen ? "is-open" : ""}`}>
           <div className="sidebar-top">
             <div className="brand-lockup">
-              <BrandMark />
               <div>
                 <strong>HADARA</strong>
                 <span>Documentation</span>
@@ -425,7 +676,7 @@ export default function App() {
           </div>
 
           <nav className="docs-nav" aria-label="Documentation navigation">
-            {groups.map((group) => (
+            {groups.filter((group) => pages.some((page) => page.group === group)).map((group) => (
               <div className="nav-group" key={group}>
                 <p>{group}</p>
                 {pages
@@ -537,9 +788,6 @@ export default function App() {
                   <Sparkles size={13} />
                   {active.eyebrow}
                 </div>
-                <div className={`audience-badge audience-${active.audience}`}>
-                  {active.audience === "agent-protocol" ? "Agent protocol" : active.audience.replaceAll("-", " ")}
-                </div>
                 <h1>
                   {active.title.split("\n").map((line, index) => (
                     <span key={index}>{line}</span>
@@ -554,7 +802,7 @@ export default function App() {
                       className="primary-action"
                       onClick={() => selectPage("getting-started")}
                     >
-                      Start with doctor <ArrowRight size={15} />
+                      Get started <ArrowRight size={15} />
                     </button>
                     <button
                       type="button"
@@ -576,12 +824,8 @@ export default function App() {
 
               <section className="content-section" id="principles">
                 <div className="section-heading">
-                  <span>Path</span>
-                  <h2>
-                    {active.id === "home"
-                      ? "The shortest useful path"
-                      : "What this page establishes"}
-                  </h2>
+                  <span>Overview</span>
+                  <h2>{active.id === "home" ? "Roles at a glance" : "Three points to keep"}</h2>
                 </div>
                 <div className="principle-grid">
                   {active.cards.map((card, index) => (
@@ -591,8 +835,8 @@ export default function App() {
                       style={{ "--delay": `${index * 80}ms` } as React.CSSProperties}
                     >
                       <span>{card.kicker}</span>
-                      <h3>{card.title}</h3>
-                      <p>{card.body}</p>
+                      <h3>{renderInline(card.titleTokens)}</h3>
+                      <p>{renderInline(card.bodyTokens)}</p>
                       <i aria-hidden="true" />
                     </article>
                   ))}
@@ -602,12 +846,9 @@ export default function App() {
               {active.command && (
                 <section className="content-section command-section" id="commands">
                   <div className="section-heading">
-                    <span>Command surface</span>
-                    <h2>Keep the next action explicit</h2>
-                    <p>
-                      Commands remain copyable and reviewable; the documentation never executes
-                      them for you.
-                    </p>
+                    <span>{commandCopy.eyebrow}</span>
+                    <h2>{commandCopy.title}</h2>
+                    <p>{commandCopy.detail}</p>
                   </div>
                   <CommandBlock command={active.command} />
                 </section>
@@ -616,7 +857,7 @@ export default function App() {
               {active.sections.map((section) => (
                 <section className="content-section" id={section.id} key={section.id}>
                   <div className="section-heading">
-                    <h2>{section.heading}</h2>
+                    <h2>{renderInline(section.headingTokens)}</h2>
                   </div>
                   {section.blocks.map((block, index) => (
                     <DocBlockView block={block} key={index} />
@@ -656,11 +897,11 @@ export default function App() {
             <aside className="on-this-page">
               <p>On this page</p>
               <a href="#principles" className={activeAnchor === "principles" ? "active" : undefined}>
-                <span /> Overview
+                  <span className="toc-dot" /> Overview
               </a>
               {active.command && (
                 <a href="#commands" className={activeAnchor === "commands" ? "active" : undefined}>
-                  <span /> Commands
+                  <span className="toc-dot" /> {commandCopy.nav}
                 </a>
               )}
               {active.sections.map((section) => (
@@ -669,7 +910,7 @@ export default function App() {
                   className={activeAnchor === section.id ? "active" : undefined}
                   key={section.id}
                 >
-                  <span /> {section.heading}
+                  <span className="toc-dot" /> {section.heading.replace(/[`*_~]/g, "")}
                 </a>
               ))}
               <div className="read-state">
