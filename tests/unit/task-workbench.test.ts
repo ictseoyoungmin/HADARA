@@ -280,6 +280,23 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.status.v2', repair).ok).toBe(true);
   });
 
+  it('labels selected-task evidence recording as a reviewed evidence append', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench evidence boundary');
+    makeTaskAuthored(task.dir, { planStatus: 'Done' });
+
+    const report = createTaskStatusV2Report(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'add-command-evidence',
+      command: `hadara evidence add-command --task ${task.id} --summary "..." --result passed --json`,
+      writeBoundary: 'evidence-append',
+      requiresReview: true,
+      writes: true
+    });
+    expect(validateSchema('hadara.task.status.v2', report).ok).toBe(true);
+  });
+
   it('keeps fast selected-task v2 compact and does not infer close-ready without close-grade checks', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench v2 fast compact');

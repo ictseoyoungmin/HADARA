@@ -11,6 +11,8 @@ export interface WorkbenchNextAction {
   path?: string;
   sourceIssueCodes: string[];
   loopBoundary?: boolean;
+  writeBoundary?: 'read-only' | 'task-local' | 'project-config' | 'evidence-append' | 'task-close-transaction' | 'none';
+  requiresReview?: boolean;
 }
 
 export interface WorkbenchNextActionInput {
@@ -42,7 +44,9 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
       priority: 'now',
       command: `hadara evidence add-command --task ${input.taskId} --summary "..." --result passed --json`,
       message: 'Add at least one canonical command-log evidence record before close.',
-      sourceIssueCodes: ['EVIDENCE_JSONL_EMPTY']
+      sourceIssueCodes: ['EVIDENCE_JSONL_EMPTY'],
+      writeBoundary: 'evidence-append',
+      requiresReview: true
     });
   }
 

@@ -224,11 +224,11 @@ function fromClosePlanReport(
   );
   const evidenceAppends = (closeProofAppended ? 1 : 0) + (closePlan.readinessEvidence?.jsonlAppended ? 1 : 0);
   const idempotentNoop = closePlan.ok && closePlan.state === 'closed-valid' && executedWrites === 0 && closePlan.pendingWrites.length === 0;
-  const recoveryAction = closePlan.ok ? undefined : normalizeCloseNextAction(taskId, closePlan.primaryNextAction ?? closePlan.nextActions.find((action) => action.required));
   const transactionPlanHash = closePlan.execution?.requestedPlanHash ?? closePlan.planHash ?? hashObject({ taskId, state: closePlan.state, issues: closePlan.issues });
+  const recoveryAction = closePlan.ok ? undefined : normalizeCloseNextAction(taskId, closePlan.primaryNextAction ?? closePlan.nextActions.find((action) => action.required), transactionPlanHash);
   const nextActions = closePlan.ok
     ? []
-    : closePlan.nextActions.map((action) => normalizeCloseNextAction(taskId, action) ?? action);
+    : closePlan.nextActions.map((action) => normalizeCloseNextAction(taskId, action, transactionPlanHash) ?? action);
 
   return {
     schemaVersion: 'hadara.task.close.v3',
@@ -1371,13 +1371,19 @@ function sleepSync(ms: number): void {
   Atomics.wait(signal, 0, 0, ms);
 }
 
-function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | undefined): HadaraNextAction | undefined {
+function normalizeCloseNextAction(taskId: string, action: HadaraNextAction | undefined, planHash?: string): HadaraNextAction | undefined {
   if (!action) return undefined;
   if (!action.command) return action;
   let command = action.command;
-  command = command.replace(`hadara task close --task ${taskId} --execute --auto --json`, `hadara task close --task ${taskId} --json`);
-  command = command.replace(`hadara task close --task ${taskId} --json`, `hadara task close --task ${taskId} --dry-run --json`);
-  command = command.replace(`hadara task close --task ${taskId} --execute --plan-hash`, `hadara task close --task ${taskId} --execute --plan-hash`);
+  const internalAutoCommand = `hadara task close --task ${taskId} --execute --auto --json`;
+  const ordinaryCloseCommand = `hadara task close --task ${taskId} --json`;
+  if (command === internalAutoCommand) {
+    command = planHash
+      ? `hadara task close --task ${taskId} --execute --plan-hash ${planHash} --json`
+      : `hadara task close --task ${taskId} --dry-run --json`;
+  } else if (command === ordinaryCloseCommand) {
+    command = `hadara task close --task ${taskId} --dry-run --json`;
+  }
   const publicCloseWrite = /\bhadara\s+task\s+close\b/.test(command) && command.includes(taskId) && !command.includes('--dry-run');
   if (command === action.command && (!publicCloseWrite || action.writeBoundary === 'task-close-transaction')) return action;
   return {

@@ -73,7 +73,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 
 | Situation | First Action |
 |---|---|
-| New project created | Read \`AGENTS.md\`, then follow its profile-specific Required Reading. |
+| New project created | Read \`AGENTS.md\`, then follow its status-first Required Reading and routing rules. |
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
 | Need project-specific docs | Use \`hadara docs add <type> --json\`, or create a Markdown file directly and register it with \`hadara docs register\`. |
@@ -115,9 +115,9 @@ Use \`hadara init\` only when creating a new HADARA project or initializing HADA
 
 \`\`\`bash
 hadara init --json
-hadara init --profile basic --json
-hadara init --profile standard --json
-hadara init --profile governed --json
+hadara init --preset minimal --json
+hadara init --preset standard --json
+hadara init --preset governed --json
 hadara init doctor --json
 \`\`\`
 
@@ -153,7 +153,7 @@ Do not leave generated docs in scaffold form after completing the first real cap
 
 ## Optional Project Docs
 
-Do not create broad planning docs just because a profile exists. Add them only when the project has real content to maintain.
+Do not create broad planning docs just because a preset exists. Add them only when the project has real content to maintain.
 
 \`\`\`bash
 hadara docs add architecture --json
@@ -326,7 +326,7 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 
 | Situation | Use | Notes |
 |---|---|---|
-| New HADARA project | \`hadara init --profile <profile> --json\` | Creates scaffold docs and registries. |
+| New HADARA project | \`hadara init --preset <minimal|standard|governed> --json\` | Creates scaffold docs and registries; omitting the preset selects standard. |
 | Check scaffold health | \`hadara init doctor --json\` | Reports missing or inconsistent scaffold files. |
 | Find next work | \`hadara task status --json\` | Read-only selection cockpit. |
 | Inspect selected task | \`hadara task status --task T-XXXX --json\` | Fast loop phase and next-action projection. |

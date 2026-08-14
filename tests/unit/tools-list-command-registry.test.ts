@@ -36,4 +36,15 @@ describe('tools list command registry projection', () => {
     expect(commandIds.filter((id) => id === 'package.recycle')).toHaveLength(1);
     expect(commandIds.filter((id) => id === 'release.publish')).toHaveLength(1);
   });
+
+  it('advertises Init presets without promoting the deprecated profile alias', () => {
+    const init = HADARA_COMMAND_REGISTRY.find((entry) => entry.id === 'init');
+
+    expect(init?.command).toContain('--preset minimal|standard|governed');
+    expect(init?.command).not.toContain('--profile');
+    expect(init?.examples.map((entry) => entry.command)).toEqual(expect.arrayContaining([
+      'hadara init --preset governed --json',
+      'hadara init --preset standard --json'
+    ]));
+  });
 });

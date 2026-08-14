@@ -90,6 +90,10 @@ describe('Init v1 core model', () => {
     expect(agents).toContain('only as Markdown fallbacks');
     expect(agents).toContain('`docs/TASK_BOARD.md`');
     expect(agents).toContain('`.hadara/context/READ_MAP.md`');
+    expect(agents).toContain('CLI task selection unavailable or task-board audit');
+    expect(agents).toContain('CLI routing unavailable or routing investigation');
+    expect(agents).not.toContain('| `docs/TASK_BOARD.md` | Every session');
+    expect(agents).not.toContain('| `.hadara/context/READ_MAP.md` | Every session');
     expect(agents).not.toContain('`.hadara/context/HADARA_CONTEXT.md`');
     const workflow = minimal.find((file) => file.path === 'docs/HADARA_WORKFLOW.md')?.content ?? '';
     expect(workflow).toContain('## Task Capsule Identity Ownership');
@@ -99,6 +103,10 @@ describe('Init v1 core model', () => {
     expect(workflow).toContain('## Read Authority Rules');
     expect(workflow).toContain('## Evidence');
     expect(workflow).toContain('## Authoring Model');
+    expect(workflow).toContain('hadara init --preset minimal --json');
+    expect(workflow).toContain('hadara init --preset standard --json');
+    expect(workflow).toContain('hadara init --preset governed --json');
+    expect(workflow).not.toContain('hadara init --profile');
     expect(workflow).not.toContain('.hadara/context/HADARA_CONTEXT.md');
     expect(minimal.find((file) => file.path === 'docs/TASK_BOARD.md')?.content).toContain(
       '| ID | Title | Status | Targets | Capsule | Result |'

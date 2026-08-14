@@ -194,6 +194,100 @@ describe('task close report', () => {
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 
+  it('returns the current reviewed plan hash in executable close-plan guidance', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close reviewed compact action');
+    completeTask(root, task.id, task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| Status | Done |', '| Status | Draft |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace('| Done |', '| Draft |'),
+      'utf8'
+    );
+
+    const report = createTaskClosePlanReport(root, task.id);
+
+    expect(report.planHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'closePlan-execute-reviewed-plan',
+      command: `hadara task close --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
+      writeBoundary: 'task-close-transaction'
+    });
+    expect(report.primaryNextAction?.command).not.toContain('--dry-run');
+    expect(report.primaryNextAction?.command).not.toContain('--auto');
+  });
+
+  it('rejects invalid post-close continuation semantics before any lifecycle write', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close post-write handoff preflight');
+    completeTask(root, task.id, task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| Status | Done |', '| Status | Draft |'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8').replace('| Done |', '| Draft |'),
+      'utf8'
+    );
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), `# Handoff
+
+## Current State
+
+| Field | Value |
+|---|---|
+| TaskStatus | Draft |
+
+## Last Completed
+
+| Item | Evidence |
+|---|---|
+| Fixture implementation and validation completed. | Canonical fixture evidence. |
+
+## Pre-Close Operator Action
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+| No separate operator action. | terminal | no | Fixture is ready. | TASK.md |
+
+## Post-Close Continuation
+
+| Step | Disposition | Create Task | Reason | Required Reading |
+|---|---|---|---|---|
+| Start follow-up work. | actionable | no | Deliberate semantic conflict. | TASK.md |
+`, 'utf8');
+    const before = snapshotFiles(root);
+
+    const dryRun = createTaskClosePlanReport(root, task.id);
+    const blocked = createTaskCloseTransactionReport(root, task.id);
+
+    expect(dryRun.ok).toBe(false);
+    expect(dryRun.pendingWrites).toEqual([]);
+    expect(dryRun.issues).toContainEqual(expect.objectContaining({ code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT' }));
+    expect(blocked.ok).toBe(false);
+    expect(blocked.writeSummary).toMatchObject({
+      executedWrites: 0,
+      executedMutationSteps: 0,
+      executedFileWrites: 0,
+      evidenceAppends: 0,
+      closeProofAppended: false
+    });
+    expect(blocked.issues).toContainEqual(expect.objectContaining({ code: 'HANDOFF_CONTINUATION_SEMANTIC_CONFLICT' }));
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'task-close', `${task.id}.json`))).toBe(false);
+
+    rewriteFile(path.join(task.dir, 'HANDOFF.md'), (content) => content.replace('| actionable | no |', '| actionable | yes |'));
+    const repaired = createTaskCloseTransactionReport(root, task.id);
+
+    expect(repaired).toMatchObject({ ok: true, closeState: 'closed-valid', terminal: true });
+    expect(repaired.writeSummary.closeProofAppended).toBe(true);
+  });
+
   it('fails closed with zero lifecycle-owned writes when a transaction lock is contended', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close transaction lock timeout');

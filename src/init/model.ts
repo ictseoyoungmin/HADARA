@@ -276,7 +276,7 @@ export function createInitV1ScaffoldFiles(projectId: string, preset: InitPreset)
   const project = createInitProjectConfig(projectId, preset);
   const registry = createInitDocuments(preset);
   const files: GeneratedScaffoldFile[] = [
-    { path: 'AGENTS.md', content: createInitV1AgentsDoc(preset) },
+    { path: 'AGENTS.md', content: createInitV1AgentsDoc() },
     { path: '.gitignore', content: '.hadara/local/\n' },
     { path: '.hadara/project.json', content: jsonFile(project) },
     { path: '.hadara/documents.json', content: jsonFile(registry) },
@@ -461,8 +461,8 @@ function assertAcyclicSupersedes(entries: InitDocumentV1[]): void {
   for (const entry of entries) visit(entry.id);
 }
 
-function createInitV1AgentsDoc(preset: InitPreset): string {
-  const contextRow = '| `.hadara/context/READ_MAP.md` | Every session or routing investigation | Compact generated read-routing anchor. |\n';
+function createInitV1AgentsDoc(): string {
+  const contextRow = '| `.hadara/context/READ_MAP.md` | CLI routing unavailable or routing investigation | Generated fallback for registered document routing. |\n';
   return `# AGENTS.md
 
 <!-- hadara:managed:start bootstrap -->
@@ -479,7 +479,7 @@ At the start of each session:
 
 | Document | When to Read | Purpose |
 |---|---|---|
-| \`docs/TASK_BOARD.md\` | Every session or task selection | Task queue, task status, and capsule paths. |
+| \`docs/TASK_BOARD.md\` | CLI task selection unavailable or task-board audit | Generated fallback task index and capsule paths. |
 | \`docs/HADARA_WORKFLOW.md\` | Every session and lifecycle work | Project start, task lifecycle, evidence, and close guidance. |
 ${contextRow}| \`Active tasks/T-*/TASK.md\` | Every task-work session | Active Task Capsule scope, plan, acceptance, and validation. |
 

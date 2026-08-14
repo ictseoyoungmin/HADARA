@@ -247,7 +247,7 @@ function convertNextAction(action: WorkbenchNextAction): StatusNextAction {
     message: action.message,
     writeBoundary,
     risk: action.priority === 'now' ? 'low' : 'none',
-    requiresReview: action.kind === 'review' || !command || Boolean(executeAlternative),
+    requiresReview: action.requiresReview ?? (action.kind === 'review' || !command || Boolean(executeAlternative)),
     writes: writeBoundary !== 'read-only' && writeBoundary !== 'none'
   };
 }
@@ -312,6 +312,7 @@ function readPlanState(projectRoot: string, capsulePath: string): TaskStatusV2Re
 }
 
 function inferWriteBoundary(action: WorkbenchNextAction): StatusNextAction['writeBoundary'] {
+  if (action.writeBoundary) return action.writeBoundary;
   const command = action.command ?? '';
   if (command.includes('task close') && !command.includes('--dry-run')) return 'task-close-transaction';
   if (command.includes('task close') && command.includes('--dry-run')) return 'read-only';

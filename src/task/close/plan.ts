@@ -1163,9 +1163,9 @@ function createPrimaryNextAction(taskId: string, steps: TaskClosePlanStep[], iss
       id: 'closePlan-execute-reviewed-plan',
       kind: 'command',
       required: true,
-      command: `hadara task close --task ${taskId} --execute --auto --json`,
+      command: `hadara task close --task ${taskId} --execute --plan-hash ${planHash ?? '<planHash>'} --json`,
       message: nextActionMessageForGuardedWrites(steps),
-      writeBoundary: 'task-local',
+      writeBoundary: 'task-close-transaction',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
       stalePlanRisk: 'low'
@@ -1192,11 +1192,11 @@ function createPrimaryNextAction(taskId: string, steps: TaskClosePlanStep[], iss
       id: closeRepair ? 'closePlan-repair-close-proof' : 'closePlan-execute-reviewed-plan',
       kind: 'command',
       required: true,
-      command: `hadara task close --task ${taskId} --execute --auto --json`,
+      command: `hadara task close --task ${taskId} --execute --plan-hash ${planHash ?? '<planHash>'} --json`,
       message: closeRepair
         ? 'Close-source drift was detected. After confirming all close-source edits are complete, execute the reviewed closePlan plan to append fresh close proof and audit it.'
         : nextActionMessage(nextStep, steps),
-      writeBoundary: nextStep.writeBoundary,
+      writeBoundary: 'task-close-transaction',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
       stalePlanRisk: 'low'

@@ -7,7 +7,7 @@ import { isInside } from '../../core/paths';
 import { parseMarkdownRowsUnderHeading, readMarkdownSection, readMarkdownSectionWithHeading } from '../../services/markdown-table';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from '../lifecycle-next-actions';
 import { findTaskCapsule, TaskCapsule } from '../task-capsule';
-import { readHandoffContinuationSection } from '../handoff-sections';
+import { readHandoffContinuationSection, type HandoffContinuationPhase } from '../handoff-sections';
 import {
   defaultTaskBoard,
   formatTaskBoardRow,
@@ -119,11 +119,7 @@ export function createCloseGuardedWritePlan(projectRoot: string, taskId: string,
   const statusHistoryStatus = readLatestStatusHistoryStatus(task);
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
-  const handoffTableIssue = validateHandoffNextStepTable(task);
-  if (handoffTableIssue) issues.push(handoffTableIssue);
-  const handoffNextStep = readTaskHandoffNextStep(task);
-  const handoffContinuationIssue = handoffTableIssue ? null : validateStructuredHandoffContinuation(handoffNextStep);
-  if (handoffContinuationIssue) issues.push(handoffContinuationIssue);
+  validateHandoffContinuationsForClose(task, taskStatus, issues);
   const stateSpecs = stateDocSpecs(projectRoot);
   const stateDocs = createStateDocAdvisories(projectRoot, task, stateSpecs, new Set());
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
@@ -579,11 +575,32 @@ function readTaskStatus(task: TaskCapsule): string {
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }
 
-function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured: boolean; disposition?: string; createTask?: string; reason: string; requiredReading: string } | null {
+function validateHandoffContinuationsForClose(task: TaskCapsule, taskStatus: string, issues: CloseGuardedWriteIssue[]): void {
+  const phases: HandoffContinuationPhase[] = taskStatus.trim().toLowerCase() === 'done'
+    ? ['post-close']
+    : ['pre-close', 'post-close'];
+  const checkedHeadings = new Set<string>();
+  for (const phase of phases) {
+    const handoffPath = path.join(task.dir, 'HANDOFF.md');
+    if (!fs.existsSync(handoffPath)) return;
+    const content = fs.readFileSync(handoffPath, 'utf8');
+    const section = readHandoffContinuationSection(content, phase);
+    if (checkedHeadings.has(section.heading)) continue;
+    checkedHeadings.add(section.heading);
+    const handoffTableIssue = validateHandoffNextStepTable(task, phase);
+    if (handoffTableIssue) {
+      issues.push(handoffTableIssue);
+      continue;
+    }
+    const handoffContinuationIssue = validateStructuredHandoffContinuation(readTaskHandoffNextStep(task, phase));
+    if (handoffContinuationIssue) issues.push(handoffContinuationIssue);
+  }
+}
+
+function readTaskHandoffNextStep(task: TaskCapsule, phase: HandoffContinuationPhase): { step: string; structured: boolean; disposition?: string; createTask?: string; reason: string; requiredReading: string } | null {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
   const content = fs.readFileSync(handoffPath, 'utf8');
-  const phase = readTaskStatus(task).trim().toLowerCase() === 'done' ? 'post-close' : 'pre-close';
   const section = readHandoffContinuationSection(content, phase);
   const rows = parseMarkdownRowsUnderHeading(content, section.heading);
   const header = rows[0] ?? [];
@@ -609,11 +626,10 @@ function readTaskHandoffNextStep(task: TaskCapsule): { step: string; structured:
   };
 }
 
-function validateHandoffNextStepTable(task: TaskCapsule): CloseGuardedWriteIssue | null {
+function validateHandoffNextStepTable(task: TaskCapsule, phase: HandoffContinuationPhase): CloseGuardedWriteIssue | null {
   const handoffPath = path.join(task.dir, 'HANDOFF.md');
   if (!fs.existsSync(handoffPath)) return null;
   const content = fs.readFileSync(handoffPath, 'utf8');
-  const phase = readTaskStatus(task).trim().toLowerCase() === 'done' ? 'post-close' : 'pre-close';
   const section = readHandoffContinuationSection(content, phase).content;
   const lines = section.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.startsWith('|') && line.endsWith('|'));
   if (lines.length === 0) return null;
