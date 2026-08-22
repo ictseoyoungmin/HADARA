@@ -795,3 +795,4 @@
 | T-0793 | Correct validation recovery identity and release publication tooling | Done | tasks/T-0793-correct-validation-recovery-identity-and-release-publication-too | |
 | T-0794 | Repair npm-only publication recovery and destination provenance | Done | tasks/T-0794-repair-npm-only-publication-recovery-and-destination-provenance | |
 | T-0795 | Bind GitHub-only recovery to canonical publication evidence | Done | tasks/T-0795-bind-github-only-recovery-to-canonical-publication-evidence | |
+| T-0796 | Prepare a fresh RC6 artifact from current source | Done | tasks/T-0796-prepare-a-fresh-rc6-artifact-from-current-source | |
