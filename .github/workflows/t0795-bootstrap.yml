@@ -29,6 +29,7 @@ jobs:
             echo 'Validated patch is already applied.'
             exit 0
           fi
+          python tools/.t0795/fix_apply.py
           python tools/.t0795/apply.py
           bash -n scripts/release/manual-publish-rc.sh
           node --check scripts/release/verify-recovery-evidence.mjs
