@@ -7,8 +7,18 @@ idx = s.index(marker)
 new_tail = r"""# Adapt the existing retained-publication fixture without rewriting the fake CLI.
 tp=Path('tests/unit/manual-publish-script.test.ts'); t=tp.read_text()
 t=t.replace("Verified prior npm publication report","Verified canonical npm publication evidence")
-t=t.replace("    expect(script).toContain('git push \\\"${GIT_REMOTE_URL}\\\" \\\"${TAG}\\\"');\n","    expect(script).toContain('git push \\\"${GIT_REMOTE_URL}\\\" \\\"${tag}\\\"');\n")
+t=t.replace("git push \\\"${GIT_REMOTE_URL}\\\" \\\"${TAG}\\\"","git push \\\"${GIT_REMOTE_URL}\\\" \\\"${tag}\\\"")
+t=t.replace("git push \"${GIT_REMOTE_URL}\" \"${TAG}\"","git push \"${GIT_REMOTE_URL}\" \"${tag}\"")
 t=t.replace("    expect(script).toContain('operator-publication:github:${TASK_ID}:${VERSION}');\n","    expect(script).toContain('operator-publication:github:${TASK_ID}:${VERSION}');\n    expect(script).toContain('verify-recovery-evidence.mjs');\n    expect(script).toContain('verify_or_create_release_tag()');\n")
+
+bin_anchor="    fs.mkdirSync(bin, { recursive: true });\n"
+helper_copy=r'''    fs.mkdirSync(path.join(root, 'scripts', 'release'), { recursive: true });
+    fs.copyFileSync(
+      path.join(process.cwd(), 'scripts', 'release', 'verify-recovery-evidence.mjs'),
+      path.join(root, 'scripts', 'release', 'verify-recovery-evidence.mjs'),
+    );
+'''
+t=one(t,bin_anchor,bin_anchor+helper_copy,'fixture verifier copy')
 
 env_anchor="    const env = { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}`, DEV_SURFACE_LOG: devSurfaceLog, EVIDENCE_LOG: evidenceLog, FAKE_NPM_LOG: npmLog, FAKE_GH_LOG: ghLog };\n"
 binder=r'''    const bindCanonicalNpmEvidence = (fixtureRoot: string, reportPath: string) => {
