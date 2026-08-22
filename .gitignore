@@ -3,6 +3,7 @@ dist/
 coverage/
 *.log
 dist-release/
+temp/
 
 # Graphify local code graph and extraction cache
 graphify-out/
@@ -12,6 +13,7 @@ data/
 .hadara/local/
 .hadara/tmp/
 .hadara/cache/
+.hadara/skills/
 
 # OS/editor
 .DS_Store

@@ -61,6 +61,14 @@ describe('registry-backed help', () => {
     expect(output).toContain('--dry-run');
   });
 
+  it('describes validation retry resolution by check identity', () => {
+    const entry = findCommandRegistryEntry('validation.run');
+
+    expect(entry?.summary).toContain('same check identity');
+    expect(entry?.notes).toContain('same check identity');
+    expect(entry?.notes).toContain('exact command argv');
+  });
+
   it('shows docs.register controlled vocabulary in command help', () => {
     const output = renderCommandHelp('docs.register');
 

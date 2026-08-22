@@ -242,7 +242,7 @@ export function createInitDocuments(preset: InitPreset): InitDocumentsV1 {
     {
       id: 'hadara-task-board',
       path: 'docs/TASK_BOARD.md',
-      management: 'hadara-managed',
+      management: 'command-managed',
       status: 'active',
       readPolicy: 'explicit-only'
     },

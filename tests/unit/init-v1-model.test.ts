@@ -103,6 +103,7 @@ describe('Init v1 core model', () => {
     expect(workflow).toContain('## Read Authority Rules');
     expect(workflow).toContain('## Evidence');
     expect(workflow).toContain('## Authoring Model');
+    expect(workflow).toContain('Validation retry resolution uses check identity');
     expect(workflow).toContain('hadara init --preset minimal --json');
     expect(workflow).toContain('hadara init --preset standard --json');
     expect(workflow).toContain('hadara init --preset governed --json');
@@ -111,6 +112,9 @@ describe('Init v1 core model', () => {
     expect(minimal.find((file) => file.path === 'docs/TASK_BOARD.md')?.content).toContain(
       '| ID | Title | Status | Targets | Capsule | Result |'
     );
+    expect(createInitDocuments('minimal').documents.find((document) => document.path === 'docs/TASK_BOARD.md')).toMatchObject({
+      management: 'command-managed'
+    });
   });
 
   it('validates project and document persistence through schemas and strict runtime parsers', () => {

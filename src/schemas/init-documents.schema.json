@@ -27,6 +27,7 @@
         "management": {
           "enum": [
             "hadara-managed",
+            "command-managed",
             "user-authored",
             "mixed-managed-block",
             "generated-projection",

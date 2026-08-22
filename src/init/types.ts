@@ -148,6 +148,7 @@ export type InitArtifactManagement =
   | 'mixed-append';
 export type InitDocumentManagement =
   | 'hadara-managed'
+  | 'command-managed'
   | 'user-authored'
   | 'mixed-managed-block'
   | 'generated-projection'

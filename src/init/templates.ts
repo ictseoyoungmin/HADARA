@@ -293,6 +293,8 @@ hadara evidence project --task T-XXXX --json
 Use \`validation run\` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes \`EVIDENCE.md\`. Its controlled \`execution.failureClass\` is \`assertion\` for a started non-zero command, \`timeout\` for an expired command, \`environment-setup\` for launch/preparation failures, and \`none\` for success. Add \`--update-task\` only when you intentionally want the matching \`TASK.md\` Validation row updated by the CLI.
 Place HADARA flags such as \`--json\` before the child-command separator \`--\`; tokens after \`--\` are passed to the validation command.
 
+Validation retry resolution uses check identity, not the label alone: a later passing attempt resolves an earlier failure only when both the check label and exact command argv match. Reusing a label with a different command does not resolve the earlier attempt.
+
 If the wrapper cannot launch a command in the current tool environment (for example \`EPERM\`, \`EACCES\`, or \`ENOENT\`) but the same command runs directly, record the direct result through \`validation run\` so validation-check resolution tags and optional TASK.md row sync remain consistent:
 
 \`\`\`bash
