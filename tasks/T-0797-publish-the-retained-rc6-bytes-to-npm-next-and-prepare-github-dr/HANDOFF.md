@@ -20,6 +20,7 @@
 | Retained files are available at `.hadara/local/release-workspace/T-0796/0.5.0-rc.6`; the release journal is `.hadara/local/release-results/T-0796/artifact.json`. | Tarball `sha256:f078d6edc4529943dd0842b787a6dc98fb04e4bdbefbd7e138dbcfe6c4202e1f`; checksum `sha256:73bec0e80788bad6f2ebc44b9fb3d9edf4ffeaf8ef725aad8f2a7c8d67dca715`; manifest `sha256:f1e742c427ca274fb1832f6e6100bdf54fd7213989d68b2ff639e9294f58c44a` |
 | Current source release-input hash matches the retained artifact: `sha256:a2ad5b5a2e058ecb958eaf0fcf5846f586b032320760868f294f7dd84754681b`. | T-0796 artifact report |
 | Publish helper syntax/help and retained-input preflight passed without mutation. | `ev:T-0797:de1b9887b3e2428fb7d4d7e9` |
+| First operator attempt stopped before mutation on Docker-owned `dist/` (`EACCES`); the old generated directory was preserved outside the source inputs, replaced with a user-owned build directory, and `npm run build` passed. | `ev:T-0797:18716ecddf8c441fb5c6f341` (failed); `ev:T-0797:081ce35ded7d41f082600ee9` (resolved) |
 
 ## Pre-Close Operator Action
 
@@ -54,3 +55,4 @@ Before running, `npm whoami --registry=https://registry.npmjs.org` and `gh auth 
 
 | Warning | Impact | Mitigation |
 |---|---|---|
+| Docker-generated `dist/` ownership caused the first local validation attempt to stop. | The helper did not reach npm or GitHub mutation. | User-owned `dist/` was regenerated and build verification passed; rerun the same prepared command. |

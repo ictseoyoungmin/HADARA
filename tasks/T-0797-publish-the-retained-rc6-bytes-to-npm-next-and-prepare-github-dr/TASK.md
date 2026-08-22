@@ -50,6 +50,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Retained artifact and release-input reconciliation | Yes | Passed | Current release input hash matches the retained T-0796 artifact; retained files are present with the recorded tarball/checksum/manifest digests. | `ev:T-0796:ac12337f30834c0eb91ba498` |
 | Publish helper syntax and command surface | Yes | Passed | bash -n scripts/release/manual-publish-rc.sh and the --help command both passed; retained artifact hash and release-input hash were verified without mutation. | ev:T-0797:de1b9887b3e2428fb7d4d7e9 |
 | npm publication and GitHub draft | Yes | Not Run | Awaiting the operator command and the two explicit confirmations. | TBD |
+| Operator publish preflight | Yes | Passed | Initial attempt failed before mutation because Docker-owned ignored `dist/` files caused `tsc` EACCES; the generated directory was safely replaced with a user-owned one and `npm run build` then passed. | `ev:T-0797:18716ecddf8c441fb5c6f341` (failed); `ev:T-0797:081ce35ded7d41f082600ee9` (resolved) |
 
 ## Inputs / Constraints
 
