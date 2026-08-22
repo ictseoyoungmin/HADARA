@@ -29,6 +29,9 @@ DIST_TAGS_AFTER_JSON="{}"
 ARTIFACT_SOURCE_COMMIT=""
 ARTIFACT_RELEASE_INPUT_HASH=""
 OPERATOR_COMMIT=""
+EXPECTED_TAG_COMMIT=""
+PARTIAL_NPM_BOUND_REPORT=""
+PARTIAL_NPM_EVIDENCE_ID=""
 REINVOKE_ARGS=()
 
 usage() {
@@ -40,8 +43,8 @@ Options:
 --execute          Allow actual npm publish after interactive confirmation.
 --github-draft    After npm publish succeeds, create a GitHub Release draft with assets.
                   Publishing that draft publicly remains a separate gh release edit command.
---github-only     Resume a prior run whose npm publication report exists; verify retained
-                  artifact bytes and source lineage, then create only the GitHub Release draft.
+--github-only     Resume from canonical byte-bound npm publication evidence; verify exact
+                  retained artifact bytes/source lineage, then create only the GitHub Release draft.
 --github-release-note <path>
                    Markdown file to use as the GitHub Release draft notes.
 --github-token-env <name>
@@ -492,6 +495,29 @@ process.stdout.write(`${sourceCommit}\t${releaseInputHash}\n`);
 NODE
 }
 
+verify_or_create_release_tag() {
+local tag="$1" expected="$2" local_target="" remote_lines remote_direct remote_peeled remote_target
+[[ -n "${expected}" ]] || { echo "Expected release tag commit is missing."; exit 1; }
+if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+  local_target="$(git rev-list -n 1 "${tag}")"
+  [[ "${local_target}" == "${expected}" ]] || { echo "Local release tag ${tag} points to ${local_target}, expected artifact source commit ${expected}."; exit 1; }
+fi
+remote_lines="$(git ls-remote "${GIT_REMOTE_URL}" "refs/tags/${tag}" "refs/tags/${tag}^{}" || true)"
+remote_direct="$(printf '%s\n' "${remote_lines}" | awk -v ref="refs/tags/${tag}" '$2 == ref { print $1; exit }')"
+remote_peeled="$(printf '%s\n' "${remote_lines}" | awk -v ref="refs/tags/${tag}^{}" '$2 == ref { print $1; exit }')"
+remote_target="${remote_peeled:-${remote_direct}}"
+[[ -z "${remote_target}" || "${remote_target}" == "${expected}" ]] || { echo "Remote release tag ${tag} on ${GIT_REMOTE_URL} points to ${remote_target}, expected artifact source commit ${expected}."; exit 1; }
+if [[ -z "${local_target}" ]]; then git tag -a "${tag}" "${expected}" -m "HADARA ${VERSION}"; fi
+if [[ -z "${remote_target}" ]]; then
+  git push "${GIT_REMOTE_URL}" "${tag}"
+  remote_lines="$(git ls-remote "${GIT_REMOTE_URL}" "refs/tags/${tag}" "refs/tags/${tag}^{}" || true)"
+  remote_direct="$(printf '%s\n' "${remote_lines}" | awk -v ref="refs/tags/${tag}" '$2 == ref { print $1; exit }')"
+  remote_peeled="$(printf '%s\n' "${remote_lines}" | awk -v ref="refs/tags/${tag}^{}" '$2 == ref { print $1; exit }')"
+  remote_target="${remote_peeled:-${remote_direct}}"
+  [[ "${remote_target}" == "${expected}" ]] || { echo "Pushed release tag ${tag} does not resolve to expected artifact source commit ${expected}."; exit 1; }
+fi
+}
+
 ensure_gh_auth() {
 if gh auth status >/dev/null 2>&1; then
 return
@@ -626,79 +652,26 @@ echo "Operator publication report: ${report_path}"
 }
 
 load_partial_npm_publication() {
-if [[ -z "${RETAINED_ARTIFACT_DIR}" ]]; then
-echo "--github-only requires --retained-artifact-dir so the exact published bytes can be verified."
-exit 1
-fi
-
+[[ -n "${RETAINED_ARTIFACT_DIR}" ]] || { echo "--github-only requires --retained-artifact-dir."; exit 1; }
 RETAINED_ARTIFACT_DIR="$(cd "${RETAINED_ARTIFACT_DIR}" && pwd)"
-if [[ -z "${RETAINED_ARTIFACT_REPORT}" ]]; then
-RETAINED_ARTIFACT_REPORT="${RETAINED_ARTIFACT_DIR}/release-artifact-report.json"
-fi
-
-PARTIAL_PUBLICATION_LINE="$(node - "${PARTIAL_NPM_REPORT}" "${PACKAGE_NAME}" "${VERSION}" <<'NODE'
-const fs = require('node:fs');
-
-const [reportPath, expectedName, expectedVersion] = process.argv.slice(2);
-const fail = (message) => {
-  console.error(`Partial npm publication report validation failed: ${message}`);
-  process.exit(1);
-};
-let report;
-try {
-  report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-} catch (error) {
-  fail(`invalid JSON: ${error.message}`);
-}
-if (report.schemaVersion !== 'hadara.releaseOperatorPublication.v1') fail('unexpected schemaVersion');
-if (report.package?.name !== expectedName || report.package?.version !== expectedVersion) fail(`package identity does not match ${expectedName}@${expectedVersion}`);
-if (report.package?.npmMutationPerformed !== true || report.package?.observedVersion !== expectedVersion) fail('report does not prove the expected npm publication');
-if (typeof report.package?.registry !== 'string' || report.package.registry.length === 0) fail('report is missing the npm registry destination');
-if (typeof report.package?.distTag !== 'string' || report.package.distTag.length === 0) fail('report is missing the npm dist-tag destination');
-if (report.github?.mutationPerformed === true) fail('GitHub mutation is already recorded; do not resume a completed publication');
-const before = report.package?.distTagsBefore ?? {};
-const after = report.package?.distTagsAfter ?? {};
-process.stdout.write(`${report.package.observedVersion}\t${report.package.registry}\t${report.package.distTag}\t${JSON.stringify(before)}\t${JSON.stringify(after)}\n`);
-NODE
-)"
-IFS=$'\t' read -r PUBLISHED_VERSION PRIOR_REGISTRY PRIOR_NPM_TAG DIST_TAGS_BEFORE_JSON DIST_TAGS_AFTER_JSON <<< "${PARTIAL_PUBLICATION_LINE}"
-if [[ "${PUBLISHED_VERSION}" != "${VERSION}" ]]; then
-echo "Partial npm publication report observed ${PUBLISHED_VERSION:-<missing>}, expected ${VERSION}."
-exit 1
-fi
-if [[ "${REGISTRY_EXPLICIT}" == "true" && "${REGISTRY}" != "${PRIOR_REGISTRY}" ]]; then
-echo "Refusing GitHub-only resume: prior npm registry ${PRIOR_REGISTRY} differs from requested ${REGISTRY}."
-exit 1
-fi
-if [[ "${NPM_TAG_EXPLICIT}" == "true" && "${NPM_TAG}" != "${PRIOR_NPM_TAG}" ]]; then
-echo "Refusing GitHub-only resume: prior npm dist-tag ${PRIOR_NPM_TAG} differs from requested ${NPM_TAG}."
-exit 1
-fi
-REGISTRY="${PRIOR_REGISTRY}"
-NPM_TAG="${PRIOR_NPM_TAG}"
-
+if [[ -z "${RETAINED_ARTIFACT_REPORT}" ]]; then RETAINED_ARTIFACT_REPORT="${RETAINED_ARTIFACT_DIR}/release-artifact-report.json"; fi
 TARBALL="${RETAINED_ARTIFACT_DIR}/${PACKAGE_NAME}-${VERSION}.tgz"
-CHECKSUM_FILE="${TARBALL}.sha256"
-MANIFEST_FILE="${TARBALL}.manifest.json"
+CHECKSUM_FILE="${TARBALL}.sha256"; MANIFEST_FILE="${TARBALL}.manifest.json"
 LINEAGE="$(read_artifact_lineage "${RETAINED_ARTIFACT_REPORT}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}")"
 IFS=$'\t' read -r ARTIFACT_SOURCE_COMMIT ARTIFACT_RELEASE_INPUT_HASH <<< "${LINEAGE}"
-verify_checksum "${CHECKSUM_FILE}"
-verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
-
-set +e
-OBSERVED_NPM_VERSION="$(npm view "${PACKAGE_NAME}@${VERSION}" version --registry="${REGISTRY}" 2>/dev/null)"
-NPM_VIEW_STATUS=$?
-set -e
-if [[ "${NPM_VIEW_STATUS}" -ne 0 || "${OBSERVED_NPM_VERSION}" != "${VERSION}" ]]; then
-echo "The prior npm publication cannot be verified: expected ${PACKAGE_NAME}@${VERSION}, observed ${OBSERVED_NPM_VERSION:-<missing>}."
-exit 1
-fi
-
+EXPECTED_TAG_COMMIT="${ARTIFACT_SOURCE_COMMIT}"
+verify_checksum "${CHECKSUM_FILE}"; verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
+RECOVERY_LINE="$(node scripts/release/verify-recovery-evidence.mjs resolve-npm "${TASK_CAPSULE_DIR}/evidence.jsonl" "${TASK_CAPSULE_DIR}" "operator-publication:npm:${TASK_ID}:${VERSION}" "${PARTIAL_NPM_REPORT}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}" "${TASK_ID}" "${PACKAGE_NAME}" "${VERSION}" "${ARTIFACT_SOURCE_COMMIT}" "${ARTIFACT_RELEASE_INPUT_HASH}" "${GITHUB_REPO}" "${GIT_REMOTE_URL}")"
+IFS=$'\t' read -r PARTIAL_NPM_BOUND_REPORT PARTIAL_NPM_EVIDENCE_ID PUBLISHED_VERSION PRIOR_REGISTRY PRIOR_NPM_TAG DIST_TAGS_BEFORE_JSON DIST_TAGS_AFTER_JSON <<< "${RECOVERY_LINE}"
+if [[ "${REGISTRY_EXPLICIT}" == "true" && "${REGISTRY}" != "${PRIOR_REGISTRY}" ]]; then echo "Refusing GitHub-only resume: prior npm registry ${PRIOR_REGISTRY} differs from requested ${REGISTRY}."; exit 1; fi
+if [[ "${NPM_TAG_EXPLICIT}" == "true" && "${NPM_TAG}" != "${PRIOR_NPM_TAG}" ]]; then echo "Refusing GitHub-only resume: prior npm dist-tag ${PRIOR_NPM_TAG} differs from requested ${NPM_TAG}."; exit 1; fi
+REGISTRY="${PRIOR_REGISTRY}"; NPM_TAG="${PRIOR_NPM_TAG}"
+set +e; OBSERVED_NPM_VERSION="$(npm view "${PACKAGE_NAME}@${VERSION}" version --registry="${REGISTRY}" 2>/dev/null)"; NPM_VIEW_STATUS=$?; set -e
+[[ "${NPM_VIEW_STATUS}" -eq 0 && "${OBSERVED_NPM_VERSION}" == "${VERSION}" ]] || { echo "The prior npm publication cannot be verified."; exit 1; }
 OPERATOR_COMMIT="$(git rev-parse HEAD)"
-echo "Verified prior npm publication report: ${PARTIAL_NPM_REPORT}"
-echo "Verified retained artifact lineage: ${ARTIFACT_RELEASE_INPUT_HASH}"
+echo "Verified canonical npm publication evidence: ${PARTIAL_NPM_EVIDENCE_ID} -> ${PARTIAL_NPM_BOUND_REPORT}"
+echo "Verified retained artifact bytes match the npm publication report."
 }
-
 create_github_release_draft() {
 echo
 echo "== GitHub Release draft =="
@@ -734,18 +707,7 @@ echo "GitHub Release draft cancelled."
 exit 0
 fi
 
-if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-echo "Git tag already exists locally: ${TAG}"
-else
-git tag -a "${TAG}" -m "HADARA ${VERSION}"
-fi
-
-REMOTE_TAG="$(git ls-remote "${GIT_REMOTE_URL}" "refs/tags/${TAG}" || true)"
-if [[ -n "${REMOTE_TAG}" ]]; then
-echo "Git tag already exists on configured remote ${GIT_REMOTE_URL}: ${TAG}"
-else
-git push "${GIT_REMOTE_URL}" "${TAG}"
-fi
+verify_or_create_release_tag "${TAG}" "${EXPECTED_TAG_COMMIT}"
 
 echo
 echo "Creating GitHub Release draft with release assets..."
@@ -834,23 +796,13 @@ echo "Task capsule: ${TASK_CAPSULE_DIR}"
 
 GIT_STATUS="$(git status --porcelain)"
 PARTIAL_NPM_REPORT="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-npm-publication-report.json"
-if [[ "${GITHUB_ONLY}" == "true" && ! -f "${PARTIAL_NPM_REPORT}" ]]; then
-echo "GitHub-only resume requires the prior npm publication report: ${PARTIAL_NPM_REPORT}"
-exit 1
-fi
 if [[ "${GITHUB_ONLY}" != "true" && "${MODE}" == "execute" && -f "${PARTIAL_NPM_REPORT}" ]]; then
-echo "A prior npm publication report exists: ${PARTIAL_NPM_REPORT}"
-echo "Resume the GitHub mutation without republishing npm:"
-echo "  bash scripts/release/manual-publish-rc.sh ${TASK_ID} --github-only --retained-artifact-dir <retained-artifact-dir> --github-repo ${GITHUB_REPO} --git-remote-url ${GIT_REMOTE_URL}"
-exit 1
+  echo "A prior npm publication report exists; use --github-only instead of republishing npm."; exit 1
 fi
 
 if [[ "${GITHUB_ONLY}" == "true" ]]; then
-if [[ -n "${GIT_STATUS}" ]] && ! dirty_paths_are_release_outputs_only "${GIT_STATUS}"; then
-echo "Git worktree contains changes outside the retained publication evidence and cannot be resumed safely."
-echo "${GIT_STATUS}"
-exit 1
-fi
+if [[ -n "${GIT_STATUS}" ]] && ! dirty_paths_are_release_outputs_only "${GIT_STATUS}"; then echo "Git worktree contains unsafe changes."; echo "${GIT_STATUS}"; exit 1; fi
+node scripts/release/verify-recovery-evidence.mjs assert-github-absent "${TASK_CAPSULE_DIR}/evidence.jsonl" "operator-publication:github:${TASK_ID}:${VERSION}"
 load_partial_npm_publication
 create_github_release_draft
 exit 0
@@ -903,6 +855,7 @@ CHECKSUM_FILE="${TARBALL}.sha256"
 MANIFEST_FILE="${TARBALL}.manifest.json"
 LINEAGE="$(read_artifact_lineage "${RETAINED_ARTIFACT_REPORT}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}")"
 IFS=$'\t' read -r ARTIFACT_SOURCE_COMMIT ARTIFACT_RELEASE_INPUT_HASH <<< "${LINEAGE}"
+EXPECTED_TAG_COMMIT="${ARTIFACT_SOURCE_COMMIT}"
 echo "Retained artifact directory: ${RETAINED_ARTIFACT_DIR}"
 echo "Retained artifact report: ${RETAINED_ARTIFACT_REPORT}"
 echo "Retained releaseInputHash: ${ARTIFACT_RELEASE_INPUT_HASH}"
@@ -927,6 +880,7 @@ CHECKSUM_FILE="${TARBALL}.sha256"
 MANIFEST_FILE="${TARBALL}.manifest.json"
 LINEAGE="$(read_artifact_lineage "${ARTIFACT_JOURNAL}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}")"
 IFS=$'\t' read -r ARTIFACT_SOURCE_COMMIT ARTIFACT_RELEASE_INPUT_HASH <<< "${LINEAGE}"
+EXPECTED_TAG_COMMIT="${ARTIFACT_SOURCE_COMMIT}"
 echo "Generated tarball: ${TARBALL}"
 fi
 
