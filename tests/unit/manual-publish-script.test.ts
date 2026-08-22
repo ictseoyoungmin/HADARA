@@ -80,6 +80,9 @@ describe('manual publish release script', () => {
     expect(script).toContain('print_reinvoke_command execute');
     expect(script).toContain('REINVOKE_ARGS+=(--registry "${REGISTRY}")');
     expect(script).toContain('REINVOKE_ARGS+=(--github-repo "${GITHUB_REPO}" --git-remote-url "${GIT_REMOTE_URL}")');
+    expect(script).toContain('--github-only');
+    expect(script).toContain('if [[ -z "${GIT_REMOTE_URL}" ]]; then');
+    expect(script).toContain('GIT_REMOTE_URL="https://github.com/${GITHUB_REPO}.git"');
     expect(script).toContain('git push "${GIT_REMOTE_URL}" "${TAG}"');
     expect(script).toContain('--repo "${GITHUB_REPO}"');
     expect(script).toContain('operator-publication:npm:${TASK_ID}:${VERSION}');
@@ -89,7 +92,7 @@ describe('manual publish release script', () => {
       script.indexOf('write_operator_publication_report "${NPM_PUBLICATION_REPORT_PATH}"'),
     );
     expect(script.indexOf('write_operator_publication_report "${NPM_PUBLICATION_REPORT_PATH}"')).toBeLessThan(
-      script.indexOf('ensure_gh_auth\n\nTAG'),
+      script.lastIndexOf('create_github_release_draft'),
     );
   });
 
@@ -218,6 +221,21 @@ describe('manual publish release script', () => {
     expect(failedGithub.stdout + failedGithub.stderr).toContain('GitHub CLI is not authenticated');
     expect(fs.existsSync(path.join(failureRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-npm-publication-report.json'))).toBe(true);
     expect(fs.readFileSync(failureEvidenceLog, 'utf8')).toContain('evidence');
+    const npmLogBeforeRecovery = fs.readFileSync(failureNpmLog, 'utf8');
+    const recovery = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', failureRetained, '--github-only'], {
+      cwd: failureRoot,
+      env: { ...failureEnv, FAKE_GH_FAIL: '0' },
+      input: 'github-draft\n',
+      encoding: 'utf8'
+    });
+    expect(recovery.status, `${recovery.stdout}\n${recovery.stderr}`).toBe(0);
+    expect(recovery.stdout).toContain('Verified prior npm publication report');
+    const npmLogAfterRecovery = fs.readFileSync(failureNpmLog, 'utf8');
+    expect(npmLogAfterRecovery.split(/\r?\n/).filter((line) => line.startsWith('publish '))).toEqual(
+      npmLogBeforeRecovery.split(/\r?\n/).filter((line) => line.startsWith('publish ')),
+    );
+    expect(fs.readFileSync(failureGhLog, 'utf8')).toContain('release create v0.5.0-rc.6');
+    expect(fs.existsSync(path.join(failureRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'))).toBe(true);
     fs.rmSync(failureRoot, { recursive: true, force: true });
     fs.rmSync(failureRetained, { recursive: true, force: true });
 
@@ -253,6 +271,7 @@ describe('manual publish release script', () => {
     expect(script).toContain('Publish origin: $(git remote get-url origin)');
     expect(script).toContain('HADARA_GIT_REMOTE_URL="$GIT_REMOTE_URL"');
     expect(script).toContain('HELPER_ARGS+=(--github-repo "$GITHUB_REPO" --git-remote-url "$GIT_REMOTE_URL")');
+    expect(script).toContain('GIT_REMOTE_URL="https://github.com/${GITHUB_REPO}.git"');
   });
 
   it('does not run the manual publish helper dry-run by default', () => {

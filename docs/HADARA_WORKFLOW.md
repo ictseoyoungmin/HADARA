@@ -299,7 +299,7 @@ Do not hand-edit `TASK.md` Identity `Status`, `docs/TASK_BOARD.md` Status, `evid
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 hadara validation run --task T-XXXX --check "Focused tests" --json -- npm test
 hadara validation run --task T-XXXX --check "Focused tests" -- npm run test:focused -- tests/unit/<file>.test.ts
-hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json -- npm test
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --artifact-file artifacts/reduced-report.json --idempotency-key "command:T-XXXX:check" --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --artifact-file artifacts/reduced-report.json --json
 hadara evidence list --task T-XXXX --json
@@ -314,7 +314,7 @@ Validation retry resolution uses check identity, not the label alone: a later pa
 If the wrapper cannot launch a command in the current tool environment (for example `EPERM`, `EACCES`, or `ENOENT`) but the same command runs directly, record the direct result through `validation run` so validation-check resolution tags and optional TASK.md row sync remain consistent:
 
 ```bash
-hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly after validation wrapper launch failure" --update-task --json
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly after validation wrapper launch failure" --update-task --json -- npm test
 ```
 
 For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.ts`. Do not use `npm run test:unit -- tests/unit/<file>.test.ts`; `test:unit` already supplies the broad unit suite path.
@@ -354,7 +354,7 @@ Agents should use `task close --json` for ordinary clean capsules; it performs t
 | Run and record validation | `hadara validation run --task T-XXXX --check "..." -- <command>` | Executes the command and records evidence without editing `TASK.md` by default. |
 | Run and record validation JSON | `hadara validation run --task T-XXXX --check "..." --json -- <command>` | Put `--json` before `--`; everything after `--` belongs to the child command. |
 | Run, record, and sync task row | `hadara validation run --task T-XXXX --check "..." --update-task -- <command>` | Executes the command, records evidence, and updates the matching `TASK.md` Validation row. |
-| Record direct validation result | `hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
+| Record direct validation result | `hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json -- npm test` | Records an already-run direct result when wrapper launch is blocked by the tool environment; preserve the original command argv after `--` so the same check identity can resolve the blocked attempt. |
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence list --task T-XXXX --json` | Durable id discovery. |
 | Add optional project doc | `hadara docs add <type> --json` | Dry-run-first creator/registrar for architecture, decisions, roadmap, security model, and agent guide docs. |

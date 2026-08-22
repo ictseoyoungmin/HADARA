@@ -4,9 +4,10 @@ set -euo pipefail
 TASK_ID=""
 MODE="dry-run"
 CREATE_GITHUB_DRAFT="false"
+GITHUB_ONLY="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 GITHUB_REPO="${HADARA_GITHUB_REPO:-ictseoyoungmin/HADARA}"
-GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-https://github.com/${GITHUB_REPO}.git}"
+GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-}"
 PACKAGE_NAME="hadara"
 DIST_DIR="dist-release"
 RELEASE_RESULTS_DIR="${HADARA_RELEASE_RESULTS_DIR:-/tmp/hadara-release-results}"
@@ -35,6 +36,8 @@ Options:
 --execute          Allow actual npm publish after interactive confirmation.
 --github-draft    After npm publish succeeds, create a GitHub Release draft with assets.
                   Publishing that draft publicly remains a separate gh release edit command.
+--github-only     Resume a prior run whose npm publication report exists; verify retained
+                  artifact bytes and source lineage, then create only the GitHub Release draft.
 --github-release-note <path>
                    Markdown file to use as the GitHub Release draft notes.
 --github-token-env <name>
@@ -89,9 +92,9 @@ scripts/release/manual-publish-rc.sh T-0614 --execute
 scripts/release/manual-publish-rc.sh T-0614 --execute --github-draft \
   --github-release-note tasks/T-0614-0-4-6-rc-0-release-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
 
-# Publish a reviewed GitHub Release draft publicly.
+# Publish a reviewed GitHub Release draft publicly (replace <owner/name> with the selected repo).
 
-gh release edit v$(node -p "require('./package.json').version") --repo ictseoyoungmin/HADARA --draft=false
+gh release edit v$(node -p "require('./package.json').version") --repo <owner/name> --draft=false
 EOF
 }
 
@@ -108,6 +111,12 @@ shift
 ;;
 --github-draft)
 CREATE_GITHUB_DRAFT="true"
+shift
+;;
+--github-only)
+GITHUB_ONLY="true"
+CREATE_GITHUB_DRAFT="true"
+MODE="execute"
 shift
 ;;
 --github-release-note)
@@ -188,6 +197,9 @@ usage
 exit 1
 fi
 [[ "${GITHUB_REPO}" =~ ^[^/]+/[^/]+$ ]] || { echo "--github-repo must be owner/name"; exit 1; }
+if [[ -z "${GIT_REMOTE_URL}" ]]; then
+GIT_REMOTE_URL="https://github.com/${GITHUB_REPO}.git"
+fi
 
 build_reinvoke_args() {
 local target_mode="${1:-${MODE}}"
@@ -603,6 +615,159 @@ NODE
 echo "Operator publication report: ${report_path}"
 }
 
+load_partial_npm_publication() {
+if [[ -z "${RETAINED_ARTIFACT_DIR}" ]]; then
+echo "--github-only requires --retained-artifact-dir so the exact published bytes can be verified."
+exit 1
+fi
+
+RETAINED_ARTIFACT_DIR="$(cd "${RETAINED_ARTIFACT_DIR}" && pwd)"
+if [[ -z "${RETAINED_ARTIFACT_REPORT}" ]]; then
+RETAINED_ARTIFACT_REPORT="${RETAINED_ARTIFACT_DIR}/release-artifact-report.json"
+fi
+
+PARTIAL_PUBLICATION_LINE="$(node - "${PARTIAL_NPM_REPORT}" "${PACKAGE_NAME}" "${VERSION}" <<'NODE'
+const fs = require('node:fs');
+
+const [reportPath, expectedName, expectedVersion] = process.argv.slice(2);
+const fail = (message) => {
+  console.error(`Partial npm publication report validation failed: ${message}`);
+  process.exit(1);
+};
+let report;
+try {
+  report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+} catch (error) {
+  fail(`invalid JSON: ${error.message}`);
+}
+if (report.schemaVersion !== 'hadara.releaseOperatorPublication.v1') fail('unexpected schemaVersion');
+if (report.package?.name !== expectedName || report.package?.version !== expectedVersion) fail(`package identity does not match ${expectedName}@${expectedVersion}`);
+if (report.package?.npmMutationPerformed !== true || report.package?.observedVersion !== expectedVersion) fail('report does not prove the expected npm publication');
+if (report.github?.mutationPerformed === true) fail('GitHub mutation is already recorded; do not resume a completed publication');
+const before = report.package?.distTagsBefore ?? {};
+const after = report.package?.distTagsAfter ?? {};
+process.stdout.write(`${report.package.observedVersion}\t${JSON.stringify(before)}\t${JSON.stringify(after)}\n`);
+NODE
+)"
+IFS=$'\t' read -r PUBLISHED_VERSION DIST_TAGS_BEFORE_JSON DIST_TAGS_AFTER_JSON <<< "${PARTIAL_PUBLICATION_LINE}"
+if [[ "${PUBLISHED_VERSION}" != "${VERSION}" ]]; then
+echo "Partial npm publication report observed ${PUBLISHED_VERSION:-<missing>}, expected ${VERSION}."
+exit 1
+fi
+
+TARBALL="${RETAINED_ARTIFACT_DIR}/${PACKAGE_NAME}-${VERSION}.tgz"
+CHECKSUM_FILE="${TARBALL}.sha256"
+MANIFEST_FILE="${TARBALL}.manifest.json"
+LINEAGE="$(read_artifact_lineage "${RETAINED_ARTIFACT_REPORT}" "${TARBALL}" "${CHECKSUM_FILE}" "${MANIFEST_FILE}")"
+IFS=$'\t' read -r ARTIFACT_SOURCE_COMMIT ARTIFACT_RELEASE_INPUT_HASH <<< "${LINEAGE}"
+verify_checksum "${CHECKSUM_FILE}"
+verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
+
+set +e
+OBSERVED_NPM_VERSION="$(npm view "${PACKAGE_NAME}@${VERSION}" version --registry="${REGISTRY}" 2>/dev/null)"
+NPM_VIEW_STATUS=$?
+set -e
+if [[ "${NPM_VIEW_STATUS}" -ne 0 || "${OBSERVED_NPM_VERSION}" != "${VERSION}" ]]; then
+echo "The prior npm publication cannot be verified: expected ${PACKAGE_NAME}@${VERSION}, observed ${OBSERVED_NPM_VERSION:-<missing>}."
+exit 1
+fi
+
+OPERATOR_COMMIT="$(git rev-parse HEAD)"
+echo "Verified prior npm publication report: ${PARTIAL_NPM_REPORT}"
+echo "Verified retained artifact lineage: ${ARTIFACT_RELEASE_INPUT_HASH}"
+}
+
+create_github_release_draft() {
+echo
+echo "== GitHub Release draft =="
+ensure_gh_auth
+
+TAG="v${VERSION}"
+if [[ ! -f "${TARBALL}" || ! -f "${CHECKSUM_FILE}" || ! -f "${MANIFEST_FILE}" ]]; then
+echo "One or more release assets are missing:"
+echo "  ${TARBALL}"
+echo "  ${CHECKSUM_FILE}"
+echo "  ${MANIFEST_FILE}"
+exit 1
+fi
+
+echo "Version: ${VERSION}"
+echo "Tag: ${TAG}"
+echo "GitHub repo: ${GITHUB_REPO}"
+echo
+echo "============================================================"
+echo "READY FOR GITHUB RELEASE DRAFT"
+echo "This will:"
+echo "  - create local tag if missing: ${TAG}"
+echo "  - push tag to the configured remote if missing remotely"
+echo "  - create a GitHub Release draft"
+echo "  - attach tarball, checksum, and manifest"
+echo
+echo "Type exactly: github-draft"
+echo "============================================================"
+read -r GITHUB_CONFIRM
+
+if [[ "${GITHUB_CONFIRM}" != "github-draft" ]]; then
+echo "GitHub Release draft cancelled."
+exit 0
+fi
+
+if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+echo "Git tag already exists locally: ${TAG}"
+else
+git tag -a "${TAG}" -m "HADARA ${VERSION}"
+fi
+
+REMOTE_TAG="$(git ls-remote "${GIT_REMOTE_URL}" "refs/tags/${TAG}" || true)"
+if [[ -n "${REMOTE_TAG}" ]]; then
+echo "Git tag already exists on configured remote ${GIT_REMOTE_URL}: ${TAG}"
+else
+git push "${GIT_REMOTE_URL}" "${TAG}"
+fi
+
+echo
+echo "Creating GitHub Release draft with release assets..."
+GH_RELEASE_NOTE_ARGS=(--notes "HADARA ${VERSION} release. See attached tarball, checksum, and manifest.")
+if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then
+GH_RELEASE_NOTE_ARGS=(--notes-file "${GITHUB_RELEASE_NOTE}")
+fi
+GH_PRERELEASE_ARGS=()
+if [[ "${VERSION}" =~ -rc\.[0-9]+$ ]]; then
+GH_PRERELEASE_ARGS=(--prerelease)
+fi
+
+gh release create "${TAG}" \
+  "${TARBALL}" \
+  "${CHECKSUM_FILE}" \
+  "${MANIFEST_FILE}" \
+  --title "HADARA ${VERSION}" \
+  --repo "${GITHUB_REPO}" \
+  "${GH_RELEASE_NOTE_ARGS[@]}" \
+  --draft \
+  "${GH_PRERELEASE_ARGS[@]}" \
+  --verify-tag
+
+GITHUB_MUTATION_PERFORMED="true"
+write_operator_publication_report "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
+
+echo
+echo "GitHub Release draft created."
+echo "Review it in GitHub UI, then publish it publicly if everything is correct:"
+if [[ "${VERSION}" =~ -rc\.[0-9]+$ ]]; then
+echo "  gh release edit ${TAG} --repo ${GITHUB_REPO} --draft=false --prerelease"
+else
+echo "  gh release edit ${TAG} --repo ${GITHUB_REPO} --draft=false"
+fi
+run_hadara_cli evidence add-command \
+  --task "${TASK_ID}" \
+  --summary "Operator publication report recorded npm/GitHub mutation boundaries and exact ${TAG} release asset digests." \
+  --result passed \
+  --category release \
+  --artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
+  --idempotency-key "operator-publication:github:${TASK_ID}:${VERSION}" \
+  --json
+}
+
 echo "== HADARA manual npm publish flow =="
 echo "Task: ${TASK_ID}"
 echo "Mode: ${MODE}"
@@ -647,11 +812,28 @@ echo "Task capsule: ${TASK_CAPSULE_DIR}"
 
 GIT_STATUS="$(git status --porcelain)"
 PARTIAL_NPM_REPORT="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-npm-publication-report.json"
-if [[ "${MODE}" == "execute" && -f "${PARTIAL_NPM_REPORT}" ]]; then
-echo "A prior npm publication report exists: ${PARTIAL_NPM_REPORT}"
-echo "Refusing to clean or overwrite partial publication evidence; reconcile the GitHub outcome in a new operator run."
+if [[ "${GITHUB_ONLY}" == "true" && ! -f "${PARTIAL_NPM_REPORT}" ]]; then
+echo "GitHub-only resume requires the prior npm publication report: ${PARTIAL_NPM_REPORT}"
 exit 1
 fi
+if [[ "${GITHUB_ONLY}" != "true" && "${MODE}" == "execute" && -f "${PARTIAL_NPM_REPORT}" ]]; then
+echo "A prior npm publication report exists: ${PARTIAL_NPM_REPORT}"
+echo "Resume the GitHub mutation without republishing npm:"
+echo "  bash scripts/release/manual-publish-rc.sh ${TASK_ID} --github-only --retained-artifact-dir <retained-artifact-dir> --github-repo ${GITHUB_REPO} --git-remote-url ${GIT_REMOTE_URL}"
+exit 1
+fi
+
+if [[ "${GITHUB_ONLY}" == "true" ]]; then
+if [[ -n "${GIT_STATUS}" ]] && ! dirty_paths_are_release_outputs_only "${GIT_STATUS}"; then
+echo "Git worktree contains changes outside the retained publication evidence and cannot be resumed safely."
+echo "${GIT_STATUS}"
+exit 1
+fi
+load_partial_npm_publication
+create_github_release_draft
+exit 0
+fi
+
 if [[ -n "${GIT_STATUS}" ]]; then
 cleanup_release_dry_run_outputs
 GIT_STATUS="$(git status --porcelain)"
@@ -800,7 +982,7 @@ printf '%q ' "${REINVOKE_ARGS[@]}"
 printf '\n'
 echo
 echo "After reviewing a GitHub draft, publish it publicly with:"
-echo "  gh release edit v${VERSION} --repo ictseoyoungmin/HADARA --draft=false"
+echo "  gh release edit v${VERSION} --repo ${GITHUB_REPO} --draft=false"
 echo "============================================================"
 exit 0
 fi
@@ -889,97 +1071,8 @@ echo
 echo "Skipping GitHub Release draft."
 echo "Re-run with --execute --github-draft if you want to create a draft release."
 echo "If a reviewed draft already exists, publish it publicly with:"
-echo "  gh release edit v${VERSION} --repo ictseoyoungmin/HADARA --draft=false"
+echo "  gh release edit v${VERSION} --repo ${GITHUB_REPO} --draft=false"
 exit 0
 fi
 
-echo
-echo "== 6. Optional GitHub Release draft =="
-
-ensure_gh_auth
-
-TAG="v${VERSION}"
-
-echo "Version: ${VERSION}"
-echo "Tag: ${TAG}"
-
-if [[ ! -f "${TARBALL}" || ! -f "${CHECKSUM_FILE}" || ! -f "${MANIFEST_FILE}" ]]; then
-echo "One or more release assets are missing:"
-echo "  ${TARBALL}"
-echo "  ${CHECKSUM_FILE}"
-echo "  ${MANIFEST_FILE}"
-exit 1
-fi
-
-echo
-echo "============================================================"
-echo "READY FOR GITHUB RELEASE DRAFT"
-echo "This will:"
-echo "  - create local tag if missing: ${TAG}"
-echo "  - push tag to origin if missing remotely"
-echo "  - create a GitHub Release draft"
-echo "  - attach tarball, checksum, and manifest"
-echo
-echo "Type exactly: github-draft"
-echo "============================================================"
-read -r GITHUB_CONFIRM
-
-if [[ "${GITHUB_CONFIRM}" != "github-draft" ]]; then
-echo "GitHub Release draft cancelled."
-exit 0
-fi
-
-if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-echo "Git tag already exists locally: ${TAG}"
-else
-git tag -a "${TAG}" -m "HADARA ${VERSION}"
-fi
-
-REMOTE_TAG="$(git ls-remote "${GIT_REMOTE_URL}" "refs/tags/${TAG}" || true)"
-if [[ -n "${REMOTE_TAG}" ]]; then
-echo "Git tag already exists on GitHub remote ${GIT_REMOTE_URL}: ${TAG}"
-else
-git push "${GIT_REMOTE_URL}" "${TAG}"
-fi
-
-echo
-echo "Creating GitHub Release draft with release assets..."
-GH_RELEASE_NOTE_ARGS=(--notes "HADARA ${VERSION} release. See attached tarball, checksum, and manifest.")
-if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then
-GH_RELEASE_NOTE_ARGS=(--notes-file "${GITHUB_RELEASE_NOTE}")
-fi
-GH_PRERELEASE_ARGS=()
-if [[ "${VERSION}" =~ -rc\.[0-9]+$ ]]; then
-GH_PRERELEASE_ARGS=(--prerelease)
-fi
-
-gh release create "${TAG}" \
-  "${TARBALL}" \
-  "${CHECKSUM_FILE}" \
-  "${MANIFEST_FILE}" \
-  --title "HADARA ${VERSION}" \
-  --repo "${GITHUB_REPO}" \
-  "${GH_RELEASE_NOTE_ARGS[@]}" \
-  --draft \
-  "${GH_PRERELEASE_ARGS[@]}" \
-  --verify-tag
-
-GITHUB_MUTATION_PERFORMED="true"
-write_operator_publication_report "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
-
-echo
-echo "GitHub Release draft created."
-echo "Review it in GitHub UI, then publish the draft manually if everything is correct:"
-if [[ "${VERSION}" =~ -rc\.[0-9]+$ ]]; then
-echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false --prerelease"
-else
-echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false"
-fi
-run_hadara_cli evidence add-command \
-  --task "${TASK_ID}" \
-  --summary "Operator publication report recorded npm/GitHub mutation boundaries and exact ${TAG} release asset digests." \
-  --result passed \
-  --category release \
-  --artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json" \
-  --idempotency-key "operator-publication:github:${TASK_ID}:${VERSION}" \
-  --json
+create_github_release_draft

@@ -45,6 +45,8 @@ Deterministic recycle sequence:
 9. Only after the gates pass, run the operator-controlled npm publish helper. For release candidates use npm dist-tag `next`; for stable use `latest`.
 10. In the same publish capsule, prepare the public GitHub Release note or draft before handoff. After npm/GitHub publication, run post-publish installed-package recycle from the published package in a dedicated capsule, using `node --import tsx tools/dev-surfaces.ts package recycle --execute --package hadara@next|latest --expected-version <version> --source-root <sourceRoot> --evidence-root <evidenceRoot> --smoke-project-root <tmp-ext4-dir> --attach-evidence --task <task> --json`.
 
+If npm publication succeeds but the GitHub step is interrupted, do not rerun npm publish. Keep the exact retained artifact bytes and invoke `scripts/release/manual-publish-rc.sh <task> --github-only --retained-artifact-dir <retained-artifact-dir> --github-repo <owner/name> --git-remote-url <remote>`. The helper verifies the prior npm publication report, package bytes, checksum, source release-input hash, and registry version before resuming only the GitHub draft boundary.
+
 Forbidden ordering:
 
 - Do not run clean release artifact generation with `sourceRoot == evidenceRoot` and `--attach-evidence`; this self-invalidates the clean-tree preflight and now fail-closes unless explicitly overridden after review.

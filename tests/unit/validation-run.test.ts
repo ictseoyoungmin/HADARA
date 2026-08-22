@@ -470,6 +470,7 @@ describe('validation run', () => {
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'VALIDATION_COMMAND_NOT_FOUND' }));
     expect(report.nextActions.map((action) => action.id)).toEqual(['run-direct-command', 'record-direct-validation-result', 'record-direct-result']);
+    expect(report.nextActions[1].command).toContain("--json -- 'definitely-not-a-real-hadara-test-command'");
     const evidenceJsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
     expect(evidenceJsonl).toContain('blocked because validation command could not be launched');
     expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
@@ -679,6 +680,47 @@ describe('validation run', () => {
     expect(report.execution.directResult).toBe(true);
     expect(report.taskValidationRow.updated).toBe(true);
     expect(report.evidence.tags).toContain('resolves:ev:T-0000:old');
+    expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
+  });
+
+  it('prints shell-safe original argv in CLI recovery guidance', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation CLI recovery guidance');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleValidationCommand({
+          args: [
+            'validation',
+            'run',
+            '--task',
+            task.id,
+            '--check',
+            'CLI blocked',
+            '--update-task',
+            '--json',
+            '--',
+            'definitely-not-a-real-hadara-test-command',
+            '--literal',
+            "a'b"
+          ],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+    const report = JSON.parse(output.join('\n'));
+    expect(report.result).toBe('Blocked');
+    expect(report.nextActions).toContainEqual(expect.objectContaining({
+      id: 'record-direct-validation-result',
+      command: "hadara validation run --task " + task.id + " --check 'CLI blocked' --direct-result passed --direct-summary 'Direct command passed after wrapper launch failure.' --update-task --json -- 'definitely-not-a-real-hadara-test-command' '--literal' 'a'\\''b'"
+    }));
     expect(validateSchema('hadara.validation.run.v2', report).ok).toBe(true);
   });
 

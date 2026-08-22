@@ -22,7 +22,7 @@
 # cd /root/hadara-publish
 # npm login --registry=https://registry.npmjs.org     # whoami 안 되어 있으면
 # bash scripts/release/manual-publish-rc.sh <TASK_ID> --execute   # 프롬프트에 publish
-# gh release edit vX.Y.Z --repo ictseoyoungmin/HADARA --draft=false   # optional, after review
+# gh release edit vX.Y.Z --repo <owner/name> --draft=false   # optional, after review
 #
 # Before running this script, the operator should have already:
 # 1) Version and release docs already point at the intended package version.
@@ -83,7 +83,7 @@ CLONE_DIR="/root/hadara-publish"
 WORKSPACE="/workspace"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 GITHUB_REPO="${HADARA_GITHUB_REPO:-ictseoyoungmin/HADARA}"
-GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-https://github.com/${GITHUB_REPO}.git}"
+GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-}"
 RETAINED_ARTIFACT_DIR="${HADARA_RETAINED_ARTIFACT_DIR:-}"
 RETAINED_ARTIFACT_REPORT="${HADARA_RETAINED_ARTIFACT_REPORT:-}"
 RUN_HELPER_DRY_RUN="${HADARA_RUN_HELPER_DRY_RUN:-0}"
@@ -117,6 +117,9 @@ if [[ -z "$TASK_ID" ]]; then
   exit 1
 fi
 [[ "$GITHUB_REPO" =~ ^[^/]+/[^/]+$ ]] || { echo "--github-repo must be owner/name"; exit 1; }
+if [[ -z "$GIT_REMOTE_URL" ]]; then
+  GIT_REMOTE_URL="https://github.com/${GITHUB_REPO}.git"
+fi
 
 command -v docker >/dev/null 2>&1 || { echo "docker not found on host."; exit 1; }
 if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
@@ -315,13 +318,13 @@ echo
 echo "If npm was already published and only the GitHub Release remains:"
 echo
 echo "  # If a draft already exists and has been reviewed:"
-echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false --prerelease  # for RC versions"
+echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo $GITHUB_REPO --draft=false --prerelease  # for RC versions"
 echo
 echo "  # Or create a draft from the source/workspace repo, then review and publish:"
-echo "  gh release create v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA \\"
+echo "  gh release create v\$(node -p \"require('./package.json').version\") --repo $GITHUB_REPO \\"
 echo "    --target \$(git rev-parse HEAD) --title \"HADARA \$(node -p \"require('./package.json').version\")\" \\"
 echo "    --notes-file .hadara/local/release-notes/$TASK_ID.md --draft --prerelease  # for RC versions"
-echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false --prerelease  # for RC versions"
+echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo $GITHUB_REPO --draft=false --prerelease  # for RC versions"
 echo
 echo "Notes:"
 echo "  - Publish from this clone, not /workspace (the mounted host repo cannot build)."

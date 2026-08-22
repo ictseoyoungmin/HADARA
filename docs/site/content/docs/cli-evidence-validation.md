@@ -53,8 +53,11 @@ hadara validation run \
   --direct-result passed \
   --direct-summary "External check passed" \
   --update-task \
-  --json
+  --json \
+  -- npm test
 ```
+
+The command after `--` is not executed again in direct-result mode. It preserves the original command argv in the validation check identity, so a passed direct result can resolve the matching blocked attempt; keep the check label and exact argv unchanged.
 
 ## Categories and outcomes
 

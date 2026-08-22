@@ -792,3 +792,4 @@
 | T-0790 | Repair docs site diagrams for visual readability | Done | tasks/T-0790-repair-docs-site-diagrams-for-visual-readability | |
 | T-0791 | Harden generated protocol and close recovery routing | Done | tasks/T-0791-harden-generated-protocol-and-close-recovery-routing | |
 | T-0792 | Fix validation identity and Task Board management metadata | Done | tasks/T-0792-fix-validation-identity-and-task-board-management-metadata | |
+| T-0793 | Correct validation recovery identity and release publication tooling | Done | tasks/T-0793-correct-validation-recovery-identity-and-release-publication-too | |

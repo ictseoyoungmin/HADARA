@@ -284,7 +284,7 @@ Do not hand-edit \`TASK.md\` Identity \`Status\`, \`docs/TASK_BOARD.md\` Status,
 \`\`\`bash
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 hadara validation run --task T-XXXX --check "Focused tests" --json -- npm test
-hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json -- npm test
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --artifact-file artifacts/reduced-report.json --json
 hadara evidence list --task T-XXXX --json
 hadara evidence project --task T-XXXX --json
@@ -339,7 +339,7 @@ Before task close, finish all close-source text, including the manual \`TASK.md 
 | Run and record validation | \`hadara validation run --task T-XXXX --check "..." -- <command>\` | Executes the command and records evidence without editing \`TASK.md\` by default. |
 | Run and record validation JSON | \`hadara validation run --task T-XXXX --check "..." --json -- <command>\` | Put \`--json\` before \`--\`; everything after \`--\` belongs to the child command. |
 | Run, record, and sync task row | \`hadara validation run --task T-XXXX --check "..." --update-task -- <command>\` | Executes the command, records evidence, and updates the matching \`TASK.md\` Validation row. |
-| Record direct validation result | \`hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json\` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
+| Record direct validation result | \`hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json -- npm test\` | Records an already-run direct result when wrapper launch is blocked by the tool environment; retain the original command argv after \`--\` for check-identity resolution. |
 | Record already-run validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | \`hadara evidence list --task T-XXXX --json\` | Durable id discovery. |
 | Review loop phase | \`hadara task status --task T-XXXX --json\` | Normal lifecycle state and next action. |

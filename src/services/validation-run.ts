@@ -668,6 +668,13 @@ function createValidationRunNextActions(options: ValidationRunOptions, result: V
   if (result !== 'Blocked') return [];
   const timedOut = failureKind === 'timeout';
   const summary = `Validation "${options.check}" was blocked by ${failureKind}.`;
+  const argvContainsSensitiveValue = argvReportFields(options.argv, false).argvRedacted;
+  const originalCommandArgv = options.argv.length > 0 && !argvContainsSensitiveValue
+    ? ` -- ${options.argv.map(shellSingleQuote).join(' ')}`
+    : '';
+  const directResultMessage = argvContainsSensitiveValue
+    ? 'The original command argv contains sensitive values and was omitted from the printed recovery command; re-enter the exact argv locally after `--` to preserve check identity.'
+    : 'Record an already-run direct result through validation run so TASK.md row sync and validation-check resolution tags remain consistent.';
   return [
     {
       id: 'run-direct-command',
@@ -679,8 +686,8 @@ function createValidationRunNextActions(options: ValidationRunOptions, result: V
     {
       id: 'record-direct-validation-result',
       kind: 'command',
-      message: 'Record an already-run direct result through validation run so TASK.md row sync and validation-check resolution tags remain consistent.',
-      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote(timedOut ? 'Direct command completed after wrapper timeout.' : 'Direct command passed after wrapper launch failure.')}${options.updateTask ? ' --update-task' : ''} --json`
+      message: directResultMessage,
+      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote(timedOut ? 'Direct command completed after wrapper timeout.' : 'Direct command passed after wrapper launch failure.')}${options.updateTask ? ' --update-task' : ''} --json${originalCommandArgv}`
     },
     {
       id: 'record-direct-result',
