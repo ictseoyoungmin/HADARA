@@ -1,0 +1,43 @@
+name: T0795 release recovery integrity
+
+on:
+  push:
+    branches:
+      - agent/release-recovery-integrity
+
+permissions:
+  contents: write
+
+jobs:
+  patch-validate-commit:
+    if: ${{ !contains(github.event.head_commit.message, '[t0795 applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply reviewed patch
+        run: python tools/.t0795/apply.py
+      - name: Static validation
+        run: |
+          bash -n scripts/release/manual-publish-rc.sh
+          node --check scripts/release/verify-recovery-evidence.mjs
+          git diff --check
+      - name: Install dependencies
+        run: npm ci
+      - name: Focused release-helper regression
+        run: npm run test:hadara-dev -- --run tests/unit/manual-publish-script.test.ts
+      - name: Full repository check
+        run: npm run check
+      - name: Commit validated changes
+        run: |
+          git config user.name "hadara-agent"
+          git config user.email "actions@users.noreply.github.com"
+          git add scripts/release/manual-publish-rc.sh scripts/release/verify-recovery-evidence.mjs tests/unit/manual-publish-script.test.ts
+          git diff --cached --check
+          git commit -m "Harden GitHub-only release recovery integrity [t0795 applied]"
+          git push origin HEAD:${GITHUB_REF_NAME}
