@@ -4,7 +4,7 @@ p = Path('tools/.t0795/apply.py')
 s = p.read_text()
 marker = '# Adapt existing fixture to emit byte-bound evidence and new wording.\n'
 idx = s.index(marker)
-new_tail = r'''# Adapt the existing retained-publication fixture without rewriting the fake CLI.
+new_tail = r"""# Adapt the existing retained-publication fixture without rewriting the fake CLI.
 tp=Path('tests/unit/manual-publish-script.test.ts'); t=tp.read_text()
 t=t.replace("Verified prior npm publication report","Verified canonical npm publication evidence")
 t=t.replace("    expect(script).toContain('git push \\\"${GIT_REMOTE_URL}\\\" \\\"${TAG}\\\"');\n","    expect(script).toContain('git push \\\"${GIT_REMOTE_URL}\\\" \\\"${tag}\\\"');\n")
@@ -39,8 +39,7 @@ binder=r'''    const bindCanonicalNpmEvidence = (fixtureRoot: string, reportPath
 t=one(t,env_anchor,env_anchor+binder,'canonical binder')
 
 npm_anchor="    expect(fs.existsSync(npmOnlyReportPath)).toBe(true);\n"
-npm_insert=npm_anchor+"    bindCanonicalNpmEvidence(npmOnlyRoot, npmOnlyReportPath);\n"
-t=one(t,npm_anchor,npm_insert,'npm-only bind')
+t=one(t,npm_anchor,npm_anchor+"    bindCanonicalNpmEvidence(npmOnlyRoot, npmOnlyReportPath);\n",'npm-only bind')
 
 before_recovery="    const npmOnlyLogBeforeRecovery = fs.readFileSync(npmOnlyLog, 'utf8');\n    const npmOnlyRecovery = spawnSync('bash', [scriptPath, 'T-0785', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', npmOnlyRetained, '--github-only'], {\n"
 checks=r'''    const npmOnlyLogBeforeRecovery = fs.readFileSync(npmOnlyLog, 'utf8');
@@ -98,6 +97,6 @@ t=one(t,failure_old,failure_new,'failure bind')
 
 tp.write_text(t)
 print('patched')
-'''
+"""
 p.write_text(s[:idx] + new_tail)
 print('apply.py simplified and hardened')
