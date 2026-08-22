@@ -67,6 +67,10 @@ describe('manual publish release script', () => {
     expect(script).toContain('artifactSourceCommit: process.env.OP_ARTIFACT_SOURCE_COMMIT');
     expect(script).toContain('releaseInputHash: process.env.OP_RELEASE_INPUT_HASH');
     expect(script).toContain('operatorCommit: process.env.OP_OPERATOR_COMMIT');
+    expect(script).toContain('repository: process.env.OP_GITHUB_REPO');
+    expect(script).toContain('gitRemote: process.env.OP_GIT_REMOTE_URL');
+    expect(script).toContain('NPM_PUBLICATION_REPORT_PATH="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-npm-publication-report.json"');
+    expect(script).toContain('To add the GitHub draft later without republishing npm');
     expect(script).toContain('--artifact-file "${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"');
     expect(script).toContain('read_npm_dist_tags()');
     expect(script).toContain('distTagsBefore');
@@ -203,6 +207,43 @@ describe('manual publish release script', () => {
     expect(fs.readFileSync(npmLog, 'utf8')).not.toContain('release artifact --execute');
     expect(fs.readFileSync(devSurfaceLog, 'utf8')).not.toContain('release artifact --execute');
 
+    const npmOnlyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-npm-only-root-'));
+    const npmOnlyRetained = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-npm-only-artifact-'));
+    fs.cpSync(root, npmOnlyRoot, { recursive: true, verbatimSymlinks: true });
+    fs.cpSync(retained, npmOnlyRetained, { recursive: true, verbatimSymlinks: true });
+    const npmOnlyLog = path.join(npmOnlyRetained, 'npm.log');
+    const npmOnlyGhLog = path.join(npmOnlyRetained, 'gh.log');
+    const npmOnlyEvidenceLog = path.join(npmOnlyRetained, 'evidence.log');
+    const npmOnlyEnv = { ...env, PATH: `${path.join(npmOnlyRoot, 'bin')}:${process.env.PATH ?? ''}`, DEV_SURFACE_LOG: path.join(npmOnlyRetained, 'dev-surface.log'), EVIDENCE_LOG: npmOnlyEvidenceLog, FAKE_NPM_LOG: npmOnlyLog, FAKE_GH_LOG: npmOnlyGhLog };
+    const npmOnly = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', npmOnlyRetained, '--execute'], {
+      cwd: npmOnlyRoot,
+      env: npmOnlyEnv,
+      input: 'publish\n',
+      encoding: 'utf8'
+    });
+    expect(npmOnly.status, `${npmOnly.stdout}\n${npmOnly.stderr}`).toBe(0);
+    expect(npmOnly.stdout).toContain('To add the GitHub draft later without republishing npm');
+    const npmOnlyReportPath = path.join(npmOnlyRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-npm-publication-report.json');
+    expect(fs.existsSync(npmOnlyReportPath)).toBe(true);
+    expect(fs.existsSync(path.join(npmOnlyRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'))).toBe(false);
+    const npmOnlyLogBeforeRecovery = fs.readFileSync(npmOnlyLog, 'utf8');
+    const npmOnlyRecovery = spawnSync('bash', [scriptPath, 'T-0785', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', npmOnlyRetained, '--github-only'], {
+      cwd: npmOnlyRoot,
+      env: npmOnlyEnv,
+      input: 'github-draft\n',
+      encoding: 'utf8'
+    });
+    expect(npmOnlyRecovery.status, `${npmOnlyRecovery.stdout}\n${npmOnlyRecovery.stderr}`).toBe(0);
+    expect(npmOnlyRecovery.stdout).toContain('Verified prior npm publication report');
+    expect(fs.readFileSync(npmOnlyLog, 'utf8').split(/\r?\n/).filter((line) => line.startsWith('publish '))).toEqual(
+      npmOnlyLogBeforeRecovery.split(/\r?\n/).filter((line) => line.startsWith('publish ')),
+    );
+    const npmOnlyFinalReport = JSON.parse(fs.readFileSync(path.join(npmOnlyRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'), 'utf8'));
+    expect(npmOnlyFinalReport.package).toMatchObject({ registry: 'https://registry.example.test', distTag: 'next' });
+    expect(npmOnlyFinalReport.github).toMatchObject({ repository: 'ictseoyoungmin/HADARA', gitRemote: remote, mutationPerformed: true });
+    fs.rmSync(npmOnlyRoot, { recursive: true, force: true });
+    fs.rmSync(npmOnlyRetained, { recursive: true, force: true });
+
     const failureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-retained-gh-failure-'));
     const failureRetained = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-retained-gh-failure-artifact-'));
     fs.cpSync(root, failureRoot, { recursive: true, verbatimSymlinks: true });
@@ -222,6 +263,16 @@ describe('manual publish release script', () => {
     expect(fs.existsSync(path.join(failureRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-npm-publication-report.json'))).toBe(true);
     expect(fs.readFileSync(failureEvidenceLog, 'utf8')).toContain('evidence');
     const npmLogBeforeRecovery = fs.readFileSync(failureNpmLog, 'utf8');
+    const ghLogBeforeMismatch = fs.existsSync(failureGhLog) ? fs.readFileSync(failureGhLog, 'utf8') : '';
+    const mismatchedDestination = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry-other.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', failureRetained, '--github-only'], {
+      cwd: failureRoot,
+      env: { ...failureEnv, FAKE_GH_FAIL: '0' },
+      input: 'github-draft\n',
+      encoding: 'utf8'
+    });
+    expect(mismatchedDestination.status).not.toBe(0);
+    expect(mismatchedDestination.stdout + mismatchedDestination.stderr).toContain('prior npm registry https://registry.example.test differs');
+    expect(fs.existsSync(failureGhLog) ? fs.readFileSync(failureGhLog, 'utf8') : '').toBe(ghLogBeforeMismatch);
     const recovery = spawnSync('bash', [scriptPath, 'T-0785', '--registry', 'https://registry.example.test', '--github-repo', 'ictseoyoungmin/HADARA', '--git-remote-url', remote, '--retained-artifact-dir', failureRetained, '--github-only'], {
       cwd: failureRoot,
       env: { ...failureEnv, FAKE_GH_FAIL: '0' },
@@ -236,6 +287,8 @@ describe('manual publish release script', () => {
     );
     expect(fs.readFileSync(failureGhLog, 'utf8')).toContain('release create v0.5.0-rc.6');
     expect(fs.existsSync(path.join(failureRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'))).toBe(true);
+    const resumedReport = JSON.parse(fs.readFileSync(path.join(failureRoot, 'tasks', 'T-0785-fixture', 'artifacts', 'operator-publication', '0.5.0-rc.6-operator-publication-report.json'), 'utf8'));
+    expect(resumedReport.github).toMatchObject({ repository: 'ictseoyoungmin/HADARA', gitRemote: remote });
     fs.rmSync(failureRoot, { recursive: true, force: true });
     fs.rmSync(failureRetained, { recursive: true, force: true });
 

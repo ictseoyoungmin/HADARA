@@ -36,6 +36,8 @@
       "additionalProperties": false,
       "required": ["mutationPerformed", "draftRequested", "prerelease", "assets"],
       "properties": {
+        "repository": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+        "gitRemote": { "type": "string", "format": "uri" },
         "mutationPerformed": { "type": "boolean" },
         "draftRequested": { "type": "boolean" },
         "prerelease": { "type": "boolean" },

@@ -88,6 +88,7 @@ function attachReleaseFacts(root: string): void {
       observedVersion: '0.5.0-rc.5', distTagsBefore: { latest: '0.4.6', next: '0.5.0-rc.4' }, distTagsAfter: { latest: '0.4.6', next: '0.5.0-rc.5' }
     },
     github: {
+      repository: 'ictseoyoungmin/HADARA', gitRemote: 'https://github.com/ictseoyoungmin/HADARA.git',
       mutationPerformed: false, draftRequested: false, prerelease: true,
       assets: [
         { name: 'hadara.tgz', sha256: `sha256:${'a'.repeat(64)}`, uploaded: false },

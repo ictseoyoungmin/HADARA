@@ -28,6 +28,8 @@ describe('runtime schema validation', () => {
         distTagsAfter: { latest: '0.4.6', next: '0.5.0-rc.4' }
       },
       github: {
+        repository: 'ictseoyoungmin/HADARA',
+        gitRemote: 'https://github.com/ictseoyoungmin/HADARA.git',
         mutationPerformed: true,
         draftRequested: false,
         prerelease: true,
@@ -65,7 +67,7 @@ describe('runtime schema validation', () => {
         name: 'hadara', version: '0.5.0-rc.6', registry: 'https://registry.npmjs.org', distTag: 'next', npmMutationPerformed: true,
         observedVersion: '0.5.0-rc.6', distTagsBefore: { latest: '0.4.6' }, distTagsAfter: { latest: '0.4.6', next: '0.5.0-rc.6' }
       },
-      github: { mutationPerformed: false, draftRequested: false, prerelease: true, assets: [
+      github: { repository: 'ictseoyoungmin/HADARA', gitRemote: 'https://github.com/ictseoyoungmin/HADARA.git', mutationPerformed: false, draftRequested: false, prerelease: true, assets: [
         { name: 'a', sha256: `sha256:${'a'.repeat(64)}`, uploaded: false },
         { name: 'b', sha256: `sha256:${'b'.repeat(64)}`, uploaded: false },
         { name: 'c', sha256: `sha256:${'c'.repeat(64)}`, uploaded: false }

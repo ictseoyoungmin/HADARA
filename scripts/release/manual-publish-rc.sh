@@ -6,6 +6,8 @@ MODE="dry-run"
 CREATE_GITHUB_DRAFT="false"
 GITHUB_ONLY="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
+REGISTRY_EXPLICIT="false"
+if [[ -n "${NPM_REGISTRY:-}" ]]; then REGISTRY_EXPLICIT="true"; fi
 GITHUB_REPO="${HADARA_GITHUB_REPO:-ictseoyoungmin/HADARA}"
 GIT_REMOTE_URL="${HADARA_GIT_REMOTE_URL:-}"
 PACKAGE_NAME="hadara"
@@ -13,6 +15,8 @@ DIST_DIR="dist-release"
 RELEASE_RESULTS_DIR="${HADARA_RELEASE_RESULTS_DIR:-/tmp/hadara-release-results}"
 PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"
 NPM_TAG="${NPM_TAG:-}"
+NPM_TAG_EXPLICIT="false"
+if [[ -n "${NPM_TAG:-}" ]]; then NPM_TAG_EXPLICIT="true"; fi
 GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
 RETAINED_ARTIFACT_DIR="${HADARA_RETAINED_ARTIFACT_DIR:-}"
@@ -142,6 +146,7 @@ shift 2
 --registry)
 REGISTRY="${2:-}"
 [[ -n "${REGISTRY}" ]] || { echo "--registry requires a value"; exit 1; }
+REGISTRY_EXPLICIT="true"
 shift 2
 ;;
 --github-repo)
@@ -177,6 +182,7 @@ shift 2
 --npm-tag)
 NPM_TAG="${2:-}"
 [[ -n "${NPM_TAG}" ]] || { echo "--npm-tag requires a value"; exit 1; }
+NPM_TAG_EXPLICIT="true"
 shift 2
 ;;
 -h|--help)
@@ -536,6 +542,8 @@ OP_NPM_TAG="${NPM_TAG}" \
 OP_DIST_TAGS_BEFORE="${DIST_TAGS_BEFORE_JSON}" \
 OP_DIST_TAGS_AFTER="${DIST_TAGS_AFTER_JSON}" \
 OP_NPM_OBSERVED="${PUBLISHED_VERSION:-}" \
+OP_GITHUB_REPO="${GITHUB_REPO}" \
+OP_GIT_REMOTE_URL="${GIT_REMOTE_URL}" \
 OP_GITHUB_MUTATION="${GITHUB_MUTATION_PERFORMED}" \
 OP_GITHUB_DRAFT="${CREATE_GITHUB_DRAFT}" \
 OP_TARBALL="${TARBALL}" \
@@ -583,6 +591,8 @@ const report = {
     distTagsAfter
   },
   github: {
+    repository: process.env.OP_GITHUB_REPO,
+    gitRemote: process.env.OP_GIT_REMOTE_URL,
     mutationPerformed: githubMutation,
     draftRequested: process.env.OP_GITHUB_DRAFT === 'true',
     prerelease,
@@ -643,17 +653,29 @@ try {
 if (report.schemaVersion !== 'hadara.releaseOperatorPublication.v1') fail('unexpected schemaVersion');
 if (report.package?.name !== expectedName || report.package?.version !== expectedVersion) fail(`package identity does not match ${expectedName}@${expectedVersion}`);
 if (report.package?.npmMutationPerformed !== true || report.package?.observedVersion !== expectedVersion) fail('report does not prove the expected npm publication');
+if (typeof report.package?.registry !== 'string' || report.package.registry.length === 0) fail('report is missing the npm registry destination');
+if (typeof report.package?.distTag !== 'string' || report.package.distTag.length === 0) fail('report is missing the npm dist-tag destination');
 if (report.github?.mutationPerformed === true) fail('GitHub mutation is already recorded; do not resume a completed publication');
 const before = report.package?.distTagsBefore ?? {};
 const after = report.package?.distTagsAfter ?? {};
-process.stdout.write(`${report.package.observedVersion}\t${JSON.stringify(before)}\t${JSON.stringify(after)}\n`);
+process.stdout.write(`${report.package.observedVersion}\t${report.package.registry}\t${report.package.distTag}\t${JSON.stringify(before)}\t${JSON.stringify(after)}\n`);
 NODE
 )"
-IFS=$'\t' read -r PUBLISHED_VERSION DIST_TAGS_BEFORE_JSON DIST_TAGS_AFTER_JSON <<< "${PARTIAL_PUBLICATION_LINE}"
+IFS=$'\t' read -r PUBLISHED_VERSION PRIOR_REGISTRY PRIOR_NPM_TAG DIST_TAGS_BEFORE_JSON DIST_TAGS_AFTER_JSON <<< "${PARTIAL_PUBLICATION_LINE}"
 if [[ "${PUBLISHED_VERSION}" != "${VERSION}" ]]; then
 echo "Partial npm publication report observed ${PUBLISHED_VERSION:-<missing>}, expected ${VERSION}."
 exit 1
 fi
+if [[ "${REGISTRY_EXPLICIT}" == "true" && "${REGISTRY}" != "${PRIOR_REGISTRY}" ]]; then
+echo "Refusing GitHub-only resume: prior npm registry ${PRIOR_REGISTRY} differs from requested ${REGISTRY}."
+exit 1
+fi
+if [[ "${NPM_TAG_EXPLICIT}" == "true" && "${NPM_TAG}" != "${PRIOR_NPM_TAG}" ]]; then
+echo "Refusing GitHub-only resume: prior npm dist-tag ${PRIOR_NPM_TAG} differs from requested ${NPM_TAG}."
+exit 1
+fi
+REGISTRY="${PRIOR_REGISTRY}"
+NPM_TAG="${PRIOR_NPM_TAG}"
 
 TARBALL="${RETAINED_ARTIFACT_DIR}/${PACKAGE_NAME}-${VERSION}.tgz"
 CHECKSUM_FILE="${TARBALL}.sha256"
@@ -1051,11 +1073,7 @@ echo "npm dist-tag verification failed; refusing to write an operator publicatio
 exit 1
 fi
 
-if [[ "${CREATE_GITHUB_DRAFT}" == "true" ]]; then
 NPM_PUBLICATION_REPORT_PATH="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-npm-publication-report.json"
-else
-NPM_PUBLICATION_REPORT_PATH="${TASK_CAPSULE_DIR}/artifacts/operator-publication/${VERSION}-operator-publication-report.json"
-fi
 write_operator_publication_report "${NPM_PUBLICATION_REPORT_PATH}"
 run_hadara_cli evidence add-command \
   --task "${TASK_ID}" \
@@ -1069,7 +1087,8 @@ run_hadara_cli evidence add-command \
 if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
 echo
 echo "Skipping GitHub Release draft."
-echo "Re-run with --execute --github-draft if you want to create a draft release."
+echo "To add the GitHub draft later without republishing npm, re-run:"
+echo "  bash scripts/release/manual-publish-rc.sh ${TASK_ID} --github-only --retained-artifact-dir <retained-artifact-dir> --github-repo ${GITHUB_REPO} --git-remote-url ${GIT_REMOTE_URL}"
 echo "If a reviewed draft already exists, publish it publicly with:"
 echo "  gh release edit v${VERSION} --repo ${GITHUB_REPO} --draft=false"
 exit 0
