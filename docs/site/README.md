@@ -18,3 +18,17 @@ npm run build
 Markdown under `content/docs/` is canonical site content. The Vite metadata
 plugin reads the root `package.json` version, so the visible HADARA version is
 not maintained independently.
+
+## GitHub Pages
+
+The repository workflow at `.github/workflows/docs-pages.yml` builds this site
+and deploys `docs/site/dist` to GitHub Pages on pushes to `main` or a manual
+workflow dispatch.
+
+After the workflow is committed, enable it once in the repository settings:
+
+`Settings → Pages → Build and deployment → Source → GitHub Actions`
+
+The project site URL is:
+
+`https://ictseoyoungmin.github.io/HADARA/`

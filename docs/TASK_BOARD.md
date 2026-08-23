@@ -797,3 +797,4 @@
 | T-0795 | Bind GitHub-only recovery to canonical publication evidence | Done | tasks/T-0795-bind-github-only-recovery-to-canonical-publication-evidence | |
 | T-0796 | Prepare a fresh RC6 artifact from current source | Done | tasks/T-0796-prepare-a-fresh-rc6-artifact-from-current-source | |
 | T-0797 | Publish the retained RC6 bytes to npm next and prepare GitHub draft and public package recycle | Done | tasks/T-0797-publish-the-retained-rc6-bytes-to-npm-next-and-prepare-github-dr | |
+| T-0798 | Deploy docs site to GitHub Pages with Actions | Done | tasks/T-0798-deploy-docs-site-to-github-pages-with-actions | |
